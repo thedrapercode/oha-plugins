@@ -1,0 +1,1263 @@
+/* OHA Schedule Hub - Frontend Styles - Halloween/Haunt Theme */
+
+/* ==========================================
+   Root-level vars — needed by the modal which
+   lives outside .oha-schedule-container in the DOM
+   ========================================== */
+:root {
+    --oha-orange:       #e07820;
+    --oha-orange-dark:  #b85e10;
+    --oha-orange-glow:  rgba(224, 120, 32, 0.25);
+    --oha-dark:         #0d0808;
+    --oha-card:         #1a0f0f;
+    --oha-card-header:  #130808;
+    --oha-border-solid: #2e1a1a;
+    --oha-text:         #f0ddd0;
+    --oha-text-muted:   #9e7a68;
+    --oha-gold:         #f0b429;
+}
+
+/* ==========================================
+   CSS Variables & Container
+   ========================================== */
+.oha-schedule-container {
+    --oha-orange:        #e07820;
+    --oha-orange-dark:   #b85e10;
+    --oha-orange-glow:   rgba(224, 120, 32, 0.25);
+    --oha-dark:          #0d0808;
+    --oha-card:          #1a0f0f;
+    --oha-card-header:   #130808;
+    --oha-surface:       #251515;
+    --oha-border:        rgba(224, 120, 32, 0.22);
+    --oha-border-solid:  #2e1a1a;
+    --oha-text:          #f0ddd0;
+    --oha-text-muted:    #9e7a68;
+    --oha-gold:          #f0b429;
+
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--oha-text);
+    box-sizing: border-box;
+}
+
+.oha-schedule-container *, .oha-schedule-container *::before, .oha-schedule-container *::after {
+    box-sizing: border-box;
+}
+
+/* ==========================================
+   Controls Panel
+   ========================================== */
+.oha-schedule-controls {
+    background: var(--oha-card);
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--oha-border);
+}
+
+/* --- Search Row --- */
+.oha-schedule-search {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+#oha-search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    background: var(--oha-dark);
+    border: 1px solid var(--oha-border-solid);
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--oha-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#oha-search-input::placeholder {
+    color: var(--oha-text-muted);
+}
+
+#oha-search-input:focus {
+    outline: none;
+    border-color: var(--oha-orange);
+    box-shadow: 0 0 0 3px var(--oha-orange-glow);
+}
+
+#oha-search-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 18px;
+    background: var(--oha-orange);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+#oha-search-btn:hover {
+    background: var(--oha-orange-dark);
+}
+
+/* --- Filters Row --- */
+.oha-schedule-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.oha-filter {
+    flex: 1;
+    min-width: 110px;
+    padding: 9px 12px;
+    background: var(--oha-dark);
+    border: 1px solid var(--oha-border-solid);
+    border-radius: 8px;
+    color: var(--oha-text);
+    font-size: 14px;
+}
+
+.oha-filter option {
+    background: #1a0f0f;
+    color: var(--oha-text);
+}
+
+/* --- Controls bottom row (view switcher + actions) --- */
+.oha-controls-bottom {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* --- View Switcher --- */
+.oha-schedule-view-switcher {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex: 1;
+}
+
+.oha-schedule-view-switcher::-webkit-scrollbar {
+    display: none;
+}
+
+.oha-view-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 7px 16px;
+    background: var(--oha-dark);
+    border: 1px solid var(--oha-border-solid);
+    border-radius: 20px;
+    color: var(--oha-text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.oha-view-btn:hover {
+    border-color: var(--oha-orange);
+    color: var(--oha-text);
+}
+
+.oha-view-btn.active {
+    background: var(--oha-orange);
+    border-color: var(--oha-orange);
+    color: #fff;
+    font-weight: 700;
+}
+
+/* --- Buttons --- */
+.oha-btn-primary, .oha-btn-secondary {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+}
+
+.oha-btn-primary {
+    background: var(--oha-orange);
+    color: #fff;
+}
+
+.oha-btn-primary:hover {
+    background: var(--oha-orange-dark);
+}
+
+.oha-btn-secondary {
+    background: transparent;
+    color: var(--oha-text-muted);
+    border-color: var(--oha-border-solid);
+}
+
+.oha-btn-secondary:hover {
+    border-color: var(--oha-orange);
+    color: var(--oha-text);
+}
+
+/* ==========================================
+   Day Section Headers — Collapsible
+   ========================================== */
+.oha-day-section {
+    margin-bottom: 24px;
+}
+
+/* Day title is a <button>. Use high specificity + !important on shape/color
+   to override WordPress theme button resets (red bg, auto width, etc.) */
+.oha-schedule-container .oha-day-title {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #1c0e0e 0%, #2a1414 100%) !important;
+    margin: 0 0 12px 0 !important;
+    padding: 13px 18px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    border-left: 5px solid #e07820 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5) !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    line-height: 1.2 !important;
+    transition: background 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+.oha-schedule-container .oha-day-title:hover {
+    background: linear-gradient(135deg, #261212 0%, #3a1c1c 100%) !important;
+    box-shadow: 0 3px 16px rgba(0, 0, 0, 0.6), 0 0 0 1px #e07820 !important;
+}
+
+.oha-schedule-container .oha-day-title:active {
+    transform: scale(0.995);
+}
+
+.oha-day-chevron {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    color: #e07820;
+    stroke: #e07820;
+}
+
+/* Collapsed state — chevron rotates */
+.oha-day-section.is-collapsed .oha-day-chevron {
+    transform: rotate(-90deg);
+}
+
+.oha-day-body {
+    overflow: hidden;
+}
+
+.oha-day-section.is-collapsed .oha-day-body {
+    display: none;
+}
+
+/* ==========================================
+   View Visibility Control
+   (all hidden; JS shows the active one)
+   ========================================== */
+.oha-timeline-view,
+.oha-grid-view,
+.oha-list-view,
+.oha-compact-view {
+    display: none;
+}
+
+/* ==========================================
+   Timeline View — Primary / Mobile Card View
+   ========================================== */
+.oha-timeline-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.oha-timeline-item {
+    background: var(--oha-card);
+    border-radius: 12px;
+    border: 1px solid var(--oha-border-solid);
+    border-left: 4px solid var(--oha-orange);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.oha-timeline-item:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--oha-orange);
+    transform: translateY(-1px);
+}
+
+/* Promoted accent */
+.oha-timeline-item[data-event-promoted="1"] {
+    border-left-color: var(--oha-gold);
+    background: linear-gradient(180deg, #1f1200 0%, var(--oha-card) 60px);
+}
+
+/* ==========================================
+   Card image banner
+   ========================================== */
+.oha-card-image {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+    background: #0d0808;
+}
+
+.oha-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.oha-timeline-item:hover .oha-card-img {
+    transform: scale(1.03);
+}
+
+/* "Featured" badge overlaid on image */
+.oha-card-image-badge {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #f0b429, #d97706);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+/* ==========================================
+   Instructor Headshots — Facebook-style circle overlay
+   ========================================== */
+
+/* Container pinned to bottom-left of the card image */
+.oha-instructor-headshots {
+    position: absolute;
+    bottom: -22px;
+    left: 14px;
+    display: flex;
+    gap: 0;
+    z-index: 4;
+}
+
+.oha-headshot-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #140b0b;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    background: #1a0f0f;
+    display: block;
+}
+
+/* Second headshot overlaps slightly */
+.oha-headshot-circle + .oha-headshot-circle {
+    margin-left: -14px;
+}
+
+/* Extra padding on card body so headshots don't overlap the title */
+.has-image .oha-class-details {
+    padding-top: 28px;
+}
+
+/* When there's no featured image but headshots exist — mini strip */
+.oha-headshots-only-wrap {
+    height: 60px;
+    background: #0d0808;
+    position: relative;
+    overflow: visible;
+}
+
+.oha-headshots-standalone {
+    position: absolute;
+    bottom: -22px;
+    left: 14px;
+}
+
+/* Card with headshots only (no featured image) still needs body padding */
+.has-headshots-only .oha-class-details {
+    padding-top: 28px;
+}
+
+/* Push the time header down so headshot circles (which overflow 22px below
+   the strip) don't sit on top of the start-time text */
+.has-headshots-only .oha-timeline-header {
+    margin-top: 22px;
+}
+
+/* Card is tappable */
+.oha-timeline-item {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    overflow: visible; /* allow headshots to bleed out of card */
+}
+
+.oha-timeline-item:active {
+    transform: scale(0.985);
+}
+
+/* Tap hint text at bottom of card body */
+.oha-tap-hint {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--oha-orange);
+    opacity: 0.7;
+    letter-spacing: 0.3px;
+    text-align: right;
+}
+
+/* Card header: time + track badge on one line */
+.oha-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--oha-border-solid);
+    background: var(--oha-card-header);
+}
+
+.oha-class-time {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: nowrap;
+}
+
+.oha-start-time {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--oha-orange);
+    white-space: nowrap;
+}
+
+.oha-time-separator {
+    color: var(--oha-text-muted);
+    font-size: 13px;
+}
+
+.oha-end-time {
+    font-size: 13px;
+    color: var(--oha-text-muted);
+    white-space: nowrap;
+}
+
+/* Card body */
+.oha-class-details {
+    padding: 12px 14px;
+}
+
+.oha-class-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+/* Track badge (used in header and inline) */
+.oha-class-track {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: rgba(224, 120, 32, 0.15);
+    color: var(--oha-orange);
+    border: 1px solid rgba(224, 120, 32, 0.3);
+    white-space: nowrap;
+}
+
+.oha-class-meta {
+    display: flex;
+    gap: 10px 16px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--oha-text-muted);
+}
+
+.oha-class-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.oha-icon {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    opacity: 0.65;
+    flex-shrink: 0;
+}
+
+.oha-class-description {
+    margin-top: 10px;
+    color: var(--oha-text);
+    font-size: 13px;
+    line-height: 1.6;
+    opacity: 0.8;
+}
+
+.oha-class-description p {
+    margin: 0;
+}
+
+/* Level badges */
+.oha-class-level {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.level-beginner    { background: rgba(22,101,52,0.3);  color: #86efac; border: 1px solid rgba(22,101,52,0.5); }
+.level-intermediate{ background: rgba(133,77,14,0.3);  color: #fcd34d; border: 1px solid rgba(133,77,14,0.5); }
+.level-advanced    { background: rgba(153,27,27,0.3);  color: #fca5a5; border: 1px solid rgba(153,27,27,0.5); }
+.level-all         { background: rgba(55,48,163,0.3);  color: #c4b5fd; border: 1px solid rgba(55,48,163,0.5); }
+
+/* Track color variants — left border + badge tint */
+.track-acting     { border-left-color: #ef4444; }
+.track-acting     .oha-class-track { background: rgba(239,68,68,0.12); color: #fca5a5; border-color: rgba(239,68,68,0.3); }
+
+.track-technical  { border-left-color: #3b82f6; }
+.track-technical  .oha-class-track { background: rgba(59,130,246,0.12); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+
+.track-business   { border-left-color: #10b981; }
+.track-business   .oha-class-track { background: rgba(16,185,129,0.12); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+
+.track-makeup     { border-left-color: #f59e0b; }
+.track-makeup     .oha-class-track { background: rgba(245,158,11,0.12); color: #fcd34d; border-color: rgba(245,158,11,0.3); }
+
+.track-default    { border-left-color: #6b7280; }
+.track-default    .oha-class-track { background: rgba(107,114,128,0.15); color: #d1d5db; border-color: rgba(107,114,128,0.3); }
+
+/* ==========================================
+   Promoted / Featured Badge
+   ========================================== */
+.oha-promoted-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #f0b429, #d97706);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 6px rgba(240, 180, 41, 0.35);
+}
+
+.oha-promoted-badge--compact {
+    display: inline-block;
+    background: linear-gradient(135deg, #f0b429, #d97706);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 7px;
+    border-radius: 3px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* ==========================================
+   Grid View
+   ========================================== */
+.oha-grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.oha-class-card {
+    background: var(--oha-card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--oha-border-solid);
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.oha-class-card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+}
+
+.oha-schedule-container .oha-class-card[data-event-promoted="1"] .oha-card-header {
+    background: linear-gradient(135deg, #1c1200, #1f1600);
+    border-bottom-color: var(--oha-gold);
+}
+
+.oha-schedule-container .oha-card-header {
+    padding: 11px 14px;
+    background: var(--oha-card-header);
+    border-bottom: 1px solid var(--oha-border-solid);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-schedule-container .oha-card-time {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--oha-orange);
+}
+
+.oha-schedule-container .oha-card-track {
+    padding: 3px 10px;
+    background: rgba(224, 120, 32, 0.15);
+    color: var(--oha-orange);
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid rgba(224, 120, 32, 0.3);
+}
+
+.oha-schedule-container .oha-card-body {
+    padding: 12px 14px;
+}
+
+.oha-schedule-container .oha-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+}
+
+.oha-schedule-container .oha-card-instructor,
+.oha-schedule-container .oha-card-room,
+.oha-schedule-container .oha-card-level {
+    font-size: 13px;
+    color: var(--oha-text-muted);
+    margin: 4px 0;
+}
+
+.oha-schedule-container .oha-card-description {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--oha-text);
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+.oha-schedule-container .oha-card-footer {
+    padding: 9px 14px;
+    background: var(--oha-card-header);
+    border-top: 1px solid var(--oha-border-solid);
+    font-size: 12px;
+    color: var(--oha-text-muted);
+}
+
+/* ==========================================
+   List View
+   ========================================== */
+.oha-list-view {
+    background: var(--oha-card);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--oha-border-solid);
+}
+
+.oha-schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.oha-schedule-table thead {
+    background: var(--oha-card-header);
+}
+
+.oha-schedule-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--oha-orange);
+    border-bottom: 2px solid var(--oha-border-solid);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.oha-schedule-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--oha-border-solid);
+    color: var(--oha-text);
+    font-size: 14px;
+}
+
+.oha-schedule-table tbody tr:hover td {
+    background: #150a0a;
+}
+
+.oha-list-time {
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--oha-orange);
+}
+
+.oha-list-time small {
+    color: var(--oha-text-muted);
+    font-weight: 400;
+}
+
+.oha-list-class strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+.oha-list-instructor,
+.oha-list-room,
+.oha-list-track {
+    color: var(--oha-text-muted);
+}
+
+.oha-list-description {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--oha-text-muted);
+}
+
+.oha-list-item[data-event-promoted="1"] td {
+    border-left: 3px solid var(--oha-gold);
+}
+
+.track-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(224, 120, 32, 0.15);
+    color: var(--oha-orange);
+    border: 1px solid rgba(224, 120, 32, 0.3);
+}
+
+/* ==========================================
+   Compact View
+   ========================================== */
+.oha-compact-view {
+    background: var(--oha-card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--oha-border-solid);
+}
+
+.oha-compact-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(224, 120, 32, 0.1);
+    font-size: 14px;
+    flex-wrap: wrap;
+}
+
+.oha-compact-item:last-child {
+    border-bottom: none;
+}
+
+.oha-compact-time {
+    font-weight: 700;
+    color: var(--oha-orange);
+    min-width: 70px;
+    flex-shrink: 0;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.oha-compact-title {
+    font-weight: 600;
+    color: #fff;
+}
+
+.oha-compact-instructor {
+    color: var(--oha-text-muted);
+    font-style: italic;
+    font-size: 13px;
+}
+
+.oha-compact-room {
+    color: var(--oha-text-muted);
+    font-size: 12px;
+}
+
+.oha-compact-item[data-event-promoted="1"] {
+    padding-left: 8px;
+    border-left: 3px solid var(--oha-gold);
+    margin-left: -8px;
+}
+
+/* End-time marker row (injected for events with "Show End Time" checked) */
+.oha-schedule-container .oha-compact-end-marker {
+    padding-left: 8px;
+    border-left: 3px solid var(--oha-orange-dark);
+    margin-left: -8px;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+.oha-schedule-container .oha-compact-end-marker .oha-compact-time {
+    color: var(--oha-text-muted);
+}
+
+.oha-schedule-container .oha-compact-end-label {
+    color: var(--oha-orange);
+    font-weight: 600;
+}
+
+/* ==========================================
+   PWA Favorite / Calendar Buttons
+   ========================================== */
+.favorite-btn,
+.calendar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    margin: 10px 6px 0 0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid;
+}
+
+.favorite-btn {
+    border-color: rgba(251, 191, 36, 0.35);
+    color: #fbbf24;
+}
+
+.favorite-btn:hover,
+.favorite-btn.favorited {
+    background: rgba(251, 191, 36, 0.12);
+    border-color: #fbbf24;
+}
+
+.calendar-btn {
+    border-color: rgba(99, 179, 237, 0.35);
+    color: #63b3ed;
+}
+
+.calendar-btn:hover {
+    background: rgba(99, 179, 237, 0.12);
+    border-color: #63b3ed;
+}
+
+/* ==========================================
+   Hidden / Empty States
+   ========================================== */
+.oha-class-item[data-hidden="true"],
+.oha-list-item[data-hidden="true"],
+.oha-class-card[data-hidden="true"],
+.oha-compact-item[data-hidden="true"] {
+    display: none !important;
+}
+
+.oha-no-classes {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--oha-text-muted);
+    font-size: 16px;
+}
+
+/* ==========================================
+   Print Button
+   ========================================== */
+.oha-print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ==========================================
+   Print Styles
+   ========================================== */
+@media print {
+    .oha-schedule-controls { display: none !important; }
+    .oha-timeline-view { display: flex !important; }
+    .oha-grid-view, .oha-list-view, .oha-compact-view { display: none !important; }
+    .oha-timeline-item { page-break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .oha-day-section { page-break-after: always; }
+    .oha-schedule-container { color: #000; --oha-text: #000; }
+    #oha-class-modal { display: none !important; }
+    #oha-modal-overlay { display: none !important; }
+}
+
+/* ==========================================
+   Mobile — ≤ 600px
+   ========================================== */
+@media (max-width: 600px) {
+    .oha-schedule-container { padding: 8px; }
+    .oha-schedule-controls  { padding: 12px; }
+    .oha-schedule-search    { flex-wrap: nowrap; }
+
+    .oha-grid-view {
+        grid-template-columns: 1fr;
+    }
+
+    .oha-schedule-table th:nth-child(n+3),
+    .oha-schedule-table td:nth-child(n+3) {
+        display: none;
+    }
+
+    .oha-day-title {
+        font-size: 17px;
+        padding: 10px 14px;
+    }
+
+    .oha-class-title { font-size: 15px; }
+
+    .favorite-btn,
+    .calendar-btn {
+        display: block;
+        width: 100%;
+        margin-right: 0;
+        text-align: center;
+    }
+}
+
+/* ==========================================
+   Class Detail Modal
+   ========================================== */
+
+/* Overlay */
+#oha-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.82);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    overscroll-behavior: contain;
+}
+
+#oha-modal-overlay.is-open {
+    display: flex;
+    align-items: flex-end;   /* slides up from bottom on mobile */
+    justify-content: center;
+}
+
+/* Modal sheet */
+#oha-class-modal {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    background: #140b0b;
+    border-radius: 20px 20px 0 0;
+    border-top: 3px solid var(--oha-orange);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    animation: ohaModalSlideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes ohaModalSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* Close button */
+#oha-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 10;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--oha-border-solid);
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#oha-modal-close:hover { background: rgba(224,120,32,0.4); }
+
+/* Pull handle indicator */
+#oha-class-modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--oha-border-solid);
+    border-radius: 2px;
+    margin: 10px auto 0;
+}
+
+/* Modal hero image */
+#oha-modal-image-wrap {
+    width: 100%;
+    max-height: 260px;
+    overflow: hidden;
+    background: #0d0808;
+    margin-top: 8px;
+}
+
+#oha-modal-image-wrap.is-empty {
+    display: none;
+}
+
+#oha-modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Modal content area — 110px bottom so last content clears the PWA tab bar on scroll */
+#oha-modal-content {
+    padding: 18px 20px 110px;
+}
+
+.oha-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.oha-modal-time {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--oha-orange);
+}
+
+.oha-modal-track {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: rgba(224,120,32,0.15);
+    color: var(--oha-orange);
+    border: 1px solid rgba(224,120,32,0.3);
+}
+
+.oha-modal-promoted {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #f0b429, #d97706);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 4px;
+}
+
+#oha-modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 14px 0;
+    line-height: 1.25;
+}
+
+.oha-modal-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--oha-text-muted);
+}
+
+.oha-modal-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-modal-meta-row svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--oha-orange);
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.oha-modal-meta-row strong {
+    color: var(--oha-text);
+}
+
+/* Level badge inside modal */
+.oha-modal-level-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Description */
+.oha-modal-description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--oha-text);
+    border-top: 1px solid var(--oha-border-solid);
+    padding-top: 14px;
+    margin-bottom: 20px;
+}
+
+.oha-modal-description p { margin: 0 0 12px 0; }
+.oha-modal-description p:last-child { margin-bottom: 0; }
+
+/* Action buttons */
+.oha-modal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.oha-modal-map-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, var(--oha-orange), var(--oha-orange-dark));
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 10px;
+    text-decoration: none;
+    box-shadow: 0 2px 12px rgba(224,120,32,0.4);
+    transition: box-shadow 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.oha-modal-map-btn:hover {
+    box-shadow: 0 4px 20px rgba(224,120,32,0.5);
+    transform: translateY(-1px);
+    color: #fff;
+    text-decoration: none;
+}
+
+.oha-modal-map-btn:active {
+    transform: scale(0.97);
+}
+
+/* ==========================================
+   Modal — Instructor headshots row
+   ========================================== */
+.oha-modal-headshots-row {
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.oha-modal-headshot-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--oha-orange);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+}
+
+.oha-modal-headshot-circle + .oha-modal-headshot-circle {
+    margin-left: -10px;
+}
+
+.oha-modal-headshot-name {
+    margin-left: 6px;
+    color: var(--oha-text);
+    font-size: 14px;
+}
+
+/* ==========================================
+   Modal — Materials Needed section
+   ========================================== */
+.oha-modal-materials {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(224, 120, 32, 0.07);
+    border: 1px solid rgba(224, 120, 32, 0.22);
+    border-radius: 10px;
+}
+
+.oha-modal-materials-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--oha-orange);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
+}
+
+.oha-modal-materials-body {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--oha-text);
+    opacity: 0.9;
+}

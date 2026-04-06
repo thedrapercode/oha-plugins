@@ -1,0 +1,397 @@
+/* Final Application Form Styles */
+
+/* CRITICAL: Wrapper to override any theme CSS */
+.oha-final-form-wrapper {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 2rem !important;
+    border-radius: 8px !important;
+    min-height: 400px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.oha-final-app-intro {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.oha-final-app-intro h2 {
+    color: #111;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.oha-final-app-intro p {
+    margin: 0.5rem 0;
+    color: #374151;
+}
+
+/* CRITICAL: Force light backgrounds on all form inputs */
+.oha-final-form input[type="text"],
+.oha-final-form input[type="email"],
+.oha-final-form input[type="tel"],
+.oha-final-form input[type="url"],
+.oha-final-form input[type="number"],
+.oha-final-form textarea,
+.oha-final-form select {
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 0.5rem !important;
+    border-radius: 6px !important;
+    font-size: 1rem !important;
+}
+
+.oha-final-form input::placeholder {
+    color: #9ca3af !important;
+}
+
+.oha-final-form select {
+    appearance: auto !important;
+}
+
+.oha-final-form select option {
+    background: #ffffff !important;
+    color: #111827 !important;
+}
+
+.oha-final-form label {
+    color: #111827 !important;
+    font-weight: 600 !important;
+    display: block !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.oha-final-form small {
+    color: #6b7280 !important;
+}
+
+/* Terms and Conditions Section */
+.oha-terms-section {
+    background: #fffbeb;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.oha-terms-section h3 {
+    color: #92400e;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.oha-terms-content {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: #1f2937;
+}
+
+.oha-terms-content h4 {
+    color: #111827;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.oha-terms-content h5 {
+    color: #374151;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.oha-terms-content ul {
+    margin: 0.5rem 0 1rem 1.5rem;
+    padding: 0;
+}
+
+.oha-terms-content li {
+    margin: 0.375rem 0;
+    color: #1f2937;
+}
+
+.oha-terms-content strong {
+    color: #111827;
+    font-weight: 700;
+}
+
+.oha-refund-warning {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.oha-terms-acknowledge {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    font-weight: 600;
+    color: #92400e;
+}
+
+/* Signature Section */
+.oha-signature-section {
+    background: #f0fdf4;
+    border: 2px solid #34d399;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.oha-signature-section h3 {
+    color: #065f46;
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.oha-signature-pad-container {
+    margin: 1.5rem 0;
+}
+
+.oha-signature-pad-container label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #065f46;
+}
+
+.oha-signature-instructions {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0.5rem 0 1rem 0;
+}
+
+.oha-signature-wrapper {
+    border: 2px solid #34d399;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0;
+    cursor: crosshair;
+    touch-action: none;
+    display: inline-block;
+}
+
+#signature-pad {
+    display: block;
+    border-radius: 6px;
+    max-width: 100%;
+    height: auto;
+}
+
+.oha-signature-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.oha-clear-btn {
+    padding: 0.5rem 1rem;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.oha-clear-btn:hover {
+    background: #dc2626;
+}
+
+.oha-signature-status {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.oha-signature-status.signed {
+    color: #059669;
+}
+
+.oha-signature-legal {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+/* Final Form Specific */
+.oha-final-form {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 800px;
+}
+
+.oha-final-form h3 {
+    color: #111;
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    font-size: 1.25rem;
+}
+
+.oha-final-form h3:first-of-type {
+    margin-top: 0;
+}
+
+.oha-vh-row small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.oha-vh-row label input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.oha-booth-summary {
+    background: #ecfdf5;
+    border: 2px solid #34d399;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0 1.5rem 0;
+}
+
+.oha-booth-summary h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    border: none;
+    padding: 0;
+    color: #065f46;
+}
+
+.oha-booth-summary p {
+    margin: 0.5rem 0;
+    color: #065f46;
+    font-size: 1rem;
+}
+
+.oha-booth-summary .oha-total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #34d399;
+}
+
+.oha-final-submit {
+    width: 100%;
+    font-size: 1.125rem;
+    padding: 1rem 2rem;
+    background: #059669;
+    margin-top: 1.5rem;
+}
+
+.oha-final-submit:hover {
+    background: #047857;
+}
+
+.oha-final-submit:disabled {
+    background: #6b7280;
+    cursor: not-allowed;
+}
+
+.oha-final-submit.submitting {
+    position: relative;
+    padding-right: 3rem;
+}
+
+.oha-final-submit .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: oha-spin 0.6s linear infinite;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .oha-final-form {
+        padding: 1rem;
+    }
+    
+    .oha-final-app-intro {
+        padding: 1rem;
+    }
+    
+    .oha-booth-summary, .oha-signature-section, .oha-terms-section {
+        padding: 1rem;
+    }
+
+    #signature-pad {
+        width: 100%;
+        height: 150px;
+    }
+
+    .oha-terms-content {
+        max-height: 300px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Signature Display in Admin (Board Hub) */
+.oha-signature-display {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.oha-signature-display h4 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    color: #374151;
+    font-size: 1rem;
+}
+
+.oha-signature-display img {
+    max-width: 400px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.oha-signature-meta {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.oha-signature-meta dt {
+    display: inline;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.oha-signature-meta dd {
+    display: inline;
+    margin: 0 1rem 0 0;
+}

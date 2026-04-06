@@ -1,0 +1,111 @@
+{
+    "plugin":  "OHA Board Hub Suite",
+    "version":  "2.3.0",
+    "entries":  [
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "2.2.15",
+                        "type":  "fix",
+                        "summary":  "Security: added CSRF nonce to mu_membership_mark_card_sent AJAX handler and its JS caller",
+                        "notes":  "BH-H1: mu_membership_mark_card_sent() had no nonce check, allowing CSRF from any page a logged-in admin visited. Fixed by adding check_ajax_referer(\u0027oha_mark_card_sent\u0027) to the handler and wp_create_nonce(\u0027oha_mark_card_sent\u0027) + fd.append(\u0027_ajax_nonce\u0027, ...) to the inline fetch() in mu_membership_admin_footer_js(). Both sides updated atomically - handler and caller must match."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "2.2.15",
+                        "type":  "fix",
+                        "summary":  "Security: replaced .html() with .text() in admin.js showNotice() and frontend.js showMessage()",
+                        "notes":  "BH-M1/BH-M2: Both functions used jQuery .html(\u0027\u003cp\u003e\u0027 + message + \u0027\u003c/p\u003e\u0027) which would execute HTML from server response data.message fields. Replaced with .append($(\u0027\u003cp\u003e\u0027).text(message)) so message content is always treated as plain text. Eliminates a latent DOM XSS vector in both admin and frontend contexts."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "2.2.15",
+                        "type":  "fix",
+                        "summary":  "Security: added CSV injection sanitizer to member export and vendor export",
+                        "notes":  "BH-M3: fputcsv() was writing raw database values without protection against formula injection (=, +, -, @, tab, CR prefixes). Added private static sanitize_csv_value() helper to class-oha-members-table.php and an inline $scsv closure to boardhub-admin.php. Applied to all user-controlled string fields (name, email, company, phone, status, address, etc.). Numeric and boolean fields left unchanged. Spreadsheet apps hide the apostrophe prefix; raw parsers see it as plain text."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "2.2.15",
+                        "type":  "fix",
+                        "summary":  "Security: replaced wildcard usermeta deletes in uninstall.php with explicit key list",
+                        "notes":  "BH-M4: uninstall.php deleted ALL usermeta matching stripe_%, billing_%, and shipping_% which would destroy WooCommerce customer billing/shipping data if both plugins were installed. Replaced with $wpdb-\u003edelete() per key against an explicit allow-list of keys only this plugin writes: stripe_customer_id, stripe_subscription_id, billing_address_*, oha_membership_*, oha_card_*, oha_stripe_*."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "2.2.15",
+                        "type":  "fix",
+                        "summary":  "Security: replaced all-$_GET loop in haunt discounts search form with explicit key whitelist",
+                        "notes":  "BH-L1: The haunt discounts admin shortcode iterated all $_GET keys and emitted them as hidden form inputs, allowing an attacker to inject arbitrary form field names via a crafted URL. Replaced with explicit foreach over [\u0027page\u0027,\u0027tab\u0027,\u0027pg\u0027] only. Removed duplicate explicit hidden inputs for page/tab that appeared just below the loop. Visible form fields (q, active, sort) continue to submit naturally."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "2.2.15",
+                        "type":  "fix",
+                        "summary":  "Security: restricted webhook GET health-check endpoint to manage_options capability",
+                        "notes":  "BH-L2: The GET handler on /wp-json/oha/v1/stripe-webhook was publicly accessible via permission_callback =\u003e \u0027__return_true\u0027, exposing configuration state (endpoint active, secret key configured, webhook secret configured) to unauthenticated users. Changed permission_callback on the GET route to require current_user_can(\u0027manage_options\u0027). POST route (Stripe webhooks) is unaffected and still uses \u0027__return_true\u0027 with signature verification."
+                    },
+                    {
+                        "date":  "2026-03-29",
+                        "version":  "2.2.14",
+                        "type":  "feature",
+                        "summary":  "Added bulk activate/deactivate to Haunt Discounts tab in Board Hub admin",
+                        "notes":  "oha-haunt-discounts.lib.php: added checkboxes column to admin table, select-all checkbox, and Bulk Set Active / Set Inactive buttons. Added REST endpoint oha/v1/haunt-discounts/bulk-update that accepts {ids:[...], value:\u00271\u0027|\u00270\u0027} and calls update_post_meta + oha_discount_activated/deactivated actions for each. Bulk action JS updates the Active checkboxes in place (no page reload) and shows a count notice. The existing single-row inline edit via oha/v1/haunt-discounts/update is unchanged."
+                    },
+                    {
+                        "date":  "2026-03-02",
+                        "version":  "2.2.13",
+                        "type":  "fix",
+                        "summary":  "Members who registered via UWP oha_member form (form_id=1) but have no uwp_account_type now appear in both admin and frontend member lists with correct address",
+                        "notes":  "Root cause: Some legacy oha_member registrants (UWP form_id=1) never had \u0027uwp_account_type\u0027 usermeta set, making them invisible to both the admin OHA_Members_Table::get_members() Part 1 query (INNER JOIN on uwp_account_type) and possibly the SWPM Part 2 query (if not in SWPM table). Fix: Added Part 3 fallback query to both get_members() in class-oha-members-table.php and fetch_members_legacy_raw() in oha-board-hub.lib.php. Part 3 queries WP users with _uwp_register_form_id=\u00271\u0027 AND no uwp_account_type set, excluding users already found by Parts 1 and 2 (by WP user ID and email). Address is read directly from usermeta (billing_address_line1 → address_street → boardhub_address_display chain) so it always shows correctly. Part 3 only runs for views that show oha_member records: all, all_paid, new_paid, cards_not_sent. The address fallback chain added in v2.2.12 (boardhub_address_display → billing_address_line1 → address_street etc.) is now fully effective since the user rows actually appear. Files changed: class-oha-members-table.php (Part 3 added to get_members), oha-board-hub.lib.php (Part 3 added to fetch_members_legacy_raw), oha-board-hub-suite.php (version bump)."
+                    },
+                    {
+                        "date":  "2026-03-01",
+                        "version":  "2.2.12",
+                        "type":  "fix",
+                        "summary":  "New members (UsersWP/Stripe) now appear in both admin Membership tab and frontend Board Hub member list",
+                        "notes":  "Root causes: (1) Admin render_membership_tab() called render_member_list() which queried wp_swpm_members_tbl — SWPM is removed from the site so the table is empty/absent. Fixed by replacing the call with OHA_Members_Table::render() which queries uwp_account_type usermeta. (2) Frontend fetch_members_legacy_raw() also only queried wp_swpm_members_tbl — new members never appeared. Fixed by extending the function to also query WordPress users with uwp_account_type=\u0027oha_member\u0027 or \u0027listing_owner\u0027, excluding users already returned by the SWPM query to prevent duplicates. Address data for SWPM rows is augmented from billing_address_line1/city/state/billing_postal_code/billing_country usermeta (written by Stripe webhook) when SWPM address fields are empty. For uwp-source rows the same billing usermeta fields are used directly. Row format stays compatible with render_members_table() (member_id, first_name, last_name, email, membership_level, subscription_starts, address_*, _source). (3) userswp_set_paid_member() in oha-board-hub-suite.php did not set oha_paid_member_since — the date filter in Board Hub used this key to determine \u0027new\u0027 members, so newly upgraded users were invisible in 30-day/90-day/ytd views. Fixed by adding update_user_meta with current_time(\u0027mysql\u0027) if not already set. (4) Card-sent AJAX action oha_toggle_card_sent was registered inside if(is_convention_enabled()) block so it only fired when Convention Tools were enabled. Moved registration outside the block so it always fires. (5) card-sent AJAX now syncs oha_card_sent usermeta (used by admin panel) and the oha_card_status table (used by frontend) together. Added data-wp-user-id attribute to table buttons so the AJAX knows which WP user to sync. (6) get_card_status() in oha-board-hub.lib.php gained a third fallback: oha_card_sent usermeta — so the card column is consistent whether toggled from admin or frontend. (7) mu_membership_mark_card_sent() in oha-board-hub-suite.php now writes both usermeta AND the oha_card_status table, and stores \u00271\u0027 instead of \u0027yes\u0027 for consistency. (8) Removed dead \u0027Open Simple Membership\u0027 admin link from frontend members tab. Files changed: oha-board-hub-suite.php (version bump, userswp_set_paid_member, mu_membership_mark_card_sent), includes/admin/class-oha-members-table.php (full rewrite — unified SWPM+uwp query, address fallback chain, dual card status read, CSV export), includes/admin/class-oha-admin-page.php (render_membership_tab wired to OHA_Members_Table::render), includes/integrations/oha-board-hub.lib.php (fetch_members_legacy_raw unified, AJAX hook fix, card usermeta sync, data-wp-user-id, dead link removed)."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "2.2.10",
+                        "type":  "fix",
+                        "summary":  "Tab management enable/disable now works correctly on Board Hub frontend",
+                        "notes":  "Three bugs were causing disabled tabs to still appear. (1) Unchecked HTML checkboxes submit no data at all — fixed by adding a hidden input with value=0 before each checkbox so the setting is always submitted. (2) PHP (bool)\u00270\u0027 evaluates to true because \u00270\u0027 is a non-empty string — fixed by replacing (bool) cast with filter_var(FILTER_VALIDATE_BOOLEAN) in get_all_tabs_ordered() and get_custom_tabs(). (3) Two-loop logic bug: loop 1 correctly skipped disabled tabs but loop 2 then re-added them as fallbacks because they were missing from $all_tabs — fixed by tracking an $explicitly_disabled array in loop 1 and excluding those slugs from the fallback loop. All three fixes are in oha-board-hub.lib.php only."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "2.2.9",
+                        "type":  "feature",
+                        "summary":  "Dev Log admin menu hidden from Board Hub sidebar, Overview card rebuilt to use OHA Dev Log Aggregator",
+                        "notes":  "oha_dev_log CPT show_in_menu set to false — CPT still exists and stores data, aggregator reads it, only sidebar item removed. Both duplicate Recent Activity cards removed from Overview tab. render_overview_widget() replaced with new version that reads from OHA_Dev_Log_Data (aggregator) when installed, falls back to direct CPT query if not. New card shows entry count, estimated hours, type breakdown pills (feature/fix/change/note), and 5 most recent entries. Hour estimates: feature=3h, change=1.5h, fix=1h, note=0.25h."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "2.2.8",
+                        "type":  "note",
+                        "summary":  "Baseline — v2.2.8-FINAL-WORKING-STRIPE-SETTINGS was the starting point for this session",
+                        "notes":  "File uploaded: oha-board-hub-suite-v2_2_8-FINAL-WORKING-STRIPE-SETTINGS.zip. All Stripe webhook and settings functionality confirmed working at this version."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "2.3.0",
+                        "type":  "feature",
+                        "summary":  "Added Sponsors tab to board hub shortcode with full CRUD sponsor management",
+                        "notes":  "New tab at order 45 between Convention 2026 and Finance. Delegates to [oha_sponsor_hub] shortcode. Added render_sponsors_tab() method and sponsors case in switch to oha-board-hub.lib.php. Tab appears in all board hub instances automatically."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "2.3.0",
+                        "type":  "feature",
+                        "summary":  "Added [oha_sponsor_hub] shortcode for managing OHA convention sponsors",
+                        "notes":  "New file: includes/integrations/oha-sponsor-hub.lib.php. Manages oha_sponsor CPT posts. Two tiers: Convention Sponsor (00 flat) and Water Station (variable). Four statuses: Invited/Paid/In-Kind/Confirmed. Payment methods: stripe/cash/check/in-kind/waived. Logo upload via WP media uploader. Year filter defaults to active_year from oha_sponsor_hub_settings. Copy Link button appends ?client_reference_id=POST_ID to configured Stripe Payment Link. Mark Paid inline panel. CSV export. Summary stats bar."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "2.3.0",
+                        "type":  "feature",
+                        "summary":  "Added Stripe webhook handler to auto-mark oha_sponsor posts as Paid",
+                        "notes":  "Hooks oha_process_webhook_event filter (owned by Board Hub). Intercepts checkout.session.completed only when client_reference_id resolves to an oha_sponsor post. Safely passes membership payments through (WP user IDs are not oha_sponsor post IDs). Stores _oha_status=Paid, _payment_method=stripe, _stripe_session_id, _paid_date, and updates sponsor_amount from session.amount_total."
+                    }
+                ]
+}

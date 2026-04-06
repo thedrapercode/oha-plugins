@@ -1,0 +1,13 @@
+{
+    "plugin":  "OHA Education Hub",
+    "version":  "1.0.0",
+    "entries":  [
+                    {
+                        "date":  "2026-04-01",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Initial release: [oha_education] shortcode pulls live class data from Schedule Hub.",
+                        "notes":  "Hero, value cards, sessions grid with instructor headshots and modal, FAQ accordion, CTA strip. All text editable via Settings \u003e Education Hub. Depends on oha-schedule-hub for oha_class CPT."
+                    }
+                ]
+}

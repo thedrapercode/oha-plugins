@@ -1,0 +1,455 @@
+/* OHA Volunteer Hub - Main Styles (Fixed for visibility and mobile) */
+
+/* Modal styles - ensure proper centering and z-index */
+.oha-modal {
+    display: none;
+    position: fixed !important;
+    z-index: 999999 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7) !important;
+}
+
+.oha-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1000000 !important;
+}
+
+.oha-modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.oha-modal-close:hover,
+.oha-modal-close:focus {
+    color: #000;
+}
+
+/* Table wrapper for horizontal scroll */
+.oha-vh-table-wrap {
+    overflow-x: auto;
+    margin: 20px 0;
+}
+
+/* Base table styles */
+.oha-vh-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.oha-vh-table th,
+.oha-vh-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    white-space: nowrap;
+}
+
+/* FORCE WHITE TEXT ON TABLE HEADERS - Maximum specificity */
+.oha-vh-table th,
+.oha-vh-table thead th,
+table.oha-vh-table th,
+table.oha-vh-table thead th,
+.oha-vh-table-wrap .oha-vh-table th,
+.oha-vh-table-wrap .oha-vh-table thead th,
+.oha-vh-table-wrap table th,
+.oha-vh-volunteers-tab .oha-vh-table th,
+.oha-vh-volunteers-tab table th,
+.oha-vh-volunteers-tab thead th {
+    background: #2c3e50 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+}
+
+/* Additional aggressive rules to override theme styles */
+.oha-vh-table-wrap thead tr th,
+.oha-vh-table thead tr th,
+table.oha-vh-table thead tr th,
+.oha-vh-volunteers-tab .oha-vh-table thead tr th,
+.oha-vh-volunteers-tab table thead tr th,
+.oha-vh-volunteers-tab thead tr th,
+body .oha-vh-table th,
+body .oha-vh-table thead th,
+body table.oha-vh-table th,
+body table.oha-vh-table thead th {
+    background-color: #2c3e50 !important;
+    background: #2c3e50 !important;
+    color: #fff !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+}
+
+/* Ensure td stays black */
+.oha-vh-table td {
+    color: #000 !important;
+    background: #fff;
+}
+
+.oha-vh-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+/* Compact action buttons */
+.oha-vh-action-btn {
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 2px;
+    font-size: 18px;
+    line-height: 1;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    vertical-align: middle;
+}
+
+.oha-vh-action-btn:hover {
+    transform: scale(1.2);
+}
+
+.oha-vh-action-btn.details {
+    color: #0073aa;
+    background: #e3f2fd;
+}
+
+.oha-vh-action-btn.approve {
+    color: #28a745;
+    background: #d4edda;
+}
+
+.oha-vh-action-btn.reject {
+    color: #dc3545;
+    background: #f8d7da;
+}
+
+.oha-vh-action-btn.delete {
+    color: #d32f2f;
+    background: #ffebee;
+}
+
+.oha-vh-action-btn.assign {
+    color: #ff9800;
+    background: #fff3e0;
+}
+
+/* Scroll hint */
+.scroll-hint {
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+    padding: 5px;
+    background: #fff3cd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+/* Progress bar */
+.oha-vh-bar {
+    position: relative;
+    height: 10px;
+    background: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.oha-vh-bar span {
+    display: block;
+    height: 100%;
+    background: #4caf50;
+}
+
+/* Notes */
+.oha-vh .oha-vh-note {
+    margin-top: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #eee;
+    color: #000;
+}
+
+.oha-vh .oha-vh-note.ok {
+    background: #e6ffed;
+    color: #155724;
+}
+
+.oha-vh .oha-vh-note.err {
+    background: #ffe6e6;
+    color: #721c24;
+}
+
+/* Cards */
+.oha-vh-cards {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.oha-vh-card {
+    flex: 1 1 200px;
+    min-width: 200px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.oha-vh-card-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333; /* Dark text */
+}
+
+.oha-vh-card-num {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2271b1; /* Blue number */
+}
+
+/* Filters */
+.oha-vh-filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 6px;
+}
+
+.oha-vh-filters label {
+    font-weight: 600;
+    color: #000;
+}
+
+.oha-vh-filters select {
+    min-width: 160px;
+    margin-left: 6px;
+    padding: 6px 10px;
+}
+
+/* Form improvements for add task */
+.oha-vh-add {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.oha-vh-create-form {
+    background: #f9f9f9;
+    padding: 30px;
+    border-radius: 8px;
+}
+
+.oha-vh-create-form p {
+    margin-bottom: 20px;
+}
+
+.oha-vh-create-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #000;
+}
+
+.oha-vh-create-form input[type="text"],
+.oha-vh-create-form input[type="date"],
+.oha-vh-create-form select,
+.oha-vh-create-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+    color: #000;
+}
+
+.oha-vh-create-form textarea {
+    min-height: 100px;
+}
+
+.oha-vh-create-form button {
+    padding: 12px 24px;
+    font-size: 16px;
+}
+
+/* Mobile responsive - Convert tables to cards on small screens */
+@media (max-width: 768px) {
+    /* Availability grid - stack on mobile */
+    .oha-vh-availability-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+    
+    .availability-day {
+        padding: 15px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+    
+    /* Hide table headers */
+    .oha-vh-table thead {
+        display: none;
+    }
+    
+    /* Make table rows display as cards */
+    .oha-vh-table,
+    .oha-vh-table tbody,
+    .oha-vh-table tr,
+    .oha-vh-table td {
+        display: block;
+        width: 100%;
+    }
+    
+    .oha-vh-table tr {
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .oha-vh-table td {
+        border: none;
+        padding: 8px 0;
+        white-space: normal;
+        position: relative;
+        padding-left: 50%;
+    }
+    
+    .oha-vh-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 45%;
+        padding-right: 10px;
+        font-weight: 600;
+        color: #000;
+    }
+    
+    /* Stack form rows */
+    .oha-vh-filters {
+        flex-direction: column;
+    }
+    
+    .oha-vh-filters select {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 5px;
+    }
+    
+    /* Card layout adjustments */
+    .oha-vh-cards {
+        flex-direction: column;
+    }
+    
+    .oha-vh-card {
+        flex: 1 1 auto;
+    }
+    
+    /* Form improvements */
+    .oha-vh-create-form {
+        padding: 20px;
+    }
+}
+
+/* My Tasks specific styles */
+.oha-vh-my .oha-vh-table th {
+    background: #2c3e50;
+    color: #fff !important;
+}
+
+.oha-vh-my .oha-vh-table td {
+    color: #000;
+}
+
+.oha-vh-my .oha-vh-update-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.oha-vh-my .oha-vh-update-form input,
+.oha-vh-my .oha-vh-update-form select {
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.oha-vh-my .oha-vh-update-form button {
+    padding: 6px 12px;
+}
+
+/* Board view specific styles */
+.oha-vh-board .oha-vh-table th {
+    background: #2c3e50;
+    color: #fff !important;
+}
+
+.oha-vh-board .oha-vh-table td {
+    color: #000;
+}
+
+.oha-vh-board .oha-vh-admin-update {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.oha-vh-board .oha-vh-admin-update input,
+.oha-vh-board .oha-vh-admin-update select {
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Summary specific styles */
+.oha-vh-summary .oha-vh-card {
+    text-align: center;
+}
+
+.oha-vh-summary .oha-vh-card-title {
+    color: #555;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.oha-vh-summary .oha-vh-card-num {
+    color: #e74c3c;
+    font-size: 48px;
+}
+
+/* Print styles */
+@media print {
+    .oha-vh-filters,
+    .oha-vh-update-form,
+    .oha-vh-admin-update,
+    .button {
+        display: none !important;
+    }
+}

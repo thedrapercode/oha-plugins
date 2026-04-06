@@ -1,0 +1,216 @@
+{
+    "plugin":  "OHA Volunteer Hub",
+    "version":  "4.10.1",
+    "entries":  [
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "4.9.1",
+                        "type":  "feature",
+                        "summary":  "Added setting to enable or disable approval emails sent when a volunteer is approved.",
+                        "notes":  "New checkbox \u0027Send Approval Emails\u0027 added to the Features tab in Settings (oha_vh_settings[send_approval_email], default enabled). Board::quick_approve() now checks this setting before calling Emails::send_approval_email(). Sanitized as a checkbox in sanitize_settings()."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed PHP fatal: $wpdb not in scope in shifts-tab.php when area has existing shifts.",
+                        "notes":  "Template is included inside a static shortcode method. Added global $wpdb before the query that fetches shift assignments. Also upgraded query to JOIN volunteers table for richer data."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed board hub assignment never completing: Admin AJAX handler fired first with wrong nonce check.",
+                        "notes":  "Admin::init() registered oha_vh_assign_volunteer before Assignments::init(). Admin handler called check_ajax_referer(\u0027oha_vh_admin\u0027) but board hub sends oha_vh_board nonce, causing wp_die(-1). Removed Admin registration. Fixed Assignments::ajax_assign_volunteer to accept both oha_vh_board and oha_vh_admin nonces via manual wp_verify_nonce. Changed permission from manage_options to Core::can_manage() so board members can assign."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed quick-approve not sending email: Ajax::quick_approve stub ran before Board::quick_approve.",
+                        "notes":  "Ajax::init() registered oha_vh_quick_approve pointing to a version with email commented out. Board::quick_approve (which sends the email) was unreachable. Removed registration from Ajax::init so Board::quick_approve is the sole handler."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed oha_vh_create_shift and oha_vh_update_area_managers stubs shadowing Board real implementations.",
+                        "notes":  "Assignments::init() registered empty stub handlers for both actions before Board::init() registered the real working handlers. Removed both stub registrations from Assignments::init(). Board\u0027s implementations now run as intended."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed PHP fatal on delete volunteer: Admin::ajax_delete_volunteer method does not exist.",
+                        "notes":  "Admin::init() registered oha_vh_delete_volunteer pointing to Ajax::delete_volunteer which does not exist in Admin class. Calling a non-existent static method causes a PHP fatal, preventing delete from working. Ajax::delete_volunteer in Ajax class handles this correctly and fires first. Removed the dead registration from Admin::init()."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed manual add volunteer causing fatal: Emails::send_confirmation() method does not exist.",
+                        "notes":  "Ajax::manual_add_volunteer() called Emails::send_confirmation($volunteer) passing an object. The method is named send_confirmation_email($volunteer_id) and accepts an int. Fixed to call Emails::send_confirmation_email($volunteer_id) correctly."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed all area_color vs color field name mismatches across templates.",
+                        "notes":  "Database column is named \u0027color\u0027 not \u0027area_color\u0027. Templates in shifts-tab.php, assign-tab.php, and areas-tab.php all referenced $area-\u003earea_color (returning null). Also fixed JS editArea() in areas-tab.php which used area.area_color when populating the color picker, causing it to always reset to default red."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed stray return in assign-tab.php change handler preventing shift dropdown from loading.",
+                        "notes":  "An orphaned \u0027return;\u0027 and a stray closing brace inside the area-select change event listener exited the function before the fetch call that loads shifts for the selected area. Removed the dead code block. Shift dropdown now loads when an area is selected."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed nonce mismatch in assign-tab.php: submitAssignment and get_area_shifts used wrong nonce.",
+                        "notes":  "submitAssignment() sent oha_vh_admin nonce but the fixed handler now validates oha_vh_board (or oha_vh_admin). The oha_vh_get_area_shifts fetch call sent oha_vh_admin nonce but Board::get_area_shifts() checks oha_vh_board. Both updated to oha_vh_board in assign-tab.php."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed Board::get_volunteer_details showing blank availability: used non-existent availability_notes field.",
+                        "notes":  "The field is \u0027notes\u0027 in the volunteers table. Changed $volunteer-\u003eavailability_notes to $volunteer-\u003enotes. Label updated to \u0027Notes / Availability\u0027."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed Board::get_area_shifts using non-existent slots_filled column in shift label.",
+                        "notes":  "The shifts table has no slots_filled column. Added a COUNT subquery against oha_volunteer_assignments to compute filled slots dynamically. Shift labels in the assign modal dropdown now correctly show [filled/available] counts."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Fixed volunteers-tab.php JS TypeError: expand-icon element is never rendered in HTML.",
+                        "notes":  "toggleVolunteerDetails() referenced document.getElementById(\u0027expand-icon-\u0027 + id) which always returns null since no such element is rendered. Added null guard before setting icon.textContent to prevent TypeError from crashing the row toggle."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "feature",
+                        "summary":  "Implemented viewShiftAssignments: clicking View on a shift now shows assigned volunteers inline.",
+                        "notes":  "Replaced \u0027Coming soon!\u0027 alert stub with a real collapsible inline list rendered in PHP. Each shift card renders a hidden div with assigned volunteer names, emails, and check-in status. viewShiftAssignments() toggles display. No additional AJAX required."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "feature",
+                        "summary":  "Re-enabled Edit Managers UI in areas-tab.php that was marked TEMPORARILY DISABLED.",
+                        "notes":  "The inline manager editor form and the Edit Managers button were wrapped in a PHP block comment disabling them. The server-side handler (Board::update_area_managers) and the JS submit handler (inline-managers-form) were already complete and working. Removed the comment block to restore the UI."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Added error_log to send_assignment_email for silent bail when volunteer or area not found.",
+                        "notes":  "Silent return false with no logging made it impossible to diagnose why assignment emails were not being sent. Now logs volunteer_id and area_id with found/NOT FOUND status to PHP error log."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.2",
+                        "type":  "fix",
+                        "summary":  "Updated DB_VERSION constant from 4.7.1 to 4.8.2 to trigger dbDelta on next load.",
+                        "notes":  "DB_VERSION was stuck at 4.7.1 while plugin reached 4.8.x. Sites that installed between 4.7.1 and 4.8.2 would never re-run install() on upgrades. Version bump ensures any future schema changes run correctly."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.3",
+                        "type":  "fix",
+                        "summary":  "Fixed volunteer search: Database::get_volunteers() ignored the search arg entirely.",
+                        "notes":  "The volunteers-tab.php correctly read $_GET[\u0027vh_search\u0027] and passed $args[\u0027search\u0027] to get_volunteers(), but get_volunteers() had no search key in defaults and no WHERE clause for it. Added \u0027search\u0027 to defaults and a LIKE query against first_name, last_name, email, and CONCAT(first_name, \u0027 \u0027, last_name) using $wpdb-\u003eesc_like() for safe escaping."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.3",
+                        "type":  "fix",
+                        "summary":  "Added orderby whitelist to Database::get_volunteers() to prevent column injection.",
+                        "notes":  "The orderby param was passed directly into ORDER BY via esc_sql(), which only escapes string literal characters and does not protect bare column names. Replaced with an in_array() whitelist of valid column names: signup_date, last_name, first_name, email, status, id. Unrecognized values fall back to signup_date."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.4",
+                        "type":  "feature",
+                        "summary":  "Added alt_name (board display name) field to areas for easier Assign tab identification.",
+                        "notes":  "New nullable varchar(100) column added to wp_oha_volunteer_areas via dbDelta + ALTER TABLE check. Editable in the Areas tab Edit Area form. On the Assign tab only, if alt_name is set it shows as the primary label with the themed area_name in parentheses in both the assignment modal dropdown and the area summary cards. All other tabs and the public signup form continue to use the themed area_name."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.4",
+                        "type":  "feature",
+                        "summary":  "Moved Status pill to first column in volunteers table for instant visibility without side-scrolling.",
+                        "notes":  "Reordered table columns from Name/Contact/Experience/Preferred/Status to Status/Name/Contact/Experience/Preferred. Added white-space:nowrap to the Status header and cell so the pill never wraps. No data or logic changes."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.8.5",
+                        "type":  "fix",
+                        "summary":  "Added Board Alt Name field to WP Admin Areas \u0026 Shifts page (oha-volunteer-areas).",
+                        "notes":  "The alt_name field added in v4.8.4 was only wired to the board hub areas-tab.php. The WP Admin area edit modal (class-oha-vh-settings.php render_areas_page) is a separate form using a native POST submission. Added alt_name input row between Area Name and Slug, populated it in editArea() JS, cleared it in addNewArea(), and added it to handle_area_action() $data for both insert and update."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.9.0",
+                        "type":  "feature",
+                        "summary":  "Added Schedule tab to board hub with time-based volunteer grid, date picker, and print view.",
+                        "notes":  "New templates/board-hub-tabs/schedule-tab.php. PHP builds a matrix of time_slots x area_id -\u003e assigned volunteers. Date picker reloads page with vh_schedule_date param. All-day shifts appear first, then chronological. Cells show volunteer names with a checkmark for checked-in. Print CSS hides navigation and formats cleanly for paper. Area column headers show alt_name if set."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.9.0",
+                        "type":  "feature",
+                        "summary":  "Added Guide tab to board hub with step-by-step instructions for non-tech-savvy board members.",
+                        "notes":  "New templates/board-hub-tabs/guide-tab.php. Loads content from oha_vh_settings[board_guide_content]. Falls back to Settings::get_default_guide_html() when blank. Default guide walks through: signup -\u003e approve -\u003e create shifts -\u003e assign -\u003e schedule view -\u003e day-of check-in. Notes which steps trigger automatic emails. Rendered with wp_kses_post. Styled divs supported: step-card, email-note, tip-card."
+                    },
+                    {
+                        "date":  "2026-03-26",
+                        "version":  "4.9.0",
+                        "type":  "feature",
+                        "summary":  "Added Guide content editor to Volunteer Hub Settings page under a new Guide tab.",
+                        "notes":  "New Guide nav tab in render_settings_page(). Textarea field board_guide_content with monospace styling. Sanitized via wp_kses_post in sanitize_settings(). Instructions note the supported CSS class divs. Leaving blank restores the built-in default guide."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "4.10.0",
+                        "type":  "fix",
+                        "summary":  "Portal email lookup: non-WP users can now find assignments by email without logging in",
+                        "notes":  "New nopriv AJAX endpoint oha_vh_portal_lookup in Portal class. Shows assignments + check-in button. Login + email lookup both shown on portal gate."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "4.10.0",
+                        "type":  "fix",
+                        "summary":  "Portal login: volunteer lookup now matches on user_id OR email for WP-logged-in users",
+                        "notes":  "Previously only matched on user_id, so volunteers who signed up without linking their account could not see their portal even when logged in."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "4.10.0",
+                        "type":  "fix",
+                        "summary":  "Assignment email now uses editable template from Settings \u003e Email Templates",
+                        "notes":  "Emails::send_assignment_email() previously sent hardcoded text and ignored the saved assignment_subject/assignment_body options. Now uses Settings::get with placeholder replacement for {first_name}, {area_name}, {shift_time}, {portal_url}, {manager_info}, etc."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "4.10.0",
+                        "type":  "feature",
+                        "summary":  "Approval email template added to Settings \u003e Email Templates",
+                        "notes":  "New approval_subject and approval_body settings. Emails::send_approval_email() now uses these templates. Default text included. approval_subject/approval_body added to sanitize_settings and get_defaults."
+                    },
+                    {
+                        "date":  "2026-04-05",
+                        "version":  "4.10.1",
+                        "type":  "change",
+                        "summary":  "Email Templates settings: removed unused Reminder template, added workflow context, fixed placeholder docs",
+                        "notes":  "Reminder email send_reminder_email() is never called by any action in the plugin so its template was removed from the UI. Three active templates remain (Confirmation, Approval, Assignment) in chronological order with accurate placeholder lists."
+                    }
+                ]
+}

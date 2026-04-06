@@ -1,0 +1,259 @@
+/* OHA Schedule Hub - Admin Styles */
+
+/* Admin Container */
+.oha-schedule-admin-container {
+    max-width: 1200px;
+    margin: 20px 0;
+}
+
+.oha-admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.oha-admin-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Admin Table */
+.oha-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.oha-admin-table th {
+    background: #f9fafb;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.oha-admin-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #1f2937;
+}
+
+.oha-admin-table td strong {
+    color: #111827;
+}
+
+.oha-admin-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.oha-admin-classes-list p {
+    color: #1f2937;
+}
+
+.oha-btn-edit,
+.oha-btn-delete {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.oha-btn-edit {
+    background: #3b82f6;
+    color: white;
+}
+
+.oha-btn-edit:hover {
+    background: #2563eb;
+}
+
+.oha-btn-delete {
+    background: #ef4444;
+    color: white;
+}
+
+.oha-btn-delete:hover {
+    background: #dc2626;
+}
+
+/* Modal */
+.oha-modal {
+    display: none;
+    position: fixed;
+    z-index: 99999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    padding: 20px;
+}
+
+.oha-modal.show {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.oha-modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    position: relative;
+    margin: auto;
+}
+
+.oha-modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.oha-modal-close:hover,
+.oha-modal-close:focus {
+    color: #000;
+}
+
+#oha-modal-title {
+    margin-top: 0;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Form Styles */
+.oha-form-row {
+    margin-bottom: 20px;
+}
+
+.oha-form-row label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.oha-form-row input[type="text"],
+.oha-form-row input[type="time"],
+.oha-form-row input[type="number"],
+.oha-form-row select,
+.oha-form-row textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.oha-form-row textarea {
+    resize: vertical;
+}
+
+.oha-form-row-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.oha-form-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Meta Box Styles */
+.oha-meta-box p {
+    margin: 15px 0;
+}
+
+.oha-meta-box label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.oha-meta-box input[type="time"],
+.oha-meta-box input[type="text"],
+.oha-meta-box input[type="number"],
+.oha-meta-box select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.oha-meta-box textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+}
+
+.oha-meta-box small {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+}
+
+/* Loading State */
+.oha-loading {
+    position: relative;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.oha-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .oha-modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .oha-form-row-split {
+        grid-template-columns: 1fr;
+    }
+    
+    .oha-admin-table {
+        font-size: 13px;
+    }
+    
+    .oha-admin-table th,
+    .oha-admin-table td {
+        padding: 8px;
+    }
+}

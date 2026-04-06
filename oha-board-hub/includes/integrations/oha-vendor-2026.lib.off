@@ -1,0 +1,83 @@
+<?php
+if(defined('OHA_VENDOR_2026_ONCE')) return; define('OHA_VENDOR_2026_ONCE', true);
+
+/* OHA Vendor 2026 (embedded lib) */
+if (!defined('ABSPATH')) exit;
+
+// CPT
+add_action('init', function(){
+    register_post_type('vendor_application', [
+        'label' => 'Vendor Applications',
+        'public' => false,
+        'show_ui' => true,
+        'supports' => ['title','custom-fields'],
+        'menu_icon' => 'dashicons-forms'
+    ]);
+});
+
+function oha_vbh_status($post_id){
+    $st = get_post_meta($post_id, '_oha_status', true);
+    return $st ? $st : 'Submitted';
+}
+function oha_vbh_set_status($post_id,$st){
+    update_post_meta($post_id, '_oha_status', sanitize_text_field($st));
+}
+
+// Frontend shortcode
+add_shortcode('oha_vendor_board_hub', function($atts){
+    if (!is_user_logged_in()) return '<div>Please log in.</div>';
+    if (!current_user_can(get_option('oha_vbh_front_cap','edit_posts'))) return '<div>Insufficient permissions.</div>';
+    $q = new WP_Query(['post_type'=>'vendor_application','posts_per_page'=>20,'orderby'=>'date','order'=>'DESC']);
+    ob_start(); ?>
+    <div class="wrap"><h2>Vendor Applications – Convention 2026</h2>
+    <table class="widefat"><thead><tr><th>Vendor</th><th>Status</th></tr></thead><tbody>
+    <?php if($q->have_posts()): while($q->have_posts()): $q->the_post(); ?>
+      <tr><td><?php the_title(); ?></td><td><?php echo esc_html(oha_vbh_status(get_the_ID())); ?></td></tr>
+    <?php endwhile; else: ?>
+      <tr><td colspan="2">No applications yet.</td></tr>
+    <?php endif; wp_reset_postdata(); ?>
+    </tbody></table></div>
+    <?php return ob_get_clean();
+});
+
+// Inject into Convention 2026 tab via hooks if available
+add_action('oha_board_hub_render_tab_convention_2026', function(){
+    echo do_shortcode('[oha_vendor_board_hub]');
+});
+add_action('oha_board_hub_render_tab', function($slug){
+    if ($slug === 'convention_2026') echo do_shortcode('[oha_vendor_board_hub]');
+}, 10, 1);
+
+// Optional: content-injection fallback by Page ID
+add_filter('the_content', function($content){
+    if (!is_user_logged_in()) return $content;
+    if (!current_user_can(get_option('oha_vbh_front_cap','edit_posts'))) return $content;
+    $page_id = (int) get_option('oha_vbh_convention_2026_page_id', 0);
+    if ($page_id && is_page($page_id)){
+        $dashboard = do_shortcode('[oha_vendor_board_hub]');
+        $placeholder = 'Convention tools enabled (placeholder panel). We can reintroduce full UI once the Members tab is confirmed stable.';
+        if (strpos($content, $placeholder) !== false){
+            return str_replace($placeholder, $dashboard, $content);
+        }
+        return $content . $dashboard;
+    }
+    return $content;
+}, 20);
+
+// Settings (minimal for Page ID + capability)
+/* stripped admin_menu block (moved under Suite) */
+function oha_vbh_2026_settings(){
+    if (isset($_POST['oha_vbh_nonce']) && wp_verify_nonce($_POST['oha_vbh_nonce'],'oha_vbh_save')){
+        update_option('oha_vbh_front_cap', sanitize_text_field($_POST['front_cap'] ?? 'edit_posts'));
+        update_option('oha_vbh_convention_2026_page_id', (int) ($_POST['page_id'] ?? 0));
+        echo '<div class="updated"><p>Saved.</p></div>';
+    }
+    $front_cap = get_option('oha_vbh_front_cap','edit_posts');
+    $page_id = (int) get_option('oha_vbh_convention_2026_page_id', 0);
+    echo '<div class="wrap"><h1>Vendor for Board Hub – Convention 2026</h1><form method="post">';
+    wp_nonce_field('oha_vbh_save','oha_vbh_nonce');
+    echo '<table class="form-table"><tr><th>Frontend Capability</th><td><input type="text" name="front_cap" value="'.esc_attr($front_cap).'"/></td></tr>';
+    echo '<tr><th>Convention 2026 Page ID</th><td><input type="number" name="page_id" value="'.esc_attr($page_id).'"/></td></tr></table>';
+    submit_button();
+    echo '</form><p>Place <code>[oha_vendor_board_hub]</code> if you want manual placement.</p></div>';
+}

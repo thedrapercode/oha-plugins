@@ -1,0 +1,69 @@
+{
+    "plugin":  "OHA Convention Schedule Hub",
+    "version":  "1.5.1",
+    "entries":  [
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "1.5.1",
+                        "type":  "fix",
+                        "summary":  "Controls bar hidden when force_view=1 is set on shortcode.",
+                        "notes":  "Wrapped entire .oha-schedule-controls div in if (!force_view). When using [oha_schedule view=compact force_view=1] the search, filter, view-switcher and print box no longer render. Also initialized _working/oha-schedule-hub/ and version.txt per new CLAUDE.md standards."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Quick List now supports end-time markers for itinerary-style display.",
+                        "notes":  "New per-event meta fields: _oha_show_end_time (checkbox) and _oha_end_time_label (text). When checked, the event\u0027s end time is injected as a separate sorted line in the Quick List view (e.g. \u00275:00 PM Show Floor Closed\u0027). The compact-view.php builds a merged sorted array of start entries and end-time markers keyed by HH:MM sort_time, then renders them in chronological order. Styling: .oha-compact-end-marker with subtle italic treatment and orange label."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Added force_view shortcode attribute to lock the schedule to a single view.",
+                        "notes":  "New [oha_schedule force_view=\"1\"] attribute. When set, the view-switcher buttons (Cards/Quick List/Grid/Table) are not rendered, so users cannot change views. Combine with view=\"compact\" to create a pure Quick List itinerary page: [oha_schedule view=\"compact\" force_view=\"1\"]. The initial view is still set by the view= attribute."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Added convention_year taxonomy for multi-year class management.",
+                        "notes":  "New flat taxonomy \u0027convention_year\u0027 on oha_class CPT. Year field added to WP editor meta box, frontend quick-admin form, and AJAX save/get handlers. Shortcode now accepts year=\"2026\" attribute to filter the public schedule to one year. No year filter = shows all classes (backward compatible). To filter public schedule: use [oha_schedule year=\"2026\"] on the schedule page."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Added Year Management section to Schedule Settings with export, delete, and tag tools.",
+                        "notes":  "Settings page now shows a Year Management table: for each tagged year, Export JSON button (downloads full backup with all fields) and Delete All button (moves classes to trash with confirm dialog). Also shows count of untagged classes with a one-click \u0027Tag all as [year]\u0027 tool. All JS is inline in admin-settings.php using existing ohaSchedule AJAX/nonce. New AJAX handlers: oha_export_year_json, oha_delete_year_classes, oha_tag_untagged_classes (all require manage_options cap)."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.4.0",
+                        "type":  "fix",
+                        "summary":  "Fixed export missing short_desc, materials, notes, promoted fields; fixed import missing level, capacity, track, short_desc, materials, promoted, year.",
+                        "notes":  "ajax_export_schedule now exports all fields including short_desc, materials, notes, promoted, year. ajax_bulk_import now imports level, capacity, track, short_desc, materials, promoted, year in addition to the previous title/description/start_time/end_time/room/day/instructor. CSV export header updated to include all new columns. JSON round-trip (export then import) now preserves all class data."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "1.3.6",
+                        "type":  "fix",
+                        "summary":  "Fixed instructor headshots overlapping the start-time header on cards with no featured image.",
+                        "notes":  "On timeline/cards view, the .oha-instructor-headshots container uses position:absolute bottom:-22px so it bleeds 22px below the .oha-headshots-only-wrap strip (overflow:visible). This caused the headshots (z-index:4) to render on top of .oha-timeline-header, covering the start time. Added .has-headshots-only .oha-timeline-header { margin-top: 22px } to push the header down clear of the overflow. The has-image case is unaffected because .oha-card-image uses overflow:hidden which clips the headshots at the image boundary."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "1.3.5",
+                        "type":  "fix",
+                        "summary":  "Fixed CSS collision with vendor hub board admin - .oha-card-* rules now scoped to .oha-schedule-container.",
+                        "notes":  "Schedule hub frontend.css loaded globally on all pages and had unscoped .oha-card-header, .oha-card-body, .oha-card-footer, .oha-card-title, .oha-card-time, .oha-card-track, .oha-card-instructor, .oha-card-room, .oha-card-level, .oha-card-description rules. The vendor hub boardhub-admin shortcode uses the same class names (oha-card-header, oha-card-body etc.) for its light-themed admin cards, causing dark Halloween backgrounds to appear on the board hub page. All .oha-card-* rules now require .oha-schedule-container as a parent so they only apply inside the schedule widget."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "1.3.4",
+                        "type":  "feature",
+                        "summary":  "Added admin setting to control the display order of Day sections on the schedule.",
+                        "notes":  "New option oha_schedule_day_order stored in wp_options. Enter comma-separated day names (e.g. Thursday, Friday, Saturday) in Schedule Settings. The classes_by_day array and the Day filter dropdown are both sorted by this order. Days not listed appear after the ordered ones."
+                    }
+                ]
+}

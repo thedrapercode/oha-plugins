@@ -1,0 +1,76 @@
+{
+    "plugin":  "OHA Vendor Hub",
+    "version":  "3.3.3",
+    "entries":  [
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "3.1.2",
+                        "type":  "feature",
+                        "summary":  "Added client-side pagination to [oha_vendor_status_table] shortcode",
+                        "notes":  "The vendor status table was loading all vendor applications at once, causing the view to be cut off when embedded in an iframe. Added JavaScript-driven pagination to vendor-status-table.php. All rows are still rendered to the DOM by PHP; JS shows only the current page slice. Pagination integrates with the existing search filter (resets to page 1 on new query, shows filtered count) and the existing column sort (re-orders DOM rows then re-renders current page). Default 20 rows per page, configurable via shortcode attribute: [oha_vendor_status_table per_page=\"25\"]. Pagination bar shows First/Prev/numbered window/Next/Last buttons; scrolls widget top into view on page change (works correctly inside iframes). Count label updates to show e.g. \u0027Showing 21-40 of 87 vendor applications\u0027."
+                    },
+                    {
+                        "date":  "2026-03-29",
+                        "version":  "3.2.0",
+                        "type":  "feature",
+                        "summary":  "Added Bulk Email Vendors panel to [oha_vendor_boardhub] shortcode using JEmail",
+                        "notes":  "New \u0027Bulk Email Vendors\u0027 button appears in the board hub controls bar. Clicking it opens a collapsible panel with: vendor status checkboxes for targeting (Submitted/Approved/Agreement Sent/Agreement Signed/Paid), live recipient count via AJAX, subject line input, TinyMCE rich text editor with full toolbar (bold/italic/underline/link/lists/blockquote/colour), and a Queue \u0026 Send button. Sending is non-blocking: the AJAX handler creates a JEmail campaign, queues all matching recipients, then returns immediately without calling process_batch(). This prevents the page freeze that occurred when wp_mail() was called synchronously in a loop. Batches process via WP Cron and JEmail\u0027s maybe_process_on_load. The panel polls campaign status every 8 seconds and shows live sent/queued counts. Requires JEmail Bulk Sender plugin to be active. Includes vendors without WP accounts (matched by email meta on vendor_application CPT). Unsubscribed addresses are automatically excluded. New AJAX actions: oha_vh_bulk_email_count, oha_vh_bulk_email_vendors, oha_vh_bulk_email_status. New helper: oha_vh_get_vendor_emails_by_status(). wp_enqueue_editor() added to wp_enqueue_scripts for manage_options users so TinyMCE is available on the frontend. Merge tags available: {{first_name}} {{last_name}} {{display_name}} {{email}} {{site_name}} {{unsubscribe_url}}."
+                    },
+                    {
+                        "date":  "2026-03-29",
+                        "version":  "3.2.0",
+                        "type":  "change",
+                        "summary":  "Renamed zip and folder to match CLAUDE.md naming standard",
+                        "notes":  "Previous zip was oha-vendor-hub-v3.1.2-BOARD-HUB-COMPATIBLE.zip with folder vendor-hub-v3.1.2-FIXED/. New zip is vendor-hub-oha-v3.2.0.zip with folder oha-vendor-hub/ as required by CLAUDE.md plugin naming conventions."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "3.3.0",
+                        "type":  "feature",
+                        "summary":  "Added Fast-Track Vendor Invite panel to [oha_vendor_boardhub] shortcode",
+                        "notes":  "New \u0027Fast-Track Invite\u0027 button (green) appears in the board hub controls bar alongside the Bulk Email button. Clicking it opens a panel with an optional vendor name field and a required email address field. Submitting sends a professional HTML-ready plain-text invitation email via wp_mail() to the specified address. The email includes event details (venue, dates, load-in time), a warm personal greeting (using the name if provided), and a direct link to the final vendor application page. The final application URL is read from the oha_vhcpt_final_app_page_id WP option if set, falling back to the hardcoded page URL. New AJAX action: oha_vh_fasttrack_invite (nonce: oha_vh_fasttrack_invite). On success the fields are cleared and a green confirmation bar appears. Does not create a vendor_application post -- this is purely an outbound invite."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "3.3.1",
+                        "type":  "fix",
+                        "summary":  "Security audit fixes: XSS, post_type validation, Stripe email cross-check, signature MIME check",
+                        "notes":  "Four security fixes applied after audit. (1) Stored XSS in showVendorDetailsModal() JS: all user-supplied values (company name, contact fields, product type, history) were inserted into innerHTML without escaping. Added escHtml() helper function and applied to all user data in the modal template. Email href validated against strict regex before use. (2) oha_get_vendor_details AJAX: added get_post_type() check to reject requests for non-vendor_application post IDs, preventing meta data from arbitrary posts from being returned to admin users. (3) Stripe webhook: when client_reference_id resolves a vendor application, the Stripe customer email is now cross-checked against the stored vendor email; mismatches are logged as warnings but payment is still processed. (4) final-application.php signature_data: added regex MIME check (must be data:image/png or jpeg/jpg;base64,...) to prevent SVG or other executable-content MIME types from being stored and embedded into HTML agreements."
+                    },
+                    {
+                        "date":  "2026-03-30",
+                        "version":  "3.3.2",
+                        "type":  "fix",
+                        "summary":  "Relaxed two security fixes that were too strict and could break legitimate use",
+                        "notes":  "Two fixes from v3.3.1 were refined. (1) Stripe webhook email cross-check was changed from hard rejection to warning-only. client_reference_id is the authoritative identifier set server-side; vendors can legitimately change their email in the Stripe checkout form. Mismatch is now logged but does not block payment processing. (2) Signature MIME validation was expanded to accept jpeg/jpg in addition to png, since some signature pad library configurations output JPEG. The regex also allows optional \\r\\n characters for base64 line-break compatibility."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.3.3",
+                        "type":  "fix",
+                        "summary":  "rawurlencode company/email in emailed app links so spaces do not break URL",
+                        "notes":  "add_query_arg() does not encode values; company names with spaces truncated the URL in plain-text emails, stripping no_payment_mode=1 and other params. Fixed by applying rawurlencode() to company and email before passing to add_query_arg()."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.3.3",
+                        "type":  "fix",
+                        "summary":  "Store _is_pre_paid meta on vendor app when no-payment email is sent",
+                        "notes":  "Now the form checks _is_pre_paid post meta (in addition to URL param) to bypass Stripe. Immune to URL parameter loss regardless of how vendor navigates to the form."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.3.3",
+                        "type":  "fix",
+                        "summary":  "Add no_payment_mode hidden field to form and preserve it on error redirect",
+                        "notes":  "Hidden field ensures no_payment_mode survives POST submission. Error redirect now includes no_payment_mode=1 so retries after validation failure still bypass payment."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.3.3",
+                        "type":  "fix",
+                        "summary":  "Fix [oha_vendor_final_form_no_payment] shortcode calling non-existent function",
+                        "notes":  "Replaced call to undefined oha_vendor_final_form_shortcode() with do_shortcode(oha_vendor_final_form). Shortcode was broken and would fatal error if oha_vhcpt_final_app_no_payment_page_id was configured."
+                    }
+                ]
+}

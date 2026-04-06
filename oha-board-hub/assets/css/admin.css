@@ -1,0 +1,321 @@
+/**
+ * OHA Board Hub Suite - Admin Styles
+ *
+ * @package OHA_Board_Hub
+ * @since 1.5.0
+ */
+
+/* General Admin Styles */
+.oha-admin-content {
+    background: #fff;
+    padding: 20px;
+    margin-top: 0;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+}
+
+.oha-tab-content {
+    margin-top: 20px;
+}
+
+/* Member Search Form */
+.oha-member-search {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.oha-member-search input[type="search"] {
+    flex: 1;
+    max-width: 400px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.oha-member-search input[type="search"]:focus {
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Member Table */
+.oha-member-list {
+    margin-top: 20px;
+}
+
+.oha-member-list table {
+    width: 100%;
+}
+
+.oha-member-list th {
+    font-weight: 600;
+}
+
+/* Stripe Admin Wrapper - Dark Theme */
+.oha-sa-wrap {
+    background: #0f0f10;
+    color: #eaeaea;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.oha-sa-wrap h2 {
+    margin: 0 0 15px;
+    color: #fff;
+}
+
+.oha-sa-wrap h3 {
+    margin: 15px 0 10px;
+    color: #fff;
+}
+
+/* Search Form in Stripe Admin */
+.oha-sa-search {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.oha-sa-search input[type="text"] {
+    flex: 1;
+    min-width: 260px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 14px;
+}
+
+.oha-sa-search input[type="text"]:focus {
+    outline: none;
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Member Cards */
+.oha-sa-card {
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    background: #141414;
+    transition: border-color 0.2s;
+}
+
+.oha-sa-card:hover {
+    border-color: #404040;
+}
+
+.oha-sa-h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 10px;
+    color: #fff;
+}
+
+.oha-sa-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    font-size: 14px;
+    opacity: 0.95;
+    margin-bottom: 10px;
+}
+
+.oha-sa-row span {
+    display: inline-block;
+}
+
+/* Action Buttons */
+.oha-sa-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.oha-sa-wrap .button {
+    background: #fff;
+    color: #111;
+    border-color: #eee;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.oha-sa-wrap .button:hover {
+    background: #f3f3f3;
+    color: #000;
+    border-color: #ddd;
+}
+
+.oha-sa-wrap .button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Subscription Box */
+.oha-sa-subbox {
+    border: 1px dashed #333;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    background: #101010;
+}
+
+.oha-sa-subbox h4 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #fff;
+}
+
+/* Links */
+.oha-sa-wrap a,
+.oha-sa-wrap a:visited {
+    color: #7dc7ff;
+    text-decoration: underline;
+}
+
+.oha-sa-wrap a:hover {
+    color: #a8d8ff;
+}
+
+/* Loading State */
+.oha-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.oha-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    border-top-color: #2271b1;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Notices */
+.oha-notice {
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-left: 4px solid;
+    border-radius: 4px;
+}
+
+.oha-notice-error {
+    background: #fcf0f1;
+    border-color: #d63638;
+    color: #3c434a;
+}
+
+.oha-notice-warning {
+    background: #fcf9e8;
+    border-color: #dba617;
+    color: #3c434a;
+}
+
+.oha-notice-success {
+    background: #edfaef;
+    border-color: #00a32a;
+    color: #3c434a;
+}
+
+.oha-notice-info {
+    background: #f0f6fc;
+    border-color: #2271b1;
+    color: #3c434a;
+}
+
+/* Webhook Info Table */
+.oha-webhook-info {
+    margin-top: 20px;
+}
+
+.oha-webhook-info code {
+    background: #f0f0f1;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.oha-webhook-info ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.oha-webhook-info li {
+    margin: 5px 0;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .oha-sa-search {
+        flex-direction: column;
+    }
+    
+    .oha-sa-search input[type="text"] {
+        width: 100%;
+        min-width: 0;
+    }
+    
+    .oha-sa-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .oha-sa-actions {
+        flex-direction: column;
+    }
+    
+    .oha-sa-wrap .button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Pagination */
+.tablenav-pages {
+    margin: 15px 0;
+}
+
+.tablenav-pages a,
+.tablenav-pages span {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    margin: 0 2px;
+    border-radius: 3px;
+    text-decoration: none;
+    color: #2271b1;
+}
+
+.tablenav-pages .current {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}
+
+.tablenav-pages a:hover {
+    background: #f6f7f7;
+}

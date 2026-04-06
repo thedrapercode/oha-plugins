@@ -1,0 +1,683 @@
+/* OHA Education Hub - Frontend Styles
+   Version: 1.0.0
+   Scoped to .oha-education-wrap to prevent theme collisions. */
+
+.oha-education-wrap {
+    --oha-bg:          #0d0808;
+    --oha-bg-card:     #1a0f0f;
+    --oha-bg-accent:   #221515;
+    --oha-orange:      #e07820;
+    --oha-orange-dark: #b85e10;
+    --oha-gold:        #f0b429;
+    --oha-text:        #e8ddd0;
+    --oha-text-muted:  #9a8878;
+    --oha-border:      #3a2020;
+    --oha-radius:      8px;
+
+    background: var(--oha-bg);
+    color: var(--oha-text);
+    font-family: inherit;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ── Shared utilities ─────────────────────────────────────────── */
+
+.oha-education-wrap *,
+.oha-education-wrap *::before,
+.oha-education-wrap *::after {
+    box-sizing: border-box;
+}
+
+.oha-edu-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.oha-edu-section-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.oha-edu-section-title {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    color: var(--oha-gold);
+    margin: 0 0 12px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.oha-edu-section-sub {
+    color: var(--oha-text-muted);
+    font-size: 1.05rem;
+    margin: 0 auto;
+    max-width: 640px;
+}
+
+.oha-edu-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: var(--oha-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    border: none;
+}
+
+.oha-edu-btn-primary {
+    background: var(--oha-orange);
+    color: #fff;
+}
+
+.oha-edu-btn-primary:hover {
+    background: var(--oha-orange-dark);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+/* ── Hero ─────────────────────────────────────────────────────── */
+
+.oha-edu-hero {
+    background: linear-gradient(135deg, #0d0808 0%, #1a0808 50%, #0d0808 100%);
+    border-bottom: 2px solid var(--oha-orange);
+    padding: 80px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.oha-edu-hero::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(224,120,32,0.11) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+.oha-edu-hero-inner {
+    position: relative;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.oha-edu-hero-eyebrow {
+    display: inline-block;
+    background: rgba(224,120,32,0.12);
+    color: var(--oha-orange);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(224,120,32,0.28);
+    margin-bottom: 20px;
+}
+
+.oha-edu-hero-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    color: var(--oha-text);
+    margin: 0 0 20px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.oha-edu-hero-desc {
+    font-size: 1.15rem;
+    color: var(--oha-text-muted);
+    margin: 0 auto 36px;
+    max-width: 580px;
+    line-height: 1.7;
+}
+
+/* ── Value Cards ─────────────────────────────────────────────── */
+
+.oha-edu-values {
+    padding: 64px 24px;
+    background: var(--oha-bg-accent);
+    border-bottom: 1px solid var(--oha-border);
+}
+
+.oha-edu-values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.oha-edu-value-card {
+    background: var(--oha-bg-card);
+    border: 1px solid var(--oha-border);
+    border-radius: var(--oha-radius);
+    padding: 32px 24px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.oha-edu-value-card:hover {
+    border-color: var(--oha-orange);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(224,120,32,0.12);
+}
+
+.oha-edu-value-icon {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+    line-height: 1;
+}
+
+.oha-edu-value-title {
+    font-size: 1.15rem;
+    color: var(--oha-gold);
+    margin: 0 0 10px;
+    font-weight: 700;
+}
+
+.oha-edu-value-desc {
+    color: var(--oha-text-muted);
+    font-size: 0.93rem;
+    margin: 0;
+    line-height: 1.65;
+}
+
+/* ── Sessions ─────────────────────────────────────────────────── */
+
+.oha-edu-sessions {
+    padding: 64px 0;
+    background: var(--oha-bg);
+}
+
+.oha-edu-day-group {
+    margin-bottom: 48px;
+}
+
+.oha-edu-day-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--oha-orange);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--oha-border);
+}
+
+.oha-edu-sessions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Session Card */
+.oha-edu-session-card {
+    background: var(--oha-bg-card);
+    border: 1px solid var(--oha-border);
+    border-radius: var(--oha-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.oha-edu-session-card:hover {
+    border-color: var(--oha-orange);
+    box-shadow: 0 4px 20px rgba(224,120,32,0.14);
+}
+
+.oha-edu-promoted {
+    border-color: rgba(240,180,41,0.5);
+}
+
+.oha-edu-promoted:hover {
+    border-color: var(--oha-gold);
+    box-shadow: 0 4px 20px rgba(240,180,41,0.18);
+}
+
+.oha-edu-promoted-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--oha-gold);
+    color: #0d0808;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 12px;
+    line-height: 1.6;
+}
+
+.oha-edu-session-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 16px 0;
+}
+
+.oha-edu-session-headshot {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--oha-border);
+    flex-shrink: 0;
+    overflow: hidden;
+    background: var(--oha-bg-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.oha-edu-session-headshot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.oha-edu-headshot-placeholder span {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--oha-orange);
+    line-height: 1;
+}
+
+.oha-edu-session-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.oha-edu-session-time {
+    font-size: 0.78rem;
+    color: var(--oha-orange);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 3px;
+}
+
+.oha-edu-session-instructor {
+    font-size: 0.83rem;
+    color: var(--oha-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.oha-edu-session-body {
+    padding: 14px 16px;
+    flex: 1;
+}
+
+.oha-edu-session-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--oha-text);
+    margin: 0 0 8px;
+    line-height: 1.35;
+}
+
+.oha-edu-session-desc {
+    font-size: 0.85rem;
+    color: var(--oha-text-muted);
+    margin: 0 0 12px;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.oha-edu-session-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.oha-edu-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid;
+    line-height: 1.6;
+}
+
+.oha-edu-level-beginner     { color: #4ade80; border-color: #4ade80; background: rgba(74,222,128,0.08); }
+.oha-edu-level-intermediate { color: var(--oha-gold); border-color: var(--oha-gold); background: rgba(240,180,41,0.08); }
+.oha-edu-level-advanced     { color: var(--oha-orange); border-color: var(--oha-orange); background: rgba(224,120,32,0.08); }
+.oha-edu-level-all          { color: var(--oha-text-muted); border-color: var(--oha-border); background: transparent; }
+.oha-edu-room-badge         { color: var(--oha-text-muted); border-color: var(--oha-border); background: transparent; }
+
+.oha-edu-session-footer {
+    padding: 0 16px 16px;
+}
+
+.oha-edu-details-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--oha-orange);
+    color: var(--oha-orange);
+    padding: 8px 16px;
+    border-radius: var(--oha-radius);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-family: inherit;
+}
+
+.oha-edu-details-btn:hover {
+    background: var(--oha-orange);
+    color: #fff;
+}
+
+/* ── FAQ ──────────────────────────────────────────────────────── */
+
+.oha-edu-faq {
+    padding: 64px 0;
+    background: var(--oha-bg-accent);
+    border-top: 1px solid var(--oha-border);
+}
+
+.oha-edu-faq-list {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.oha-edu-faq-item {
+    border-bottom: 1px solid var(--oha-border);
+}
+
+.oha-edu-faq-item:first-child {
+    border-top: 1px solid var(--oha-border);
+}
+
+.oha-edu-faq-q {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 0;
+    background: transparent;
+    border: none;
+    color: var(--oha-text);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.2s;
+    font-family: inherit;
+}
+
+.oha-edu-faq-q:hover,
+.oha-edu-faq-q[aria-expanded="true"] {
+    color: var(--oha-gold);
+}
+
+.oha-edu-faq-icon {
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    color: var(--oha-orange);
+    transition: transform 0.25s;
+    line-height: 1;
+}
+
+.oha-edu-faq-q[aria-expanded="true"] .oha-edu-faq-icon {
+    transform: rotate(45deg);
+}
+
+.oha-edu-faq-a {
+    padding: 0 0 18px;
+    color: var(--oha-text-muted);
+    line-height: 1.75;
+    font-size: 0.95rem;
+}
+
+.oha-edu-faq-a[hidden] { display: none; }
+
+/* ── CTA ──────────────────────────────────────────────────────── */
+
+.oha-edu-cta {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #1a0808 0%, #251515 100%);
+    border-top: 2px solid var(--oha-orange);
+    text-align: center;
+}
+
+.oha-edu-cta-title {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    color: var(--oha-text);
+    margin: 0 0 12px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.oha-edu-cta-sub {
+    color: var(--oha-text-muted);
+    font-size: 1.05rem;
+    margin: 0 auto 32px;
+    max-width: 520px;
+}
+
+/* ── Modal ────────────────────────────────────────────────────── */
+
+.oha-edu-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.oha-edu-modal-overlay[hidden] { display: none; }
+
+.oha-edu-modal-box {
+    background: var(--oha-bg-card);
+    border: 1px solid var(--oha-border);
+    border-radius: var(--oha-radius);
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+}
+
+.oha-edu-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--oha-bg-accent);
+    border: 1px solid var(--oha-border);
+    color: var(--oha-text-muted);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, border-color 0.2s;
+    z-index: 1;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.oha-edu-modal-close:hover {
+    color: var(--oha-text);
+    border-color: var(--oha-orange);
+}
+
+.oha-edu-modal-body {
+    padding: 28px;
+}
+
+.oha-edu-modal-header {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 22px;
+    padding-right: 36px;
+}
+
+.oha-edu-modal-headshot-wrap { flex-shrink: 0; }
+
+.oha-edu-modal-headshot,
+.oha-edu-modal-headshot-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+}
+
+.oha-edu-modal-headshot {
+    object-fit: cover;
+    border: 2px solid var(--oha-orange);
+    display: block;
+}
+
+.oha-edu-modal-headshot[hidden] { display: none; }
+
+.oha-edu-modal-headshot-placeholder {
+    background: var(--oha-bg-accent);
+    border: 2px solid var(--oha-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.oha-edu-modal-headshot-placeholder[hidden] { display: none; }
+
+.oha-edu-modal-initials {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--oha-orange);
+    line-height: 1;
+}
+
+.oha-edu-modal-header-text { flex: 1; min-width: 0; }
+
+.oha-edu-modal-instructor {
+    font-size: 0.82rem;
+    color: var(--oha-orange);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 5px;
+}
+
+.oha-edu-modal-title {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: var(--oha-text);
+    margin: 0 0 10px;
+    line-height: 1.3;
+}
+
+.oha-edu-modal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.oha-edu-modal-time,
+.oha-edu-modal-room,
+.oha-edu-modal-level {
+    font-size: 0.78rem;
+    color: var(--oha-text-muted);
+    background: var(--oha-bg-accent);
+    border: 1px solid var(--oha-border);
+    padding: 2px 9px;
+    border-radius: 12px;
+    line-height: 1.7;
+}
+
+.oha-edu-modal-time[hidden],
+.oha-edu-modal-room[hidden],
+.oha-edu-modal-level[hidden] { display: none; }
+
+.oha-edu-modal-desc {
+    font-size: 0.95rem;
+    color: var(--oha-text-muted);
+    line-height: 1.75;
+    margin-bottom: 18px;
+    white-space: pre-wrap;
+}
+
+.oha-edu-modal-materials-wrap[hidden] { display: none; }
+
+.oha-edu-modal-materials-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--oha-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin: 0 0 6px;
+}
+
+.oha-edu-modal-materials {
+    font-size: 0.9rem;
+    color: var(--oha-text-muted);
+    line-height: 1.65;
+    white-space: pre-wrap;
+}
+
+/* ── Status messages ──────────────────────────────────────────── */
+
+.oha-edu-no-classes {
+    color: var(--oha-text-muted);
+    text-align: center;
+    padding: 60px 0;
+    font-size: 1rem;
+}
+
+.oha-edu-error {
+    background: rgba(120,20,20,0.3);
+    border: 1px solid #7a2020;
+    color: #e8a0a0;
+    padding: 16px 20px;
+    border-radius: var(--oha-radius);
+    font-size: 0.95rem;
+    margin: 20px 0;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+
+@media (max-width: 767px) {
+    .oha-edu-hero { padding: 48px 20px; }
+    .oha-edu-hero-title { font-size: 1.9rem; }
+    .oha-edu-values { padding: 40px 20px; }
+    .oha-edu-sessions,
+    .oha-edu-faq,
+    .oha-edu-cta { padding: 44px 0; }
+    .oha-edu-container { padding: 0 16px; }
+    .oha-edu-sessions-grid { grid-template-columns: 1fr; }
+    .oha-edu-cta-title { font-size: 1.6rem; }
+}
+
+@media (max-width: 480px) {
+    .oha-edu-modal-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .oha-edu-modal-meta { justify-content: center; }
+    .oha-edu-modal-box { max-height: 95vh; }
+}

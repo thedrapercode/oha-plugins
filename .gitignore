@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Node (if any plugin uses npm build)
+node_modules/
+
+# Composer
+vendor/
+
+# Backup files
+*.bak
+*.tmp
+
+# IDE
+.vscode/
+.idea/

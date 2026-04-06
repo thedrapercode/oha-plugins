@@ -1,0 +1,337 @@
+/* OHA Education Page Styles - v1.4.1
+ * Scoped to .oha-edu-wrap; modal classes are prefixed oha-edu-modal-* and unique enough to be unscoped.
+ * CSS custom properties defined on .oha-edu-wrap cascade to modal since it is nested in the DOM.
+ */
+
+.oha-edu-wrap {
+  --edu-surface: rgba(255,255,255,.06);
+  --edu-surface-2: rgba(255,255,255,.09);
+  --edu-border: rgba(255,255,255,.12);
+  --edu-text: rgba(255,255,255,.92);
+  --edu-muted: rgba(255,255,255,.72);
+  --edu-accent: #b300ff;
+  --edu-accent-2: #00e5ff;
+  --edu-max: 1180px;
+  --edu-radius: 18px;
+  --edu-shadow: 0 14px 40px rgba(0,0,0,.35);
+  background: transparent;
+  color: var(--edu-text);
+  font-family: inherit;
+}
+.oha-edu {
+  max-width: var(--edu-max);
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+/* --- Hero --- */
+.oha-edu-wrap .oha-hero {
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--edu-shadow);
+  border: 1px solid var(--edu-border);
+  background:
+    radial-gradient(900px 500px at 15% 20%, rgba(179,0,255,.35), transparent 55%),
+    radial-gradient(700px 450px at 80% 30%, rgba(0,229,255,.25), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  margin: 18px 0 26px;
+}
+.oha-edu-wrap .oha-hero-inner {
+  padding: 54px 34px;
+  display: grid;
+  gap: 18px;
+}
+.oha-edu-wrap .oha-badge {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  width: max-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid var(--edu-border);
+  color: var(--edu-muted);
+  font-size: .92rem;
+}
+.oha-edu-wrap .oha-badge .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--edu-accent);
+}
+.oha-edu-wrap .oha-title {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+  line-height: 1.1;
+}
+.oha-edu-wrap .oha-sub {
+  margin: 0;
+  color: var(--edu-muted);
+  font-size: 1.05rem;
+  max-width: 70ch;
+}
+.oha-edu-wrap .oha-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+.oha-edu-wrap .oha-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--edu-border);
+  text-decoration: none;
+  font-weight: 700;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+  will-change: transform;
+  cursor: pointer;
+}
+.oha-edu-wrap .oha-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.22);
+}
+.oha-edu-wrap .oha-btn.primary {
+  background: linear-gradient(90deg, var(--edu-accent), var(--edu-accent-2));
+  color: #0b0b0f;
+  border: 0;
+}
+.oha-edu-wrap .oha-btn.ghost {
+  background: rgba(255,255,255,.04);
+  color: var(--edu-text);
+}
+.oha-edu-wrap .oha-btn small {
+  opacity: .8;
+  font-weight: 600;
+}
+
+/* --- Section --- */
+.oha-edu-wrap .oha-section { margin: 28px 0; }
+.oha-edu-wrap .oha-h2 { margin: 0 0 10px; font-size: 1.55rem; }
+.oha-edu-wrap .oha-lead {
+  margin: 0 0 18px;
+  color: var(--edu-muted);
+  max-width: 80ch;
+}
+
+/* --- Grid --- */
+.oha-edu-wrap .oha-grid { display: grid; gap: 14px; }
+.oha-edu-wrap .oha-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.oha-edu-wrap .oha-grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* --- Cards --- */
+.oha-edu-wrap .oha-card {
+  background: linear-gradient(180deg, var(--edu-surface), rgba(255,255,255,.03));
+  border: 1px solid var(--edu-border);
+  border-radius: var(--edu-radius);
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+  padding: 18px;
+}
+.oha-edu-wrap .oha-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.oha-edu-wrap .oha-card p { margin: 0; color: var(--edu-muted); line-height: 1.5; }
+.oha-edu-wrap .oha-meta {
+  margin-top: 10px;
+  font-size: .92rem;
+  color: var(--edu-muted);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.oha-edu-wrap .oha-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--edu-border);
+  background: rgba(0,0,0,.25);
+  font-size: .85rem;
+  color: var(--edu-muted);
+}
+.oha-edu-wrap .oha-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.25);
+  border: 1px solid var(--edu-border);
+  margin-bottom: 12px;
+  font-size: 1.15rem;
+}
+
+/* --- Headshot button --- */
+.oha-edu-wrap .oha-headshot {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--edu-border);
+  background: rgba(0,0,0,.25);
+  box-shadow: 0 10px 22px rgba(0,0,0,.25);
+  margin-bottom: 12px;
+}
+.oha-edu-wrap .oha-headshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.oha-edu-wrap .oha-headshot-btn {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.oha-edu-wrap .oha-headshot-btn:focus-visible {
+  outline: 3px solid rgba(179,0,255,.45);
+  outline-offset: 4px;
+  border-radius: 18px;
+}
+
+/* --- Accordion --- */
+.oha-edu-wrap details.oha-acc {
+  border: 1px solid var(--edu-border);
+  border-radius: var(--edu-radius);
+  background: rgba(255,255,255,.04);
+  padding: 14px 16px;
+}
+.oha-edu-wrap details.oha-acc summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-weight: 800;
+}
+.oha-edu-wrap details.oha-acc summary::-webkit-details-marker { display: none; }
+.oha-edu-wrap details.oha-acc .chev { opacity: .75; transition: transform .12s ease; }
+.oha-edu-wrap details.oha-acc[open] .chev { transform: rotate(180deg); }
+.oha-edu-wrap details.oha-acc .content { margin-top: 10px; color: var(--edu-muted); line-height: 1.55; }
+
+/* --- CTA strip --- */
+.oha-edu-wrap .oha-cta {
+  border-radius: 24px;
+  border: 1px solid var(--edu-border);
+  background:
+    radial-gradient(700px 420px at 20% 20%, rgba(179,0,255,.22), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  box-shadow: var(--edu-shadow);
+  padding: 28px 22px;
+}
+.oha-edu-wrap .oha-cta-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.oha-edu-wrap .oha-cta h2 { margin: 0; font-size: 1.35rem; }
+.oha-edu-wrap .oha-cta p { margin: 6px 0 0; color: var(--edu-muted); }
+
+/* --- Modal ---
+ * oha-edu-modal-* classes are unique; no parent scope needed.
+ * CSS vars inherit because the modal element is inside .oha-edu-wrap in the DOM.
+ */
+.oha-edu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity .18s ease, visibility .18s ease;
+}
+.oha-edu-modal-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.oha-edu-modal {
+  width: min(860px, 100%);
+  border-radius: 22px;
+  border: 1px solid var(--edu-border);
+  background: linear-gradient(180deg, rgba(20,20,28,.98), rgba(10,10,14,.98));
+  box-shadow: 0 22px 80px rgba(0,0,0,.6);
+  overflow: hidden;
+  transform: translateY(10px) scale(.98);
+  opacity: 0;
+  transition: transform .18s ease, opacity .18s ease;
+}
+.oha-edu-modal-overlay.is-open .oha-edu-modal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.oha-edu-modal-header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--edu-border);
+  background:
+    radial-gradient(700px 280px at 10% 10%, rgba(179,0,255,.18), transparent 55%),
+    radial-gradient(700px 280px at 90% 10%, rgba(0,229,255,.12), transparent 55%),
+    rgba(0,0,0,.15);
+}
+.oha-edu-modal-headshot {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--edu-border);
+  background: rgba(0,0,0,.25);
+  flex: 0 0 auto;
+}
+.oha-edu-modal-headshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.oha-edu-modal-title { margin: 0; font-size: 1.2rem; line-height: 1.2; }
+.oha-edu-modal-sub { margin: 6px 0 0; color: var(--edu-muted); font-size: .95rem; }
+.oha-edu-modal-close {
+  margin-left: auto;
+  border: 1px solid var(--edu-border);
+  background: rgba(255,255,255,.04);
+  color: var(--edu-text);
+  border-radius: 999px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+}
+.oha-edu-modal-close:hover { border-color: rgba(255,255,255,.22); }
+.oha-edu-modal-body { padding: 16px 18px 18px; }
+.oha-edu-modal-meta { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.oha-edu-modal-desc { margin: 0; color: var(--edu-muted); line-height: 1.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  .oha-edu-modal-overlay, .oha-edu-modal { transition: none !important; }
+}
+
+/* --- Responsive --- */
+@media (max-width: 980px) {
+  .oha-edu-wrap .oha-grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .oha-edu-wrap .oha-grid.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .oha-edu-wrap .oha-hero-inner { padding: 42px 22px; }
+}
+@media (max-width: 560px) {
+  .oha-edu-wrap .oha-grid.cols-4,
+  .oha-edu-wrap .oha-grid.cols-3 { grid-template-columns: 1fr; }
+  .oha-edu-wrap .oha-actions { flex-direction: column; align-items: stretch; }
+  .oha-edu-wrap .oha-btn { width: 100%; }
+}
