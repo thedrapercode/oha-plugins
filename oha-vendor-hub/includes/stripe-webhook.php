@@ -91,9 +91,25 @@ function oha_vhcpt_handle_vendor_payment_events($handled, $event) {
         }
     }
 
-    // Email-only fallback (used when client_reference_id was absent or invalid post type)
+    // Email-only fallback — but only when client_reference_id was completely absent.
+    //
+    // CROSS-PRODUCT GUARD: If client_reference_id was present (even as a non-vendor post),
+    // this payment belongs to another system — e.g. a Board Hub membership uses the WP user
+    // ID or a membership record ID as client_reference_id. If we fell through to the email
+    // lookup in that case, we would incorrectly mark the vendor's booth application as Paid
+    // just because they share an email with the membership buyer. Return false immediately.
+    //
+    // If client_reference_id was completely absent, use a status-restricted email fallback:
+    // only match apps that are already in "Agreement Signed" state (the vendor has signed
+    // the contract and legitimately owes payment). This prevents a stray membership webhook
+    // with no reference from marking an application that was never in the payment flow.
     if (!$app_id) {
-        $app_id = oha_vhcpt_find_recent_app_by_email($customer_email);
+        if (!empty($app_id_from_ref)) {
+            error_log('OHA VENDOR HUB: client_reference_id (' . $app_id_from_ref . ') was present but is not a vendor_application — belongs to another system (e.g. membership). Skipping vendor processing.');
+            return false;
+        }
+        // client_reference_id absent — safe to use email fallback, but restrict to Agreement Signed
+        $app_id = oha_vhcpt_find_agreement_signed_app_by_email($customer_email);
     }
 
     if (!$app_id) {

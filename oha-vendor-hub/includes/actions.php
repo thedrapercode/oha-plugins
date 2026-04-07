@@ -883,6 +883,11 @@ add_action('wp_ajax_oha_get_vendor_details', function() {
                 case 'payment_completed_webhook':
                     $description = '💳 Payment processed via webhook';
                     break;
+                case 'admin_status_override':
+                    $from = $entry['status_from'] ?? '?';
+                    $to   = $entry['status_to']   ?? '?';
+                    $description = '🔧 Admin overrode status: ' . esc_html($from) . ' → ' . esc_html($to);
+                    break;
                 default:
                     $description = '• ' . esc_html($entry['type'] ?? 'Unknown');
             }
@@ -1128,6 +1133,82 @@ add_action('wp_ajax_oha_vh_fasttrack_invite', function() {
     } else {
         wp_send_json_error('Failed to send invitation. Please check server email settings.');
     }
+});
+
+
+/**
+ * AJAX: Admin Override — force-set a vendor application to a specific status.
+ *
+ * Bypasses automated email triggers and Stripe idempotency guards.
+ * When reverting FROM Paid, clears payment markers so the vendor can re-enter
+ * the normal sign + pay flow without being blocked by duplicate-application guards.
+ * The existing agreement file and signature date are preserved as a historical record.
+ */
+add_action('wp_ajax_oha_vh_admin_override_status', function() {
+    check_ajax_referer('oha_vh_admin_override', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized', 403);
+    }
+
+    $app_id     = intval($_POST['app_id'] ?? 0);
+    $new_status = sanitize_text_field($_POST['new_status'] ?? '');
+
+    $valid_statuses = ['Submitted', 'Approved', 'Agreement Sent', 'Agreement Signed', 'Paid'];
+    if (!$app_id || !in_array($new_status, $valid_statuses, true)) {
+        wp_send_json_error('Invalid parameters');
+    }
+    if (get_post_type($app_id) !== 'vendor_application') {
+        wp_send_json_error('Invalid application ID');
+    }
+
+    $old_status = get_post_meta($app_id, '_oha_status', true) ?: 'Submitted';
+
+    // Update the canonical status meta
+    update_post_meta($app_id, '_oha_status', $new_status);
+
+    // When reverting FROM Paid, clear payment/pre-paid markers so the vendor
+    // can re-enter the sign + pay flow without being blocked by idempotency guards
+    // or the duplicate-application check in final-application.php.
+    if ($old_status === 'Paid' && $new_status !== 'Paid') {
+        delete_post_meta($app_id, '_agreement_emailed_at');
+        delete_post_meta($app_id, '_stripe_session_id');
+        delete_post_meta($app_id, '_stripe_payment_intent');
+        delete_post_meta($app_id, '_stripe_charge_id');
+        delete_post_meta($app_id, '_is_pre_paid');
+        delete_post_meta($app_id, '_pre_paid');
+        // _agreement_url, _pdf_url, _signature_date preserved as historical record
+    }
+
+    // Record override in history
+    oha_vhcpt_append_history($app_id, [
+        'type'        => 'admin_status_override',
+        'status_from' => $old_status,
+        'status_to'   => $new_status,
+    ]);
+
+    // Recount all vendors so the UI stat bar can be refreshed without a page reload
+    $all_vendor_ids = get_posts([
+        'post_type'      => 'vendor_application',
+        'posts_per_page' => -1,
+        'post_status'    => 'any',
+        'fields'         => 'ids',
+    ]);
+    $paid_count    = 0;
+    $pending_count = 0;
+    foreach ($all_vendor_ids as $vid) {
+        $s = get_post_meta($vid, '_oha_status', true);
+        if ($s === 'Paid') $paid_count++;
+        if ($s === 'Pending' || empty($s)) $pending_count++;
+    }
+
+    wp_send_json_success([
+        'new_status'    => $new_status,
+        'old_status'    => $old_status,
+        'app_id'        => $app_id,
+        'paid_count'    => $paid_count,
+        'pending_count' => $pending_count,
+        'total_count'   => count($all_vendor_ids),
+    ]);
 });
 
 

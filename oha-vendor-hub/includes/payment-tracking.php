@@ -143,3 +143,47 @@ function oha_vhcpt_find_recent_app_by_email($email) {
 
     return false;
 }
+
+/**
+ * Email fallback for webhook: find an application in Agreement Signed status only.
+ *
+ * This is deliberately more restrictive than oha_vhcpt_find_recent_app_by_email().
+ * It is only called when the Stripe event had NO client_reference_id, meaning we
+ * cannot uniquely identify which product was purchased. By requiring Agreement Signed
+ * status, we ensure the vendor has actually gone through the sign+pay flow before
+ * a webhook can mark them as Paid — preventing membership payments and other stray
+ * Stripe events from accidentally triggering vendor booth completion.
+ *
+ * @param string $email Customer email from the Stripe event.
+ * @return int|false Vendor application post ID, or false if none found.
+ */
+function oha_vhcpt_find_agreement_signed_app_by_email($email) {
+    $apps = get_posts([
+        'post_type'      => 'vendor_application',
+        'post_status'    => 'any',
+        'posts_per_page' => 1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [
+            'relation' => 'AND',
+            [
+                'key'     => 'email',
+                'value'   => sanitize_email($email),
+                'compare' => '=',
+            ],
+            [
+                'key'     => '_oha_status',
+                'value'   => 'Agreement Signed',
+                'compare' => '=',
+            ],
+        ],
+    ]);
+
+    if (!empty($apps)) {
+        error_log('OHA VENDOR HUB: Email fallback matched Agreement Signed app ID ' . $apps[0]->ID . ' for ' . $email);
+        return $apps[0]->ID;
+    }
+
+    error_log('OHA VENDOR HUB: Email fallback found no Agreement Signed app for ' . $email . ' — payment not processed as vendor booth payment');
+    return false;
+}

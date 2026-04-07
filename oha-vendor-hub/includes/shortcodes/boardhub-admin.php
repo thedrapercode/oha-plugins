@@ -713,6 +713,121 @@ add_shortcode('oha_vendor_boardhub', function() {
     }
     .oha-btn-fasttrack-open:hover { background: #047857; }
 
+    /* === Admin Status Override (v3.5.0) === */
+    .oha-status-override-wrap {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .oha-status-override-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .oha-status-sel {
+        flex: 1;
+        padding: 7px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 13px;
+        background: #fff;
+        color: #1e293b;
+    }
+    .oha-btn-override {
+        background: #92400e;
+        color: #fff;
+        padding: 7px 14px;
+        font-size: 13px;
+        white-space: nowrap;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .oha-btn-override:hover { background: #78350f; }
+    .oha-override-result {
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .oha-override-result.success { color: #065f46; }
+    .oha-override-result.error   { color: #991b1b; }
+    /* Override confirmation modal */
+    .oha-override-modal-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.6);
+        z-index: 99998;
+        align-items: center;
+        justify-content: center;
+    }
+    .oha-override-modal-backdrop.active { display: flex; }
+    .oha-override-modal {
+        background: #fff;
+        max-width: 500px;
+        width: 92%;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.3);
+        overflow: hidden;
+    }
+    .oha-override-modal-header {
+        background: #92400e;
+        padding: 16px 20px;
+    }
+    .oha-override-modal-header h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #fff;
+        font-weight: 700;
+    }
+    .oha-override-modal-body {
+        padding: 20px;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #1e293b;
+    }
+    .oha-override-warning {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: #78350f;
+        line-height: 1.5;
+    }
+    .oha-override-modal-footer {
+        padding: 14px 20px;
+        background: #f8fafc;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .oha-btn-override-confirm {
+        background: #92400e;
+        color: #fff;
+        font-weight: 700;
+        padding: 10px 22px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .oha-btn-override-confirm:hover { background: #78350f; }
+    .oha-btn-override-confirm:disabled { background: #d97706; cursor: not-allowed; }
+    .oha-btn-override-cancel {
+        background: #e2e8f0;
+        color: #475569;
+        padding: 10px 22px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .oha-btn-override-cancel:hover { background: #cbd5e1; }
+
     <?php
     echo '</style>';
     ?>
@@ -739,15 +854,15 @@ add_shortcode('oha_vendor_boardhub', function() {
                     ?>
                     <div class="oha-stat">
                         <div class="oha-stat-label">Total Vendors</div>
-                        <div class="oha-stat-value"><?php echo $total; ?></div>
+                        <div class="oha-stat-value" id="oha-stat-total"><?php echo $total; ?></div>
                     </div>
                     <div class="oha-stat">
                         <div class="oha-stat-label">Paid</div>
-                        <div class="oha-stat-value" style="color:#059669;"><?php echo $paid; ?></div>
+                        <div class="oha-stat-value" id="oha-stat-paid" style="color:#059669;"><?php echo $paid; ?></div>
                     </div>
                     <div class="oha-stat">
                         <div class="oha-stat-label">Pending</div>
-                        <div class="oha-stat-value" style="color:#dc2626;"><?php echo $pending; ?></div>
+                        <div class="oha-stat-value" id="oha-stat-pending" style="color:#dc2626;"><?php echo $pending; ?></div>
                     </div>
                     <div class="oha-stat">
                         <div class="oha-stat-label">Total Booths</div>
@@ -930,7 +1045,7 @@ add_shortcode('oha_vendor_boardhub', function() {
                             </div>
                             
                             <div class="oha-card-actions">
-                                <span class="oha-card-status status-<?php echo $status_class; ?>">
+                                <span class="oha-card-status status-<?php echo $status_class; ?>" id="oha-status-badge-<?php echo $app_id; ?>">
                                     <?php echo esc_html($status); ?>
                                 </span>
                                 
@@ -1069,6 +1184,26 @@ add_shortcode('oha_vendor_boardhub', function() {
                                     <button type="button" class="oha-btn oha-btn-secondary oha-btn-small" onclick="viewVendorDetails(<?php echo $app_id; ?>)" style="margin-top:10px;width:100%;">
                                         🔍 View All Details
                                     </button>
+
+                                    <!-- Admin Status Override (v3.5.0) -->
+                                    <div class="oha-status-override-wrap">
+                                        <div class="oha-card-section-title" style="margin-bottom:8px;">🔧 Override Status</div>
+                                        <div class="oha-status-override-row">
+                                            <select id="oha-status-sel-<?php echo $app_id; ?>" class="oha-status-sel"
+                                                    data-app-id="<?php echo $app_id; ?>"
+                                                    data-current-status="<?php echo esc_attr($status); ?>">
+                                                <option value="">— Select new status —</option>
+                                                <?php foreach (['Submitted','Approved','Agreement Sent','Agreement Signed','Paid'] as $opt): ?>
+                                                <option value="<?php echo esc_attr($opt); ?>"><?php echo esc_html($opt); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <button type="button" class="oha-btn-override"
+                                                    onclick="event.stopPropagation();ohaShowStatusOverrideConfirm(<?php echo $app_id; ?>)">
+                                                Change
+                                            </button>
+                                        </div>
+                                        <div id="oha-override-result-<?php echo $app_id; ?>" class="oha-override-result" style="display:none;"></div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1105,6 +1240,11 @@ add_shortcode('oha_vendor_boardhub', function() {
                                             case 'pre_paid_vendor':
                                                 echo '✅ Pre-paid vendor confirmed';
                                                 break;
+                                            case 'admin_status_override':
+                                                $from_s = $entry['status_from'] ?? '?';
+                                                $to_s   = $entry['status_to']   ?? '?';
+                                                echo '🔧 Admin overrode status: ' . esc_html($from_s) . ' → ' . esc_html($to_s);
+                                                break;
                                             default:
                                                 echo '• ' . esc_html($entry['type']);
                                         }
@@ -1120,7 +1260,22 @@ add_shortcode('oha_vendor_boardhub', function() {
             <?php endif; ?>
         </div>
     </div>
-    
+
+    <!-- Admin Status Override Confirmation Modal (v3.5.0) — position:fixed, placement in DOM doesn't matter -->
+    <div id="oha-override-modal-backdrop" class="oha-override-modal-backdrop"
+         onclick="if(event.target===this)ohaHideStatusOverrideModal()">
+        <div class="oha-override-modal">
+            <div class="oha-override-modal-header">
+                <h2>⚠️ Change Vendor Status</h2>
+            </div>
+            <div id="oha-override-modal-body" class="oha-override-modal-body"></div>
+            <div class="oha-override-modal-footer">
+                <button type="button" class="oha-btn-override-cancel" onclick="ohaHideStatusOverrideModal()">Cancel</button>
+                <button type="button" id="oha-override-confirm-btn" class="oha-btn-override-confirm">Yes, Change Status</button>
+            </div>
+        </div>
+    </div>
+
     <script>
     // Define ajaxurl for frontend (it's only available in admin by default)
     var ajaxurl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
@@ -1605,6 +1760,173 @@ add_shortcode('oha_vendor_boardhub', function() {
                 }
             });
         };
+    })();
+    </script>
+
+    <script type="text/javascript">
+    /* Admin Status Override — OHA Vendor Hub v3.5.0 */
+    (function() {
+        var overrideNonce = '<?php echo wp_create_nonce('oha_vh_admin_override'); ?>';
+        var pendingAppId  = 0;
+        var pendingStatus = '';
+
+        window.ohaShowStatusOverrideConfirm = function(appId) {
+            var sel = document.getElementById('oha-status-sel-' + appId);
+            if (!sel || !sel.value) {
+                alert('Please select a new status from the dropdown first.');
+                return;
+            }
+            var newStatus   = sel.value;
+            var curStatus   = sel.getAttribute('data-current-status') || 'Submitted';
+            var companyEl   = document.querySelector('[data-vendor-id="' + appId + '"] .oha-card-company');
+            var companyName = companyEl ? companyEl.textContent.trim() : 'Vendor #' + appId;
+
+            if (newStatus === curStatus) {
+                alert('"' + companyName + '" is already set to "' + curStatus + '". Please choose a different status.');
+                return;
+            }
+
+            pendingAppId  = appId;
+            pendingStatus = newStatus;
+
+            // Build warning text based on direction of change
+            var warningHtml = '';
+            if (curStatus === 'Paid' && newStatus !== 'Paid') {
+                warningHtml = '<div class="oha-override-warning">'
+                    + '<strong>Reverting from Paid:</strong> Stripe payment markers and pre-paid flags will be cleared so this vendor can sign the agreement and pay through the normal flow again. '
+                    + 'The existing agreement file and signature date are kept as a historical record.'
+                    + '</div>';
+            } else if (newStatus === 'Paid') {
+                warningHtml = '<div class="oha-override-warning">'
+                    + '<strong>Marking as Paid without Stripe:</strong> Only do this if payment has been confirmed through another method. '
+                    + 'This will make the vendor appear in the public vendor card grid.'
+                    + '</div>';
+            }
+
+            var bodyEl = document.getElementById('oha-override-modal-body');
+            if (!bodyEl) return;
+            bodyEl.innerHTML = '<p>You are about to change <strong>' + escHtml(companyName) + '</strong>\'s status:</p>'
+                + '<p style="margin:14px 0;">'
+                + '<span style="background:#fee2e2;color:#991b1b;padding:5px 12px;border-radius:4px;font-weight:600;">' + escHtml(curStatus) + '</span>'
+                + '<span style="color:#94a3b8;margin:0 10px;font-size:18px;">→</span>'
+                + '<span style="background:#dbeafe;color:#1e40af;padding:5px 12px;border-radius:4px;font-weight:600;">' + escHtml(newStatus) + '</span>'
+                + '</p>'
+                + warningHtml;
+
+            var confirmBtn = document.getElementById('oha-override-confirm-btn');
+            if (confirmBtn) {
+                confirmBtn.disabled    = false;
+                confirmBtn.textContent = 'Yes, Change Status';
+                confirmBtn.onclick     = ohaDoStatusOverride;
+            }
+
+            var backdrop = document.getElementById('oha-override-modal-backdrop');
+            if (backdrop) backdrop.classList.add('active');
+        };
+
+        window.ohaHideStatusOverrideModal = function() {
+            var backdrop = document.getElementById('oha-override-modal-backdrop');
+            if (backdrop) backdrop.classList.remove('active');
+            pendingAppId  = 0;
+            pendingStatus = '';
+        };
+
+        window.ohaDoStatusOverride = function() {
+            if (!pendingAppId || !pendingStatus) return;
+
+            // Capture locals before modal reset clears the pending vars
+            var appId     = pendingAppId;
+            var newStatus = pendingStatus;
+
+            var confirmBtn = document.getElementById('oha-override-confirm-btn');
+            if (confirmBtn) {
+                confirmBtn.disabled    = true;
+                confirmBtn.textContent = 'Updating\u2026';
+            }
+
+            fetch(ajaxurl, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action:     'oha_vh_admin_override_status',
+                    nonce:      overrideNonce,
+                    app_id:     appId,
+                    new_status: newStatus,
+                }),
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (confirmBtn) {
+                    confirmBtn.disabled    = false;
+                    confirmBtn.textContent = 'Yes, Change Status';
+                }
+                ohaHideStatusOverrideModal();
+
+                if (res.success) {
+                    var d = res.data;
+
+                    // Update the status badge on the card header
+                    var badge = document.getElementById('oha-status-badge-' + d.app_id);
+                    if (badge) {
+                        // Strip old status- classes
+                        var oldClasses = badge.className.split(' ').filter(function(c) { return !c.startsWith('status-'); });
+                        var newClass   = 'status-' + d.new_status.toLowerCase().replace(/\s+/g, '-');
+                        badge.className = oldClasses.concat([newClass]).join(' ');
+                        badge.textContent = d.new_status;
+                    }
+
+                    // Update the select's data-current-status so subsequent changes are correct
+                    var sel = document.getElementById('oha-status-sel-' + d.app_id);
+                    if (sel) {
+                        sel.setAttribute('data-current-status', d.new_status);
+                        sel.value = ''; // reset to placeholder
+                    }
+
+                    // Update stat counters in the header bar
+                    var paidEl    = document.getElementById('oha-stat-paid');
+                    var pendingEl = document.getElementById('oha-stat-pending');
+                    var totalEl   = document.getElementById('oha-stat-total');
+                    if (paidEl)    paidEl.textContent    = d.paid_count;
+                    if (pendingEl) pendingEl.textContent  = d.pending_count;
+                    if (totalEl)   totalEl.textContent    = d.total_count;
+
+                    // Show inline success result under the dropdown
+                    var resultEl = document.getElementById('oha-override-result-' + d.app_id);
+                    if (resultEl) {
+                        resultEl.className     = 'oha-override-result success';
+                        resultEl.textContent   = '\u2705 Status changed to ' + d.new_status;
+                        resultEl.style.display = 'block';
+                        setTimeout(function() { resultEl.style.display = 'none'; }, 6000);
+                    }
+                } else {
+                    var resultEl = document.getElementById('oha-override-result-' + appId);
+                    if (resultEl) {
+                        resultEl.className     = 'oha-override-result error';
+                        resultEl.textContent   = '\u274C Error: ' + (res.data || 'Unknown error');
+                        resultEl.style.display = 'block';
+                    }
+                }
+            })
+            .catch(function() {
+                if (confirmBtn) {
+                    confirmBtn.disabled    = false;
+                    confirmBtn.textContent = 'Yes, Change Status';
+                }
+                ohaHideStatusOverrideModal();
+                var resultEl = document.getElementById('oha-override-result-' + appId);
+                if (resultEl) {
+                    resultEl.className     = 'oha-override-result error';
+                    resultEl.textContent   = '\u274C Network error. Please try again.';
+                    resultEl.style.display = 'block';
+                }
+            });
+        };
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') ohaHideStatusOverrideModal();
+        });
+
     })();
     </script>
 

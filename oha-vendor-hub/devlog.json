@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.4.0",
+    "version":  "3.5.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -85,6 +85,20 @@
                         "type":  "feature",
                         "summary":  "Added admin settings for [oha_vendor_cards]: field visibility checkboxes and placeholder image picker",
                         "notes":  "Options: oha_vhcpt_cards_fields (website, products), oha_vhcpt_cards_placeholder_id, oha_vhcpt_cards_placeholder_url. WP media picker with live preview. Located in Vendor Hub Settings \u003e Vendor Card Grid section."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "3.5.0",
+                        "type":  "fix",
+                        "summary":  "Added two-layer webhook guard to prevent membership payments marking vendor as Paid",
+                        "notes":  "Layer 1: if client_reference_id is present but not a vendor_application post, return false immediately. Layer 2: email fallback restricted to Agreement Signed status only via new oha_vhcpt_find_agreement_signed_app_by_email() in payment-tracking.php."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "3.5.0",
+                        "type":  "feature",
+                        "summary":  "Added admin status override UI with confirmation modal on board hub admin shortcode",
+                        "notes":  "Override dropdown + styled confirmation modal in each card Quick Actions. Clears all payment markers when reverting from Paid. Live DOM updates stat counters and status badges. Appended to audit history log."
                     }
                 ]
 }
