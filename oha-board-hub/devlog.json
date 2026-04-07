@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.3.0",
+    "version":  "2.3.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -106,6 +106,34 @@
                         "type":  "feature",
                         "summary":  "Added Stripe webhook handler to auto-mark oha_sponsor posts as Paid",
                         "notes":  "Hooks oha_process_webhook_event filter (owned by Board Hub). Intercepts checkout.session.completed only when client_reference_id resolves to an oha_sponsor post. Safely passes membership payments through (WP user IDs are not oha_sponsor post IDs). Stores _oha_status=Paid, _payment_method=stripe, _stripe_session_id, _paid_date, and updates sponsor_amount from session.amount_total."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Webhook: only promote to OHA member for subscription checkouts, not one-time payments",
+                        "notes":  "handle_checkout_completed now returns early if session-\u003esubscription is empty. Prevents shirt/booth/award buyers from being tagged as oha_member via uwp_account_type."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Webhook: validate client_reference_id is a real WP user before treating it as one",
+                        "notes":  "Vendor/sponsor checkouts use post IDs in client_reference_id. get_userdata() check prevents misidentification."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Member table: gate all_paid/new_paid/cards_not_sent views on stripe_subscription_id",
+                        "notes":  "Added EXISTS subquery for stripe_subscription_id to Part 1 UWP query for affected views. Filters out users erroneously tagged via old bug without needing a DB cleanup."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Member table Part 3 fallback: require stripe_subscription_id to prevent false positives",
+                        "notes":  "Part 3 (_uwp_register_form_id=1 fallback) now requires stripe_subscription_id. Prevents general form-1 registrants from appearing as OHA Members."
                     }
                 ]
 }

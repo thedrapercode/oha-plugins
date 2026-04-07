@@ -315,9 +315,18 @@ class OHA_Members_Table {
         $uwp_where  = [];
         $uwp_params = [];
 
+        // Subscription gate: only subscription checkouts write stripe_subscription_id.
+        // One-time payments (booths, shirts, awards) never set it, so this subquery
+        // cleanly separates real OHA members from erroneous writes.
+        $sub_gate = "EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} msub
+            WHERE msub.user_id = u.ID AND msub.meta_key = 'stripe_subscription_id'
+        )";
+
         switch ($view) {
             case 'new_paid':
                 $uwp_where[]  = "m.meta_value = 'oha_member'";
+                $uwp_where[]  = $sub_gate;
                 $uwp_where[]  = "(u.user_registered >= %s OR (m2.meta_value IS NOT NULL AND m2.meta_value >= %s))";
                 $uwp_params[] = $thirty_days_ago;
                 $uwp_params[] = $thirty_days_ago;
@@ -329,12 +338,14 @@ class OHA_Members_Table {
                 break;
             case 'all_paid':
                 $uwp_where[] = "m.meta_value = 'oha_member'";
+                $uwp_where[] = $sub_gate;
                 break;
             case 'all_listing':
                 $uwp_where[] = "m.meta_value = 'listing_owner'";
                 break;
             case 'cards_not_sent':
                 $uwp_where[] = "m.meta_value = 'oha_member'";
+                $uwp_where[] = $sub_gate;
                 $uwp_where[] = "NOT EXISTS (
                     SELECT 1 FROM {$wpdb->usermeta} um3
                     WHERE um3.user_id = u.ID
@@ -581,6 +592,12 @@ class OHA_Members_Table {
             $fb_where[] = "NOT EXISTS (
                 SELECT 1 FROM {$wpdb->usermeta} um_acct
                 WHERE um_acct.user_id = u.ID AND um_acct.meta_key = 'uwp_account_type'
+            )";
+            // Require a Stripe subscription — otherwise any form-1 registrant appears
+            // as an OHA Member regardless of whether they ever paid.
+            $fb_where[] = "EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} msub
+                WHERE msub.user_id = u.ID AND msub.meta_key = 'stripe_subscription_id'
             )";
 
             // Exclude WP user IDs already covered

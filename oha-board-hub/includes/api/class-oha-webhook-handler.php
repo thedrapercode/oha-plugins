@@ -385,17 +385,30 @@ class OHA_Webhook_Handler {
             OHA_Logger::error('Function oha_sm_save_from_checkout_session not found');
             return;
         }
-        
+
         $session = $this->event->data->object;
         oha_sm_save_from_checkout_session($session);
+
+        // Only promote to OHA member for subscription (membership) checkouts.
+        // One-time payments — booths, shirts, awards, sponsors — are mode=payment
+        // and carry no subscription ID. Promoting them would corrupt the member list.
+        if (empty($session->subscription)) {
+            return;
+        }
 
         // Promote user to paid member (UsersWP + role) using the same user mapping
         $user_id = 0;
         if (!empty($session->metadata->wp_user_id)) {
             $user_id = absint($session->metadata->wp_user_id);
         } elseif (!empty($session->client_reference_id)) {
-            $user_id = absint($session->client_reference_id);
-        } elseif (!empty($session->customer_details->email)) {
+            // Only treat client_reference_id as a WP user ID if it resolves to a real user.
+            // Vendor/sponsor checkouts use post IDs here — skip those.
+            $candidate = absint($session->client_reference_id);
+            if ($candidate && get_userdata($candidate)) {
+                $user_id = $candidate;
+            }
+        }
+        if (!$user_id && !empty($session->customer_details->email)) {
             $u = get_user_by('email', sanitize_email($session->customer_details->email));
             if ($u) $user_id = (int) $u->ID;
         }
