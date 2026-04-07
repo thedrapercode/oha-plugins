@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.3.3",
+    "version":  "3.4.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -71,6 +71,20 @@
                         "type":  "fix",
                         "summary":  "Fix [oha_vendor_final_form_no_payment] shortcode calling non-existent function",
                         "notes":  "Replaced call to undefined oha_vendor_final_form_shortcode() with do_shortcode(oha_vendor_final_form). Shortcode was broken and would fatal error if oha_vhcpt_final_app_no_payment_page_id was configured."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "3.4.0",
+                        "type":  "feature",
+                        "summary":  "Added [oha_vendor_cards] shortcode: public vendor card grid for website pages, light theme, responsive",
+                        "notes":  "3-col desktop, 2-col tablet, 1-col mobile. Queries Paid vendors A-Z. Shows logo, name, product type, website. No favorites button."
+                    },
+                    {
+                        "date":  "2026-04-06",
+                        "version":  "3.4.0",
+                        "type":  "feature",
+                        "summary":  "Added admin settings for [oha_vendor_cards]: field visibility checkboxes and placeholder image picker",
+                        "notes":  "Options: oha_vhcpt_cards_fields (website, products), oha_vhcpt_cards_placeholder_id, oha_vhcpt_cards_placeholder_url. WP media picker with live preview. Located in Vendor Hub Settings \u003e Vendor Card Grid section."
                     }
                 ]
 }

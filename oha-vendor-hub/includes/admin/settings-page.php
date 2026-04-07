@@ -15,6 +15,11 @@ add_action('admin_menu', function(){
     );
 });
 
+add_action('admin_enqueue_scripts', function( $hook ){
+    if ( $hook !== 'vendor_application_page_oha-vhcpt-settings' ) return;
+    wp_enqueue_media();
+});
+
 /**
  * Normalize a status label to an internal key.
  */
@@ -134,6 +139,14 @@ function oha_vhcpt_settings_page(){
         if (isset($_POST['final_app_no_payment_page_id'])) {
             update_option('oha_vhcpt_final_app_no_payment_page_id', intval($_POST['final_app_no_payment_page_id']));
         }
+
+        // Vendor Card Grid settings
+        update_option( 'oha_vhcpt_cards_placeholder_id',  absint( isset( $_POST['cards_placeholder_id'] )  ? $_POST['cards_placeholder_id']  : 0 ) );
+        update_option( 'oha_vhcpt_cards_placeholder_url', esc_url_raw( isset( $_POST['cards_placeholder_url'] ) ? wp_unslash( $_POST['cards_placeholder_url'] ) : '' ) );
+        update_option( 'oha_vhcpt_cards_fields', [
+            'website'  => ! empty( $_POST['cards_field_website'] ),
+            'products' => ! empty( $_POST['cards_field_products'] ),
+        ] );
 
         echo '<div class="updated"><p>Settings saved.</p></div>';
     }
@@ -432,6 +445,78 @@ function oha_vhcpt_settings_page(){
                 oha_vhcpt_render_stripe_settings();
             }
             ?>
+
+            <h2 class="title">Vendor Card Grid (Public Display)</h2>
+            <p>Controls the <code>[oha_vendor_cards]</code> shortcode used on public website pages.</p>
+
+            <?php
+            $cards_fields      = get_option( 'oha_vhcpt_cards_fields', [ 'website' => true, 'products' => true ] );
+            $cards_ph_id       = (int) get_option( 'oha_vhcpt_cards_placeholder_id', 0 );
+            $cards_ph_url      = get_option( 'oha_vhcpt_cards_placeholder_url', '' );
+            $cards_ph_preview  = $cards_ph_id ? wp_get_attachment_image_url( $cards_ph_id, [ 120, 90 ] ) : $cards_ph_url;
+            ?>
+
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Fields to display</th>
+                    <td>
+                        <label style="display:block;margin-bottom:6px;">
+                            <input type="checkbox" name="cards_field_website" value="1" <?php checked( ! empty( $cards_fields['website'] ) ); ?>>
+                            <strong>Website</strong> — shows a clickable link below the company name
+                        </label>
+                        <label style="display:block;">
+                            <input type="checkbox" name="cards_field_products" value="1" <?php checked( ! empty( $cards_fields['products'] ) ); ?>>
+                            <strong>Product Type</strong> — shows the product/product category text on the card
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label>Placeholder image</label></th>
+                    <td>
+                        <input type="hidden" name="cards_placeholder_id"  id="oha-cards-ph-id"  value="<?php echo esc_attr( $cards_ph_id ); ?>">
+                        <input type="hidden" name="cards_placeholder_url" id="oha-cards-ph-url" value="<?php echo esc_url( $cards_ph_url ); ?>">
+
+                        <div id="oha-cards-ph-preview" style="margin-bottom:8px;">
+                            <?php if ( $cards_ph_preview ) : ?>
+                                <img src="<?php echo esc_url( $cards_ph_preview ); ?>" style="max-width:120px;max-height:90px;border:1px solid #ddd;border-radius:4px;display:block;">
+                            <?php else : ?>
+                                <span style="color:#888;font-size:13px;">No image set — a shopping bag icon is shown as the default.</span>
+                            <?php endif; ?>
+                        </div>
+
+                        <button type="button" class="button" id="oha-cards-ph-choose">Choose Image</button>
+                        <button type="button" class="button" id="oha-cards-ph-clear" style="<?php echo $cards_ph_id ? '' : 'display:none;'; ?>margin-left:6px;">Remove</button>
+                        <p class="description">Shown on vendor cards that have no logo uploaded. Leave blank to use the default shopping bag icon.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <script>
+            (function($){
+                var frame;
+                $('#oha-cards-ph-choose').on('click', function(e){
+                    e.preventDefault();
+                    if (frame) { frame.open(); return; }
+                    frame = wp.media({ title: 'Select Placeholder Image', button: { text: 'Use this image' }, multiple: false });
+                    frame.on('select', function(){
+                        var att = frame.state().get('selection').first().toJSON();
+                        $('#oha-cards-ph-id').val(att.id);
+                        $('#oha-cards-ph-url').val(att.url);
+                        var thumb = att.sizes && att.sizes.thumbnail ? att.sizes.thumbnail.url : att.url;
+                        $('#oha-cards-ph-preview').html('<img src="' + thumb + '" style="max-width:120px;max-height:90px;border:1px solid #ddd;border-radius:4px;display:block;">');
+                        $('#oha-cards-ph-clear').show();
+                    });
+                    frame.open();
+                });
+                $('#oha-cards-ph-clear').on('click', function(e){
+                    e.preventDefault();
+                    $('#oha-cards-ph-id').val('0');
+                    $('#oha-cards-ph-url').val('');
+                    $('#oha-cards-ph-preview').html('<span style="color:#888;font-size:13px;">No image set — a shopping bag icon is shown as the default.</span>');
+                    $(this).hide();
+                });
+            })(jQuery);
+            </script>
 
             <p><button class="button button-primary">Save Settings</button></p>
         </form>
