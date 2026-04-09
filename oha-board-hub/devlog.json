@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.4.0",
+    "version":  "2.4.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -169,6 +169,13 @@
                         "type":  "change",
                         "summary":  "Remove SWPM table writes from webhook handler and Stripe lib",
                         "notes":  "handle_invoice_payment_succeeded() no longer calls oha_sm_set_swpm_membership_active(). apply_free_level() no longer writes to SWPM table. oha_sm_save_from_checkout_session() SWPM call fully removed. oha_sm_sync_to_swpm() stubbed as no-op."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.4.1",
+                        "type":  "fix",
+                        "summary":  "Remove dead SWPM activate call from oha_sm_handle_webhook; replace with canonical oha_bhs_membership_set_paid action",
+                        "notes":  "oha_sm_handle_webhook is dead code (REST reg moved to Suite which uses OHA_Webhook_Handler), but cleaned up for safety. The SWPM call at the old invoice.payment_succeeded case now fires the correct action hook instead."
                     }
                 ]
 }

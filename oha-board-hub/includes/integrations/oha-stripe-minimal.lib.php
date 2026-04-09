@@ -249,11 +249,11 @@ function oha_sm_handle_webhook(WP_REST_Request $req){
             case 'invoice.payment_succeeded':
                 $inv=$event->data->object??null; $cfg=oha_sm_get();
                 
-                // Handle subscription invoices (existing logic)
+                // Handle subscription invoices — fire canonical paid action (no SWPM)
                 if(!empty($inv->subscription)){
                     $sub_id=sanitize_text_field($inv->subscription);
                     $users=get_users(array('meta_key'=>'stripe_subscription_id','meta_value'=>$sub_id,'number'=>1,'fields'=>'ID'));
-                    if(!empty($users) && !empty($cfg['membership_level_id'])) oha_sm_set_swpm_membership_active((int)$users[0], (int)$cfg['membership_level_id']);
+                    if(!empty($users)) do_action('oha_bhs_membership_set_paid',(int)$users[0],$inv,$event);
                 }
                 
                 // Handle one-time membership product invoices (new logic)
