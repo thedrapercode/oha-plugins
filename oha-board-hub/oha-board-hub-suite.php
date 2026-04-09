@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.4.1
+ * Version: 2.4.2
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.4.1');
+define('OHA_BHS_VERSION', '2.4.2');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -503,6 +503,22 @@ public function admin_notices() {
              . 'To prevent “saved but didn’t apply” Stripe settings and webhook conflicts, deactivate the legacy plugin and manage Stripe settings only in <strong>OHA Board Hub → Stripe Settings</strong>.';
 
         echo '<div class="notice notice-warning ' . ($is_boardhub ? 'notice-alt' : '') . '"><p><strong>' . esc_html($title) . '</strong><br>' . wp_kses_post($msg) . '</p></div>';
+    }
+
+    // Webhook failure alert — shown once after a processing exception, then cleared.
+    $failure = get_transient('oha_webhook_failure_alert');
+    if ($failure) {
+        delete_transient('oha_webhook_failure_alert');
+        $event_id   = esc_html($failure['event_id'] ?? 'unknown');
+        $event_type = esc_html($failure['type']     ?? 'unknown');
+        $error_msg  = esc_html($failure['error']    ?? '');
+        $time       = esc_html($failure['time']     ?? '');
+        echo '<div class="notice notice-error"><p>'
+            . '<strong>Board Hub: Stripe webhook processing failed.</strong> '
+            . 'Event <code>' . $event_id . '</code> (' . $event_type . ') threw an exception at ' . $time . '. '
+            . 'Error: ' . $error_msg . '. '
+            . 'Stripe will retry automatically. Check <strong>Board Hub &rarr; Webhooks</strong> and PHP error log for details.'
+            . '</p></div>';
     }
 }
 

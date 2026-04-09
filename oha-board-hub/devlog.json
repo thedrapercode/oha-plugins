@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.4.1",
+    "version":  "2.4.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -176,6 +176,27 @@
                         "type":  "fix",
                         "summary":  "Remove dead SWPM activate call from oha_sm_handle_webhook; replace with canonical oha_bhs_membership_set_paid action",
                         "notes":  "oha_sm_handle_webhook is dead code (REST reg moved to Suite which uses OHA_Webhook_Handler), but cleaned up for safety. The SWPM call at the old invoice.payment_succeeded case now fires the correct action hook instead."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.4.2",
+                        "type":  "fix",
+                        "summary":  "Remove duplicate OHA_Stripe_Webhook_Log call in is_duplicate branch of webhook handler",
+                        "notes":  "Second log_event duplicate call (lines 145-147) was a copy-paste artifact. First call at line 138-140 is sufficient."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.4.2",
+                        "type":  "fix",
+                        "summary":  "Delete three .off disabled-file stubs (class-oha-members-table, boardhub-admin, oha-vendor-2026)",
+                        "notes":  ".off files are not loaded by WordPress but create maintenance confusion. All three files were replaced by active .php counterparts."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.4.2",
+                        "type":  "fix",
+                        "summary":  "Add admin notice when webhook processing throws an exception (HTTP 500 response)",
+                        "notes":  "Stores oha_webhook_failure_alert transient (7 day TTL) on catch. admin_notices() reads and clears it on next admin page load, showing event ID, type, error, and timestamp."
                     }
                 ]
 }

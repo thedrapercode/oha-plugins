@@ -141,10 +141,6 @@ class OHA_Webhook_Handler {
             OHA_Logger::info('Duplicate webhook event received', [
                 'event_id' => $this->event->id
             ]);
-
-            if (class_exists('OHA_Stripe_Webhook_Log')) {
-                OHA_Stripe_Webhook_Log::log_event($this->event, 'duplicate');
-            }
             return new WP_REST_Response([
                 'status' => 'already_processed'
             ], 200);
@@ -199,7 +195,15 @@ class OHA_Webhook_Handler {
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
+            // Store a transient so an admin notice surfaces on the next WP admin page load.
+            set_transient('oha_webhook_failure_alert', [
+                'event_id' => $this->event->id ?? 'unknown',
+                'type'     => $this->event->type ?? 'unknown',
+                'error'    => $e->getMessage(),
+                'time'     => gmdate('Y-m-d H:i:s') . ' UTC',
+            ], 7 * DAY_IN_SECONDS);
+
             return new WP_REST_Response([
                 'error' => 'processing_failed'
             ], 500);
