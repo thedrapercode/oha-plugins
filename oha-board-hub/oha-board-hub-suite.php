@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.3.2
+ * Version: 2.4.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.3.2');
+define('OHA_BHS_VERSION', '2.4.0');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -600,6 +600,23 @@ private function is_plugin_file_active($plugin_file) {
 
         $webhook_handler = new OHA_Webhook_Handler();
         $webhook_handler->register_routes();
+
+        // Membership Stripe sync routes (admin only)
+        register_rest_route('oha/v1', '/membership/stripe-sync-preview', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_stripe_sync_preview'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
+        register_rest_route('oha/v1', '/membership/stripe-sync-commit', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_stripe_sync_commit'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
+        register_rest_route('oha/v1', '/membership/verify-member', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_verify_member'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
     }
 
     /**
@@ -705,6 +722,9 @@ public function handle_membership_set_free($user_id, $context = null, $event = n
 private function userswp_set_paid_member($user_id) {
     if ($user_id <= 0) return;
 
+    // Canonical membership state — Stripe subscription confirmed active
+    update_user_meta($user_id, 'stripe_subscription_status', 'active');
+
     // UsersWP markers for paid member form/account type
     update_user_meta($user_id, '_uwp_register_form_id', '1');
     update_user_meta($user_id, 'uwp_account_type', 'oha_member');
@@ -729,6 +749,9 @@ private function userswp_set_paid_member($user_id) {
 private function userswp_set_free_member($user_id) {
     if ($user_id <= 0) return;
 
+    // Canonical membership state — subscription cancelled/expired
+    update_user_meta($user_id, 'stripe_subscription_status', 'cancelled');
+
     // UsersWP markers for free listing owner form/account type
     update_user_meta($user_id, '_uwp_register_form_id', '4');
     update_user_meta($user_id, 'uwp_account_type', 'listing_owner');
@@ -743,6 +766,360 @@ private function userswp_set_free_member($user_id) {
     if ($user && $user->exists()) {
         $user->set_role($target_role);
     }
+}
+
+// =========================================================================
+// STRIPE SYNC REST ENDPOINTS
+// =========================================================================
+
+/**
+ * REST: Preview migration — compares old 3-part query vs. new canonical query.
+ * Fetches Stripe active subscriptions to classify each old member.
+ * No data is written. Returns JSON for admin review before committing.
+ *
+ * Response buckets:
+ *   green  — already in canonical new set (no action needed)
+ *   yellow — in old set, not new set; Stripe active sub found (sync will fix)
+ *   orange — in old set, not new set; no Stripe match (needs manual verify)
+ *
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response
+ */
+public function rest_stripe_sync_preview(WP_REST_Request $request) {
+    if (!function_exists('oha_sm_stripe_get')) {
+        require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-stripe-minimal.lib.php';
+    }
+
+    // ── OLD member set: 3-part query (uwp_account_type + SWPM + fallback) ──
+    $old_set = $this->preview_get_old_paid_member_ids();
+
+    // ── NEW (canonical) member set ─────────────────────────────────────────
+    global $wpdb;
+    $new_raw = $wpdb->get_results("
+        SELECT DISTINCT u.ID as user_id
+        FROM {$wpdb->users} u
+        WHERE (
+            EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} ms1
+                WHERE ms1.user_id = u.ID AND ms1.meta_key = 'stripe_subscription_id'
+            )
+            AND EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} ms2
+                WHERE ms2.user_id = u.ID AND ms2.meta_key = 'stripe_subscription_status' AND ms2.meta_value = 'active'
+            )
+        )
+        OR EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} mv
+            WHERE mv.user_id = u.ID AND mv.meta_key = 'oha_membership_verified' AND mv.meta_value = '1'
+        )
+    ", ARRAY_A);
+    $new_ids = array_flip(array_column((array) $new_raw, 'user_id'));
+
+    // ── Fetch active Stripe subscriptions ─────────────────────────────────
+    // Only subscriptions whose price matches a configured membership price ID
+    // are considered. If no price IDs are configured, all active subs are included.
+    $stripe_by_customer = [];
+    $stripe_by_email    = [];
+    $sm        = oha_sm_get();
+    $price_ids = array_filter(array_map('trim', [
+        $sm['price_signup_20'] ?? '',
+        $sm['price_yearly_10'] ?? '',
+    ]));
+
+    $starting_after = null;
+    $pages = 0;
+    do {
+        $params = ['status' => 'active', 'limit' => 100, 'expand' => ['data.customer']];
+        if ($starting_after) {
+            $params['starting_after'] = $starting_after;
+        }
+        $resp = oha_sm_stripe_get('/v1/subscriptions', $params);
+        if (!empty($resp->error) || empty($resp->data)) {
+            break;
+        }
+
+        foreach ($resp->data as $sub) {
+            if (!empty($price_ids)) {
+                $matched_price = false;
+                foreach ($sub->items->data ?? [] as $item) {
+                    if (in_array($item->price->id ?? '', $price_ids, true)) {
+                        $matched_price = true;
+                        break;
+                    }
+                }
+                if (!$matched_price) {
+                    continue;
+                }
+            }
+
+            $cust_id = is_object($sub->customer) ? ($sub->customer->id ?? '') : (string) ($sub->customer ?? '');
+            $email   = strtolower(trim(is_object($sub->customer) ? ($sub->customer->email ?? '') : ''));
+            if ($cust_id) {
+                $stripe_by_customer[$cust_id] = $sub->id;
+            }
+            if ($email) {
+                $stripe_by_email[$email] = $sub->id;
+            }
+        }
+
+        $starting_after = !empty($resp->has_more) ? ($resp->data[count($resp->data) - 1]->id ?? null) : null;
+        $pages++;
+    } while (!empty($resp->has_more) && $pages < 20);
+
+    // ── Classify each old member ──────────────────────────────────────────
+    $green  = [];
+    $yellow = [];
+    $orange = [];
+
+    foreach ($old_set as $entry) {
+        $uid   = (int) $entry['user_id'];
+        $email = strtolower(trim($entry['user_email'] ?? ''));
+
+        if (isset($new_ids[$uid])) {
+            $green[] = [
+                'user_id' => $uid,
+                'name'    => $entry['display_name'],
+                'email'   => $entry['user_email'],
+                'source'  => $entry['source'],
+            ];
+            continue;
+        }
+
+        // Look up by stripe_customer_id meta first, then email
+        $cust_meta = get_user_meta($uid, 'stripe_customer_id', true);
+        $found_sub = null;
+        if ($cust_meta && isset($stripe_by_customer[$cust_meta])) {
+            $found_sub = $stripe_by_customer[$cust_meta];
+        } elseif ($email && isset($stripe_by_email[$email])) {
+            $found_sub = $stripe_by_email[$email];
+        }
+
+        if ($found_sub) {
+            $yellow[] = [
+                'user_id'    => $uid,
+                'name'       => $entry['display_name'],
+                'email'      => $entry['user_email'],
+                'source'     => $entry['source'],
+                'stripe_sub' => $found_sub,
+            ];
+        } else {
+            $orange[] = [
+                'user_id' => $uid,
+                'name'    => $entry['display_name'],
+                'email'   => $entry['user_email'],
+                'source'  => $entry['source'],
+            ];
+        }
+    }
+
+    return rest_ensure_response([
+        'green'  => $green,
+        'yellow' => $yellow,
+        'orange' => $orange,
+        'counts' => [
+            'old_total'    => count($old_set),
+            'new_total'    => count($new_ids),
+            'stays_member' => count($green),
+            'will_sync'    => count($yellow),
+            'needs_review' => count($orange),
+            'stripe_pages' => $pages,
+        ],
+    ]);
+}
+
+/**
+ * Build the OLD paid member ID list using the 3-part query logic (all_paid view).
+ * Replicates the logic of OHA_Members_Table::get_members('all_paid') for preview purposes.
+ * No data written — read-only.
+ *
+ * @return array[] Each entry: ['user_id', 'display_name', 'user_email', 'source']
+ */
+private function preview_get_old_paid_member_ids() {
+    global $wpdb;
+    $result = [];
+    $seen   = [];
+
+    // Part 1: uwp_account_type = oha_member WITH stripe_subscription_id
+    $part1 = $wpdb->get_results("
+        SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email
+        FROM {$wpdb->users} u
+        INNER JOIN {$wpdb->usermeta} m
+            ON u.ID = m.user_id AND m.meta_key = 'uwp_account_type' AND m.meta_value = 'oha_member'
+        WHERE EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} ms
+            WHERE ms.user_id = u.ID AND ms.meta_key = 'stripe_subscription_id'
+        )
+    ", ARRAY_A);
+    foreach ((array) $part1 as $r) {
+        $uid = (int) $r['user_id'];
+        if (isset($seen[$uid])) continue;
+        $seen[$uid] = true;
+        $result[]   = ['user_id' => $uid, 'display_name' => $r['display_name'], 'user_email' => $r['user_email'], 'source' => 'uwp'];
+    }
+
+    // Part 2: SWPM level 10 matched by email to WP users
+    $swpm_tbl = $wpdb->prefix . 'swpm_members_tbl';
+    if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $swpm_tbl)) === $swpm_tbl) {
+        $part2 = $wpdb->get_results($wpdb->prepare("
+            SELECT u.ID as user_id, u.display_name, s.email as user_email
+            FROM {$swpm_tbl} s
+            INNER JOIN {$wpdb->users} u ON s.email = u.user_email
+            WHERE s.membership_level = %d
+        ", 10), ARRAY_A);
+        foreach ((array) $part2 as $r) {
+            $uid = (int) $r['user_id'];
+            if (isset($seen[$uid])) continue;
+            $seen[$uid] = true;
+            $result[]   = ['user_id' => $uid, 'display_name' => $r['display_name'], 'user_email' => $r['user_email'], 'source' => 'swpm'];
+        }
+    }
+
+    // Part 3: _uwp_register_form_id=1, no uwp_account_type, has stripe_subscription_id
+    $excl = empty($seen) ? '' : 'AND u.ID NOT IN (' . implode(',', array_map('intval', array_keys($seen))) . ')';
+    $part3 = $wpdb->get_results("
+        SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email
+        FROM {$wpdb->users} u
+        INNER JOIN {$wpdb->usermeta} um_form
+            ON u.ID = um_form.user_id AND um_form.meta_key = '_uwp_register_form_id' AND um_form.meta_value = '1'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} um_acct
+            WHERE um_acct.user_id = u.ID AND um_acct.meta_key = 'uwp_account_type'
+        )
+        AND EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} ms
+            WHERE ms.user_id = u.ID AND ms.meta_key = 'stripe_subscription_id'
+        )
+        {$excl}
+    ", ARRAY_A);
+    foreach ((array) $part3 as $r) {
+        $uid = (int) $r['user_id'];
+        if (isset($seen[$uid])) continue;
+        $seen[$uid] = true;
+        $result[]   = ['user_id' => $uid, 'display_name' => $r['display_name'], 'user_email' => $r['user_email'], 'source' => 'fb'];
+    }
+
+    return $result;
+}
+
+/**
+ * REST: Commit Stripe sync — writes canonical meta for all active membership subscriptions.
+ *
+ * For each Stripe active subscription matching a membership price ID:
+ *   1. Finds WP user by stripe_customer_id meta, then by email fallback
+ *   2. Writes stripe_subscription_id + calls userswp_set_paid_member() (sets status, form_id, role)
+ *
+ * @param WP_REST_Request $request
+ * @return WP_REST_Response
+ */
+public function rest_stripe_sync_commit(WP_REST_Request $request) {
+    if (!function_exists('oha_sm_stripe_get')) {
+        require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-stripe-minimal.lib.php';
+    }
+
+    $matched = 0;
+    $updated = 0;
+    $skipped = 0;
+    $sm        = oha_sm_get();
+    $price_ids = array_filter(array_map('trim', [
+        $sm['price_signup_20'] ?? '',
+        $sm['price_yearly_10'] ?? '',
+    ]));
+
+    $starting_after = null;
+    $pages = 0;
+    do {
+        $params = ['status' => 'active', 'limit' => 100, 'expand' => ['data.customer']];
+        if ($starting_after) {
+            $params['starting_after'] = $starting_after;
+        }
+        $resp = oha_sm_stripe_get('/v1/subscriptions', $params);
+        if (!empty($resp->error) || empty($resp->data)) {
+            break;
+        }
+
+        foreach ($resp->data as $sub) {
+            if (!empty($price_ids)) {
+                $matched_price = false;
+                foreach ($sub->items->data ?? [] as $item) {
+                    if (in_array($item->price->id ?? '', $price_ids, true)) {
+                        $matched_price = true;
+                        break;
+                    }
+                }
+                if (!$matched_price) {
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            $cust_id = is_object($sub->customer) ? ($sub->customer->id ?? '') : (string) ($sub->customer ?? '');
+            $email   = is_object($sub->customer) ? ($sub->customer->email ?? '') : '';
+
+            // Find WP user: stripe_customer_id meta first, then email fallback
+            $user_id = 0;
+            if ($cust_id) {
+                $users = get_users([
+                    'meta_key'   => 'stripe_customer_id',
+                    'meta_value' => $cust_id,
+                    'number'     => 1,
+                    'fields'     => 'ID',
+                ]);
+                if (!empty($users)) {
+                    $user_id = (int) $users[0];
+                }
+            }
+            if (!$user_id && $email) {
+                $u = get_user_by('email', $email);
+                if ($u) {
+                    $user_id = (int) $u->ID;
+                }
+            }
+
+            if (!$user_id) {
+                $skipped++;
+                continue;
+            }
+
+            $matched++;
+            update_user_meta($user_id, 'stripe_subscription_id', sanitize_text_field($sub->id));
+            if ($cust_id) {
+                update_user_meta($user_id, 'stripe_customer_id', sanitize_text_field($cust_id));
+            }
+            $this->userswp_set_paid_member($user_id);
+            $updated++;
+        }
+
+        $starting_after = !empty($resp->has_more) ? ($resp->data[count($resp->data) - 1]->id ?? null) : null;
+        $pages++;
+    } while (!empty($resp->has_more) && $pages < 20);
+
+    return rest_ensure_response([
+        'success' => true,
+        'matched' => $matched,
+        'updated' => $updated,
+        'skipped' => $skipped,
+        'pages'   => $pages,
+    ]);
+}
+
+/**
+ * REST: Manually mark a WP user as a verified OHA member.
+ * Sets oha_membership_verified = 1 as a board-managed override.
+ * Used for members who cannot be matched via Stripe sync (e.g. paid by check).
+ *
+ * @param WP_REST_Request $request  Must include user_id param.
+ * @return WP_REST_Response|WP_Error
+ */
+public function rest_verify_member(WP_REST_Request $request) {
+    $user_id = intval($request->get_param('user_id'));
+    if ($user_id <= 0) {
+        return new WP_Error('invalid_user', 'Invalid user ID.', ['status' => 400]);
+    }
+    if (!get_user_by('ID', $user_id)) {
+        return new WP_Error('user_not_found', 'User not found.', ['status' => 404]);
+    }
+    update_user_meta($user_id, 'oha_membership_verified', '1');
+    return rest_ensure_response(['success' => true, 'user_id' => $user_id]);
 }
 
 /**

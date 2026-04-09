@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.3.2",
+    "version":  "2.4.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -141,6 +141,34 @@
                         "type":  "fix",
                         "summary":  "SWPM level no longer set for non-subscription Stripe checkouts (shirt/booth payments)",
                         "notes":  "oha_sm_save_from_checkout_session in oha-stripe-minimal.lib.php was calling oha_sm_set_swpm_membership_active for any checkout.session.completed event matching a WP user by email. Added \\!empty(session-\u003esubscription) guard so SWPM level is only written for membership subscription checkouts. This stopped free members being shown as OHA Paid Members in Board Hub after purchasing shirts or other one-time items."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Add stripe_subscription_status meta written on every paid/free membership state change",
+                        "notes":  "userswp_set_paid_member() now writes stripe_subscription_status=active; userswp_set_free_member() writes stripe_subscription_status=cancelled. Both called via oha_bhs_membership_set_paid/free action hooks."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Add Stripe sync migration tool (preview + commit) in membership admin tab",
+                        "notes":  "Three REST endpoints: stripe-sync-preview (dry run), stripe-sync-commit (writes meta), verify-member (sets oha_membership_verified=1). Preview classifies members as green/yellow/orange before any writes."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "2.4.0",
+                        "type":  "change",
+                        "summary":  "Replace 3-part SWPM/uwp UNION member query with canonical Stripe-based query",
+                        "notes":  "New canonical: stripe_subscription_id EXISTS AND stripe_subscription_status=active OR oha_membership_verified=1. SWPM table wp_swpm_members_tbl no longer queried. Listing owner query unchanged (uwp_account_type=listing_owner)."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "2.4.0",
+                        "type":  "change",
+                        "summary":  "Remove SWPM table writes from webhook handler and Stripe lib",
+                        "notes":  "handle_invoice_payment_succeeded() no longer calls oha_sm_set_swpm_membership_active(). apply_free_level() no longer writes to SWPM table. oha_sm_save_from_checkout_session() SWPM call fully removed. oha_sm_sync_to_swpm() stubbed as no-op."
                     }
                 ]
 }

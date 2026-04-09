@@ -1,22 +1,22 @@
 <?php
 /**
- * Enhanced Members Table — Unified SWPM + UsersWP Member List
+ * Canonical Members Table — Stripe-based OHA Member List
  *
- * Data sources (in priority order):
- * 1. uwp_account_type usermeta  — new members registered after Simple Membership removal
- * 2. wp_swpm_members_tbl        — legacy members from Simple Membership era
+ * Member query (canonical, v2.4.0+):
+ *   (stripe_subscription_id EXISTS AND stripe_subscription_status = 'active')
+ *   OR oha_membership_verified = '1'
  *
  * Address priority (per user):
  * 1. billing_address_display usermeta (set by Stripe webhook)
- * 2. billing_address_line1 / billing_city / etc usermeta
- * 3. SWPM table address columns (address_street, address_city, address_state, address_zipcode, country)
+ * 2. billing_address_line1 / billing_city / etc usermeta (Stripe individual fields)
+ * 3. address_street / address_city / etc usermeta (legacy Board Hub individual fields)
  *
  * Card-sent status priority:
  * 1. oha_card_sent usermeta (set by admin form)
  * 2. oha_card_status custom table (set by frontend toggle)
  *
  * @package OHA_Board_Hub
- * @since 1.6.0 / updated 2.2.12
+ * @since 1.6.0 / updated 2.4.0
  */
 
 if (!defined('ABSPATH')) {
@@ -89,7 +89,7 @@ class OHA_Members_Table {
             <div class="oha-members-header">
                 <h2><?php esc_html_e('Member Management', 'oha-board-hub'); ?></h2>
                 <p class="description">
-                    <?php esc_html_e('Displays members from all sources: UsersWP account type and legacy Simple Membership records.', 'oha-board-hub'); ?>
+                    <?php esc_html_e('Displays OHA members using the canonical Stripe-based query. Use the Stripe Sync Migration Tool below to populate the required meta before first use.', 'oha-board-hub'); ?>
                 </p>
             </div>
 
@@ -256,10 +256,129 @@ class OHA_Members_Table {
                     <input type="hidden" name="member_view"   value="<?php echo esc_attr($view); ?>">
                     <input type="hidden" name="member_search" value="<?php echo esc_attr($search); ?>">
                     <button type="submit" name="oha_export_members_csv" class="button button-secondary">
-                        📥 <?php esc_html_e('Export to CSV', 'oha-board-hub'); ?>
+                        <?php esc_html_e('Export to CSV', 'oha-board-hub'); ?>
                     </button>
                 </form>
             </div>
+
+            <!-- Stripe Sync Migration Tool -->
+            <div class="oha-stripe-sync-section" style="margin-top:30px;padding-top:20px;border-top:2px solid #e0e0e0;">
+                <h3 style="margin-bottom:8px;">Stripe Sync Migration Tool</h3>
+                <p class="description" style="margin-bottom:15px;">
+                    Migrates member records to the canonical Stripe-based system. Run Preview first to review results, then Run Sync to write the data. The sync matches each active Stripe subscription to a WP user by customer ID or email, then sets <code>stripe_subscription_status = active</code> and <code>_uwp_register_form_id = 1</code>.
+                </p>
+                <div id="oha-sync-controls">
+                    <button type="button" id="oha-sync-preview-btn" class="button button-primary">Preview Migration</button>
+                    <button type="button" id="oha-sync-commit-btn" class="button button-secondary" style="display:none;margin-left:10px;">Run Sync</button>
+                    <span id="oha-sync-spinner" style="display:none;margin-left:10px;color:#555;"><em>Working, please wait...</em></span>
+                </div>
+                <div id="oha-sync-results" style="display:none;margin-top:20px;">
+                    <div id="oha-sync-summary" style="padding:12px;background:#f0f6fc;border:1px solid #c0d9f0;border-radius:4px;margin-bottom:15px;"></div>
+                    <div id="oha-sync-green" style="margin-bottom:15px;"></div>
+                    <div id="oha-sync-yellow" style="margin-bottom:15px;"></div>
+                    <div id="oha-sync-orange" style="margin-bottom:15px;"></div>
+                    <div id="oha-sync-commit-result" style="display:none;padding:12px;background:#edfaed;border:1px solid #acdcac;border-radius:4px;"></div>
+                </div>
+            </div>
+
+            <script>
+            (function(){
+                var nonce   = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
+                var apiBase = '<?php echo esc_js(rest_url('oha/v1/membership/')); ?>';
+
+                function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+                function buildTable(rows, extraHeader) {
+                    if (!rows || !rows.length) return '<em style="color:#999;">None</em>';
+                    var h = '<table class="wp-list-table widefat fixed striped" style="font-size:13px;"><thead><tr><th style="width:50px;">ID</th><th>Name</th><th>Email</th><th>Source</th>' + (extraHeader||'') + '</tr></thead><tbody>';
+                    rows.forEach(function(r){
+                        h += '<tr><td>'+r.user_id+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.source)+'</td>';
+                        if (extraHeader && r.stripe_sub) {
+                            h += '<td><code>'+esc(r.stripe_sub)+'</code></td>';
+                        } else if (extraHeader && r.user_id) {
+                            h += '<td><button class="button button-small oha-verify-btn" data-user-id="'+r.user_id+'" data-name="'+esc(r.name)+'">Verify</button></td>';
+                        }
+                        h += '</tr>';
+                    });
+                    return h+'</tbody></table>';
+                }
+
+                function doFetch(endpoint, body, callback) {
+                    document.getElementById('oha-sync-spinner').style.display = 'inline';
+                    fetch(apiBase + endpoint, {
+                        method: 'POST',
+                        headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' },
+                        body: body ? JSON.stringify(body) : null,
+                        credentials: 'same-origin'
+                    }).then(function(r){ return r.json(); }).then(function(data){
+                        document.getElementById('oha-sync-spinner').style.display = 'none';
+                        callback(data);
+                    }).catch(function(e){
+                        document.getElementById('oha-sync-spinner').style.display = 'none';
+                        alert('Request failed: '+e);
+                    });
+                }
+
+                document.getElementById('oha-sync-preview-btn').addEventListener('click', function(){
+                    doFetch('stripe-sync-preview', null, function(data){
+                        var c = data.counts || {};
+                        document.getElementById('oha-sync-summary').innerHTML =
+                            '<strong>Preview complete.</strong>&nbsp; ' +
+                            'Old query total: <strong>'+( c.old_total||0)+'</strong> | ' +
+                            'New canonical total: <strong>'+(c.new_total||0)+'</strong> | ' +
+                            'Stripe pages fetched: <strong>'+(c.stripe_pages||0)+'</strong><br>' +
+                            'Already canonical (green): <strong style="color:#155724;">'+(c.stays_member||0)+'</strong> | ' +
+                            'Stripe match found (yellow): <strong style="color:#856404;">'+(c.will_sync||0)+'</strong> | ' +
+                            'No Stripe match (orange): <strong style="color:#721c24;">'+(c.needs_review||0)+'</strong>';
+
+                        document.getElementById('oha-sync-green').innerHTML =
+                            '<h4 style="color:#155724;margin:0 0 6px;">Already Canonical (no action needed) - '+(data.green||[]).length+'</h4>'+
+                            buildTable(data.green, '');
+                        document.getElementById('oha-sync-yellow').innerHTML =
+                            '<h4 style="color:#856404;margin:10px 0 6px;">Stripe Match Found - Sync Will Fix - '+(data.yellow||[]).length+'</h4>'+
+                            buildTable(data.yellow, '<th>Stripe Subscription</th>');
+                        document.getElementById('oha-sync-orange').innerHTML =
+                            '<h4 style="color:#721c24;margin:10px 0 6px;">No Stripe Match - Needs Manual Review - '+(data.orange||[]).length+'</h4>'+
+                            buildTable(data.orange, '<th>Action</th>');
+
+                        document.getElementById('oha-sync-results').style.display = 'block';
+                        document.getElementById('oha-sync-commit-btn').style.display = 'inline-block';
+
+                        // Wire verify buttons
+                        document.querySelectorAll('.oha-verify-btn').forEach(function(btn){
+                            btn.addEventListener('click', function(){
+                                var uid  = parseInt(this.getAttribute('data-user-id'), 10);
+                                var name = this.getAttribute('data-name');
+                                if (!confirm('Mark '+name+' as a board-verified OHA member? This sets oha_membership_verified = 1.')) return;
+                                var self = this;
+                                doFetch('verify-member', {user_id: uid}, function(resp){
+                                    if (resp.success) {
+                                        self.textContent = 'Verified';
+                                        self.disabled = true;
+                                        self.classList.add('button-primary');
+                                    } else {
+                                        alert('Error: could not verify user.');
+                                    }
+                                });
+                            });
+                        });
+                    });
+                });
+
+                document.getElementById('oha-sync-commit-btn').addEventListener('click', function(){
+                    if (!confirm('Run the Stripe sync now?\n\nThis writes stripe_subscription_status, _uwp_register_form_id, and uwp_account_type for all matched users.\n\nReview the preview above before proceeding.')) return;
+                    doFetch('stripe-sync-commit', null, function(data){
+                        var el = document.getElementById('oha-sync-commit-result');
+                        el.innerHTML = '<strong>Sync complete.</strong>&nbsp; ' +
+                            'Matched: <strong>'+(data.matched||0)+'</strong> | ' +
+                            'Updated: <strong>'+(data.updated||0)+'</strong> | ' +
+                            'Skipped (no WP match): <strong>'+(data.skipped||0)+'</strong>';
+                        el.style.display = 'block';
+                        document.getElementById('oha-sync-commit-btn').style.display = 'none';
+                    });
+                });
+            })();
+            </script>
         </div>
 
         <style>
@@ -292,126 +411,189 @@ class OHA_Members_Table {
     // =========================================================================
 
     /**
-     * Get unified member list from both uwp_account_type and SWPM legacy table.
+     * Get the canonical OHA member list.
+     *
+     * Paid member views (all_paid, new_paid, cards_not_sent) use the canonical
+     * Stripe-based query: stripe_subscription_status = 'active' OR oha_membership_verified = '1'.
+     * Listing owner views (all_listing, new_listing) use uwp_account_type = 'listing_owner'.
+     * The 'all' view merges both sets without duplicates.
      *
      * Returned row format:
-     *   user_id          int    WP user ID (0 if SWPM-only with no WP account)
+     *   user_id          int    WP user ID
      *   display_name     string
      *   user_email       string
      *   user_registered  string
      *   account_type     string  'oha_member' | 'listing_owner' | level-name string
      *   paid_since       string|null
      *   is_upgrade       bool
-     *   _source          string  'uwp' | 'swpm' | 'both'
-     *   _swpm_member_id  int     SWPM primary-key member_id (0 for uwp-only)
-     *   _swpm_address    array|null  SWPM address columns as fallback
+     *   _source          string  'canonical' | 'uwp'
+     *   _swpm_member_id  int     always 0 (SWPM no longer used)
+     *   _swpm_address    null    always null (address read from usermeta only)
      */
     private static function get_members($view, $search = '') {
+        $thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
+        $listing_views   = ['all_listing', 'new_listing'];
+        $paid_views      = ['all_paid', 'new_paid', 'cards_not_sent'];
+
+        if (in_array($view, $listing_views, true)) {
+            return self::get_listing_owner_members($view, $search, $thirty_days_ago);
+        }
+
+        $paid = self::get_canonical_paid_members($view, $search, $thirty_days_ago);
+
+        if ($view === 'all') {
+            // Merge listing owners without duplicating paid members
+            $listing  = self::get_listing_owner_members('all_listing', $search, $thirty_days_ago);
+            $seen_ids = array_flip(array_column($paid, 'user_id'));
+            foreach ($listing as $lo) {
+                if (!isset($seen_ids[(int) $lo['user_id']])) {
+                    $paid[] = $lo;
+                }
+            }
+        }
+
+        return $paid;
+    }
+
+    /**
+     * Canonical paid member query.
+     * Returns users who have stripe_subscription_status = 'active' OR oha_membership_verified = '1'.
+     * View filters applied: new_paid (30-day window), cards_not_sent (no card sent).
+     */
+    private static function get_canonical_paid_members($view, $search, $thirty_days_ago) {
         global $wpdb;
 
-        $thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
-
-        // ── Part 1: UsersWP / new members ──────────────────────────────────
-        $uwp_where  = [];
-        $uwp_params = [];
-
-        // Subscription gate: only subscription checkouts write stripe_subscription_id.
-        // One-time payments (booths, shirts, awards) never set it, so this subquery
-        // cleanly separates real OHA members from erroneous writes.
-        $sub_gate = "EXISTS (
-            SELECT 1 FROM {$wpdb->usermeta} msub
-            WHERE msub.user_id = u.ID AND msub.meta_key = 'stripe_subscription_id'
+        // Base canonical condition
+        $canonical = "(
+            (
+                EXISTS (SELECT 1 FROM {$wpdb->usermeta} ms1 WHERE ms1.user_id = u.ID AND ms1.meta_key = 'stripe_subscription_id')
+                AND EXISTS (SELECT 1 FROM {$wpdb->usermeta} ms2 WHERE ms2.user_id = u.ID AND ms2.meta_key = 'stripe_subscription_status' AND ms2.meta_value = 'active')
+            )
+            OR EXISTS (SELECT 1 FROM {$wpdb->usermeta} mv WHERE mv.user_id = u.ID AND mv.meta_key = 'oha_membership_verified' AND mv.meta_value = '1')
         )";
+
+        $where  = [$canonical];
+        $params = [];
 
         switch ($view) {
             case 'new_paid':
-                $uwp_where[]  = "m.meta_value = 'oha_member'";
-                $uwp_where[]  = $sub_gate;
-                $uwp_where[]  = "(u.user_registered >= %s OR (m2.meta_value IS NOT NULL AND m2.meta_value >= %s))";
-                $uwp_params[] = $thirty_days_ago;
-                $uwp_params[] = $thirty_days_ago;
-                break;
-            case 'new_listing':
-                $uwp_where[]  = "m.meta_value = 'listing_owner'";
-                $uwp_where[]  = "u.user_registered >= %s";
-                $uwp_params[] = $thirty_days_ago;
-                break;
-            case 'all_paid':
-                $uwp_where[] = "m.meta_value = 'oha_member'";
-                $uwp_where[] = $sub_gate;
-                break;
-            case 'all_listing':
-                $uwp_where[] = "m.meta_value = 'listing_owner'";
+                $where[]  = "(u.user_registered >= %s OR (paid.meta_value IS NOT NULL AND paid.meta_value >= %s))";
+                $params[] = $thirty_days_ago;
+                $params[] = $thirty_days_ago;
                 break;
             case 'cards_not_sent':
-                $uwp_where[] = "m.meta_value = 'oha_member'";
-                $uwp_where[] = $sub_gate;
-                $uwp_where[] = "NOT EXISTS (
-                    SELECT 1 FROM {$wpdb->usermeta} um3
-                    WHERE um3.user_id = u.ID
-                    AND um3.meta_key = 'oha_card_sent'
-                    AND um3.meta_value = '1'
+                $where[] = "NOT EXISTS (
+                    SELECT 1 FROM {$wpdb->usermeta} um_cs
+                    WHERE um_cs.user_id = u.ID AND um_cs.meta_key = 'oha_card_sent' AND um_cs.meta_value = '1'
                 )";
                 break;
+            case 'all_paid':
             case 'all':
             default:
                 break;
         }
 
         if (!empty($search)) {
-            $like         = '%' . $wpdb->esc_like($search) . '%';
-            $uwp_where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-            $uwp_params[] = $like;
-            $uwp_params[] = $like;
-            $uwp_params[] = $like;
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
         }
 
-        $uwp_sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
-                    m.meta_value as account_type,
-                    m2.meta_value as paid_since
-                    FROM {$wpdb->users} u
-                    INNER JOIN {$wpdb->usermeta} m  ON u.ID = m.user_id  AND m.meta_key  = 'uwp_account_type'
-                    LEFT  JOIN {$wpdb->usermeta} m2 ON u.ID = m2.user_id AND m2.meta_key = 'oha_paid_member_since'";
+        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    paid.meta_value as paid_since
+                FROM {$wpdb->users} u
+                LEFT JOIN {$wpdb->usermeta} paid
+                    ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'";
 
-        if (!empty($uwp_where)) {
-            $uwp_sql .= ' WHERE ' . implode(' AND ', $uwp_where);
-        }
-        $uwp_sql .= ' ORDER BY u.user_registered DESC';
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+        $sql .= ' ORDER BY u.user_registered DESC';
 
-        $uwp_raw = empty($uwp_params)
-            ? $wpdb->get_results($uwp_sql, ARRAY_A)
-            : $wpdb->get_results($wpdb->prepare($uwp_sql, ...$uwp_params), ARRAY_A);
+        $raw = empty($params)
+            ? $wpdb->get_results($sql, ARRAY_A)
+            : $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
 
-        $uwp_raw = is_array($uwp_raw) ? $uwp_raw : [];
-
-        // Track covered user_ids and emails so SWPM query can exclude duplicates
-        $covered_user_ids = [];
-        $covered_emails   = [];
-        $uwp_members      = [];
-
-        foreach ($uwp_raw as $row) {
-            $uid = intval($row['user_id']);
-            $covered_user_ids[] = $uid;
-            $covered_emails[]   = strtolower(trim($row['user_email']));
-
+        $members = [];
+        foreach ((array) $raw as $row) {
+            $uid        = intval($row['user_id']);
             $registered = $row['user_registered'] ?? '';
             $paid_since = $row['paid_since'] ?: null;
-            // Also check oha_membership_paid_date as fallback for paid_since
             if (!$paid_since) {
                 $paid_since = get_user_meta($uid, 'oha_membership_paid_date', true) ?: null;
             }
-
             $is_upgrade = false;
             if ($paid_since && $registered) {
                 $is_upgrade = (strtotime($paid_since) - strtotime($registered)) > (7 * DAY_IN_SECONDS);
             }
-
-            $uwp_members[] = [
+            $members[] = [
                 'user_id'         => $uid,
                 'display_name'    => $row['display_name'],
                 'user_email'      => $row['user_email'],
                 'user_registered' => $registered,
-                'account_type'    => $row['account_type'],
+                'account_type'    => 'oha_member',
+                'paid_since'      => $paid_since,
+                'is_upgrade'      => $is_upgrade,
+                '_source'         => 'canonical',
+                '_swpm_member_id' => 0,
+                '_swpm_address'   => null,
+            ];
+        }
+
+        return $members;
+    }
+
+    /**
+     * Listing owner query — UsersWP uwp_account_type = 'listing_owner'.
+     * Unchanged from pre-canonical architecture.
+     */
+    private static function get_listing_owner_members($view, $search, $thirty_days_ago) {
+        global $wpdb;
+        $where  = ["m.meta_value = 'listing_owner'"];
+        $params = [];
+
+        if ($view === 'new_listing') {
+            $where[]  = "u.user_registered >= %s";
+            $params[] = $thirty_days_ago;
+        }
+
+        if (!empty($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+        }
+
+        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    m2.meta_value as paid_since
+                FROM {$wpdb->users} u
+                INNER JOIN {$wpdb->usermeta} m
+                    ON u.ID = m.user_id AND m.meta_key = 'uwp_account_type'
+                LEFT JOIN {$wpdb->usermeta} m2
+                    ON u.ID = m2.user_id AND m2.meta_key = 'oha_paid_member_since'
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY u.user_registered DESC";
+
+        $raw = empty($params)
+            ? $wpdb->get_results($sql, ARRAY_A)
+            : $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
+
+        $members = [];
+        foreach ((array) $raw as $row) {
+            $uid        = intval($row['user_id']);
+            $registered = $row['user_registered'] ?? '';
+            $paid_since = $row['paid_since'] ?: null;
+            $is_upgrade = false;
+            if ($paid_since && $registered) {
+                $is_upgrade = (strtotime($paid_since) - strtotime($registered)) > (7 * DAY_IN_SECONDS);
+            }
+            $members[] = [
+                'user_id'         => $uid,
+                'display_name'    => $row['display_name'],
+                'user_email'      => $row['user_email'],
+                'user_registered' => $registered,
+                'account_type'    => 'listing_owner',
                 'paid_since'      => $paid_since,
                 'is_upgrade'      => $is_upgrade,
                 '_source'         => 'uwp',
@@ -419,265 +601,13 @@ class OHA_Members_Table {
                 '_swpm_address'   => null,
             ];
         }
-
-        // ── Part 2: SWPM Legacy members ────────────────────────────────────
-        $swpm_members = [];
-        $swpm_tbl     = $wpdb->prefix . 'swpm_members_tbl';
-        $swpm_exists  = ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $swpm_tbl)) === $swpm_tbl);
-
-        if ($swpm_exists) {
-            $level_map  = self::get_level_map();
-            $oha_level  = (string)($level_map['oha_member']    ?? '10');
-            $list_level = (string)($level_map['listing_owners'] ?? '2');
-
-            $swpm_where  = [];
-            $swpm_params = [];
-
-            // Level / view filter
-            switch ($view) {
-                case 'new_paid':
-                    $swpm_where[]  = "s.membership_level = %d";
-                    $swpm_params[] = intval($oha_level);
-                    $swpm_where[]  = "(s.subscription_starts >= %s OR (u.user_registered IS NOT NULL AND u.user_registered >= %s))";
-                    $swpm_params[] = $thirty_days_ago;
-                    $swpm_params[] = $thirty_days_ago;
-                    break;
-                case 'new_listing':
-                    $swpm_where[]  = "s.membership_level = %d";
-                    $swpm_params[] = intval($list_level);
-                    $swpm_where[]  = "(s.subscription_starts >= %s OR (u.user_registered IS NOT NULL AND u.user_registered >= %s))";
-                    $swpm_params[] = $thirty_days_ago;
-                    $swpm_params[] = $thirty_days_ago;
-                    break;
-                case 'all_paid':
-                    $swpm_where[]  = "s.membership_level = %d";
-                    $swpm_params[] = intval($oha_level);
-                    break;
-                case 'all_listing':
-                    $swpm_where[]  = "s.membership_level = %d";
-                    $swpm_params[] = intval($list_level);
-                    break;
-                case 'cards_not_sent':
-                    $swpm_where[]  = "s.membership_level = %d";
-                    $swpm_params[] = intval($oha_level);
-                    $swpm_where[]  = "NOT EXISTS (
-                        SELECT 1 FROM {$wpdb->usermeta} um_cs
-                        WHERE um_cs.user_id = s.wp_user_id
-                        AND um_cs.meta_key  = 'oha_card_sent'
-                        AND um_cs.meta_value = '1'
-                    )";
-                    break;
-                case 'all':
-                default:
-                    break;
-            }
-
-            // Exclude already-covered users (by WP user_id)
-            if (!empty($covered_user_ids)) {
-                $ids_safe     = implode(',', array_map('intval', $covered_user_ids));
-                $swpm_where[] = "(s.wp_user_id IS NULL OR s.wp_user_id NOT IN ($ids_safe))";
-            }
-
-            // Search
-            if (!empty($search)) {
-                $like          = '%' . $wpdb->esc_like($search) . '%';
-                $swpm_where[]  = "(s.first_name LIKE %s OR s.last_name LIKE %s OR s.user_name LIKE %s OR s.email LIKE %s)";
-                $swpm_params[] = $like;
-                $swpm_params[] = $like;
-                $swpm_params[] = $like;
-                $swpm_params[] = $like;
-            }
-
-            // Check which SWPM columns exist
-            $cols_check  = $wpdb->get_results("DESCRIBE {$swpm_tbl}", ARRAY_A);
-            $col_names   = array_column($cols_check, 'Field');
-            $has_wp_uid  = in_array('wp_user_id', $col_names, true);
-            $wp_uid_sel  = $has_wp_uid ? 's.wp_user_id' : '0 as wp_user_id';
-
-            $swpm_sql = "SELECT s.member_id, s.user_name, s.first_name, s.last_name, s.email,
-                                s.membership_level, s.account_state, s.subscription_starts,
-                                s.address_street, s.address_city, s.address_state, s.address_zipcode, s.country,
-                                {$wp_uid_sel},
-                                u.ID as wp_uid_verified, u.display_name as wp_display_name,
-                                u.user_registered as wp_registered
-                         FROM {$swpm_tbl} s
-                         LEFT JOIN {$wpdb->users} u ON s.email = u.user_email";
-
-            if (!empty($swpm_where)) {
-                $swpm_sql .= ' WHERE ' . implode(' AND ', $swpm_where);
-            }
-            $swpm_sql .= ' ORDER BY s.member_id DESC LIMIT 3000';
-
-            $swpm_raw = empty($swpm_params)
-                ? $wpdb->get_results($swpm_sql, ARRAY_A)
-                : $wpdb->get_results($wpdb->prepare($swpm_sql, ...$swpm_params), ARRAY_A);
-
-            $swpm_raw = is_array($swpm_raw) ? $swpm_raw : [];
-
-            foreach ($swpm_raw as $s) {
-                // Skip if email already covered by uwp query
-                if (in_array(strtolower(trim($s['email'])), $covered_emails, true)) {
-                    continue;
-                }
-
-                $wp_user_id  = intval($s['wp_uid_verified'] ?? $s['wp_user_id'] ?? 0);
-                $display     = trim(($s['first_name'] ?? '') . ' ' . ($s['last_name'] ?? ''));
-                if (!$display) {
-                    $display = $s['wp_display_name'] ?? $s['user_name'] ?? $s['email'];
-                }
-
-                $registered  = $s['wp_registered'] ?? '';
-                $paid_since  = $s['subscription_starts'] ?: null;
-                // Also check usermeta for paid_since if wp_user_id is known
-                if (!$paid_since && $wp_user_id) {
-                    $paid_since = get_user_meta($wp_user_id, 'oha_paid_member_since', true) ?: null;
-                    if (!$paid_since) {
-                        $paid_since = get_user_meta($wp_user_id, 'oha_membership_paid_date', true) ?: null;
-                    }
-                }
-
-                $is_upgrade  = false;
-                if ($paid_since && $registered) {
-                    $is_upgrade = (strtotime($paid_since) - strtotime($registered)) > (7 * DAY_IN_SECONDS);
-                }
-
-                $account_type = self::get_level_name_from_id((string)($s['membership_level'] ?? ''));
-
-                $swpm_members[] = [
-                    'user_id'         => $wp_user_id,
-                    'display_name'    => $display,
-                    'user_email'      => $s['email'] ?? '',
-                    'user_registered' => $registered,
-                    'account_type'    => $account_type,
-                    'paid_since'      => $paid_since,
-                    'is_upgrade'      => $is_upgrade,
-                    '_source'         => 'swpm',
-                    '_swpm_member_id' => intval($s['member_id']),
-                    '_swpm_address'   => [
-                        'street'  => $s['address_street']  ?? '',
-                        'city'    => $s['address_city']    ?? '',
-                        'state'   => $s['address_state']   ?? '',
-                        'zipcode' => $s['address_zipcode'] ?? '',
-                        'country' => $s['country']         ?? '',
-                    ],
-                ];
-            }
-        }
-
-        // ── Part 3: Fallback for _uwp_register_form_id=1 users with no uwp_account_type ──
-        // These are OHA member form registrants whose uwp_account_type was never set,
-        // so they are invisible to Part 1 (uwp INNER JOIN) and may not be in SWPM (Part 2).
-        // Include for any view that shows oha_member records.
-        $fb_members = [];
-        $include_fb = in_array($view, ['all', 'all_paid', 'new_paid', 'cards_not_sent'], true);
-
-        if ($include_fb) {
-            // Collect all WP user IDs already covered by Parts 1 & 2
-            $fb_excl_ids = array_unique(array_merge(
-                $covered_user_ids,
-                array_filter(array_map(fn($m) => $m['user_id'], $swpm_members))
-            ));
-            // Collect covered emails (for dedup when SWPM wp_user_id=0)
-            $fb_excl_emails = array_unique(array_merge(
-                $covered_emails,
-                array_map(fn($m) => strtolower($m['user_email']), $swpm_members)
-            ));
-
-            $fb_where  = [];
-            $fb_params = [];
-
-            // Only users who registered via the oha_member UWP form (form_id=1)
-            $fb_where[] = "um_form.meta_value = '1'";
-            // Exclude users who already have uwp_account_type (already in Part 1)
-            $fb_where[] = "NOT EXISTS (
-                SELECT 1 FROM {$wpdb->usermeta} um_acct
-                WHERE um_acct.user_id = u.ID AND um_acct.meta_key = 'uwp_account_type'
-            )";
-            // Require a Stripe subscription — otherwise any form-1 registrant appears
-            // as an OHA Member regardless of whether they ever paid.
-            $fb_where[] = "EXISTS (
-                SELECT 1 FROM {$wpdb->usermeta} msub
-                WHERE msub.user_id = u.ID AND msub.meta_key = 'stripe_subscription_id'
-            )";
-
-            // Exclude WP user IDs already covered
-            if (!empty($fb_excl_ids)) {
-                $ids_safe   = implode(',', array_map('intval', $fb_excl_ids));
-                $fb_where[] = "u.ID NOT IN ($ids_safe)";
-            }
-
-            if ($view === 'new_paid') {
-                $fb_where[]  = "(u.user_registered >= %s OR (paid.meta_value IS NOT NULL AND paid.meta_value >= %s))";
-                $fb_params[] = $thirty_days_ago;
-                $fb_params[] = $thirty_days_ago;
-            }
-            if ($view === 'cards_not_sent') {
-                $fb_where[] = "NOT EXISTS (
-                    SELECT 1 FROM {$wpdb->usermeta} um_cs
-                    WHERE um_cs.user_id = u.ID
-                    AND um_cs.meta_key = 'oha_card_sent'
-                    AND um_cs.meta_value = '1'
-                )";
-            }
-            if (!empty($search)) {
-                $like        = '%' . $wpdb->esc_like($search) . '%';
-                $fb_where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-                $fb_params[] = $like;
-                $fb_params[] = $like;
-                $fb_params[] = $like;
-            }
-
-            $fb_sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
-                              paid.meta_value as paid_since
-                       FROM {$wpdb->users} u
-                       INNER JOIN {$wpdb->usermeta} um_form
-                               ON u.ID = um_form.user_id AND um_form.meta_key = '_uwp_register_form_id'
-                       LEFT  JOIN {$wpdb->usermeta} paid
-                               ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'";
-
-            if (!empty($fb_where)) {
-                $fb_sql .= ' WHERE ' . implode(' AND ', $fb_where);
-            }
-            $fb_sql .= ' ORDER BY u.user_registered DESC';
-
-            $fb_raw = empty($fb_params)
-                ? $wpdb->get_results($fb_sql, ARRAY_A)
-                : $wpdb->get_results($wpdb->prepare($fb_sql, ...$fb_params), ARRAY_A);
-
-            foreach (is_array($fb_raw) ? $fb_raw : [] as $row) {
-                $uid = intval($row['user_id']);
-                // Skip if already covered by email (handles SWPM rows with user_id=0)
-                if (in_array(strtolower($row['user_email']), $fb_excl_emails, true)) {
-                    continue;
-                }
-
-                $registered = $row['user_registered'] ?? '';
-                $paid_since = $row['paid_since'] ?: null;
-                if (!$paid_since) {
-                    $paid_since = get_user_meta($uid, 'oha_membership_paid_date', true) ?: null;
-                }
-                $is_upgrade = false;
-                if ($paid_since && $registered) {
-                    $is_upgrade = (strtotime($paid_since) - strtotime($registered)) > (7 * DAY_IN_SECONDS);
-                }
-
-                $fb_members[] = [
-                    'user_id'         => $uid,
-                    'display_name'    => $row['display_name'],
-                    'user_email'      => $row['user_email'],
-                    'user_registered' => $registered,
-                    'account_type'    => 'oha_member',
-                    'paid_since'      => $paid_since,
-                    'is_upgrade'      => $is_upgrade,
-                    '_source'         => 'uwp',
-                    '_swpm_member_id' => 0,
-                    '_swpm_address'   => null,
-                ];
-            }
-        }
-
-        return array_merge($uwp_members, $swpm_members, $fb_members);
+        return $members;
     }
+
+    // wp_swpm_members_tbl is no longer read by any query in this class.
+    // It is accessed once during the migration preview via the REST endpoint
+    // rest_stripe_sync_preview() in oha-board-hub-suite.php.
+
 
     // =========================================================================
     // HELPERS

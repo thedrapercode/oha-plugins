@@ -428,8 +428,7 @@ function oha_sm_save_from_checkout_session($session){
     if(!empty($session->shipping_details->address)) oha_sm_save_addr($wp_user_id,$session->shipping_details->address,'shipping_');
     if(!empty($session->subscription)) update_user_meta($wp_user_id,'stripe_subscription_id',sanitize_text_field($session->subscription));
 
-    $s=oha_sm_get(); $level_id=!empty($s['membership_level_id'])?(int)$s['membership_level_id']:0;
-    if($level_id>0 && !empty($session->subscription)) oha_sm_set_swpm_membership_active($wp_user_id,$level_id);
+    $s=oha_sm_get();
     if(!empty($s['trial_end_iso'])) update_user_meta($wp_user_id,'membership_trial_end',sanitize_text_field($s['trial_end_iso']));
 }
 function oha_sm_save_from_customer($cust){
@@ -647,6 +646,9 @@ function oha_sm_push_to_board_hub_fields($user_id,$src_prefix='billing_'){
  * SWPM sync/activate
  * ================== */
 function oha_sm_sync_to_swpm($user_id){
+    // SWPM is no longer used as the membership data store.
+    // This function is kept as a stub to avoid fatal errors from any remaining call sites.
+    return false;
     global $wpdb; $table=$wpdb->prefix.'swpm_members_tbl';
     $exists=$wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table)); if($exists!=$table){ oha_sm_admin_note('SWPM table not found: '.$table); return false; }
     $cols=$wpdb->get_results("DESCRIBE {$table}", ARRAY_A); $names=wp_list_pluck($cols,'Field');

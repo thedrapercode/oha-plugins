@@ -526,13 +526,8 @@ class OHA_Webhook_Handler {
         }
         
         $user_id = (int) $users[0];
-        $membership_level = (int) $this->settings->get('stripe.membership_level_id', 0);
-        
-        if ($membership_level > 0 && function_exists('oha_sm_set_swpm_membership_active')) {
-            oha_sm_set_swpm_membership_active($user_id, $membership_level);
-        }
 
-        // Renewal/payment succeeded -> ensure paid status is applied
+        // Renewal/payment succeeded -> ensure paid status is applied (writes stripe_subscription_status + form_id)
         do_action('oha_bhs_membership_set_paid', $user_id, $invoice, $this->event);
     }
     
@@ -548,61 +543,20 @@ class OHA_Webhook_Handler {
             'number' => 1,
             'fields' => 'ID'
         ]);
-        
+
         if (empty($users)) {
             OHA_Logger::warning('No user found for subscription to downgrade', ['sub_id' => $sub_id]);
             return;
         }
-        
-        $user_id = (int) $users[0];
-        $free_level = (int) $this->settings->get('swpm.free_level_id', 2);
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'swpm_members_tbl';
-        
-        // Verify table exists
-        $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table));
-        if ($exists !== $table) {
-            OHA_Logger::error('SWPM table not found', ['table' => $table]);
-            return;
-        }
-        
-        $user = get_userdata($user_id);
-        if (!$user) {
-            OHA_Logger::error('User not found', ['user_id' => $user_id]);
-            return;
-        }
-        
-        // Check table structure
-        $columns = $wpdb->get_results("DESCRIBE {$table}", ARRAY_A);
-        $column_names = wp_list_pluck($columns, 'Field');
-        
-        $data = [
-            'membership_level' => $free_level,
-            'account_state' => 'active'
-        ];
-        
-        $where = in_array('wp_user_id', $column_names, true) 
-            ? ['wp_user_id' => $user_id]
-            : ['email' => $user->user_email];
-        
-        $result = $wpdb->update($table, $data, $where);
-        
-        if (false !== $result) {
-            OHA_Logger::info('User downgraded to free level', [
-                'user_id' => $user_id,
-                'level' => $free_level,
-                'sub_id' => $sub_id
-            ]);
-        } else {
-            OHA_Logger::error('Failed to downgrade user', [
-                'user_id' => $user_id,
-                'sub_id' => $sub_id
-            ]);
-        }
 
-        // Also align UsersWP/account type
+        $user_id = (int) $users[0];
+
+        // Downgrade: set stripe_subscription_status = cancelled and revert form_id/account_type
         do_action('oha_bhs_membership_set_free', $user_id, $sub_id, $this->event);
 
+        OHA_Logger::info('User subscription cancelled — membership status cleared', [
+            'user_id' => $user_id,
+            'sub_id'  => $sub_id,
+        ]);
     }
 }
