@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Volunteer Hub",
-    "version":  "4.10.1",
+    "version":  "4.10.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -211,6 +211,27 @@
                         "type":  "change",
                         "summary":  "Email Templates settings: removed unused Reminder template, added workflow context, fixed placeholder docs",
                         "notes":  "Reminder email send_reminder_email() is never called by any action in the plugin so its template was removed from the UI. Three active templates remain (Confirmation, Approval, Assignment) in chronological order with accurate placeholder lists."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "4.10.2",
+                        "type":  "fix",
+                        "summary":  "Portal email input: remove forced color:#000 so typed text inherits theme color",
+                        "notes":  "Theme was overriding background to dark while our color:#000 kept typed text black. Using color:inherit fixes it."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "4.10.2",
+                        "type":  "change",
+                        "summary":  "Remove all hardcoded emojis from volunteer portal output",
+                        "notes":  "Removed decorative emoji icons from all headings, status badges, list items, buttons, and inline messages. Admin-configured area icons (stored in DB) are unchanged."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "4.10.2",
+                        "type":  "change",
+                        "summary":  "Remove all em dashes from volunteer portal user-facing text",
+                        "notes":  "Replaced em dashes with hyphens or rephrased. Applied throughout portal gate header and main portal render."
                     }
                 ]
 }

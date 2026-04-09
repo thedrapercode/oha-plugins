@@ -38,7 +38,7 @@ class Portal {
                     .portal-gate-section p { margin: 0 0 15px 0; color: #555; font-size: 14px; }
                     .portal-gate-divider { text-align: center; margin: 5px 0; color: #aaa; font-size: 13px; font-style: italic; }
                     .portal-email-row { display: flex; gap: 10px; margin-top: 5px; }
-                    .portal-email-row input[type="email"] { flex: 1; padding: 10px 14px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; color: #000; }
+                    .portal-email-row input[type="email"] { flex: 1; padding: 10px 14px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; color: inherit; }
                     .portal-email-row button { white-space: nowrap; padding: 10px 18px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
                     .portal-email-row button:hover { background: #c0392b; }
                     .portal-lookup-error { margin-top: 12px; padding: 12px 16px; background: #f8d7da; color: #721c24; border-radius: 6px; font-size: 14px; }
@@ -48,8 +48,8 @@ class Portal {
                 </style>
 
                 <div class="portal-gate-header">
-                    <h2>🎃 Volunteer Portal</h2>
-                    <p>OHA Convention 2026 — View your assignment &amp; check in</p>
+                    <h2>Volunteer Portal</h2>
+                    <p>OHA Convention 2026 - View your assignment and check in</p>
                 </div>
 
                 <div class="portal-gate-section">
@@ -58,7 +58,7 @@ class Portal {
                     <a href="<?php echo esc_url($login_url); ?>" class="button button-primary" style="background:#2271b1;border-color:#2271b1;text-decoration:none;color:white;padding:10px 20px;">Log In to Your Account</a>
                 </div>
 
-                <div class="portal-gate-divider">— or —</div>
+                <div class="portal-gate-divider">- or -</div>
 
                 <div class="portal-gate-section">
                     <h3>Not a website member?</h3>
@@ -155,17 +155,16 @@ class Portal {
         ?>
         <div class="oha-vh-portal">
             <div class="portal-header">
-                <h2 style="color: #ffffff !important;">🎉 Welcome, <?php echo esc_html($volunteer->first_name); ?>!</h2>
+                <h2 style="color: #ffffff !important;">Welcome, <?php echo esc_html($volunteer->first_name); ?>!</h2>
                 <p class="portal-subtitle">Your OHA Convention 2026 Assignments</p>
             </div>
 
             <?php if (empty($assignments)): ?>
                 <div class="portal-no-assignments">
-                    <div class="portal-icon">⏳</div>
                     <h3>No Assignments Yet</h3>
-                    <p style="color: #000 !important;">You're approved! Our team is currently reviewing volunteer preferences and will assign you to an area soon.</p>
-                    <p style="color: #000 !important;">You'll receive an email when you're assigned. Check back here for updates!</p>
-                    <p class="portal-info"><strong style="color: #000 !important;">Your Status:</strong> <span class="status-badge approved">✅ Approved</span></p>
+                    <p style="color: #000 !important;">You are approved. Our team is currently reviewing volunteer preferences and will assign you to an area soon.</p>
+                    <p style="color: #000 !important;">You will receive an email when you are assigned. Check back here for updates.</p>
+                    <p class="portal-info"><strong style="color: #000 !important;">Your Status:</strong> <span class="status-badge approved">Approved</span></p>
                 </div>
             <?php else: ?>
                 <div class="portal-assignments">
@@ -186,23 +185,21 @@ class Portal {
                         <div class="assignment-header">
                             <h3><?php echo esc_html($assignment->icon . ' ' . $assignment->area_name); ?></h3>
                             <?php if ($assignment->checked_in): ?>
-                                <span class="assignment-status checked-in">✅ Checked In</span>
+                                <span class="assignment-status checked-in">Checked In</span>
                             <?php else: ?>
-                                <span class="assignment-status pending">⏳ Not Checked In</span>
+                                <span class="assignment-status pending">Not Checked In</span>
                             <?php endif; ?>
                         </div>
 
                         <div class="assignment-details">
                             <?php if ($assignment->shift_type === 'time_slot'): ?>
                                 <div class="detail-row">
-                                    <span class="detail-icon">📅</span>
                                     <div>
                                         <strong>Date:</strong>
                                         <?php echo esc_html(date('l, F j, Y', strtotime($assignment->shift_date))); ?>
                                     </div>
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-icon">⏰</span>
                                     <div>
                                         <strong>Time:</strong>
                                         <?php echo esc_html(date('g:i A', strtotime($assignment->shift_start)) . ' - ' . date('g:i A', strtotime($assignment->shift_end))); ?>
@@ -210,28 +207,25 @@ class Portal {
                                 </div>
                             <?php else: ?>
                                 <div class="detail-row">
-                                    <span class="detail-icon">📅</span>
                                     <div>
                                         <strong>Date:</strong>
                                         <?php echo esc_html(date('l, F j, Y', strtotime($assignment->shift_date ?: Settings::get('convention_date')))); ?>
                                     </div>
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-icon">⏰</span>
                                     <div><strong>Shift:</strong> All Day</div>
                                 </div>
                             <?php endif; ?>
 
                             <?php if (!empty($manager_info)): ?>
                                 <div class="detail-row">
-                                    <span class="detail-icon">👤</span>
                                     <div>
                                         <strong>Your Area Manager<?php echo count($manager_info) > 1 ? 's' : ''; ?>:</strong><br>
                                         <?php foreach ($manager_info as $mgr): ?>
                                             <div class="manager-info">
                                                 <?php echo esc_html($mgr['name']); ?>
                                                 <a href="mailto:<?php echo esc_attr($mgr['email']); ?>" class="manager-email">
-                                                    ✉️ <?php echo esc_html($mgr['email']); ?>
+                                                    <?php echo esc_html($mgr['email']); ?>
                                                 </a>
                                             </div>
                                         <?php endforeach; ?>
@@ -241,7 +235,6 @@ class Portal {
 
                             <?php if ($assignment->notes): ?>
                                 <div class="detail-row">
-                                    <span class="detail-icon">📝</span>
                                     <div>
                                         <strong>Notes:</strong><br>
                                         <?php echo nl2br(esc_html($assignment->notes)); ?>
@@ -254,15 +247,15 @@ class Portal {
                             <div class="assignment-actions">
                                 <button class="button button-primary check-in-btn"
                                         onclick="checkInVolunteer(<?php echo esc_js($assignment->id); ?>)">
-                                    ✅ Check In Now
+                                    Check In Now
                                 </button>
-                                <small>Check in when you arrive at the convention!</small>
+                                <small>Check in when you arrive at the convention.</small>
                             </div>
                         <?php else: ?>
                             <div class="assignment-checkin-info">
-                                <p><strong>✅ Checked in:</strong> <?php echo esc_html(date('g:i A', strtotime($assignment->checked_in_time))); ?></p>
+                                <p><strong>Checked in:</strong> <?php echo esc_html(date('g:i A', strtotime($assignment->checked_in_time))); ?></p>
                                 <?php if ($assignment->hours_worked > 0): ?>
-                                    <p><strong>⏱️ Hours worked:</strong> <?php echo esc_html($assignment->hours_worked); ?> hours</p>
+                                    <p><strong>Hours worked:</strong> <?php echo esc_html($assignment->hours_worked); ?> hours</p>
                                 <?php endif; ?>
                             </div>
                         <?php endif; ?>
@@ -271,7 +264,7 @@ class Portal {
                 </div>
 
                 <div class="portal-contact">
-                    <h3>📞 Need Help?</h3>
+                    <h3>Need Help?</h3>
                     <p>Questions about your assignment? Contact your area manager using the email above, or reach out to our volunteer coordinator:</p>
                     <p><strong>Email:</strong> <a href="mailto:<?php echo esc_attr(Settings::get('volunteer_coordinator_email')); ?>"><?php echo esc_html(Settings::get('volunteer_coordinator_email')); ?></a></p>
                     <?php if (Settings::get('volunteer_coordinator_phone')): ?>
@@ -281,15 +274,15 @@ class Portal {
             <?php endif; ?>
 
             <div class="portal-info-box">
-                <h3>📋 What to Bring</h3>
+                <h3>What to Bring</h3>
                 <ul>
-                    <li>✅ Comfortable shoes (you'll be on your feet!)</li>
-                    <li>✅ Water bottle (stay hydrated)</li>
-                    <li>✅ Positive energy and enthusiasm</li>
-                    <li>✅ This page (bookmark it for check-in)</li>
+                    <li>Comfortable shoes (you will be on your feet)</li>
+                    <li>Water bottle (stay hydrated)</li>
+                    <li>Positive attitude and enthusiasm</li>
+                    <li>Bookmark this page for check-in day</li>
                 </ul>
                 <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px dashed #e74c3c;">
-                    <strong style="display: block; margin-bottom: 8px; color: #000 !important;">📖 Important Resources</strong>
+                    <strong style="display: block; margin-bottom: 8px; color: #000 !important;">Important Resources</strong>
                     <a href="/convention/2026-convention/volunteers/volunteer-handbook/" target="_blank" class="button button-primary" style="background: #e74c3c !important; border-color: #e74c3c !important; text-decoration: none;">
                         View Volunteer Handbook
                     </a>
@@ -304,7 +297,6 @@ class Portal {
             .portal-header h2 { margin: 0 0 10px 0; color: #000; }
             .portal-subtitle { color: #666; font-size: 18px; }
             .portal-no-assignments { text-align: center; padding: 60px 20px; background: #f9f9f9; border-radius: 12px; }
-            .portal-icon { font-size: 72px; margin-bottom: 20px; }
             .portal-no-assignments h3 { color: #000; margin-bottom: 15px; }
             .portal-info { margin-top: 30px; }
             .status-badge { padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; }
@@ -318,7 +310,6 @@ class Portal {
             .assignment-details { margin-bottom: 20px; }
             .detail-row { display: flex; gap: 15px; margin-bottom: 15px; padding: 12px; background: #f9f9f9; border-radius: 6px; color: #000 !important; }
             .detail-row div { color: #000 !important; }
-            .detail-icon { font-size: 24px; flex-shrink: 0; }
             .detail-row strong { display: block; color: #000 !important; margin-bottom: 5px; }
             .manager-info { margin-top: 8px; padding: 8px 12px; background: #e3f2fd; border-radius: 4px; color: #000 !important; }
             .manager-email { display: block; margin-top: 4px; color: #1976d2 !important; text-decoration: none; font-size: 14px; }
@@ -365,7 +356,7 @@ class Portal {
 
     /**
      * AJAX: Email-based portal lookup for non-WP users
-     * Nopriv — authenticated only by email match against submitted volunteer record
+     * Nopriv -- authenticated only by email match against submitted volunteer record
      */
     public static function ajax_portal_lookup() {
         $nonce = sanitize_text_field($_POST['nonce'] ?? '');
@@ -388,19 +379,18 @@ class Portal {
             wp_send_json_error(['message' => 'No volunteer record found for that email address. Please double-check your spelling, or <a href="/convention-2026/volunteers/">sign up here</a> if you haven\'t yet.']);
         }
 
-        $assignments  = Database::get_assignments_by_volunteer($volunteer->id);
+        $assignments   = Database::get_assignments_by_volunteer($volunteer->id);
         $checkin_nonce = wp_create_nonce('oha_vh_checkin');
         $ajax_url      = admin_url('admin-ajax.php');
 
         ob_start();
         ?>
         <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e74c3c;">
-            <h3 style="color: #000; margin: 0 0 15px 0;">🎉 Hi <?php echo esc_html($volunteer->first_name); ?>! Here are your assignments:</h3>
+            <h3 style="color: #000; margin: 0 0 15px 0;">Hi <?php echo esc_html($volunteer->first_name); ?>, here are your assignments:</h3>
 
             <?php if (empty($assignments)): ?>
                 <div style="padding: 30px; background: #f9f9f9; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 12px;">⏳</div>
-                    <p style="color: #000; margin: 0;"><strong>No assignments yet.</strong> Our team is reviewing preferences and will assign you soon. You'll get an email when it's ready!</p>
+                    <p style="color: #000; margin: 0;"><strong>No assignments yet.</strong> Our team is reviewing preferences and will assign you soon. You will receive an email when it is ready.</p>
                 </div>
             <?php else: ?>
                 <?php foreach ($assignments as $assignment):
@@ -418,33 +408,29 @@ class Portal {
                     <div class="assignment-header">
                         <h3><?php echo esc_html($assignment->icon . ' ' . $assignment->area_name); ?></h3>
                         <?php if ($assignment->checked_in): ?>
-                            <span class="assignment-status checked-in">✅ Checked In</span>
+                            <span class="assignment-status checked-in">Checked In</span>
                         <?php else: ?>
-                            <span class="assignment-status pending">⏳ Not Checked In</span>
+                            <span class="assignment-status pending">Not Checked In</span>
                         <?php endif; ?>
                     </div>
 
                     <div class="assignment-details">
                         <div class="detail-row">
-                            <span class="detail-icon">📅</span>
                             <div>
                                 <strong>Date:</strong>
                                 <?php echo esc_html($assignment->shift_date ? date('l, F j, Y', strtotime($assignment->shift_date)) : 'To Be Determined'); ?>
                             </div>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-icon">⏰</span>
                             <div><strong>Time:</strong> <?php echo esc_html($shift_display); ?></div>
                         </div>
                         <?php if ($assignment->notes): ?>
                         <div class="detail-row">
-                            <span class="detail-icon">📝</span>
                             <div><strong>Notes:</strong><br><?php echo nl2br(esc_html($assignment->notes)); ?></div>
                         </div>
                         <?php endif; ?>
                         <?php if (!empty($managers)): ?>
                         <div class="detail-row">
-                            <span class="detail-icon">👤</span>
                             <div>
                                 <strong>Area Manager<?php echo count($managers) > 1 ? 's' : ''; ?>:</strong><br>
                                 <?php foreach ($managers as $mid):
@@ -454,7 +440,7 @@ class Portal {
                                 <div class="manager-info">
                                     <?php echo esc_html($mgr->display_name); ?>
                                     <a href="mailto:<?php echo esc_attr($mgr->user_email); ?>" class="manager-email">
-                                        ✉️ <?php echo esc_html($mgr->user_email); ?>
+                                        <?php echo esc_html($mgr->user_email); ?>
                                     </a>
                                 </div>
                                 <?php endif; endforeach; ?>
@@ -467,15 +453,15 @@ class Portal {
                     <div class="assignment-actions" id="checkin-wrap-<?php echo (int)$assignment->id; ?>">
                         <button class="button button-primary check-in-btn"
                                 onclick="ohaGuestCheckIn(<?php echo (int)$assignment->id; ?>, '<?php echo esc_js($checkin_nonce); ?>', '<?php echo esc_js($ajax_url); ?>')">
-                            ✅ Check In Now
+                            Check In Now
                         </button>
-                        <small>Tap this when you arrive at the convention!</small>
+                        <small>Tap this when you arrive at the convention.</small>
                     </div>
                     <?php else: ?>
                     <div class="assignment-checkin-info">
-                        <p><strong>✅ Checked in:</strong> <?php echo esc_html(date('g:i A', strtotime($assignment->checked_in_time))); ?></p>
+                        <p><strong>Checked in:</strong> <?php echo esc_html(date('g:i A', strtotime($assignment->checked_in_time))); ?></p>
                         <?php if ($assignment->hours_worked > 0): ?>
-                            <p><strong>⏱️ Hours worked:</strong> <?php echo esc_html($assignment->hours_worked); ?> hours</p>
+                            <p><strong>Hours worked:</strong> <?php echo esc_html($assignment->hours_worked); ?> hours</p>
                         <?php endif; ?>
                     </div>
                     <?php endif; ?>
@@ -498,7 +484,6 @@ class Portal {
             .assignment-details { margin-bottom: 15px; }
             .detail-row { display: flex; gap: 12px; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 6px; }
             .detail-row div { color: #000 !important; }
-            .detail-icon { font-size: 20px; flex-shrink: 0; }
             .detail-row strong { display: block; color: #000 !important; margin-bottom: 3px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
             .manager-info { margin-top: 6px; padding: 7px 10px; background: #e3f2fd; border-radius: 4px; color: #000 !important; }
             .manager-email { display: block; margin-top: 3px; color: #1976d2 !important; text-decoration: none; font-size: 13px; }
@@ -529,7 +514,7 @@ class Portal {
             .then(function(data) {
                 if (data.success) {
                     if (wrap) {
-                        wrap.innerHTML = '<div class="assignment-checkin-info"><p>✅ <strong>Checked in!</strong> Thank you for being here!</p></div>';
+                        wrap.innerHTML = '<div class="assignment-checkin-info"><p><strong>Checked in!</strong> Thank you for being here.</p></div>';
                     }
                 } else {
                     alert(data.data && data.data.message ? data.data.message : 'Error checking in. Please try again.');
