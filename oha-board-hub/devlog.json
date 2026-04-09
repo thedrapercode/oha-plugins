@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.5.0",
+    "version":  "2.5.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -246,6 +246,13 @@
                         "type":  "feature",
                         "summary":  "Admin notice when membership_product_ids is empty in Stripe Settings",
                         "notes":  "Shows on Board Hub admin pages. Warns that manual Stripe invoice Path B cannot fire until at least one Stripe Product ID is configured."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.1",
+                        "type":  "fix",
+                        "summary":  "Preview endpoint now captures and displays Stripe API error message when pages fetched is 0",
+                        "notes":  "stripe_error field added to preview REST response and shown in red in the admin UI summary line. Helps diagnose no_key, network errors, or invalid API key issues."
                     }
                 ]
 }

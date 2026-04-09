@@ -322,11 +322,15 @@ class OHA_Members_Table {
                 document.getElementById('oha-sync-preview-btn').addEventListener('click', function(){
                     doFetch('stripe-sync-preview', null, function(data){
                         var c = data.counts || {};
+                        var stripeErrHtml = c.stripe_error
+                            ? '<br><strong style="color:#721c24;">Stripe API error: ' + c.stripe_error + '</strong>'
+                            : '';
                         document.getElementById('oha-sync-summary').innerHTML =
                             '<strong>Preview complete.</strong>&nbsp; ' +
                             'Old query total: <strong>'+( c.old_total||0)+'</strong> | ' +
                             'New canonical total: <strong>'+(c.new_total||0)+'</strong> | ' +
-                            'Stripe pages fetched: <strong>'+(c.stripe_pages||0)+'</strong><br>' +
+                            'Stripe pages fetched: <strong>'+(c.stripe_pages||0)+'</strong>' +
+                            stripeErrHtml + '<br>' +
                             'Already canonical (green): <strong style="color:#155724;">'+(c.stays_member||0)+'</strong> | ' +
                             'Stripe match found (yellow): <strong style="color:#856404;">'+(c.will_sync||0)+'</strong> | ' +
                             'No Stripe match (orange): <strong style="color:#721c24;">'+(c.needs_review||0)+'</strong>';

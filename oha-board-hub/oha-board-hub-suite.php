@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.5.0
+ * Version: 2.5.1
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.5.0');
+define('OHA_BHS_VERSION', '2.5.1');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -872,6 +872,7 @@ public function rest_stripe_sync_preview(WP_REST_Request $request) {
     ]));
 
     $starting_after = null;
+    $stripe_error   = null;
     $pages = 0;
     do {
         $params = ['status' => 'active', 'limit' => 100, 'expand' => ['data.customer']];
@@ -879,7 +880,12 @@ public function rest_stripe_sync_preview(WP_REST_Request $request) {
             $params['starting_after'] = $starting_after;
         }
         $resp = oha_sm_stripe_get('/v1/subscriptions', $params);
-        if (!empty($resp->error) || empty($resp->data)) {
+        if (!empty($resp->error)) {
+            $stripe_error = is_string($resp->error) ? $resp->error : json_encode($resp->error);
+            break;
+        }
+        if (empty($resp->data)) {
+            $stripe_error = isset($resp->object) ? 'no_subscriptions' : 'empty_response';
             break;
         }
 
@@ -968,6 +974,7 @@ public function rest_stripe_sync_preview(WP_REST_Request $request) {
             'will_sync'    => count($yellow),
             'needs_review' => count($orange),
             'stripe_pages' => $pages,
+            'stripe_error' => $stripe_error,
         ],
     ]);
 }
