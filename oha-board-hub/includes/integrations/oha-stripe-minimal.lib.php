@@ -429,7 +429,7 @@ function oha_sm_save_from_checkout_session($session){
     if(!empty($session->subscription)) update_user_meta($wp_user_id,'stripe_subscription_id',sanitize_text_field($session->subscription));
 
     $s=oha_sm_get(); $level_id=!empty($s['membership_level_id'])?(int)$s['membership_level_id']:0;
-    if($level_id>0) oha_sm_set_swpm_membership_active($wp_user_id,$level_id);
+    if($level_id>0 && !empty($session->subscription)) oha_sm_set_swpm_membership_active($wp_user_id,$level_id);
     if(!empty($s['trial_end_iso'])) update_user_meta($wp_user_id,'membership_trial_end',sanitize_text_field($s['trial_end_iso']));
 }
 function oha_sm_save_from_customer($cust){

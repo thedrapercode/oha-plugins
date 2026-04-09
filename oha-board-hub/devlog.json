@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.3.1",
+    "version":  "2.3.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -134,6 +134,13 @@
                         "type":  "fix",
                         "summary":  "Member table Part 3 fallback: require stripe_subscription_id to prevent false positives",
                         "notes":  "Part 3 (_uwp_register_form_id=1 fallback) now requires stripe_subscription_id. Prevents general form-1 registrants from appearing as OHA Members."
+                    },
+                    {
+                        "date":  "2026-04-08",
+                        "version":  "2.3.2",
+                        "type":  "fix",
+                        "summary":  "SWPM level no longer set for non-subscription Stripe checkouts (shirt/booth payments)",
+                        "notes":  "oha_sm_save_from_checkout_session in oha-stripe-minimal.lib.php was calling oha_sm_set_swpm_membership_active for any checkout.session.completed event matching a WP user by email. Added \\!empty(session-\u003esubscription) guard so SWPM level is only written for membership subscription checkouts. This stopped free members being shown as OHA Paid Members in Board Hub after purchasing shirts or other one-time items."
                     }
                 ]
 }
