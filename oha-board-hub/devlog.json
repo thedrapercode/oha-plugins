@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.4.2",
+    "version":  "2.5.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -197,6 +197,55 @@
                         "type":  "fix",
                         "summary":  "Add admin notice when webhook processing throws an exception (HTTP 500 response)",
                         "notes":  "Stores oha_webhook_failure_alert transient (7 day TTL) on catch. admin_notices() reads and clears it on next admin page load, showing event ID, type, error, and timestamp."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "fix",
+                        "summary":  "Removed uwp_account_type from all write paths - it was never a real UsersWP field",
+                        "notes":  "uwp_account_type is not a real UsersWP field. Real fields are _uwp_register_form_id and WP role. Removed from userswp_set_paid_member, userswp_set_free_member, and oha-stripe-minimal.lib.php."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "fix",
+                        "summary":  "Listing owner query now uses _uwp_register_form_id=4 instead of uwp_account_type",
+                        "notes":  "class-oha-members-table.php get_listing_owner_members INNER JOIN corrected. fetch_members_legacy_raw Part 2 also corrected."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "feature",
+                        "summary":  "Manual Stripe invoice now triggers membership upgrade via Path B in webhook handler",
+                        "notes":  "If invoice-\u003esubscription is empty, Path B checks membership product IDs, matches user by stripe_customer_id or email, saves address, sets oha_membership_verified=1, fires oha_bhs_membership_set_paid. Requires membership_product_ids configured in Stripe Settings."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "change",
+                        "summary":  "Removed dead oha_sm_handle_webhook function body - REST route already moved to Suite",
+                        "notes":  "oha_sm_verify_sig kept - actively called by class-oha-webhook-handler.php. Active endpoint /wp-json/oha/v1/stripe-webhook remains untouched."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "change",
+                        "summary":  "Removed legacy unmatched payment system functions and auto-match hooks",
+                        "notes":  "Removed store, get, auto_match, manual_match, create_user_from_invoice functions. Removed wp_login, user_register, and profile_update hooks that called auto_match."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "feature",
+                        "summary":  "Admin notice when trial_end_iso annual renewal date is in the past",
+                        "notes":  "Shows on Board Hub admin pages. Warns that new Join OHA checkouts will be blocked until the date is updated to a future UTC timestamp."
+                    },
+                    {
+                        "date":  "2026-04-09",
+                        "version":  "2.5.0",
+                        "type":  "feature",
+                        "summary":  "Admin notice when membership_product_ids is empty in Stripe Settings",
+                        "notes":  "Shows on Board Hub admin pages. Warns that manual Stripe invoice Path B cannot fire until at least one Stripe Product ID is configured."
                     }
                 ]
 }

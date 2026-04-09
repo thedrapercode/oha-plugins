@@ -507,32 +507,103 @@ class OHA_Webhook_Handler {
     }
     
     /**
-     * Handle invoice payment succeeded
+     * Handle invoice payment succeeded.
+     *
+     * Path A — subscription invoice (recurring $10/year renewal):
+     *   invoice->subscription is set; look up user by stripe_subscription_id and reconfirm paid status.
+     *
+     * Path B — manual invoice (board-created, no subscription):
+     *   invoice->subscription is empty; check line items for a configured membership product ID.
+     *   If found, look up user by stripe_customer_id then email, pull billing address, set
+     *   oha_membership_verified=1 (so the canonical query finds them via OR path), and upgrade.
      */
     private function handle_invoice_payment_succeeded() {
         $invoice = $this->event->data->object;
-        
-        if (empty($invoice->subscription)) {
-            return; // Not a subscription invoice
-        }
-        
-        $sub_id = sanitize_text_field($invoice->subscription);
-        $users = get_users([
-            'meta_key' => 'stripe_subscription_id',
-            'meta_value' => $sub_id,
-            'number' => 1,
-            'fields' => 'ID'
-        ]);
-        
-        if (empty($users)) {
-            OHA_Logger::warning('No user found for subscription', ['sub_id' => $sub_id]);
+
+        // ── Path A: subscription invoice ────────────────────────────────────────
+        if (!empty($invoice->subscription)) {
+            $sub_id = sanitize_text_field($invoice->subscription);
+            $users = get_users([
+                'meta_key'   => 'stripe_subscription_id',
+                'meta_value' => $sub_id,
+                'number'     => 1,
+                'fields'     => 'ID',
+            ]);
+            if (empty($users)) {
+                OHA_Logger::warning('No user found for subscription', ['sub_id' => $sub_id]);
+                return;
+            }
+            $user_id = (int) $users[0];
+            do_action('oha_bhs_membership_set_paid', $user_id, $invoice, $this->event);
             return;
         }
-        
-        $user_id = (int) $users[0];
 
-        // Renewal/payment succeeded -> ensure paid status is applied (writes stripe_subscription_status + form_id)
+        // ── Path B: manual invoice — check for membership product ────────────────
+        if (!function_exists('oha_sm_is_membership_product')) {
+            return;
+        }
+
+        $is_membership = false;
+        if (!empty($invoice->lines->data)) {
+            foreach ($invoice->lines->data as $line) {
+                if (!empty($line->price->product) && oha_sm_is_membership_product($line->price->product)) {
+                    $is_membership = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$is_membership) {
+            return; // Manual invoice but not a membership product — ignore
+        }
+
+        // Find WP user: stripe_customer_id first, email fallback
+        $user_id = 0;
+        if (!empty($invoice->customer)) {
+            $customer_id = sanitize_text_field($invoice->customer);
+            $users = get_users([
+                'meta_key'   => 'stripe_customer_id',
+                'meta_value' => $customer_id,
+                'number'     => 1,
+                'fields'     => 'ID',
+            ]);
+            if (!empty($users)) {
+                $user_id = (int) $users[0];
+            }
+        }
+        if (!$user_id && !empty($invoice->customer_email)) {
+            $u = get_user_by('email', sanitize_email($invoice->customer_email));
+            if ($u) $user_id = (int) $u->ID;
+        }
+
+        if (!$user_id) {
+            OHA_Logger::warning('Manual membership invoice: no WP user found', [
+                'invoice'  => $invoice->id ?? '',
+                'customer' => $invoice->customer ?? '',
+                'email'    => $invoice->customer_email ?? '',
+            ]);
+            return;
+        }
+
+        // Save Stripe customer ID and billing address from the invoice
+        if (!empty($invoice->customer)) {
+            update_user_meta($user_id, 'stripe_customer_id', sanitize_text_field($invoice->customer));
+        }
+        if (!empty($invoice->customer_address) && function_exists('oha_sm_save_addr')) {
+            oha_sm_save_addr($user_id, $invoice->customer_address, 'billing_');
+        }
+
+        // Mark as board-verified so the canonical query finds them (no subscription = no sub ID path)
+        update_user_meta($user_id, 'oha_membership_verified', '1');
+
+        // Upgrade: sets _uwp_register_form_id=1, WP role=subscriber, stripe_subscription_status=active
         do_action('oha_bhs_membership_set_paid', $user_id, $invoice, $this->event);
+
+        OHA_Logger::info('Manual invoice membership activated', [
+            'user_id'  => $user_id,
+            'invoice'  => $invoice->id ?? '',
+            'customer' => $invoice->customer ?? '',
+        ]);
     }
     
     /**

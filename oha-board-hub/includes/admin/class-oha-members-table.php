@@ -366,7 +366,7 @@ class OHA_Members_Table {
                 });
 
                 document.getElementById('oha-sync-commit-btn').addEventListener('click', function(){
-                    if (!confirm('Run the Stripe sync now?\n\nThis writes stripe_subscription_status, _uwp_register_form_id, and uwp_account_type for all matched users.\n\nReview the preview above before proceeding.')) return;
+                    if (!confirm('Run the Stripe sync now?\n\nThis writes stripe_subscription_status and _uwp_register_form_id for all matched users.\n\nReview the preview above before proceeding.')) return;
                     doFetch('stripe-sync-commit', null, function(data){
                         var el = document.getElementById('oha-sync-commit-result');
                         el.innerHTML = '<strong>Sync complete.</strong>&nbsp; ' +
@@ -415,7 +415,7 @@ class OHA_Members_Table {
      *
      * Paid member views (all_paid, new_paid, cards_not_sent) use the canonical
      * Stripe-based query: stripe_subscription_status = 'active' OR oha_membership_verified = '1'.
-     * Listing owner views (all_listing, new_listing) use uwp_account_type = 'listing_owner'.
+     * Listing owner views (all_listing, new_listing) use _uwp_register_form_id = '4'.
      * The 'all' view merges both sets without duplicates.
      *
      * Returned row format:
@@ -544,12 +544,11 @@ class OHA_Members_Table {
     }
 
     /**
-     * Listing owner query — UsersWP uwp_account_type = 'listing_owner'.
-     * Unchanged from pre-canonical architecture.
+     * Listing owner query — UsersWP _uwp_register_form_id = '4'.
      */
     private static function get_listing_owner_members($view, $search, $thirty_days_ago) {
         global $wpdb;
-        $where  = ["m.meta_value = 'listing_owner'"];
+        $where  = ["m.meta_value = '4'"];
         $params = [];
 
         if ($view === 'new_listing') {
@@ -569,7 +568,7 @@ class OHA_Members_Table {
                     m2.meta_value as paid_since
                 FROM {$wpdb->users} u
                 INNER JOIN {$wpdb->usermeta} m
-                    ON u.ID = m.user_id AND m.meta_key = 'uwp_account_type'
+                    ON u.ID = m.user_id AND m.meta_key = '_uwp_register_form_id'
                 LEFT JOIN {$wpdb->usermeta} m2
                     ON u.ID = m2.user_id AND m2.meta_key = 'oha_paid_member_since'
                 WHERE " . implode(' AND ', $where) . "

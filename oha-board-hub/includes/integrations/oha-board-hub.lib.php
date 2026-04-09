@@ -987,7 +987,6 @@ private function render_overview_tab($range = '30d') {
                      WHERE m1.user_id = u.ID
                      AND (
                          (m1.meta_key = 'uwp_member_type' AND m1.meta_value = 'oha_member')
-                         OR (m1.meta_key = 'uwp_account_type' AND m1.meta_value = 'oha_member')
                          OR (m1.meta_key = 'oha_stripe_member_from_invoice' AND m1.meta_value = '1')
                          OR (m1.meta_key = 'oha_membership_paid' AND m1.meta_value = '1')
                      )
@@ -1014,7 +1013,6 @@ private function render_overview_tab($range = '30d') {
                      WHERE m.user_id = u.ID
                      AND (
                          (m.meta_key = 'uwp_member_type' AND m.meta_value = 'oha_member')
-                         OR (m.meta_key = 'uwp_account_type' AND m.meta_value = 'oha_member')
                          OR (m.meta_key = 'oha_stripe_member_from_invoice' AND m.meta_value = '1')
                          OR (m.meta_key = 'oha_membership_paid' AND m.meta_value = '1')
                      )
@@ -1427,23 +1425,28 @@ private function render_overview_tab($range = '30d') {
         }
 
         // ── Part 2: UsersWP members not already covered by SWPM ──────────────
-        // Determine which uwp account_types to include given the level filter.
+        // Determine which _uwp_register_form_id values to include given the level filter.
         if ($level_id) {
             $want_types = [];
             if ((string)$levels['oha_member']     === (string)$level_id) $want_types[] = 'oha_member';
             if ((string)$levels['listing_owners'] === (string)$level_id) $want_types[] = 'listing_owner';
             if (empty($want_types)) {
-                // Requested level has no uwp equivalent (board/vendor/etc) – return SWPM only.
+                // Requested level has no UsersWP form equivalent (board/vendor/etc) – return SWPM only.
                 return $swpm_rows;
             }
         } else {
             $want_types = ['oha_member', 'listing_owner'];
         }
 
+        // Map account type labels to _uwp_register_form_id values.
+        // form 1 = paid OHA member, form 4 = listing owner.
+        $form_id_map = ['oha_member' => '1', 'listing_owner' => '4'];
+
         $uwp_rows = [];
         foreach ($want_types as $acct_type) {
-            $sql_args   = [$acct_type];
-            $uwp_where  = "WHERE um.meta_key = 'uwp_account_type' AND um.meta_value = %s";
+            $form_id_val = $form_id_map[$acct_type] ?? '1';
+            $sql_args    = [$form_id_val];
+            $uwp_where   = "WHERE um.meta_key = '_uwp_register_form_id' AND um.meta_value = %s";
 
             if (!empty($swpm_wp_ids)) {
                 $ph         = implode(',', array_fill(0, count($swpm_wp_ids), '%d'));
@@ -1513,8 +1516,7 @@ private function render_overview_tab($range = '30d') {
             }
         }
 
-        // ── Part 3: Fallback for _uwp_register_form_id=1 users with no uwp_account_type ──
-        // These are oha_member form registrants whose uwp_account_type was never set.
+        // ── Part 3: Fallback for _uwp_register_form_id=1 users not already in Part 1 or Part 2 ──
         // Only run when the level filter maps to oha_member (or no filter).
         $include_fb_level = !$level_id || (string)$levels['oha_member'] === (string)$level_id;
         $fb_rows = [];
@@ -1537,10 +1539,6 @@ private function render_overview_tab($range = '30d') {
             $fb_params = [];
 
             $fb_where[] = "um_form.meta_value = '1'";
-            $fb_where[] = "NOT EXISTS (
-                SELECT 1 FROM {$wpdb->usermeta} ua
-                WHERE ua.user_id = u.ID AND ua.meta_key = 'uwp_account_type'
-            )";
 
             if (!empty($fb_excl_ids)) {
                 $ph = implode(',', array_fill(0, count($fb_excl_ids), '%d'));

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.4.2
+ * Version: 2.5.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.4.2');
+define('OHA_BHS_VERSION', '2.5.0');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -520,6 +520,37 @@ public function admin_notices() {
             . 'Stripe will retry automatically. Check <strong>Board Hub &rarr; Webhooks</strong> and PHP error log for details.'
             . '</p></div>';
     }
+
+    // Stripe settings config warnings — shown on Board Hub admin pages only.
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    $is_boardhub_page = $screen && !empty($screen->id) && (
+        strpos($screen->id, 'oha-board-hub') !== false ||
+        strpos($screen->id, OHA_BHS_MENU)   !== false
+    );
+    if ($is_boardhub_page && function_exists('oha_sm_get')) {
+        $sm = oha_sm_get();
+
+        // Warn if trial_end_iso (annual renewal date) is in the past.
+        $trial_ts = !empty($sm['trial_end_iso']) ? strtotime($sm['trial_end_iso']) : 0;
+        if (!$trial_ts || $trial_ts <= time()) {
+            $label = esc_html($sm['trial_end_iso'] ?? '(not set)');
+            echo '<div class="notice notice-warning"><p>'
+                . '<strong>Board Hub: Annual Renewal Start Date is in the past.</strong> '
+                . 'The configured date <code>' . $label . '</code> has already passed. '
+                . 'New Join OHA checkouts will be blocked until this is updated. '
+                . 'Go to <strong>Board Hub &rarr; Stripe Settings</strong> and set a future UTC date.'
+                . '</p></div>';
+        }
+
+        // Warn if membership_product_ids is empty (manual invoice Path B will not fire).
+        if (empty(trim($sm['membership_product_ids'] ?? ''))) {
+            echo '<div class="notice notice-warning"><p>'
+                . '<strong>Board Hub: Membership Product IDs not configured.</strong> '
+                . 'Manual Stripe invoices will not trigger membership upgrades until at least one Stripe Product ID is entered. '
+                . 'Go to <strong>Board Hub &rarr; Stripe Settings</strong> and enter the product ID(s) used on membership invoices (e.g. <code>prod_abc123</code>).'
+                . '</p></div>';
+        }
+    }
 }
 
 /**
@@ -741,9 +772,8 @@ private function userswp_set_paid_member($user_id) {
     // Canonical membership state — Stripe subscription confirmed active
     update_user_meta($user_id, 'stripe_subscription_status', 'active');
 
-    // UsersWP markers for paid member form/account type
+    // UsersWP form field: form 1 = paid OHA member (gates member-only content)
     update_user_meta($user_id, '_uwp_register_form_id', '1');
-    update_user_meta($user_id, 'uwp_account_type', 'oha_member');
 
     // Record when membership was paid — only set once, never overwrite existing date.
     // This powers the "new member" date filter in Board Hub member lists.
@@ -768,9 +798,8 @@ private function userswp_set_free_member($user_id) {
     // Canonical membership state — subscription cancelled/expired
     update_user_meta($user_id, 'stripe_subscription_status', 'cancelled');
 
-    // UsersWP markers for free listing owner form/account type
+    // UsersWP form field: form 4 = listing owner (gates listing-owner content only)
     update_user_meta($user_id, '_uwp_register_form_id', '4');
-    update_user_meta($user_id, 'uwp_account_type', 'listing_owner');
 
     // Role alignment: prefer listing_owner if it exists, otherwise subscriber
     $target_role = 'subscriber';
