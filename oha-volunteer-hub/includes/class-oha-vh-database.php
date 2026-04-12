@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 class Database {
 
-    const DB_VERSION = '4.8.5'; // v4.8.5: alt_name added to WP admin area edit form
+    const DB_VERSION = '4.11.0'; // v4.11.0: last_emailed_at added to volunteers table
     const DB_VERSION_OPTION = 'oha_vh_db_version';
 
     /**
@@ -47,6 +47,7 @@ class Database {
                 signup_date datetime NOT NULL,
                 status varchar(20) DEFAULT 'pending',
                 notes longtext DEFAULT NULL,
+                last_emailed_at datetime DEFAULT NULL,
                 PRIMARY KEY  (id),
                 KEY idx_email (email),
                 KEY idx_user_id (user_id),
@@ -195,6 +196,12 @@ class Database {
             $alt_name_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_areas} LIKE 'alt_name'");
             if (empty($alt_name_exists)) {
                 $wpdb->query("ALTER TABLE {$table_areas} ADD COLUMN alt_name VARCHAR(100) DEFAULT NULL COMMENT 'Board-only display name shown in assign tab' AFTER area_name");
+            }
+
+            // Add last_emailed_at column (v4.11.0)
+            $last_emailed_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_volunteers} LIKE 'last_emailed_at'");
+            if (empty($last_emailed_exists)) {
+                $wpdb->query("ALTER TABLE {$table_volunteers} ADD COLUMN last_emailed_at DATETIME DEFAULT NULL AFTER notes");
             }
 
             // Update version

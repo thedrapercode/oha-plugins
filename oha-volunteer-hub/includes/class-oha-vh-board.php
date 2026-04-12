@@ -35,7 +35,15 @@ class Board {
         // Messaging actions
         add_action('wp_ajax_oha_vh_send_area_message', [__CLASS__, 'send_area_message']);
         add_action('wp_ajax_oha_vh_get_area_assignments_count', [__CLASS__, 'get_area_assignments_count']);
-        
+
+        // Communication actions
+        add_action('wp_ajax_oha_vh_resend_assignment_email', [__CLASS__, 'resend_assignment_email']);
+        add_action('wp_ajax_oha_vh_broadcast_email', [__CLASS__, 'broadcast_email']);
+
+        // Assignment management
+        add_action('wp_ajax_oha_vh_remove_assignment', [__CLASS__, 'remove_assignment']);
+        add_action('wp_ajax_oha_vh_update_assignment_area', [__CLASS__, 'update_assignment_area']);
+
         // Export action
         add_action('admin_post_oha_vh_export_volunteers', [__CLASS__, 'export_volunteers']);
     }
@@ -850,6 +858,165 @@ class Board {
             'failed' => $failed_count,
             'total' => count($assignments)
         ]);
+    }
+
+    /**
+     * Resend assignment email to a volunteer (all their current assignments)
+     */
+    public static function resend_assignment_email() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        $volunteer_id = isset($_POST['volunteer_id']) ? intval($_POST['volunteer_id']) : 0;
+
+        if (!$volunteer_id) {
+            wp_send_json_error(['message' => 'Invalid volunteer']);
+        }
+
+        $assignments = Database::get_volunteer_assignments($volunteer_id);
+
+        if (empty($assignments)) {
+            wp_send_json_error(['message' => 'No assignments found for this volunteer']);
+        }
+
+        $sent = 0;
+        foreach ($assignments as $assignment) {
+            $result = Emails::send_assignment_email($volunteer_id, $assignment->area_id, $assignment->shift_id ?: null);
+            if ($result) $sent++;
+        }
+
+        if ($sent > 0) {
+            wp_send_json_success(['message' => 'Assignment email sent (' . $sent . ' sent)']);
+        } else {
+            wp_send_json_error(['message' => 'Failed to send assignment email']);
+        }
+    }
+
+    /**
+     * Broadcast email to all volunteers with status "assigned"
+     */
+    public static function broadcast_email() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
+        $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
+
+        if (!$subject || !$message) {
+            wp_send_json_error(['message' => 'Subject and message are required']);
+        }
+
+        $volunteers = Database::get_volunteers(['status' => 'assigned', 'limit' => 10000]);
+
+        if (empty($volunteers)) {
+            wp_send_json_error(['message' => 'No assigned volunteers to email']);
+        }
+
+        global $wpdb;
+        $from_name  = Settings::get('from_name', 'OHA Volunteer Coordinator');
+        $from_email = Settings::get('from_email', get_option('admin_email'));
+        $headers    = [
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . $from_name . ' <' . $from_email . '>'
+        ];
+
+        $sent   = 0;
+        $failed = 0;
+
+        foreach ($volunteers as $v) {
+            $personalized = str_replace(
+                ['{{name}}', '{{first_name}}'],
+                [$v->first_name . ' ' . $v->last_name, $v->first_name],
+                $message
+            );
+
+            $result = wp_mail($v->email, $subject, $personalized, $headers);
+
+            if ($result) {
+                $sent++;
+                $wpdb->update(
+                    $wpdb->prefix . 'oha_volunteers',
+                    ['last_emailed_at' => current_time('mysql')],
+                    ['id' => $v->id]
+                );
+            } else {
+                $failed++;
+            }
+        }
+
+        wp_send_json_success([
+            'sent'   => $sent,
+            'failed' => $failed,
+            'total'  => count($volunteers)
+        ]);
+    }
+
+    /**
+     * Remove a single volunteer assignment
+     */
+    public static function remove_assignment() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        $assignment_id = isset($_POST['assignment_id']) ? intval($_POST['assignment_id']) : 0;
+
+        if (!$assignment_id) {
+            wp_send_json_error(['message' => 'Invalid assignment']);
+        }
+
+        global $wpdb;
+        $result = $wpdb->delete(
+            $wpdb->prefix . 'oha_volunteer_assignments',
+            ['id' => $assignment_id],
+            ['%d']
+        );
+
+        if ($result) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error(['message' => 'Failed to remove assignment']);
+        }
+    }
+
+    /**
+     * Update a volunteer assignment to a new area/shift (quick-reassign)
+     */
+    public static function update_assignment_area() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        $assignment_id = isset($_POST['assignment_id']) ? intval($_POST['assignment_id']) : 0;
+        $area_id       = isset($_POST['area_id'])       ? intval($_POST['area_id'])       : 0;
+        $shift_id      = isset($_POST['shift_id'])      ? intval($_POST['shift_id'])      : 0;
+
+        if (!$assignment_id || !$area_id) {
+            wp_send_json_error(['message' => 'Missing required fields']);
+        }
+
+        global $wpdb;
+        $result = $wpdb->update(
+            $wpdb->prefix . 'oha_volunteer_assignments',
+            ['area_id' => $area_id, 'shift_id' => $shift_id ?: null],
+            ['id' => $assignment_id]
+        );
+
+        if ($result !== false) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error(['message' => 'Failed to update assignment']);
+        }
     }
 
     /**

@@ -120,6 +120,12 @@ class Settings {
             'send_reminder_24h' => '1',
             'send_thank_you_after' => '1',
             'send_approval_email' => '1',
+
+            // Portal Display
+            'portal_show_checkin'    => '1',
+            'portal_announcement'    => '',
+            'portal_checkin_location' => '',
+            'portal_parking_info'    => '',
         ];
     }
 
@@ -131,7 +137,8 @@ class Settings {
         
         // Checkboxes
         $checkboxes = ['enable_signups', 'require_approval', 'enable_shifts', 'enable_check_in',
-                       'enable_hours_tracking', 'send_reminder_24h', 'send_thank_you_after', 'send_approval_email'];
+                       'enable_hours_tracking', 'send_reminder_24h', 'send_thank_you_after', 'send_approval_email',
+                       'portal_show_checkin'];
         foreach ($checkboxes as $checkbox) {
             $sanitized[$checkbox] = isset($input[$checkbox]) ? '1' : '0';
         }
@@ -163,6 +170,13 @@ class Settings {
         // Board guide content (allow HTML)
         if (isset($input['board_guide_content'])) {
             $sanitized['board_guide_content'] = wp_kses_post($input['board_guide_content']);
+        }
+
+        // Portal display fields (plain text)
+        foreach (['portal_announcement', 'portal_checkin_location', 'portal_parking_info'] as $field) {
+            if (isset($input[$field])) {
+                $sanitized[$field] = sanitize_textarea_field($input[$field]);
+            }
         }
 
         return $sanitized;
@@ -509,6 +523,7 @@ class Settings {
                     <a href="#convention" class="nav-tab" onclick="switchTab(event, 'convention')">Convention Info</a>
                     <a href="#features" class="nav-tab" onclick="switchTab(event, 'features')">Features</a>
                     <a href="#guide" class="nav-tab" onclick="switchTab(event, 'guide')">Guide</a>
+                    <a href="#portal" class="nav-tab" onclick="switchTab(event, 'portal')">Portal</a>
                 </h2>
 
                 <!-- General Tab -->
@@ -704,6 +719,41 @@ class Settings {
                             <td>
                                 <textarea id="board_guide_content" name="oha_vh_settings[board_guide_content]" rows="35" class="large-text" style="font-family: monospace; font-size: 12px;"><?php echo esc_textarea($settings['board_guide_content'] ?? ''); ?></textarea>
                                 <p class="description">Leave blank to restore the built-in default guide.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Portal Tab -->
+                <div id="portal" class="tab-content" style="display:none;">
+                    <p>These settings control optional information and features shown on the Volunteer Portal page (<code>[oha_volunteer_portal]</code>). All fields are optional. Leave blank to hide the corresponding section.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th><label for="portal_show_checkin">Show Check-In Button on Portal</label></th>
+                            <td>
+                                <input type="checkbox" id="portal_show_checkin" name="oha_vh_settings[portal_show_checkin]" value="1" <?php checked($settings['portal_show_checkin'] ?? '1', '1'); ?>>
+                                <p class="description">When checked, volunteers see a "Check In Now" button on their portal page. Uncheck this if the board will not be using portal-based check-in for the convention.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="portal_announcement">Volunteer Announcement</label></th>
+                            <td>
+                                <textarea id="portal_announcement" name="oha_vh_settings[portal_announcement]" rows="4" class="large-text"><?php echo esc_textarea($settings['portal_announcement'] ?? ''); ?></textarea>
+                                <p class="description">If filled in, this notice appears at the top of the portal for all volunteers. Use for last-minute updates or important day-of information. Leave blank to hide.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="portal_checkin_location">Volunteer Check-In Location</label></th>
+                            <td>
+                                <textarea id="portal_checkin_location" name="oha_vh_settings[portal_checkin_location]" rows="3" class="large-text"><?php echo esc_textarea($settings['portal_checkin_location'] ?? ''); ?></textarea>
+                                <p class="description">Where volunteers should go when they first arrive (e.g., "Check in at the registration table in the main lobby before reporting to your area."). Leave blank to hide.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="portal_parking_info">Parking Information</label></th>
+                            <td>
+                                <textarea id="portal_parking_info" name="oha_vh_settings[portal_parking_info]" rows="3" class="large-text"><?php echo esc_textarea($settings['portal_parking_info'] ?? ''); ?></textarea>
+                                <p class="description">Parking guidance specific to volunteers. Leave blank to hide.</p>
                             </td>
                         </tr>
                     </table>

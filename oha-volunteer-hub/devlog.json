@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Volunteer Hub",
-    "version":  "4.10.2",
+    "version":  "4.11.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -232,6 +232,41 @@
                         "type":  "change",
                         "summary":  "Remove all em dashes from volunteer portal user-facing text",
                         "notes":  "Replaced em dashes with hyphens or rephrased. Applied throughout portal gate header and main portal render."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "4.11.0",
+                        "type":  "feature",
+                        "summary":  "Add phone number display and edit block to volunteer portal (logged-in and guest)",
+                        "notes":  "Uses oha_vh_phone_{id} nonce. render_phone_block() helper mirrors EC block pattern. Nopriv AJAX action oha_vh_update_phone."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "4.11.0",
+                        "type":  "feature",
+                        "summary":  "Add last_emailed_at column to volunteers table, stamped on every outbound email",
+                        "notes":  "DB_VERSION bumped to 4.11.0. Column added via ALTER TABLE check in install(). All four send methods in Emails class now stamp the column on success."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "4.11.0",
+                        "type":  "feature",
+                        "summary":  "Add Resend Assignment Email button to volunteer expanded details in board hub",
+                        "notes":  "Button appears when volunteer has at least one assignment. AJAX action oha_vh_resend_assignment_email in Board class. Sends to all current assignments."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "4.11.0",
+                        "type":  "feature",
+                        "summary":  "Add Broadcast Email modal to volunteers tab for emailing all assigned volunteers",
+                        "notes":  "Button in tab header. Modal with subject+message. Placeholders: {{name}}, {{first_name}}. AJAX action oha_vh_broadcast_email. Updates last_emailed_at per send."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "4.11.0",
+                        "type":  "feature",
+                        "summary":  "Add quick-reassign and remove-assignment buttons to volunteer expanded details",
+                        "notes":  "Reassign opens modal with area+shift select (loads shifts via existing get_area_shifts). Remove deletes assignment record. AJAX actions oha_vh_remove_assignment and oha_vh_update_assignment_area in Board class."
                     }
                 ]
 }

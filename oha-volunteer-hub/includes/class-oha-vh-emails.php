@@ -94,7 +94,11 @@ class Emails {
         $body = preg_replace('/\n{3,}/', "\n\n", trim($body));
 
         $headers = ['Content-Type: text/plain; charset=UTF-8'];
-        return wp_mail($volunteer->email, $subject, $body, $headers);
+        $result = wp_mail($volunteer->email, $subject, $body, $headers);
+        if ($result) {
+            $wpdb->update($wpdb->prefix . 'oha_volunteers', ['last_emailed_at' => current_time('mysql')], ['id' => $volunteer_id]);
+        }
+        return $result;
     }
 
     /**
@@ -135,7 +139,12 @@ class Emails {
         $body = preg_replace('/\n{3,}/', "\n\n", trim($body));
 
         $headers = ['Content-Type: text/plain; charset=UTF-8'];
-        return wp_mail($volunteer->email, $subject, $body, $headers);
+        global $wpdb;
+        $result = wp_mail($volunteer->email, $subject, $body, $headers);
+        if ($result) {
+            $wpdb->update($wpdb->prefix . 'oha_volunteers', ['last_emailed_at' => current_time('mysql')], ['id' => $volunteer_id]);
+        }
+        return $result;
     }
 
     /**
@@ -172,7 +181,12 @@ class Emails {
         $body = preg_replace('/\n{3,}/', "\n\n", trim($body));
 
         $headers = ['Content-Type: text/plain; charset=UTF-8'];
-        return wp_mail($volunteer->email, $subject, $body, $headers);
+        global $wpdb;
+        $result = wp_mail($volunteer->email, $subject, $body, $headers);
+        if ($result) {
+            $wpdb->update($wpdb->prefix . 'oha_volunteers', ['last_emailed_at' => current_time('mysql')], ['id' => $volunteer_id]);
+        }
+        return $result;
     }
 
     /**
@@ -239,7 +253,11 @@ class Emails {
         $body = preg_replace('/\n{3,}/', "\n\n", trim($body));
 
         $headers = ['Content-Type: text/plain; charset=UTF-8'];
-        return wp_mail($email, $subject, $body, $headers);
+        $result = wp_mail($email, $subject, $body, $headers);
+        if ($result && !empty($assignment->volunteer_id)) {
+            $wpdb->update($wpdb->prefix . 'oha_volunteers', ['last_emailed_at' => current_time('mysql')], ['id' => $assignment->volunteer_id]);
+        }
+        return $result;
     }
 
     /**

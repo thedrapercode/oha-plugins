@@ -18,15 +18,21 @@ if ($search) {
 
 $volunteers = \OHA\VH\Database::get_volunteers($args);
 $counts = \OHA\VH\Database::get_volunteer_counts();
+$all_areas = \OHA\VH\Database::get_areas();
 ?>
 
 <div class="oha-vh-volunteers-tab">
     <div class="tab-header">
         <h3>Volunteer Directory</h3>
         <p>View all volunteer signups, approve applications, and assign to areas</p>
-        <button class="button button-primary" onclick="toggleManualAddPanel()" style="margin-top: 10px;">
-            ➕ Manually Add Volunteer
-        </button>
+        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+            <button class="button button-primary" onclick="toggleManualAddPanel()">
+                Manually Add Volunteer
+            </button>
+            <button class="button" onclick="openBroadcastModal()" style="background: #2271b1; border-color: #2271b1; color: white;">
+                Broadcast Email to All Assigned
+            </button>
+        </div>
     </div>
 
     <!-- Manual Add Volunteer Panel -->
@@ -295,6 +301,12 @@ $counts = \OHA\VH\Database::get_volunteer_counts();
                                                 <strong><?php echo esc_html(ucfirst($v->status)); ?></strong>
                                             </td>
                                         </tr>
+                                        <tr>
+                                            <th style="background: #2c3e50; color: #fff; padding: 10px; text-align: left;">Last Emailed:</th>
+                                            <td style="padding: 10px; border: 1px solid #ddd;">
+                                                <?php echo !empty($v->last_emailed_at) ? esc_html(date('F j, Y g:i A', strtotime($v->last_emailed_at))) : '<em>Never</em>'; ?>
+                                            </td>
+                                        </tr>
                                         <?php if ($v->user_id): ?>
                                         <tr>
                                             <th style="background: #2c3e50; color: #fff; padding: 10px; text-align: left;">WordPress Account:</th>
@@ -311,15 +323,23 @@ $counts = \OHA\VH\Database::get_volunteer_counts();
                                 <?php if (!empty($assignments)): ?>
                                 <div style="margin-top: 20px;">
                                     <h4>Current Assignments (<?php echo count($assignments); ?>)</h4>
-                                    <ul style="margin: 0; padding-left: 20px;">
-                                        <?php foreach ($assignments as $assignment): 
+                                    <ul style="margin: 0; padding: 0; list-style: none;">
+                                        <?php foreach ($assignments as $assignment):
                                             $area = \OHA\VH\Database::get_area($assignment->area_id);
                                         ?>
-                                            <li>
+                                            <li style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px; background: #f9f9f9; border-radius: 4px;">
                                                 <strong><?php echo esc_html($area ? $area->icon . ' ' . $area->area_name : 'Unknown Area'); ?></strong>
-                                                <span style="color: #666;">
+                                                <span style="color: #666; font-size: 12px;">
                                                     - Assigned <?php echo esc_html(date('M j, Y', strtotime($assignment->assignment_date))); ?>
                                                 </span>
+                                                <button class="button" style="padding: 3px 10px; font-size: 12px; margin-left: auto;"
+                                                        onclick="event.stopPropagation(); openReassignModal(<?php echo esc_js($assignment->id); ?>, <?php echo esc_js($v->id); ?>)">
+                                                    Reassign
+                                                </button>
+                                                <button class="button" style="padding: 3px 10px; font-size: 12px; background: #dc3545; border-color: #dc3545; color: white;"
+                                                        onclick="event.stopPropagation(); removeAssignment(<?php echo esc_js($assignment->id); ?>, <?php echo esc_js($v->id); ?>)">
+                                                    Remove
+                                                </button>
                                             </li>
                                         <?php endforeach; ?>
                                     </ul>
@@ -349,8 +369,13 @@ $counts = \OHA\VH\Database::get_volunteer_counts();
                                         <?php endif; ?>
                                         <?php if ($v->status === 'approved' || $v->status === 'assigned'): ?>
                                             <a href="#" onclick="event.stopPropagation(); location.href=buildBoardHubUrl('assign', {volunteer_id: <?php echo esc_js($v->id); ?>}); return false;" class="button button-primary">
-                                                📍 Assign to Area
+                                                Assign to Area
                                             </a>
+                                        <?php endif; ?>
+                                        <?php if (!empty($assignments)): ?>
+                                            <button class="button" onclick="event.stopPropagation(); resendAssignmentEmail(<?php echo esc_js($v->id); ?>)">
+                                                Resend Assignment Email
+                                            </button>
                                         <?php endif; ?>
                                         <?php if ($is_admin): ?>
                                             <button class="button" onclick="event.stopPropagation(); deleteVolunteer(<?php echo esc_js($v->id); ?>)" style="background: #6c757d; border-color: #6c757d; color: white;">
@@ -372,6 +397,62 @@ $counts = \OHA\VH\Database::get_volunteer_counts();
     <?php endif; ?>
 
     <p class="total-count">Showing <?php echo count($volunteers); ?> volunteer(s)</p>
+</div>
+
+<!-- Broadcast Email Modal -->
+<div id="broadcast-modal" class="oha-modal" style="display:none; position:fixed !important; z-index:999999 !important; left:0 !important; top:0 !important; width:100% !important; height:100% !important; background-color:rgba(0,0,0,0.7) !important; align-items:center !important; justify-content:center !important;">
+    <div class="oha-modal-content" style="background:white; padding:30px; border-radius:8px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <span class="oha-modal-close" onclick="closeBroadcastModal()" style="position:absolute; right:15px; top:15px; font-size:32px; font-weight:bold; cursor:pointer; color:#999; line-height:1;">&times;</span>
+        <h3 style="margin-top:0; color:#333;">Broadcast Email to All Assigned Volunteers</h3>
+        <p style="color:#666;">Sends a message to all volunteers with status "Assigned". Use <code>{{first_name}}</code> or <code>{{name}}</code> to personalize.</p>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:6px;"><strong>Subject:</strong></label>
+            <input type="text" id="broadcast-subject" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:6px;"><strong>Message:</strong></label>
+            <textarea id="broadcast-message" rows="8" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;"></textarea>
+        </div>
+        <div id="broadcast-result" style="display:none; margin-bottom:15px; padding:12px; border-radius:6px;"></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="button" onclick="closeBroadcastModal()">Cancel</button>
+            <button class="button button-primary" id="broadcast-send-btn" onclick="submitBroadcastEmail()">Send to All Assigned</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Reassign Modal -->
+<div id="reassign-modal" class="oha-modal" style="display:none; position:fixed !important; z-index:999999 !important; left:0 !important; top:0 !important; width:100% !important; height:100% !important; background-color:rgba(0,0,0,0.7) !important; align-items:center !important; justify-content:center !important;">
+    <div class="oha-modal-content" style="background:white; padding:30px; border-radius:8px; max-width:500px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <span class="oha-modal-close" onclick="closeReassignModal()" style="position:absolute; right:15px; top:15px; font-size:32px; font-weight:bold; cursor:pointer; color:#999; line-height:1;">&times;</span>
+        <h3 style="margin-top:0; color:#333;">Quick Reassign</h3>
+        <p style="color:#666;">Select a new area and optional shift for this assignment.</p>
+        <input type="hidden" id="reassign-assignment-id">
+        <input type="hidden" id="reassign-volunteer-id">
+        <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:6px;"><strong>New Area:</strong></label>
+            <select id="reassign-area-select" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <option value="">-- Select Area --</option>
+                <?php foreach ($all_areas as $area):
+                    $display = !empty($area->alt_name) ? $area->alt_name . ' (' . $area->area_name . ')' : $area->area_name;
+                ?>
+                    <option value="<?php echo esc_attr($area->id); ?>">
+                        <?php echo esc_html($area->icon . ' ' . $display); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div id="reassign-shift-group" style="display:none; margin-bottom:15px;">
+            <label style="display:block; margin-bottom:6px;"><strong>Shift (optional):</strong></label>
+            <select id="reassign-shift-select" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+                <option value="">-- All Day / No specific shift --</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+            <button class="button" onclick="closeReassignModal()">Cancel</button>
+            <button class="button button-primary" onclick="submitReassign()">Update Assignment</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -515,6 +596,198 @@ function quickReject(id) {
         }
     });
 }
+
+// --- Broadcast Email ---
+function openBroadcastModal() {
+    const modal = document.getElementById('broadcast-modal');
+    modal.style.display = 'flex';
+    document.getElementById('broadcast-result').style.display = 'none';
+}
+
+function closeBroadcastModal() {
+    document.getElementById('broadcast-modal').style.display = 'none';
+}
+
+function submitBroadcastEmail() {
+    const subject = document.getElementById('broadcast-subject').value.trim();
+    const message = document.getElementById('broadcast-message').value.trim();
+
+    if (!subject || !message) {
+        alert('Subject and message are required.');
+        return;
+    }
+
+    if (!confirm('Send this email to all assigned volunteers?')) return;
+
+    const btn = document.getElementById('broadcast-send-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_broadcast_email',
+            subject: subject,
+            message: message,
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Send to All Assigned';
+        const resultDiv = document.getElementById('broadcast-result');
+        resultDiv.style.display = 'block';
+        if (data.success) {
+            resultDiv.style.background = '#d4edda';
+            resultDiv.style.color = '#155724';
+            resultDiv.textContent = 'Sent to ' + data.data.sent + ' of ' + data.data.total + ' volunteers.' + (data.data.failed > 0 ? ' (' + data.data.failed + ' failed)' : '');
+        } else {
+            resultDiv.style.background = '#f8d7da';
+            resultDiv.style.color = '#721c24';
+            resultDiv.textContent = data.data.message || 'Failed to send.';
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.textContent = 'Send to All Assigned';
+        alert('Connection error. Please try again.');
+    });
+}
+
+// --- Resend Assignment Email ---
+function resendAssignmentEmail(volunteerId) {
+    if (!confirm('Resend assignment email to this volunteer?')) return;
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_resend_assignment_email',
+            volunteer_id: volunteerId,
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.data.message || 'Email sent.');
+            location.reload();
+        } else {
+            alert(data.data.message || 'Error sending email.');
+        }
+    });
+}
+
+// --- Remove Assignment ---
+function removeAssignment(assignmentId, volunteerId) {
+    if (!confirm('Remove this assignment? The volunteer will not be notified automatically.')) return;
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_remove_assignment',
+            assignment_id: assignmentId,
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.data.message || 'Error removing assignment.');
+        }
+    });
+}
+
+// --- Quick Reassign ---
+function openReassignModal(assignmentId, volunteerId) {
+    document.getElementById('reassign-assignment-id').value = assignmentId;
+    document.getElementById('reassign-volunteer-id').value = volunteerId;
+    document.getElementById('reassign-area-select').value = '';
+    document.getElementById('reassign-shift-group').style.display = 'none';
+    document.getElementById('reassign-modal').style.display = 'flex';
+}
+
+function closeReassignModal() {
+    document.getElementById('reassign-modal').style.display = 'none';
+}
+
+function submitReassign() {
+    const assignmentId = document.getElementById('reassign-assignment-id').value;
+    const areaId       = document.getElementById('reassign-area-select').value;
+    const shiftId      = document.getElementById('reassign-shift-select').value;
+
+    if (!areaId) {
+        alert('Please select an area.');
+        return;
+    }
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_update_assignment_area',
+            assignment_id: assignmentId,
+            area_id: areaId,
+            shift_id: shiftId || '',
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            closeReassignModal();
+            location.reload();
+        } else {
+            alert(data.data.message || 'Error reassigning volunteer.');
+        }
+    });
+}
+
+document.getElementById('reassign-area-select')?.addEventListener('change', function() {
+    const areaId = this.value;
+    if (!areaId) {
+        document.getElementById('reassign-shift-group').style.display = 'none';
+        return;
+    }
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_get_area_shifts',
+            area_id: areaId,
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.data.shifts.length > 0) {
+            const select = document.getElementById('reassign-shift-select');
+            select.innerHTML = '<option value="">-- All Day / No specific shift --</option>';
+            data.data.shifts.forEach(shift => {
+                const opt = document.createElement('option');
+                opt.value = shift.id;
+                opt.textContent = shift.label;
+                select.appendChild(opt);
+            });
+            document.getElementById('reassign-shift-group').style.display = 'block';
+        } else {
+            document.getElementById('reassign-shift-group').style.display = 'none';
+        }
+    });
+});
+
+// Close broadcast/reassign modals on Escape or outside click
+document.addEventListener('click', function(e) {
+    const broadcast = document.getElementById('broadcast-modal');
+    if (e.target === broadcast) closeBroadcastModal();
+    const reassign = document.getElementById('reassign-modal');
+    if (e.target === reassign) closeReassignModal();
+});
 
 // Delete volunteer (move to trash)
 function deleteVolunteer(id) {
