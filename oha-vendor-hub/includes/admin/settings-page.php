@@ -145,6 +145,11 @@ function oha_vhcpt_settings_page(){
         $closed_msg = isset($_POST['apps_closed_message']) ? wp_kses_post(wp_unslash($_POST['apps_closed_message'])) : '';
         update_option('oha_vhcpt_apps_closed_message', $closed_msg);
 
+        // Vendor edit page ID
+        if (isset($_POST['vendor_edit_page_id'])) {
+            update_option('oha_vhcpt_vendor_edit_page_id', intval($_POST['vendor_edit_page_id']));
+        }
+
         // Vendor Card Grid settings
         update_option( 'oha_vhcpt_cards_placeholder_id',  absint( isset( $_POST['cards_placeholder_id'] )  ? $_POST['cards_placeholder_id']  : 0 ) );
         update_option( 'oha_vhcpt_cards_placeholder_url', esc_url_raw( isset( $_POST['cards_placeholder_url'] ) ? wp_unslash( $_POST['cards_placeholder_url'] ) : '' ) );
@@ -247,6 +252,27 @@ function oha_vhcpt_settings_page(){
                     <td>
                         <textarea id="apps_closed_message" name="apps_closed_message" rows="3" class="large-text"><?php echo esc_textarea($apps_closed_msg); ?></textarea>
                         <p class="description">Shown to visitors when applications are closed. HTML is allowed.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="vendor_edit_page_id">Vendor Edit Page</label></th>
+                    <td>
+                        <?php
+                        $vendor_edit_page_id = (int) get_option('oha_vhcpt_vendor_edit_page_id', 0);
+                        $all_pages = get_pages();
+                        ?>
+                        <select name="vendor_edit_page_id" id="vendor_edit_page_id" class="regular-text">
+                            <option value="0">-- Select Page --</option>
+                            <?php foreach ($all_pages as $page): ?>
+                                <option value="<?php echo intval($page->ID); ?>" <?php selected($vendor_edit_page_id, $page->ID); ?>>
+                                    <?php echo esc_html($page->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <p class="description">Select the page that contains the <code>[oha_vendor_edit]</code> shortcode. When set, the magic link email sent to vendors will point to this page.</p>
+                        <?php if ($vendor_edit_page_id): ?>
+                            <p class="description"><strong>Current page:</strong> <a href="<?php echo esc_url(get_permalink($vendor_edit_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($vendor_edit_page_id)); ?></a></p>
+                        <?php endif; ?>
                     </td>
                 </tr>
             </table>

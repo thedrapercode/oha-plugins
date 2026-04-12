@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.7.0",
+    "version":  "3.7.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -134,6 +134,20 @@
                         "type":  "fix",
                         "summary":  "Removed 5 noisy error_log calls from stripe-webhook.php that fired on every Stripe event",
                         "notes":  "Removed: Processing payment event header, Event type, Payment for email (all fired on every Stripe event including memberships). Removed: No vendor application found (fired on every non-vendor payment). Removed: Processing complete (redundant). Kept all exception and failure logs."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.1",
+                        "type":  "feature",
+                        "summary":  "Add Vendor Edit Page selector to settings UI so admin can configure page without code",
+                        "notes":  "oha_vhcpt_vendor_edit_page_id now has a page dropdown in Application Status section of settings. Previously required manual option set."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.1",
+                        "type":  "fix",
+                        "summary":  "Correct OHA_VHCPT_VER constant which was stuck at 3.5.0 since v3.7.0 bumps",
+                        "notes":  "PHP header was correct at 3.7.0 but constant was missed during v3.6.0 and v3.7.0 bumps. Now both updated to 3.7.1."
                     }
                 ]
 }
