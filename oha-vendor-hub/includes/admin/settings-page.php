@@ -140,6 +140,11 @@ function oha_vhcpt_settings_page(){
             update_option('oha_vhcpt_final_app_no_payment_page_id', intval($_POST['final_app_no_payment_page_id']));
         }
 
+        // Application close toggle
+        update_option('oha_vhcpt_apps_closed', !empty($_POST['apps_closed']) ? 1 : 0);
+        $closed_msg = isset($_POST['apps_closed_message']) ? wp_kses_post(wp_unslash($_POST['apps_closed_message'])) : '';
+        update_option('oha_vhcpt_apps_closed_message', $closed_msg);
+
         // Vendor Card Grid settings
         update_option( 'oha_vhcpt_cards_placeholder_id',  absint( isset( $_POST['cards_placeholder_id'] )  ? $_POST['cards_placeholder_id']  : 0 ) );
         update_option( 'oha_vhcpt_cards_placeholder_url', esc_url_raw( isset( $_POST['cards_placeholder_url'] ) ? wp_unslash( $_POST['cards_placeholder_url'] ) : '' ) );
@@ -221,6 +226,41 @@ function oha_vhcpt_settings_page(){
         <h1>Vendor Hub Settings</h1>
         <form method="post">
             <?php wp_nonce_field('oha_vhcpt_save','oha_vhcpt_nonce'); ?>
+
+            <h2 class="title">Application Status</h2>
+            <?php
+            $apps_closed     = get_option('oha_vhcpt_apps_closed', 0);
+            $apps_closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Applications are closed for the 2026 Ohio Haunters Convention. Please keep us in mind for 2027.');
+            ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Accept Applications</th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="apps_closed" value="1" <?php checked($apps_closed, 1); ?>>
+                            <strong>Close applications</strong> — the public application form will show the message below instead of the form
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="apps_closed_message">Closed Message</label></th>
+                    <td>
+                        <textarea id="apps_closed_message" name="apps_closed_message" rows="3" class="large-text"><?php echo esc_textarea($apps_closed_msg); ?></textarea>
+                        <p class="description">Shown to visitors when applications are closed. HTML is allowed.</p>
+                    </td>
+                </tr>
+            </table>
+
+            <h2 class="title">Stripe Webhook</h2>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Webhook URL</th>
+                    <td>
+                        <code><?php echo esc_html(rest_url('oha/v1/stripe-webhook')); ?></code>
+                        <p class="description">This is the centralized webhook managed by OHA Board Hub Suite. Configure this URL in your Stripe dashboard. All Stripe events (memberships, vendor payments) use this single endpoint.</p>
+                    </td>
+                </tr>
+            </table>
 
             <h2 class="title">Fields</h2>
             <p>Edit the JSON to add/remove/reorder fields. (Keys become meta keys on the <code>vendor_application</code> post.)</p>

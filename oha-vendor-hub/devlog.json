@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.5.0",
+    "version":  "3.7.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -99,6 +99,41 @@
                         "type":  "feature",
                         "summary":  "Added admin status override UI with confirmation modal on board hub admin shortcode",
                         "notes":  "Override dropdown + styled confirmation modal in each card Quick Actions. Clears all payment markers when reverting from Paid. Live DOM updates stat counters and status badges. Appended to audit history log."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.0",
+                        "type":  "feature",
+                        "summary":  "Added [oha_vendor_edit] shortcode with email magic link for vendor self-service profile updates",
+                        "notes":  "Vendors enter email on edit page to receive a 24-hour magic link. Logged-in users bypass the email step. Editable fields: contact info, address, website, product type (locked after Agreement Signed), logo upload. Token stored as _edit_token + _edit_token_expires post meta. Rate-limited to 5 min per email via transient."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.0",
+                        "type":  "change",
+                        "summary":  "Added Update Your Vendor Info button to vendor dashboard when edit page option is configured",
+                        "notes":  "Only shows if oha_vhcpt_vendor_edit_page_id WP option is set. Set this to the page ID containing [oha_vendor_edit] to activate the link."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.0",
+                        "type":  "feature",
+                        "summary":  "Added applications closed toggle to Vendor Hub Settings with customizable message",
+                        "notes":  "oha_vhcpt_apps_closed (0/1) controls whether [oha_vendor_form] shows the form or a closed notice. oha_vhcpt_apps_closed_message holds the displayed text. Toggle is at the top of the Settings page under Application Status."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.0",
+                        "type":  "change",
+                        "summary":  "Moved Stripe webhook URL display from admin notice to Vendor Hub Settings page",
+                        "notes":  "Was showing as a notice-info banner on every vendor_application admin screen on page load. Now a static read-only field in Settings \u003e Stripe Webhook section."
+                    },
+                    {
+                        "date":  "2026-04-12",
+                        "version":  "3.7.0",
+                        "type":  "fix",
+                        "summary":  "Removed 5 noisy error_log calls from stripe-webhook.php that fired on every Stripe event",
+                        "notes":  "Removed: Processing payment event header, Event type, Payment for email (all fired on every Stripe event including memberships). Removed: No vendor application found (fired on every non-vendor payment). Removed: Processing complete (redundant). Kept all exception and failure logs."
                     }
                 ]
 }

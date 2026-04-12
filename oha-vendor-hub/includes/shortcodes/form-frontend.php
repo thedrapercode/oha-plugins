@@ -36,6 +36,12 @@ add_shortcode('oha_vendor_form', function(){
     // Keep styling the same as before.
     wp_enqueue_style('oha-vhcpt');
 
+    // Applications closed check — must come before anything else.
+    if (get_option('oha_vhcpt_apps_closed', 0)) {
+        $closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Applications are closed for the 2026 Ohio Haunters Convention. Please keep us in mind for 2027.');
+        return '<div class="oha-vh-notice" style="padding:1.2em 1.5em;border-left:4px solid #b32020;background:#fff5f5;border-radius:0 4px 4px 0;margin:1em 0;">' . wp_kses_post($closed_msg) . '</div>';
+    }
+
     $user   = wp_get_current_user();
     $fields = get_option('oha_vhcpt_fields', oha_vhcpt_fields_default());
     $msg    = '';

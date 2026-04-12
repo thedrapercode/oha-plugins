@@ -28,6 +28,9 @@ require_once OHA_VHCPT_PATH . 'includes/shortcodes/vendor-status-table.php';
 // Public vendor card grid for website pages (light theme, searchable, no favorites)
 require_once OHA_VHCPT_PATH . 'includes/shortcodes/vendor-cards.php';
 
+// Vendor self-edit form (email magic link, no WP account required)
+require_once OHA_VHCPT_PATH . 'includes/shortcodes/vendor-edit.php';
+
 // Shortcode aliases for easier reference
 add_shortcode('vendor_dashboard', 'oha_vendor_boardhub'); // Easier: [vendor_dashboard]
 add_shortcode('admin_vendor_list', 'oha_vendor_boardhub'); // Alternative: [admin_vendor_list]

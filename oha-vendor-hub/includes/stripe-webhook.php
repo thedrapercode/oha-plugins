@@ -42,9 +42,6 @@ function oha_vhcpt_handle_vendor_payment_events($handled, $event) {
         return false; // Not a vendor payment event
     }
     
-    error_log('=== OHA VENDOR HUB: Processing payment event ===');
-    error_log('Event type: ' . $event->type);
-    
     $charge_data = $event->data->object;
     
     // Get customer email from event data
@@ -64,8 +61,6 @@ function oha_vhcpt_handle_vendor_payment_events($handled, $event) {
             $customer_email = $charge_data->receipt_email;
         }
     }
-    
-    error_log('Payment for email: ' . $customer_email);
     
     if (empty($customer_email)) {
         error_log('OHA VENDOR HUB: No email found in event data');
@@ -113,7 +108,6 @@ function oha_vhcpt_handle_vendor_payment_events($handled, $event) {
     }
 
     if (!$app_id) {
-        error_log('OHA VENDOR HUB: No vendor application found for payment event');
         return false; // Not a vendor payment
     }
     
@@ -191,8 +185,6 @@ function oha_vhcpt_handle_vendor_payment_events($handled, $event) {
             
             // Release lock
             delete_transient($lock_key);
-            
-            error_log('OHA VENDOR HUB: Processing complete');
             return true; // Mark as handled
             
         } else {
@@ -207,19 +199,4 @@ function oha_vhcpt_handle_vendor_payment_events($handled, $event) {
     return false;
 }
 
-/**
- * Display centralized webhook information in admin
- * Points to Board Hub's centralized webhook endpoint
- */
-add_action('admin_notices', function() {
-    $screen = get_current_screen();
-    if ($screen && strpos($screen->id, 'vendor-applications') !== false) {
-        $webhook_url = rest_url('oha/v1/stripe-webhook');
-        
-        echo '<div class="notice notice-info">
-            <p><strong>Stripe Webhook URL (Centralized):</strong></p>
-            <p><code>' . esc_html($webhook_url) . '</code></p>
-            <p><small>This is the centralized webhook managed by Board Hub Suite. All Stripe events (memberships, vendors, board payments) use this single endpoint.</small></p>
-        </div>';
-    }
-});
+// Webhook URL reference moved to Vendor Hub Settings page (Application Status / Stripe Webhook section).
