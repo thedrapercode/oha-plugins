@@ -428,7 +428,8 @@ add_shortcode('oha_vendor_edit', function() {
     <style>
     .oha-vh-edit-wrap h4 { border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
     .oha-vh-logo-wrap { display:flex; flex-direction:column; gap:0.25em; }
-    .oha-vh-status-note { background:#fff8e1; border-left:3px solid #f59e0b; padding:0.6em 0.9em; margin-bottom:1em; border-radius:0 4px 4px 0; }
+    .oha-vh-status-note { background:#fff8e1; border-left:3px solid #f59e0b; padding:0.6em 0.9em; margin-bottom:1em; border-radius:0 4px 4px 0; color:#000; }
+    .oha-vh-edit-wrap .oha-vh-row label { color:#fff; }
     </style>
 
     <script>
