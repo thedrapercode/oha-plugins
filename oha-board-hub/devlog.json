@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.6.2",
+    "version":  "2.6.3",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -337,6 +337,20 @@
                         "type":  "fix",
                         "summary":  "Replaced usermeta JOINs with correlated LIMIT 1 subqueries to prevent duplicate rows in member table",
                         "notes":  "LEFT JOIN and INNER JOIN on wp_usermeta caused row multiplication when users had multiple rows for the same meta key (e.g. oha_paid_member_since). All four query functions updated: get_canonical_paid_members, get_listing_owner_members, get_board_members, get_all_users. Also fixed new_paid WHERE clause that referenced paid.meta_value alias after JOIN removal."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.2",
+                        "type":  "fix",
+                        "summary":  "Fixed duplicate rows in frontend shortcode member list by replacing usermeta JOINs with LIMIT 1 subqueries",
+                        "notes":  "fetch_members_legacy_raw() in oha-board-hub.lib.php had the same LEFT JOIN / INNER JOIN row-multiplication bug as the admin table. Part 2 uwp query: removed INNER JOIN on form_id + LEFT JOINs on first_name/last_name/oha_paid_member_since; replaced with EXISTS + correlated subqueries. Part 3 fallback query: same fix. Also changed um_form.meta_value filter condition to EXISTS."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.3",
+                        "type":  "fix",
+                        "summary":  "Fixed duplicate rows in frontend shortcode member list by replacing usermeta JOINs with LIMIT 1 subqueries",
+                        "notes":  "fetch_members_legacy_raw() in oha-board-hub.lib.php had the same LEFT JOIN / INNER JOIN row-multiplication bug as the admin table. Part 2 uwp query: removed INNER JOIN on form_id + LEFT JOINs on first_name/last_name/oha_paid_member_since, replaced with EXISTS + correlated subqueries. Part 3 fallback query: same fix. Also changed um_form.meta_value filter condition to EXISTS."
                     }
                 ]
 }

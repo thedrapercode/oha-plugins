@@ -1446,7 +1446,10 @@ private function render_overview_tab($range = '30d') {
         foreach ($want_types as $acct_type) {
             $form_id_val = $form_id_map[$acct_type] ?? '1';
             $sql_args    = [$form_id_val];
-            $uwp_where   = "WHERE um.meta_key = '_uwp_register_form_id' AND um.meta_value = %s";
+            $uwp_where   = "WHERE EXISTS (
+    SELECT 1 FROM {$wpdb->usermeta} um
+    WHERE um.user_id = u.ID AND um.meta_key = '_uwp_register_form_id' AND um.meta_value = %s
+)";
 
             if (!empty($swpm_wp_ids)) {
                 $ph         = implode(',', array_fill(0, count($swpm_wp_ids), '%d'));
@@ -1460,14 +1463,10 @@ private function render_overview_tab($range = '30d') {
             }
 
             $uwp_sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
-                               fn.meta_value AS first_name,
-                               ln.meta_value AS last_name,
-                               ps.meta_value AS oha_paid_since
+                               (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'first_name' LIMIT 1) AS first_name,
+                               (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'last_name' LIMIT 1) AS last_name,
+                               (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since
                         FROM {$wpdb->users} u
-                        INNER JOIN {$wpdb->usermeta} um ON u.ID = um.user_id
-                        LEFT JOIN {$wpdb->usermeta} fn ON u.ID = fn.user_id AND fn.meta_key = 'first_name'
-                        LEFT JOIN {$wpdb->usermeta} ln ON u.ID = ln.user_id AND ln.meta_key = 'last_name'
-                        LEFT JOIN {$wpdb->usermeta} ps ON u.ID = ps.user_id AND ps.meta_key = 'oha_paid_member_since'
                         $uwp_where
                         ORDER BY u.user_registered DESC LIMIT 5000";
 
@@ -1538,7 +1537,10 @@ private function render_overview_tab($range = '30d') {
             $fb_where  = [];
             $fb_params = [];
 
-            $fb_where[] = "um_form.meta_value = '1'";
+            $fb_where[] = "EXISTS (
+    SELECT 1 FROM {$wpdb->usermeta} um_form
+    WHERE um_form.user_id = u.ID AND um_form.meta_key = '_uwp_register_form_id' AND um_form.meta_value = '1'
+)";
 
             if (!empty($fb_excl_ids)) {
                 $ph = implode(',', array_fill(0, count($fb_excl_ids), '%d'));
@@ -1552,14 +1554,10 @@ private function render_overview_tab($range = '30d') {
             }
 
             $fb_sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
-                              fn.meta_value AS first_name, ln.meta_value AS last_name,
-                              ps.meta_value AS oha_paid_since
+                              (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'first_name' LIMIT 1) AS first_name,
+                              (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'last_name' LIMIT 1) AS last_name,
+                              (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since
                        FROM {$wpdb->users} u
-                       INNER JOIN {$wpdb->usermeta} um_form
-                               ON u.ID = um_form.user_id AND um_form.meta_key = '_uwp_register_form_id'
-                       LEFT JOIN {$wpdb->usermeta} fn ON u.ID = fn.user_id AND fn.meta_key = 'first_name'
-                       LEFT JOIN {$wpdb->usermeta} ln ON u.ID = ln.user_id AND ln.meta_key = 'last_name'
-                       LEFT JOIN {$wpdb->usermeta} ps ON u.ID = ps.user_id AND ps.meta_key = 'oha_paid_member_since'
                        WHERE " . implode(' AND ', $fb_where) . "
                        ORDER BY u.user_registered DESC LIMIT 5000";
 
