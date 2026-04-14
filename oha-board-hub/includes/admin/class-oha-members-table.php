@@ -104,12 +104,13 @@ class OHA_Members_Table {
                     <div class="filter-group">
                         <label><?php esc_html_e('View:', 'oha-board-hub'); ?></label>
                         <select name="member_view" onchange="this.form.submit()">
-                            <option value="new_paid"    <?php selected($view, 'new_paid'); ?>><?php esc_html_e('New Paid Members (30 days)',  'oha-board-hub'); ?></option>
-                            <option value="new_listing" <?php selected($view, 'new_listing'); ?>><?php esc_html_e('New Listing Owners (30 days)', 'oha-board-hub'); ?></option>
-                            <option value="all_paid"    <?php selected($view, 'all_paid'); ?>><?php esc_html_e('All Paid Members',             'oha-board-hub'); ?></option>
-                            <option value="all_listing" <?php selected($view, 'all_listing'); ?>><?php esc_html_e('All Listing Owners',            'oha-board-hub'); ?></option>
-                            <option value="cards_not_sent" <?php selected($view, 'cards_not_sent'); ?>><?php esc_html_e('Cards Not Sent',           'oha-board-hub'); ?></option>
-                            <option value="all"         <?php selected($view, 'all'); ?>><?php esc_html_e('All Members',                  'oha-board-hub'); ?></option>
+                            <option value="all_paid"       <?php selected($view, 'all_paid'); ?>><?php esc_html_e('OHA Members',                  'oha-board-hub'); ?></option>
+                            <option value="new_paid"       <?php selected($view, 'new_paid'); ?>><?php esc_html_e('New OHA Members (30 days)',    'oha-board-hub'); ?></option>
+                            <option value="all_listing"    <?php selected($view, 'all_listing'); ?>><?php esc_html_e('Basic Members',                'oha-board-hub'); ?></option>
+                            <option value="new_listing"    <?php selected($view, 'new_listing'); ?>><?php esc_html_e('New Basic Members (30 days)',  'oha-board-hub'); ?></option>
+                            <option value="board"          <?php selected($view, 'board'); ?>><?php esc_html_e('Board Members',                  'oha-board-hub'); ?></option>
+                            <option value="cards_not_sent" <?php selected($view, 'cards_not_sent'); ?>><?php esc_html_e('Cards Not Sent',             'oha-board-hub'); ?></option>
+                            <option value="all"            <?php selected($view, 'all'); ?>><?php esc_html_e('All Users',                      'oha-board-hub'); ?></option>
                         </select>
                     </div>
 
@@ -398,6 +399,8 @@ class OHA_Members_Table {
         .member-type-badge    { display:inline-block; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:600; text-transform:uppercase; }
         .member-type-oha_member    { background:#d4edda; color:#155724; }
         .member-type-listing_owner { background:#d1ecf1; color:#0c5460; }
+        .member-type-board_member  { background:#e8d5f5; color:#5b2c6f; }
+        .member-type-other         { background:#f5f5f5; color:#666; }
         .address-column       { max-width:250px; font-size:13px; }
         .address-display      { line-height:1.4; }
         .card-status-toggle   { display:flex; align-items:center; gap:5px; cursor:pointer; }
@@ -416,66 +419,53 @@ class OHA_Members_Table {
     // =========================================================================
 
     /**
-     * Get the canonical OHA member list.
+     * Get the member list for a given view.
      *
-     * Paid member views (all_paid, new_paid, cards_not_sent) use the canonical
-     * Stripe-based query: stripe_subscription_status = 'active' OR oha_membership_verified = '1'.
-     * Listing owner views (all_listing, new_listing) use _uwp_register_form_id = '4'.
-     * The 'all' view merges both sets without duplicates.
-     *
-     * Returned row format:
-     *   user_id          int    WP user ID
-     *   display_name     string
-     *   user_email       string
-     *   user_registered  string
-     *   account_type     string  'oha_member' | 'listing_owner' | level-name string
-     *   paid_since       string|null
-     *   is_upgrade       bool
-     *   _source          string  'canonical' | 'uwp'
-     *   _swpm_member_id  int     always 0 (SWPM no longer used)
-     *   _swpm_address    null    always null (address read from usermeta only)
+     * Views:
+     *   all_paid / new_paid / cards_not_sent  -- _uwp_register_form_id='1' AND role=subscriber
+     *   all_listing / new_listing             -- _uwp_register_form_id='4' AND role=listing_owner
+     *   board                                 -- _uwp_register_form_id='2' AND role=oha_board
+     *   all                                   -- every user in the WP database
      */
     private static function get_members($view, $search = '') {
         $thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
-        $listing_views   = ['all_listing', 'new_listing'];
-        $paid_views      = ['all_paid', 'new_paid', 'cards_not_sent'];
 
-        if (in_array($view, $listing_views, true)) {
+        if (in_array($view, ['all_listing', 'new_listing'], true)) {
             return self::get_listing_owner_members($view, $search, $thirty_days_ago);
         }
 
-        $paid = self::get_canonical_paid_members($view, $search, $thirty_days_ago);
-
-        if ($view === 'all') {
-            // Merge listing owners without duplicating paid members
-            $listing  = self::get_listing_owner_members('all_listing', $search, $thirty_days_ago);
-            $seen_ids = array_flip(array_column($paid, 'user_id'));
-            foreach ($listing as $lo) {
-                if (!isset($seen_ids[(int) $lo['user_id']])) {
-                    $paid[] = $lo;
-                }
-            }
+        if ($view === 'board') {
+            return self::get_board_members($search);
         }
 
-        return $paid;
+        if ($view === 'all') {
+            return self::get_all_users($search);
+        }
+
+        return self::get_canonical_paid_members($view, $search, $thirty_days_ago);
     }
 
     /**
-     * Canonical paid member query.
-     * Returns users who have _uwp_register_form_id = '1'.
-     * This key is written by userswp_set_paid_member() on every confirmed payment
-     * and cleared to '4' by userswp_set_free_member() on cancellation.
+     * OHA member query.
+     * Requires BOTH: _uwp_register_form_id = '1' AND WP role = subscriber.
      * View filters applied: new_paid (30-day window), cards_not_sent (no card sent).
      */
     private static function get_canonical_paid_members($view, $search, $thirty_days_ago) {
         global $wpdb;
+        $cap_key = $wpdb->prefix . 'capabilities';
 
-        // Base canonical condition: UsersWP form 1 = paid OHA member
+        // OHA member: form_id = 1 AND WP role = subscriber
         $canonical = "EXISTS (
             SELECT 1 FROM {$wpdb->usermeta} mf
             WHERE mf.user_id = u.ID
             AND mf.meta_key = '_uwp_register_form_id'
             AND mf.meta_value = '1'
+        )
+        AND EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} mr
+            WHERE mr.user_id = u.ID
+            AND mr.meta_key = '{$cap_key}'
+            AND mr.meta_value LIKE '%\"subscriber\"%'
         )";
 
         $where  = [$canonical];
@@ -559,11 +549,21 @@ class OHA_Members_Table {
     }
 
     /**
-     * Listing owner query — UsersWP _uwp_register_form_id = '4'.
+     * Basic member query.
+     * Requires BOTH: _uwp_register_form_id = '4' AND WP role = listing_owner.
      */
     private static function get_listing_owner_members($view, $search, $thirty_days_ago) {
         global $wpdb;
-        $where  = ["m.meta_value = '4'"];
+        $cap_key = $wpdb->prefix . 'capabilities';
+        $where   = [
+            "m.meta_value = '4'",
+            "EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} mr
+                WHERE mr.user_id = u.ID
+                AND mr.meta_key = '{$cap_key}'
+                AND mr.meta_value LIKE '%\"listing_owner\"%'
+            )",
+        ];
         $params = [];
 
         if ($view === 'new_listing') {
@@ -615,6 +615,157 @@ class OHA_Members_Table {
                 '_swpm_address'   => null,
             ];
         }
+        return $members;
+    }
+
+    /**
+     * Board member query.
+     * Requires BOTH: _uwp_register_form_id = '2' AND WP role = oha_board.
+     */
+    private static function get_board_members($search = '') {
+        global $wpdb;
+        $cap_key = $wpdb->prefix . 'capabilities';
+
+        $where  = [
+            "EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} mf
+                WHERE mf.user_id = u.ID
+                AND mf.meta_key = '_uwp_register_form_id'
+                AND mf.meta_value = '2'
+            )",
+            "EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} mr
+                WHERE mr.user_id = u.ID
+                AND mr.meta_key = '{$cap_key}'
+                AND mr.meta_value LIKE '%\"oha_board\"%'
+            )",
+        ];
+        $params = [];
+
+        if (!empty($search)) {
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            if (ctype_digit($search)) {
+                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)";
+                $params[] = $like; $params[] = $like; $params[] = $like;
+                $params[] = intval($search);
+            } else {
+                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+                $params[] = $like; $params[] = $like; $params[] = $like;
+            }
+        }
+
+        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    paid.meta_value as paid_since
+                FROM {$wpdb->users} u
+                LEFT JOIN {$wpdb->usermeta} paid
+                    ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY u.display_name ASC";
+
+        $raw = empty($params)
+            ? $wpdb->get_results($sql, ARRAY_A)
+            : $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
+
+        $members = [];
+        foreach ((array) $raw as $row) {
+            $uid = intval($row['user_id']);
+            $members[] = [
+                'user_id'         => $uid,
+                'display_name'    => $row['display_name'],
+                'user_email'      => $row['user_email'],
+                'user_registered' => $row['user_registered'] ?? '',
+                'account_type'    => 'board_member',
+                'paid_since'      => $row['paid_since'] ?: null,
+                'is_upgrade'      => false,
+                '_source'         => 'canonical',
+                '_swpm_member_id' => 0,
+                '_swpm_address'   => null,
+            ];
+        }
+
+        return $members;
+    }
+
+    /**
+     * All users query — every user in the WP database.
+     * account_type is inferred from form_id and WP capabilities.
+     */
+    private static function get_all_users($search = '') {
+        global $wpdb;
+        $cap_key = $wpdb->prefix . 'capabilities';
+
+        $where  = [];
+        $params = [];
+
+        if (!empty($search)) {
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            if (ctype_digit($search)) {
+                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)";
+                $params[] = $like; $params[] = $like; $params[] = $like;
+                $params[] = intval($search);
+            } else {
+                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+                $params[] = $like; $params[] = $like; $params[] = $like;
+            }
+        }
+
+        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    mf.meta_value as form_id,
+                    mc.meta_value as capabilities,
+                    paid.meta_value as paid_since
+                FROM {$wpdb->users} u
+                LEFT JOIN {$wpdb->usermeta} mf
+                    ON u.ID = mf.user_id AND mf.meta_key = '_uwp_register_form_id'
+                LEFT JOIN {$wpdb->usermeta} mc
+                    ON u.ID = mc.user_id AND mc.meta_key = '{$cap_key}'
+                LEFT JOIN {$wpdb->usermeta} paid
+                    ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'";
+
+        if (!empty($where)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $sql .= ' ORDER BY u.user_registered DESC';
+
+        $raw = empty($params)
+            ? $wpdb->get_results($sql, ARRAY_A)
+            : $wpdb->get_results($wpdb->prepare($sql, ...$params), ARRAY_A);
+
+        $members = [];
+        foreach ((array) $raw as $row) {
+            $uid        = intval($row['user_id']);
+            $registered = $row['user_registered'] ?? '';
+            $paid_since = $row['paid_since'] ?: null;
+            $form_id    = $row['form_id'] ?? '';
+            $caps       = $row['capabilities'] ?? '';
+            $is_upgrade = false;
+            if ($paid_since && $registered) {
+                $is_upgrade = (strtotime($paid_since) - strtotime($registered)) > (7 * DAY_IN_SECONDS);
+            }
+
+            if ($form_id === '1' && strpos($caps, '"subscriber"') !== false) {
+                $account_type = 'oha_member';
+            } elseif ($form_id === '4' && strpos($caps, '"listing_owner"') !== false) {
+                $account_type = 'listing_owner';
+            } elseif ($form_id === '2' && strpos($caps, '"oha_board"') !== false) {
+                $account_type = 'board_member';
+            } else {
+                $account_type = 'other';
+            }
+
+            $members[] = [
+                'user_id'         => $uid,
+                'display_name'    => $row['display_name'],
+                'user_email'      => $row['user_email'],
+                'user_registered' => $registered,
+                'account_type'    => $account_type,
+                'paid_since'      => $paid_since,
+                'is_upgrade'      => $is_upgrade,
+                '_source'         => 'canonical',
+                '_swpm_member_id' => 0,
+                '_swpm_address'   => null,
+            ];
+        }
+
         return $members;
     }
 
@@ -671,12 +822,13 @@ class OHA_Members_Table {
     private static function get_member_type_label($account_type) {
         $labels = [
             'oha_member'     => __('OHA Member',     'oha-board-hub'),
-            'listing_owner'  => __('Listing Owner',  'oha-board-hub'),
+            'listing_owner'  => __('Basic Member',   'oha-board-hub'),
             'board_member'   => __('Board Member',   'oha-board-hub'),
             'vendor'         => __('Vendor',         'oha-board-hub'),
             'sponsor'        => __('Sponsor',        'oha-board-hub'),
             'convention2026' => __('Convention 2026','oha-board-hub'),
             'webmaster'      => __('Webmaster',      'oha-board-hub'),
+            'other'          => __('Other',          'oha-board-hub'),
         ];
 
         // Exact match

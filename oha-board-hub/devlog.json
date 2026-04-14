@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.6.0",
+    "version":  "2.6.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -295,6 +295,41 @@
                         "type":  "feature",
                         "summary":  "Added grant-access REST endpoint oha/v1/membership/grant-access",
                         "notes":  "Calls userswp_set_paid_member for the given user_id. Requires manage_options. Used by the Needs Attention table Grant Access button in the admin Membership Health panel."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.1",
+                        "type":  "fix",
+                        "summary":  "Member queries now use strict AND conditions: form_id + WP role required for all member types",
+                        "notes":  "OHA member: form_id=1 AND subscriber role. Basic: form_id=4 AND listing_owner role. Board: form_id=2 AND oha_board role. This eliminates false positives from default form_id values."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.1",
+                        "type":  "feature",
+                        "summary":  "Added Board Members view to membership tab filtering by form_id=2 and oha_board role",
+                        "notes":  "New get_board_members() function. Accessible via board view in the dropdown."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.1",
+                        "type":  "feature",
+                        "summary":  "Added All Users view to membership tab returning every WP user with inferred account type",
+                        "notes":  "New get_all_users() function. Infers type from form_id + capabilities. Users not matching any known type show as Other."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.1",
+                        "type":  "change",
+                        "summary":  "Renamed Listing Owner label to Basic Member in membership table badges",
+                        "notes":  "Consistent with user-facing terminology. Label change only, no data changes."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.1",
+                        "type":  "change",
+                        "summary":  "Reordered and renamed membership tab view dropdown options for clearer UI",
+                        "notes":  "Views now ordered: OHA Members, New OHA Members, Basic Members, New Basic Members, Board Members, Cards Not Sent, All Users."
                     }
                 ]
 }
