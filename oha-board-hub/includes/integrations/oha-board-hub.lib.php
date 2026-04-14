@@ -1457,9 +1457,14 @@ private function render_overview_tab($range = '30d') {
                 foreach ($swpm_wp_ids as $swid) $sql_args[] = intval($swid);
             }
             if ($q !== '') {
-                $like       = '%' . $wpdb->esc_like($q) . '%';
-                $uwp_where .= ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
-                array_push($sql_args, $like, $like, $like);
+                $like = '%' . $wpdb->esc_like($q) . '%';
+                if (ctype_digit($q)) {
+                    $uwp_where .= ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)';
+                    array_push($sql_args, $like, $like, $like, intval($q));
+                } else {
+                    $uwp_where .= ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
+                    array_push($sql_args, $like, $like, $like);
+                }
             }
 
             $uwp_sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
@@ -1548,9 +1553,14 @@ private function render_overview_tab($range = '30d') {
                 foreach ($fb_excl_ids as $eid) $fb_params[] = intval($eid);
             }
             if ($q !== '') {
-                $like       = '%' . $wpdb->esc_like($q) . '%';
-                $fb_where[] = '(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
-                array_push($fb_params, $like, $like, $like);
+                $like = '%' . $wpdb->esc_like($q) . '%';
+                if (ctype_digit($q)) {
+                    $fb_where[] = '(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)';
+                    array_push($fb_params, $like, $like, $like, intval($q));
+                } else {
+                    $fb_where[] = '(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
+                    array_push($fb_params, $like, $like, $like);
+                }
             }
 
             $fb_sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,

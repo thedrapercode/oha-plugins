@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.6.3",
+    "version":  "2.6.4",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -351,6 +351,13 @@
                         "type":  "fix",
                         "summary":  "Fixed duplicate rows in frontend shortcode member list by replacing usermeta JOINs with LIMIT 1 subqueries",
                         "notes":  "fetch_members_legacy_raw() in oha-board-hub.lib.php had the same LEFT JOIN / INNER JOIN row-multiplication bug as the admin table. Part 2 uwp query: removed INNER JOIN on form_id + LEFT JOINs on first_name/last_name/oha_paid_member_since, replaced with EXISTS + correlated subqueries. Part 3 fallback query: same fix. Also changed um_form.meta_value filter condition to EXISTS."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.4",
+                        "type":  "feature",
+                        "summary":  "Added numeric user ID exact-match search to frontend shortcode member list",
+                        "notes":  "fetch_members_legacy_raw() Part 2 and Part 3 search conditions now check ctype_digit() and add u.ID = %d condition when a numeric query is entered, matching admin table behavior added in v2.6.0."
                     }
                 ]
 }
