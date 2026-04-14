@@ -636,10 +636,69 @@ public function __construct() {
             </script>
             <?php endif; ?>
 
+            <!-- Card Status Sync -->
+            <?php
+            $meta_sent_count = (int) $wpdb->get_var(
+                "SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta}
+                 WHERE meta_key = 'oha_card_sent' AND meta_value = '1'"
+            );
+            $card_tbl_name  = $wpdb->prefix . 'oha_card_status';
+            $tbl_sent_count = 0;
+            if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $card_tbl_name)) === $card_tbl_name) {
+                $tbl_sent_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$card_tbl_name} WHERE sent = 1");
+            }
+            ?>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e0e0e0;">
+                <p style="margin:0 0 10px;font-weight:600;color:#444;">Card Status Sync</p>
+                <p style="margin:0 0 12px;color:#555;font-size:13px;">
+                    Usermeta records marked sent: <strong><?php echo $meta_sent_count; ?></strong>
+                    &nbsp;&bull;&nbsp;
+                    Card table records marked sent: <strong><?php echo $tbl_sent_count; ?></strong>
+                    &nbsp;&bull;&nbsp;
+                    Run sync to write missing usermeta entries from the table and missing table entries from usermeta.
+                </p>
+                <button type="button" id="oha-card-sync-btn" class="button button-secondary">Sync Card Status</button>
+                <span id="oha-card-sync-spinner" style="display:none;margin-left:10px;color:#555;"><em>Syncing...</em></span>
+                <div id="oha-card-sync-result" style="display:none;margin-top:10px;padding:10px;background:#edfaed;border:1px solid #acdcac;border-radius:4px;font-size:13px;"></div>
+            </div>
+            <script>
+            (function(){
+                var nonce   = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
+                var apiBase = '<?php echo esc_js(rest_url('oha/v1/membership/')); ?>';
+                document.getElementById('oha-card-sync-btn').addEventListener('click', function() {
+                    var btn = this;
+                    btn.disabled = true;
+                    document.getElementById('oha-card-sync-spinner').style.display = 'inline';
+                    fetch(apiBase + 'sync-card-status', {
+                        method: 'POST',
+                        headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' },
+                        credentials: 'same-origin'
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        document.getElementById('oha-card-sync-spinner').style.display = 'none';
+                        var result = document.getElementById('oha-card-sync-result');
+                        if (data.success) {
+                            result.innerHTML = 'Sync complete. Usermeta added to table: <strong>' + data.meta_to_table + '</strong>. Table entries added to usermeta: <strong>' + data.table_to_meta + '</strong>. Reload the page to see updated counts.';
+                        } else {
+                            result.innerHTML = '<span style="color:#721c24;">Sync failed. Please try again.</span>';
+                        }
+                        result.style.display = 'block';
+                        btn.disabled = false;
+                    })
+                    .catch(function(e) {
+                        document.getElementById('oha-card-sync-spinner').style.display = 'none';
+                        alert('Request failed: ' + e);
+                        btn.disabled = false;
+                    });
+                });
+            })();
+            </script>
+
         </div>
         <?php
     }
-    
+
     /**
      * Render member list with proper security
      */

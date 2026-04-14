@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.6.4
+ * Version: 2.7.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.6.4');
+define('OHA_BHS_VERSION', '2.7.0');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -667,6 +667,11 @@ private function is_plugin_file_active($plugin_file) {
         register_rest_route('oha/v1', '/membership/grant-access', [
             'methods'             => 'POST',
             'callback'            => [$this, 'rest_grant_member_access'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
+        register_rest_route('oha/v1', '/membership/sync-card-status', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_sync_card_status'],
             'permission_callback' => function() { return current_user_can('manage_options'); },
         ]);
     }
@@ -1193,6 +1198,83 @@ public function rest_grant_member_access(WP_REST_Request $request) {
     }
     $this->userswp_set_paid_member($user_id);
     return rest_ensure_response(['success' => true, 'user_id' => $user_id]);
+}
+
+/**
+ * Sync card-sent status between oha_card_sent usermeta and wp_oha_card_status table.
+ *
+ * Pass 1 (meta -> table): for every user with oha_card_sent = '1' usermeta, ensure
+ *   a row exists in the card table with sent = 1.
+ * Pass 2 (table -> meta): for every card table row with sent = 1, if the member_id
+ *   matches a valid WP user who lacks oha_card_sent = '1' usermeta, write it.
+ *
+ * @return WP_REST_Response
+ */
+public function rest_sync_card_status(WP_REST_Request $request) {
+    global $wpdb;
+
+    $card_tbl     = $wpdb->prefix . 'oha_card_status';
+    $table_exists = ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $card_tbl)) === $card_tbl);
+
+    $meta_to_table = 0;
+    $table_to_meta = 0;
+
+    // === Pass 1: usermeta -> card table ===
+    $meta_rows = $wpdb->get_results(
+        "SELECT user_id FROM {$wpdb->usermeta}
+         WHERE meta_key = 'oha_card_sent' AND meta_value = '1'",
+        ARRAY_A
+    );
+
+    if ($table_exists && $meta_rows) {
+        foreach ($meta_rows as $row) {
+            $uid = intval($row['user_id']);
+            if (!$uid) continue;
+
+            $existing_sent = $wpdb->get_var(
+                $wpdb->prepare("SELECT sent FROM {$card_tbl} WHERE member_id = %d LIMIT 1", $uid)
+            );
+            if ($existing_sent === null || intval($existing_sent) !== 1) {
+                $date = get_user_meta($uid, 'oha_card_sent_date', true) ?: gmdate('Y-m-d');
+                $wpdb->replace($card_tbl, [
+                    'member_id' => $uid,
+                    'sent'      => 1,
+                    'date'      => $date,
+                ], ['%d', '%d', '%s']);
+                $meta_to_table++;
+            }
+        }
+    }
+
+    // === Pass 2: card table -> usermeta ===
+    if ($table_exists) {
+        $tbl_rows = $wpdb->get_results(
+            "SELECT member_id, date FROM {$card_tbl} WHERE sent = 1",
+            ARRAY_A
+        );
+
+        foreach ((array) $tbl_rows as $row) {
+            $uid = intval($row['member_id']);
+            if (!$uid) continue;
+
+            // Only process valid WP users (skips legacy SWPM-only IDs with no WP account)
+            if (!get_userdata($uid)) continue;
+
+            $existing_meta = get_user_meta($uid, 'oha_card_sent', true);
+            if ($existing_meta === '1') continue;
+
+            $date = !empty($row['date']) ? $row['date'] : gmdate('Y-m-d');
+            update_user_meta($uid, 'oha_card_sent', '1');
+            update_user_meta($uid, 'oha_card_sent_date', $date);
+            $table_to_meta++;
+        }
+    }
+
+    return rest_ensure_response([
+        'success'       => true,
+        'meta_to_table' => $meta_to_table,
+        'table_to_meta' => $table_to_meta,
+    ]);
 }
 
 /**

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.6.4",
+    "version":  "2.7.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -358,6 +358,27 @@
                         "type":  "feature",
                         "summary":  "Added numeric user ID exact-match search to frontend shortcode member list",
                         "notes":  "fetch_members_legacy_raw() Part 2 and Part 3 search conditions now check ctype_digit() and add u.ID = %d condition when a numeric query is entered, matching admin table behavior added in v2.6.0."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.7.0",
+                        "type":  "fix",
+                        "summary":  "Fixed cards_not_sent filter to check both usermeta and wp_oha_card_status table, eliminating false positives",
+                        "notes":  "SQL now uses two NOT EXISTS subqueries. Members with sent=1 in either location are correctly excluded from the not-sent view."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Added REST endpoint sync-card-status for bidirectional sync of card-sent data between usermeta and card table",
+                        "notes":  "Pass 1: usermeta -\u003e card table. Pass 2: card table -\u003e usermeta (WP user IDs only, skips legacy SWPM-only IDs). Endpoint: POST oha/v1/membership/sync-card-status."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Added Card Status Sync section to Membership Health admin panel with record counts and sync button",
+                        "notes":  "Shows live count of usermeta and card table sent records before sync. Displays meta_to_table and table_to_meta counts after sync completes."
                     }
                 ]
 }

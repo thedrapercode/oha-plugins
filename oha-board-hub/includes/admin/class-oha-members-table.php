@@ -471,6 +471,10 @@ class OHA_Members_Table {
         $where  = [$canonical];
         $params = [];
 
+        // For cards_not_sent: check both usermeta and card status table
+        $card_tbl        = $wpdb->prefix . 'oha_card_status';
+        $card_tbl_exists = ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $card_tbl)) === $card_tbl);
+
         switch ($view) {
             case 'new_paid':
                 $where[]  = "(u.user_registered >= %s OR EXISTS (
@@ -487,6 +491,12 @@ class OHA_Members_Table {
                     SELECT 1 FROM {$wpdb->usermeta} um_cs
                     WHERE um_cs.user_id = u.ID AND um_cs.meta_key = 'oha_card_sent' AND um_cs.meta_value = '1'
                 )";
+                if ($card_tbl_exists) {
+                    $where[] = "NOT EXISTS (
+                        SELECT 1 FROM {$card_tbl} cs_tbl
+                        WHERE cs_tbl.member_id = u.ID AND cs_tbl.sent = 1
+                    )";
+                }
                 break;
             case 'all_paid':
             case 'all':
