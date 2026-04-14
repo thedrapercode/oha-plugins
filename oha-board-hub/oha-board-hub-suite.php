@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.5.1
+ * Version: 2.6.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.5.1');
+define('OHA_BHS_VERSION', '2.6.0');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -664,6 +664,11 @@ private function is_plugin_file_active($plugin_file) {
             'callback'            => [$this, 'rest_verify_member'],
             'permission_callback' => function() { return current_user_can('manage_options'); },
         ]);
+        register_rest_route('oha/v1', '/membership/grant-access', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_grant_member_access'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
     }
 
     /**
@@ -769,10 +774,8 @@ public function handle_membership_set_free($user_id, $context = null, $event = n
 private function userswp_set_paid_member($user_id) {
     if ($user_id <= 0) return;
 
-    // Canonical membership state — Stripe subscription confirmed active
-    update_user_meta($user_id, 'stripe_subscription_status', 'active');
-
-    // UsersWP form field: form 1 = paid OHA member (gates member-only content)
+    // UsersWP form field: form 1 = paid OHA member (gates member-only content).
+    // This is the single canonical membership signal used by the Board Hub query.
     update_user_meta($user_id, '_uwp_register_form_id', '1');
 
     // Record when membership was paid — only set once, never overwrite existing date.
@@ -795,10 +798,8 @@ private function userswp_set_paid_member($user_id) {
 private function userswp_set_free_member($user_id) {
     if ($user_id <= 0) return;
 
-    // Canonical membership state — subscription cancelled/expired
-    update_user_meta($user_id, 'stripe_subscription_status', 'cancelled');
-
-    // UsersWP form field: form 4 = listing owner (gates listing-owner content only)
+    // UsersWP form field: form 4 = listing owner (non-paying registered user).
+    // Clears paid member access — mirrors the set_paid_member write.
     update_user_meta($user_id, '_uwp_register_form_id', '4');
 
     // Role alignment: prefer listing_owner if it exists, otherwise subscriber
@@ -1133,7 +1134,7 @@ public function rest_stripe_sync_commit(WP_REST_Request $request) {
             }
 
             $matched++;
-            update_user_meta($user_id, 'stripe_subscription_id', sanitize_text_field($sub->id));
+            // Write stripe_customer_id for future sync matching — do not write stripe_subscription_id.
             if ($cust_id) {
                 update_user_meta($user_id, 'stripe_customer_id', sanitize_text_field($cust_id));
             }
@@ -1171,6 +1172,26 @@ public function rest_verify_member(WP_REST_Request $request) {
         return new WP_Error('user_not_found', 'User not found.', ['status' => 404]);
     }
     update_user_meta($user_id, 'oha_membership_verified', '1');
+    return rest_ensure_response(['success' => true, 'user_id' => $user_id]);
+}
+
+/**
+ * REST: Grant OHA member access to a user flagged in the Membership Health panel.
+ * Sets _uwp_register_form_id = 1 via the canonical set_paid_member path.
+ * Used for users who completed a Stripe checkout but whose webhook did not promote them.
+ *
+ * @param WP_REST_Request $request  Must include user_id param.
+ * @return WP_REST_Response|WP_Error
+ */
+public function rest_grant_member_access(WP_REST_Request $request) {
+    $user_id = intval($request->get_param('user_id'));
+    if ($user_id <= 0) {
+        return new WP_Error('invalid_user', 'Invalid user ID.', ['status' => 400]);
+    }
+    if (!get_user_by('ID', $user_id)) {
+        return new WP_Error('user_not_found', 'User not found.', ['status' => 404]);
+    }
+    $this->userswp_set_paid_member($user_id);
     return rest_ensure_response(['success' => true, 'user_id' => $user_id]);
 }
 

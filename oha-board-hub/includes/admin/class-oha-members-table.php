@@ -1,10 +1,11 @@
 <?php
 /**
- * Canonical Members Table — Stripe-based OHA Member List
+ * Canonical Members Table — OHA Member List
  *
- * Member query (canonical, v2.4.0+):
- *   (stripe_subscription_id EXISTS AND stripe_subscription_status = 'active')
- *   OR oha_membership_verified = '1'
+ * Member query (canonical, v2.6.0+):
+ *   _uwp_register_form_id = '1'
+ *   Written by userswp_set_paid_member() on every confirmed payment.
+ *   Cleared to '4' by userswp_set_free_member() on cancellation.
  *
  * Address priority (per user):
  * 1. billing_address_display usermeta (set by Stripe webhook)
@@ -115,7 +116,7 @@ class OHA_Members_Table {
                     <div class="filter-group">
                         <label><?php esc_html_e('Search:', 'oha-board-hub'); ?></label>
                         <input type="search" name="member_search" value="<?php echo esc_attr($search); ?>"
-                               placeholder="<?php esc_attr_e('Name, email, username…', 'oha-board-hub'); ?>">
+                               placeholder="<?php esc_attr_e('Name, email, username, or User ID', 'oha-board-hub'); ?>">
                         <button type="submit" class="button"><?php esc_html_e('Search', 'oha-board-hub'); ?></button>
                         <?php if (!empty($search)) : ?>
                             <a href="?page=<?php echo esc_attr($_GET['page'] ?? ''); ?>&tab=<?php echo esc_attr($_GET['tab'] ?? ''); ?>&member_view=<?php echo esc_attr($view); ?>"
@@ -265,7 +266,7 @@ class OHA_Members_Table {
             <div class="oha-stripe-sync-section" style="margin-top:30px;padding-top:20px;border-top:2px solid #e0e0e0;">
                 <h3 style="margin-bottom:8px;">Stripe Sync Migration Tool</h3>
                 <p class="description" style="margin-bottom:15px;">
-                    Migrates member records to the canonical Stripe-based system. Run Preview first to review results, then Run Sync to write the data. The sync matches each active Stripe subscription to a WP user by customer ID or email, then sets <code>stripe_subscription_status = active</code> and <code>_uwp_register_form_id = 1</code>.
+                    Syncs missing members from Stripe. Run Preview first to review, then Run Sync to apply. The sync matches each active Stripe subscription to a WP user by customer ID or email, then sets <code>_uwp_register_form_id = 1</code> so they appear in the member list.
                 </p>
                 <div id="oha-sync-controls">
                     <button type="button" id="oha-sync-preview-btn" class="button button-primary">Preview Migration</button>
@@ -461,19 +462,20 @@ class OHA_Members_Table {
 
     /**
      * Canonical paid member query.
-     * Returns users who have stripe_subscription_status = 'active' OR oha_membership_verified = '1'.
+     * Returns users who have _uwp_register_form_id = '1'.
+     * This key is written by userswp_set_paid_member() on every confirmed payment
+     * and cleared to '4' by userswp_set_free_member() on cancellation.
      * View filters applied: new_paid (30-day window), cards_not_sent (no card sent).
      */
     private static function get_canonical_paid_members($view, $search, $thirty_days_ago) {
         global $wpdb;
 
-        // Base canonical condition
-        $canonical = "(
-            (
-                EXISTS (SELECT 1 FROM {$wpdb->usermeta} ms1 WHERE ms1.user_id = u.ID AND ms1.meta_key = 'stripe_subscription_id')
-                AND EXISTS (SELECT 1 FROM {$wpdb->usermeta} ms2 WHERE ms2.user_id = u.ID AND ms2.meta_key = 'stripe_subscription_status' AND ms2.meta_value = 'active')
-            )
-            OR EXISTS (SELECT 1 FROM {$wpdb->usermeta} mv WHERE mv.user_id = u.ID AND mv.meta_key = 'oha_membership_verified' AND mv.meta_value = '1')
+        // Base canonical condition: UsersWP form 1 = paid OHA member
+        $canonical = "EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} mf
+            WHERE mf.user_id = u.ID
+            AND mf.meta_key = '_uwp_register_form_id'
+            AND mf.meta_value = '1'
         )";
 
         $where  = [$canonical];
@@ -499,10 +501,19 @@ class OHA_Members_Table {
 
         if (!empty($search)) {
             $like     = '%' . $wpdb->esc_like($search) . '%';
-            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
+            // If the search is a plain integer, also match by exact user ID
+            if (ctype_digit($search)) {
+                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)";
+                $params[] = $like;
+                $params[] = $like;
+                $params[] = $like;
+                $params[] = intval($search);
+            } else {
+                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+                $params[] = $like;
+                $params[] = $like;
+                $params[] = $like;
+            }
         }
 
         $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,

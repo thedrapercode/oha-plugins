@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.5.1",
+    "version":  "2.6.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -253,6 +253,48 @@
                         "type":  "fix",
                         "summary":  "Preview endpoint now captures and displays Stripe API error message when pages fetched is 0",
                         "notes":  "stripe_error field added to preview REST response and shown in red in the admin UI summary line. Helps diagnose no_key, network errors, or invalid API key issues."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.0",
+                        "type":  "change",
+                        "summary":  "Membership query simplified to _uwp_register_form_id = 1 as sole canonical paid member signal",
+                        "notes":  "Replaces stripe_subscription_status/stripe_subscription_id/oha_membership_verified conditions that were never reliably written. All 51 current members already have this key. New and cancelled members written/cleared by userswp_set_paid_member and userswp_set_free_member."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.0",
+                        "type":  "change",
+                        "summary":  "Removed stripe_subscription_status writes from set_paid and set_free member functions",
+                        "notes":  "stripe_subscription_status was added in v2.4.0 but was never populated on existing members and caused query confusion. Removed from userswp_set_paid_member and userswp_set_free_member."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.0",
+                        "type":  "change",
+                        "summary":  "Removed stripe_subscription_id write from Stripe sync commit",
+                        "notes":  "stripe_subscription_id was never reliably written to user meta at scale. Sync now writes stripe_customer_id and _uwp_register_form_id only via userswp_set_paid_member."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.0",
+                        "type":  "feature",
+                        "summary":  "Added user ID search to membership tab - numeric search matches exact user ID",
+                        "notes":  "When search string is a plain integer, query also checks u.ID = value. Useful for card lookup workflows where staff know the member card user ID."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.0",
+                        "type":  "feature",
+                        "summary":  "Added Membership Health panel to admin backend membership tab",
+                        "notes":  "Shows 4 summary counts: total paid, new this month, no Stripe link, needs attention. Needs Attention table lists users with membership_trial_end but without _uwp_register_form_id=1 - i.e. completed checkout but webhook did not promote them. Each row has a Grant Access button with confirm dialog."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.0",
+                        "type":  "feature",
+                        "summary":  "Added grant-access REST endpoint oha/v1/membership/grant-access",
+                        "notes":  "Calls userswp_set_paid_member for the given user_id. Requires manage_options. Used by the Needs Attention table Grant Access button in the admin Membership Health panel."
                     }
                 ]
 }

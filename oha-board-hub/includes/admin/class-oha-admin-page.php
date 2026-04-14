@@ -451,17 +451,192 @@ public function __construct() {
     private function render_membership_tab() {
         ?>
         <h2><?php esc_html_e('Members', 'oha-board-hub'); ?></h2>
-        <p><?php esc_html_e('Stripe management (Cancel / Resume / Swap / Renew) below. All current members (legacy SWPM + UsersWP) listed below.', 'oha-board-hub'); ?></p>
-
-        <?php echo do_shortcode('[oha_board_stripe_admin]'); ?>
+        <p><?php esc_html_e('Stripe management (Cancel / Resume / Swap / Renew) below. All current members listed below.', 'oha-board-hub'); ?></p>
 
         <?php
+        $this->render_membership_health();
+        echo do_shortcode('[oha_board_stripe_admin]');
         if (class_exists('OHA_Members_Table')) {
             OHA_Members_Table::render();
         } else {
             echo '<p><em>OHA_Members_Table class not loaded.</em></p>';
         }
         ?>
+        <?php
+    }
+
+    /**
+     * Render the Membership Health panel.
+     *
+     * Summary bar: total paid, new this month, no Stripe link, needs attention count.
+     * Needs Attention table: users who have membership_trial_end but NOT _uwp_register_form_id = '1'.
+     * Each row has a Grant Access button that calls oha/v1/membership/grant-access via REST.
+     */
+    private function render_membership_health() {
+        global $wpdb;
+
+        // -- Counts ----------------------------------------------------------
+
+        $total_paid = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT user_id) FROM {$wpdb->usermeta}
+             WHERE meta_key = '_uwp_register_form_id' AND meta_value = '1'"
+        );
+
+        $thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
+        $new_this_month  = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT u.ID)
+             FROM {$wpdb->users} u
+             INNER JOIN {$wpdb->usermeta} m ON u.ID = m.user_id
+                 AND m.meta_key = '_uwp_register_form_id' AND m.meta_value = '1'
+             LEFT JOIN {$wpdb->usermeta} p ON u.ID = p.user_id
+                 AND p.meta_key = 'oha_paid_member_since'
+             WHERE u.user_registered >= %s OR (p.meta_value IS NOT NULL AND p.meta_value >= %s)",
+            $thirty_days_ago,
+            $thirty_days_ago
+        ));
+
+        $no_stripe_link = (int) $wpdb->get_var(
+            "SELECT COUNT(DISTINCT m1.user_id) FROM {$wpdb->usermeta} m1
+             WHERE m1.meta_key = '_uwp_register_form_id' AND m1.meta_value = '1'
+             AND NOT EXISTS (
+                 SELECT 1 FROM {$wpdb->usermeta} m2
+                 WHERE m2.user_id = m1.user_id AND m2.meta_key = 'stripe_customer_id'
+             )"
+        );
+
+        // Users with membership_trial_end set but NOT _uwp_register_form_id = '1'
+        $needs_attention = $wpdb->get_results(
+            "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, mt.meta_value as trial_end
+             FROM {$wpdb->users} u
+             INNER JOIN {$wpdb->usermeta} mt ON u.ID = mt.user_id AND mt.meta_key = 'membership_trial_end'
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM {$wpdb->usermeta} mf
+                 WHERE mf.user_id = u.ID
+                 AND mf.meta_key = '_uwp_register_form_id' AND mf.meta_value = '1'
+             )
+             ORDER BY u.user_registered DESC",
+            ARRAY_A
+        );
+        $needs_count = count($needs_attention);
+
+        ?>
+        <div class="oha-health-panel" style="margin-bottom:24px;padding:16px 20px;background:#fff;border:1px solid #ddd;border-radius:4px;">
+            <h3 style="margin:0 0 14px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:#444;">Membership Health</h3>
+
+            <!-- Summary bar -->
+            <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:<?php echo $needs_count ? '20px' : '0'; ?>;">
+
+                <div style="flex:1;min-width:120px;padding:12px 16px;background:#f0f6fc;border:1px solid #c0d9f0;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:700;color:#2271b1;"><?php echo $total_paid; ?></div>
+                    <div style="font-size:12px;color:#555;margin-top:2px;">Total Paid Members</div>
+                </div>
+
+                <div style="flex:1;min-width:120px;padding:12px 16px;background:#edfaed;border:1px solid #acdcac;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:700;color:#2a7e2e;"><?php echo $new_this_month; ?></div>
+                    <div style="font-size:12px;color:#555;margin-top:2px;">New This Month</div>
+                </div>
+
+                <div style="flex:1;min-width:120px;padding:12px 16px;background:#fafafa;border:1px solid #ddd;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:700;color:#777;"><?php echo $no_stripe_link; ?></div>
+                    <div style="font-size:12px;color:#555;margin-top:2px;">No Stripe Link</div>
+                </div>
+
+                <div style="flex:1;min-width:120px;padding:12px 16px;background:<?php echo $needs_count ? '#fff3cd' : '#fafafa'; ?>;border:1px solid <?php echo $needs_count ? '#ffc107' : '#ddd'; ?>;border-radius:4px;text-align:center;">
+                    <div style="font-size:28px;font-weight:700;color:<?php echo $needs_count ? '#856404' : '#777'; ?>;"><?php echo $needs_count; ?></div>
+                    <div style="font-size:12px;color:#555;margin-top:2px;">Needs Attention</div>
+                </div>
+
+            </div>
+
+            <?php if ($needs_count > 0) : ?>
+            <!-- Needs Attention table -->
+            <div style="border-top:1px solid #e0e0e0;padding-top:16px;">
+                <p style="margin:0 0 10px;font-weight:600;color:#856404;">
+                    The following users completed a Stripe checkout (membership_trial_end is set) but do not have paid member access. Review each row and click Grant Access to promote them.
+                </p>
+                <table class="wp-list-table widefat fixed striped" style="font-size:13px;">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">User ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th style="width:140px;">Trial End</th>
+                            <th style="width:130px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($needs_attention as $row) : ?>
+                        <tr id="oha-na-row-<?php echo intval($row['user_id']); ?>">
+                            <td><?php echo intval($row['user_id']); ?></td>
+                            <td>
+                                <a href="<?php echo esc_url(admin_url('user-edit.php?user_id=' . intval($row['user_id']))); ?>">
+                                    <?php echo esc_html($row['display_name']); ?>
+                                </a>
+                            </td>
+                            <td><?php echo esc_html($row['user_email']); ?></td>
+                            <td><?php echo esc_html($row['trial_end']); ?></td>
+                            <td>
+                                <button type="button"
+                                    class="button button-small oha-grant-access-btn"
+                                    data-user-id="<?php echo intval($row['user_id']); ?>"
+                                    data-name="<?php echo esc_attr($row['display_name']); ?>"
+                                    data-email="<?php echo esc_attr($row['user_email']); ?>">
+                                    Grant Access
+                                </button>
+                                <span class="oha-grant-result" style="display:none;margin-left:6px;color:#2a7e2e;font-weight:600;">Access Granted</span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <script>
+            (function(){
+                var nonce   = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
+                var apiBase = '<?php echo esc_js(rest_url('oha/v1/membership/')); ?>';
+
+                document.querySelectorAll('.oha-grant-access-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var uid   = parseInt(this.getAttribute('data-user-id'), 10);
+                        var name  = this.getAttribute('data-name');
+                        var email = this.getAttribute('data-email');
+                        if (!confirm('Grant OHA member access to ' + name + ' (' + email + ', User ID: ' + uid + ')?\n\nThis will set _uwp_register_form_id = 1 so they appear in the member list.')) {
+                            return;
+                        }
+                        var self = this;
+                        self.disabled = true;
+                        self.textContent = 'Saving...';
+                        fetch(apiBase + 'grant-access', {
+                            method: 'POST',
+                            headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: uid }),
+                            credentials: 'same-origin'
+                        })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.success) {
+                                self.style.display = 'none';
+                                var result = self.closest('tr').querySelector('.oha-grant-result');
+                                if (result) result.style.display = 'inline';
+                            } else {
+                                self.disabled = false;
+                                self.textContent = 'Grant Access';
+                                alert('Error: could not grant access. Please try again.');
+                            }
+                        })
+                        .catch(function(e) {
+                            self.disabled = false;
+                            self.textContent = 'Grant Access';
+                            alert('Request failed: ' + e);
+                        });
+                    });
+                });
+            })();
+            </script>
+            <?php endif; ?>
+
+        </div>
         <?php
     }
     
