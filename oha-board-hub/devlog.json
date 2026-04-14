@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.6.1",
+    "version":  "2.6.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -330,6 +330,13 @@
                         "type":  "change",
                         "summary":  "Reordered and renamed membership tab view dropdown options for clearer UI",
                         "notes":  "Views now ordered: OHA Members, New OHA Members, Basic Members, New Basic Members, Board Members, Cards Not Sent, All Users."
+                    },
+                    {
+                        "date":  "2026-04-14",
+                        "version":  "2.6.2",
+                        "type":  "fix",
+                        "summary":  "Replaced usermeta JOINs with correlated LIMIT 1 subqueries to prevent duplicate rows in member table",
+                        "notes":  "LEFT JOIN and INNER JOIN on wp_usermeta caused row multiplication when users had multiple rows for the same meta key (e.g. oha_paid_member_since). All four query functions updated: get_canonical_paid_members, get_listing_owner_members, get_board_members, get_all_users. Also fixed new_paid WHERE clause that referenced paid.meta_value alias after JOIN removal."
                     }
                 ]
 }

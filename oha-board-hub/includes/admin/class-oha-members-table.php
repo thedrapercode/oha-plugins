@@ -473,7 +473,12 @@ class OHA_Members_Table {
 
         switch ($view) {
             case 'new_paid':
-                $where[]  = "(u.user_registered >= %s OR (paid.meta_value IS NOT NULL AND paid.meta_value >= %s))";
+                $where[]  = "(u.user_registered >= %s OR EXISTS (
+                    SELECT 1 FROM {$wpdb->usermeta} um_ps
+                    WHERE um_ps.user_id = u.ID
+                    AND um_ps.meta_key = 'oha_paid_member_since'
+                    AND um_ps.meta_value >= %s
+                ))";
                 $params[] = $thirty_days_ago;
                 $params[] = $thirty_days_ago;
                 break;
@@ -506,11 +511,11 @@ class OHA_Members_Table {
             }
         }
 
-        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
-                    paid.meta_value as paid_since
-                FROM {$wpdb->users} u
-                LEFT JOIN {$wpdb->usermeta} paid
-                    ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'";
+        $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
+                     LIMIT 1) as paid_since
+                FROM {$wpdb->users} u";
 
         $sql .= ' WHERE ' . implode(' AND ', $where);
         $sql .= ' ORDER BY u.user_registered DESC';
@@ -556,7 +561,12 @@ class OHA_Members_Table {
         global $wpdb;
         $cap_key = $wpdb->prefix . 'capabilities';
         $where   = [
-            "m.meta_value = '4'",
+            "EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} mf
+                WHERE mf.user_id = u.ID
+                AND mf.meta_key = '_uwp_register_form_id'
+                AND mf.meta_value = '4'
+            )",
             "EXISTS (
                 SELECT 1 FROM {$wpdb->usermeta} mr
                 WHERE mr.user_id = u.ID
@@ -579,13 +589,11 @@ class OHA_Members_Table {
             $params[] = $like;
         }
 
-        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
-                    m2.meta_value as paid_since
+        $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
+                     LIMIT 1) as paid_since
                 FROM {$wpdb->users} u
-                INNER JOIN {$wpdb->usermeta} m
-                    ON u.ID = m.user_id AND m.meta_key = '_uwp_register_form_id'
-                LEFT JOIN {$wpdb->usermeta} m2
-                    ON u.ID = m2.user_id AND m2.meta_key = 'oha_paid_member_since'
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY u.user_registered DESC";
 
@@ -654,11 +662,11 @@ class OHA_Members_Table {
             }
         }
 
-        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
-                    paid.meta_value as paid_since
+        $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
+                     LIMIT 1) as paid_since
                 FROM {$wpdb->users} u
-                LEFT JOIN {$wpdb->usermeta} paid
-                    ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY u.display_name ASC";
 
@@ -709,17 +717,17 @@ class OHA_Members_Table {
             }
         }
 
-        $sql = "SELECT DISTINCT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
-                    mf.meta_value as form_id,
-                    mc.meta_value as capabilities,
-                    paid.meta_value as paid_since
-                FROM {$wpdb->users} u
-                LEFT JOIN {$wpdb->usermeta} mf
-                    ON u.ID = mf.user_id AND mf.meta_key = '_uwp_register_form_id'
-                LEFT JOIN {$wpdb->usermeta} mc
-                    ON u.ID = mc.user_id AND mc.meta_key = '{$cap_key}'
-                LEFT JOIN {$wpdb->usermeta} paid
-                    ON u.ID = paid.user_id AND paid.meta_key = 'oha_paid_member_since'";
+        $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = '_uwp_register_form_id'
+                     LIMIT 1) as form_id,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = '{$cap_key}'
+                     LIMIT 1) as capabilities,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
+                     LIMIT 1) as paid_since
+                FROM {$wpdb->users} u";
 
         if (!empty($where)) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
