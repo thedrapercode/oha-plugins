@@ -400,8 +400,8 @@ $all_areas = \OHA\VH\Database::get_areas();
 </div>
 
 <!-- Broadcast Email Modal -->
-<div id="broadcast-modal" class="oha-modal" style="display:none; position:fixed !important; z-index:999999 !important; left:0 !important; top:0 !important; width:100% !important; height:100% !important; background-color:rgba(0,0,0,0.7) !important; align-items:center !important; justify-content:center !important;">
-    <div class="oha-modal-content" style="background:white; padding:30px; border-radius:8px; max-width:600px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+<div id="broadcast-modal" class="oha-modal" style="display:none;">
+    <div class="oha-modal-content" style="max-width:600px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
         <span class="oha-modal-close" onclick="closeBroadcastModal()" style="position:absolute; right:15px; top:15px; font-size:32px; font-weight:bold; cursor:pointer; color:#999; line-height:1;">&times;</span>
         <h3 style="margin-top:0; color:#333;">Broadcast Email to All Assigned Volunteers</h3>
         <p style="color:#666;">Sends a message to all volunteers with status "Assigned". Use <code>{{first_name}}</code> or <code>{{name}}</code> to personalize.</p>
@@ -422,8 +422,8 @@ $all_areas = \OHA\VH\Database::get_areas();
 </div>
 
 <!-- Quick Reassign Modal -->
-<div id="reassign-modal" class="oha-modal" style="display:none; position:fixed !important; z-index:999999 !important; left:0 !important; top:0 !important; width:100% !important; height:100% !important; background-color:rgba(0,0,0,0.7) !important; align-items:center !important; justify-content:center !important;">
-    <div class="oha-modal-content" style="background:white; padding:30px; border-radius:8px; max-width:500px; width:90%; max-height:85vh; overflow-y:auto; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+<div id="reassign-modal" class="oha-modal" style="display:none;">
+    <div class="oha-modal-content" style="max-width:500px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
         <span class="oha-modal-close" onclick="closeReassignModal()" style="position:absolute; right:15px; top:15px; font-size:32px; font-weight:bold; cursor:pointer; color:#999; line-height:1;">&times;</span>
         <h3 style="margin-top:0; color:#333;">Quick Reassign</h3>
         <p style="color:#666;">Select a new area and optional shift for this assignment.</p>

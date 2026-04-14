@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Volunteer Hub",
-    "version":  "4.11.0",
+    "version":  "4.12.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -267,6 +267,20 @@
                         "type":  "feature",
                         "summary":  "Add quick-reassign and remove-assignment buttons to volunteer expanded details",
                         "notes":  "Reassign opens modal with area+shift select (loads shifts via existing get_area_shifts). Remove deletes assignment record. AJAX actions oha_vh_remove_assignment and oha_vh_update_assignment_area in Board class."
+                    },
+                    {
+                        "date":  "2026-04-13",
+                        "version":  "4.12.0",
+                        "type":  "feature",
+                        "summary":  "Added signup_closed toggle and editable message to close volunteer applications on the signup form",
+                        "notes":  "Settings: signup_closed checkbox and signup_closed_message textarea in General tab. SignupForm::render_form() returns early with styled notice when closed. Default message references 2026/2027."
+                    },
+                    {
+                        "date":  "2026-04-13",
+                        "version":  "4.12.0",
+                        "type":  "fix",
+                        "summary":  "Fixed board hub modals appearing behind site header and not centering correctly",
+                        "notes":  "Root causes: z-index 999999 beaten by theme header; align-items/justify-content only on .oha-modal.show class not on .oha-modal. Fix: z-index 2147483647 on .oha-modal, flex alignment on .oha-modal directly, padding-top 80px to clear fixed header. Updated oha-vh.css, board-hub-tabbed.php inline CSS, and stripped redundant inline styles from modal divs in volunteers-tab.php and assign-tab.php."
                     }
                 ]
 }

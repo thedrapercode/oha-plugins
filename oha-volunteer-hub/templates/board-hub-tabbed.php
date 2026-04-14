@@ -226,34 +226,39 @@ function buildBoardHubUrl(vhTab, additionalParams) {
 .oha-modal {
     display: none;
     position: fixed;
-    z-index: 999999;
+    z-index: 2147483647;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden; /* Changed from 'auto' to fix flexbox centering */
+    overflow-x: hidden;
+    overflow-y: auto;
     background-color: rgba(0,0,0,0.7);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 16px 30px;
+    box-sizing: border-box;
 }
 
 .oha-modal.show {
     display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
 }
 
 .oha-modal-content {
     background-color: white;
     padding: 30px;
     border-radius: 8px;
-    width: 90%;
+    width: 100%;
     max-width: 700px;
-    max-height: 85vh;
+    max-height: calc(100vh - 140px);
     overflow-y: auto;
     position: relative;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: modalSlideIn 0.3s ease-out;
+    box-sizing: border-box;
+    margin: 0 auto;
 }
 
 .oha-modal-content * {

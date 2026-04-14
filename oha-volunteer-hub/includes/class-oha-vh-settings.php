@@ -126,6 +126,10 @@ class Settings {
             'portal_announcement'    => '',
             'portal_checkin_location' => '',
             'portal_parking_info'    => '',
+
+            // Applications
+            'signup_closed'          => '0',
+            'signup_closed_message'  => 'Volunteer applications for OHA Convention 2026 are now closed. Thank you for your interest - please keep us in mind for 2027!',
         ];
     }
 
@@ -138,7 +142,7 @@ class Settings {
         // Checkboxes
         $checkboxes = ['enable_signups', 'require_approval', 'enable_shifts', 'enable_check_in',
                        'enable_hours_tracking', 'send_reminder_24h', 'send_thank_you_after', 'send_approval_email',
-                       'portal_show_checkin'];
+                       'portal_show_checkin', 'signup_closed'];
         foreach ($checkboxes as $checkbox) {
             $sanitized[$checkbox] = isset($input[$checkbox]) ? '1' : '0';
         }
@@ -177,6 +181,11 @@ class Settings {
             if (isset($input[$field])) {
                 $sanitized[$field] = sanitize_textarea_field($input[$field]);
             }
+        }
+
+        // Applications closed message (plain text)
+        if (isset($input['signup_closed_message'])) {
+            $sanitized['signup_closed_message'] = sanitize_textarea_field($input['signup_closed_message']);
         }
 
         return $sanitized;
@@ -534,6 +543,20 @@ class Settings {
                             <td>
                                 <input type="checkbox" id="enable_signups" name="oha_vh_settings[enable_signups]" value="1" <?php checked($settings['enable_signups'], '1'); ?>>
                                 <p class="description">Allow public to submit volunteer signup form</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="signup_closed">Close Applications</label></th>
+                            <td>
+                                <input type="checkbox" id="signup_closed" name="oha_vh_settings[signup_closed]" value="1" <?php checked($settings['signup_closed'] ?? '0', '1'); ?>>
+                                <p class="description">When checked, the signup form is hidden and the message below is displayed in its place.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="signup_closed_message">Applications Closed Message</label></th>
+                            <td>
+                                <textarea id="signup_closed_message" name="oha_vh_settings[signup_closed_message]" rows="3" class="large-text"><?php echo esc_textarea($settings['signup_closed_message'] ?? ''); ?></textarea>
+                                <p class="description">Displayed on the signup page when applications are closed. Shown only when the toggle above is checked.</p>
                             </td>
                         </tr>
                         <tr>

@@ -28,6 +28,14 @@ class SignupForm {
             'show_emergency' => 'no'  // Default to NO for 18+ policy
         ], $atts);
 
+        // Check if applications are closed
+        if (Settings::get('signup_closed', '0') === '1') {
+            $message = Settings::get('signup_closed_message', 'Volunteer applications are currently closed.');
+            wp_enqueue_style('oha-vh');
+            $style = '<style>.oha-vh-closed-notice{background:#fff;border:1px solid #ddd;border-radius:12px;padding:30px 25px;margin:20px 0;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.06);}.oha-vh-closed-notice p{font-size:17px;color:#333;margin:0;line-height:1.6;}</style>';
+            return $style . '<div class="oha-vh oha-vh-signup"><div class="oha-vh-signup-header" style="text-align:center;margin-bottom:20px;"><h2>' . esc_html($atts['title']) . '</h2></div><div class="oha-vh-closed-notice"><p>' . esc_html($message) . '</p></div></div>';
+        }
+
         wp_enqueue_style('oha-vh');
         wp_enqueue_script('oha-vh');
 

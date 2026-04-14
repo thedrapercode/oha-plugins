@@ -218,8 +218,8 @@ function viewAreaAssignments(areaId) {
 </div>
 
 <!-- Assignment Modal -->
-<div id="assign-modal" class="oha-modal" style="display:none; position:fixed !important; z-index:999999 !important; left:0 !important; top:0 !important; width:100% !important; height:100% !important; background-color:rgba(0,0,0,0.7) !important; align-items:center !important; justify-content:center !important;">
-    <div class="oha-modal-content" style="background:white; padding:30px; border-radius:8px; max-width:700px; max-height:85vh; overflow-y:auto; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+<div id="assign-modal" class="oha-modal" style="display:none;">
+    <div class="oha-modal-content" style="max-width:700px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
         <span class="oha-modal-close" onclick="closeAssignModal()" style="position:absolute; right:15px; top:15px; font-size:32px; font-weight:bold; cursor:pointer; color:#999; line-height:1;">&times;</span>
         <div id="assign-modal-content">
             <h3>Assign Volunteer</h3>

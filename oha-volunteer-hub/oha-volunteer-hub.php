@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Volunteer Hub
  * Description: Complete volunteer management for OHA Convention 2026. Phase 4: Board empowerment with tabbed hub, shift management, area management, and CSV export.
- * Version: 4.11.0
+ * Version: 4.12.0
  * Author: OHA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -11,7 +11,7 @@
 
 if (!defined('ABSPATH')) { exit; }
 
-define('OHA_VH_VERSION', '4.11.0');
+define('OHA_VH_VERSION', '4.12.0');
 define('OHA_VH_PATH', plugin_dir_path(__FILE__));
 define('OHA_VH_URL', plugin_dir_url(__FILE__));
 
