@@ -353,20 +353,32 @@
         } catch(e) {}
 
         // --------------------------------------------------
-        // Offline banner
+        // Offline indicator — small corner icon (does not cover content)
         // --------------------------------------------------
         function showOfflineBanner() {
-            if ($('#oha-offline-message').length === 0) {
-                $('body').prepend(
-                    '<div id="oha-offline-message" style="' +
-                    'background:#1a0f0f;color:#fbbf24;border-bottom:1px solid #e07820;' +
-                    'padding:10px 16px;text-align:center;position:fixed;top:0;left:0;right:0;z-index:200000;' +
-                    'font-size:14px;font-weight:600;">&#9888; Offline — viewing cached schedule.</div>'
+            if ($('#oha-offline-icon').length === 0) {
+                $('body').append(
+                    '<div id="oha-offline-icon" title="Offline — viewing cached schedule" style="' +
+                    'position:fixed;top:8px;right:8px;z-index:200001;' +
+                    'background:rgba(26,15,15,0.92);color:#fbbf24;' +
+                    'border:1px solid #e07820;border-radius:16px;' +
+                    'padding:4px 10px 4px 7px;font-size:12px;font-weight:600;' +
+                    'display:flex;align-items:center;gap:5px;' +
+                    'box-shadow:0 2px 8px rgba(0,0,0,0.5);pointer-events:none;">' +
+                    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<line x1="2" y1="2" x2="22" y2="22"/>' +
+                    '<path d="M8.5 16.5a5 5 0 0 1 7 0"/>' +
+                    '<path d="M5 12.5a9 9 0 0 1 5.17-2.29"/>' +
+                    '<path d="M1.42 9a16 16 0 0 1 3.7-2.4"/>' +
+                    '<path d="M22 9a16 16 0 0 0-11-4"/>' +
+                    '<circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/>' +
+                    '</svg>' +
+                    'Offline</div>'
                 );
             }
         }
         function hideOfflineBanner() {
-            $('#oha-offline-message').fadeOut(400, function() { $(this).remove(); });
+            $('#oha-offline-icon').fadeOut(400, function() { $(this).remove(); });
         }
 
         window.addEventListener('offline',  showOfflineBanner);

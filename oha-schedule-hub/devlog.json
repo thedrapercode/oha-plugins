@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention Schedule Hub",
-    "version":  "1.5.1",
+    "version":  "1.5.2",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -64,6 +64,13 @@
                         "type":  "feature",
                         "summary":  "Added admin setting to control the display order of Day sections on the schedule.",
                         "notes":  "New option oha_schedule_day_order stored in wp_options. Enter comma-separated day names (e.g. Thursday, Friday, Saturday) in Schedule Settings. The classes_by_day array and the Day filter dropdown are both sorted by this order. Days not listed appear after the ordered ones."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "1.5.2",
+                        "type":  "fix",
+                        "summary":  "Replaced full-width offline banner with small corner icon (top-right, pointer-events:none) to stop it covering content",
+                        "notes":  "Element ID changed from oha-offline-message to oha-offline-icon. Uses inline SVG wifi-off icon. Does not obstruct taps."
                     }
                 ]
 }

@@ -3,7 +3,7 @@
  * Plugin Name: OHA Convention Schedule Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive class schedule management for OHA Convention with multiple views, filtering, and PWA support
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author: Justin @ OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('OHA_SCHEDULE_VERSION', '1.5.1');
+define('OHA_SCHEDULE_VERSION', '1.5.2');
 define('OHA_SCHEDULE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SCHEDULE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
