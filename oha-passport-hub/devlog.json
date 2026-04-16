@@ -1,0 +1,48 @@
+{
+    "plugin":  "OHA Passport Hub",
+    "version":  "2.1.0",
+    "entries":  [
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Add oha_award_demo_stamp AJAX endpoint for pre-event OHA Beginner stamp",
+                        "notes":  "Awards stamp_type=\u0027demo\u0027, event_slug=\u0027pre-event\u0027, actor_two_id=0. One per user. Does NOT check is_event_active() so it works before convention dates. Updates stamps_earned counter. Registered in OHA_Passport_Stamps constructor."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Add oha_convention_passport to page_needs_passport_assets() shortcode list",
+                        "notes":  "The [oha_convention_passport] shortcode lives in OHA Convention PWA Core (not Passport Hub). Without this addition, Passport Hub JS/CSS would not load on the passport page because has_shortcode() would never match. This makes Passport Hub assets load whenever the PWA Core passport shortcode is on the page."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "2.1.0",
+                        "type":  "fix",
+                        "summary":  "Profile card header flex-wrap fix on small screens",
+                        "notes":  "Added flex-wrap:wrap, gap:6px to .passport-header; min-width:0 + overflow-wrap on h4; flex-shrink:0 + white-space:nowrap on .character-type"
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Post-scan success shows dual actions: Scan More and View My Passport buttons",
+                        "notes":  "displayScanSuccess() and processActorScan() both render oha-scan-after-actions div with two buttons. passport_page_url localized from oha_pwa_passport_url WP option."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Scanner pages show a link to the passport page below the scan result area",
+                        "notes":  "Both display_qr_scanner() and display_smart_scanner() accept passport_url shortcode attr, default from oha_pwa_passport_url option. Renders .oha-scanner-passport-link div."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "2.1.0",
+                        "type":  "change",
+                        "summary":  "passport_page_url added to wp_localize_script so JS can link back to passport page",
+                        "notes":  "Reads oha_pwa_passport_url WP option (shared with PWA Core). Falls back to /convention/2026-convention/passport/."
+                    }
+                ]
+}

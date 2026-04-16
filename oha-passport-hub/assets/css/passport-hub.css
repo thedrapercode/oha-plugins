@@ -1,0 +1,1461 @@
+/**
+ * OHA Passport Hub Styles
+ * 
+ * Mobile-first design for haunted attraction community
+ * Dark theme with theatrical accents and professional polish
+ * Extends v3.3.0 schedule styles with passport functionality
+ * 
+ * @package OHA_Passport_Hub
+ * @version 2.0.0
+ */
+
+/* ===== CSS VARIABLES ===== */
+:root {
+    /* Actor Passport Color Palette - Theatrical Dark Theme */
+    --oha-passport-primary: #2d1b3d;      /* Deep theatrical purple */
+    --oha-passport-accent: #ff6b35;       /* Vibrant orange (Halloween) */
+    --oha-passport-secondary: #4a4a4a;    /* Professional gray */
+    --oha-passport-success: #27ae60;      /* Badge success green */
+    --oha-passport-warning: #f39c12;      /* Warning amber */
+    --oha-passport-error: #e74c3c;        /* Error red */
+    
+    /* Dark theme backgrounds */
+    --oha-passport-bg: #1a1a1a;           /* Deep dark background */
+    --oha-passport-card-bg: #2c2c2c;      /* Card backgrounds */
+    --oha-passport-input-bg: #333333;     /* Form inputs */
+    --oha-passport-border: #444444;       /* Borders */
+    
+    /* Text colors */
+    --oha-passport-text: #ffffff;         /* Primary text */
+    --oha-passport-text-muted: #cccccc;   /* Muted text */
+    --oha-passport-text-light: #999999;   /* Light text */
+    
+    /* Shadows and effects */
+    --oha-passport-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --oha-passport-glow: 0 0 20px rgba(255, 107, 53, 0.3);
+    --oha-passport-inner-glow: inset 0 1px 3px rgba(255, 255, 255, 0.1);
+    
+    /* Typography */
+    --oha-passport-font-primary: 'Creepster', 'Chiller', cursive;
+    --oha-passport-font-body: 'Inter', 'Segoe UI', sans-serif;
+    --oha-passport-font-mono: 'Courier New', monospace;
+    
+    /* Spacing and sizing */
+    --oha-passport-radius: 12px;
+    --oha-passport-radius-large: 20px;
+    --oha-passport-spacing: 1rem;
+    --oha-passport-spacing-large: 2rem;
+}
+
+/* ===== GLOBAL PASSPORT CONTAINER ===== */
+.oha-passport-container,
+.oha-scanner-container,
+.oha-stamps-container {
+    background: var(--oha-passport-bg);
+    color: var(--oha-passport-text);
+    min-height: 100vh;
+    padding: var(--oha-passport-spacing);
+    font-family: var(--oha-passport-font-body);
+    line-height: 1.6;
+}
+
+/* ===== NAVIGATION ENHANCEMENT (Extends v3.3.0) ===== */
+.oha-pwa-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: var(--oha-passport-spacing-large);
+    padding: 0.5rem;
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    box-shadow: var(--oha-passport-inner-glow);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.oha-nav-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: var(--oha-passport-radius);
+    color: var(--oha-passport-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.oha-nav-btn:hover {
+    color: var(--oha-passport-text);
+    border-color: var(--oha-passport-accent);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.oha-nav-btn.active {
+    background: var(--oha-passport-accent);
+    color: white;
+    border-color: var(--oha-passport-accent);
+    box-shadow: var(--oha-passport-glow);
+}
+
+/* ===== PASSPORT CARD DESIGN ===== */
+.oha-passport-header {
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing-large);
+    padding: var(--oha-passport-spacing);
+    background: linear-gradient(135deg, var(--oha-passport-primary), var(--oha-passport-accent));
+    border-radius: var(--oha-passport-radius-large);
+    box-shadow: var(--oha-passport-shadow);
+}
+
+.oha-passport-header h3 {
+    font-family: var(--oha-passport-font-primary);
+    font-size: 2rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin: 0 0 0.5rem 0;
+}
+
+.oha-passport-header p {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Passport Card Display */
+.passport-card-display {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing-large);
+    box-shadow: var(--oha-passport-shadow);
+    border: 1px solid var(--oha-passport-border);
+    margin-bottom: var(--oha-passport-spacing-large);
+    position: relative;
+    overflow: hidden;
+}
+
+.passport-card-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--oha-passport-accent), var(--oha-passport-primary));
+}
+
+.passport-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: var(--oha-passport-spacing);
+    padding-bottom: var(--oha-passport-spacing);
+    border-bottom: 2px solid var(--oha-passport-border);
+}
+
+.passport-header h4 {
+    font-family: var(--oha-passport-font-primary);
+    font-size: 1.5rem;
+    color: var(--oha-passport-accent);
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.character-type {
+    background: var(--oha-passport-accent);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.passport-haunt {
+    margin-bottom: var(--oha-passport-spacing);
+    padding: 0.75rem;
+    background: rgba(255, 107, 53, 0.1);
+    border-left: 4px solid var(--oha-passport-accent);
+    border-radius: 0 var(--oha-passport-radius) var(--oha-passport-radius) 0;
+}
+
+.passport-bio {
+    margin-bottom: var(--oha-passport-spacing);
+    font-style: italic;
+    color: var(--oha-passport-text-muted);
+    line-height: 1.7;
+}
+
+.passport-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--oha-passport-spacing);
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.stat-item {
+    text-align: center;
+    padding: var(--oha-passport-spacing);
+    background: var(--oha-passport-input-bg);
+    border-radius: var(--oha-passport-radius);
+    border: 1px solid var(--oha-passport-border);
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--oha-passport-accent);
+    font-family: var(--oha-passport-font-mono);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--oha-passport-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+}
+
+.passport-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--oha-passport-spacing);
+}
+
+/* No Passport State */
+.no-passport {
+    text-align: center;
+    padding: var(--oha-passport-spacing-large);
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    border: 2px dashed var(--oha-passport-border);
+}
+
+.no-passport .empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--oha-passport-spacing);
+    opacity: 0.7;
+}
+
+.no-passport h4 {
+    color: var(--oha-passport-accent);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+/* ===== FORM STYLES ===== */
+.oha-passport-form {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing-large);
+    box-shadow: var(--oha-passport-shadow);
+    border: 1px solid var(--oha-passport-border);
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-passport-form h4 {
+    color: var(--oha-passport-accent);
+    font-family: var(--oha-passport-font-primary);
+    font-size: 1.3rem;
+    margin-bottom: var(--oha-passport-spacing);
+    text-align: center;
+}
+
+.form-row {
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.form-row label {
+    display: block;
+    font-weight: 600;
+    color: var(--oha-passport-text);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--oha-passport-input-bg);
+    border: 2px solid var(--oha-passport-border);
+    border-radius: var(--oha-passport-radius);
+    color: var(--oha-passport-text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+    outline: none;
+    border-color: var(--oha-passport-accent);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+}
+
+.form-row small {
+    display: block;
+    color: var(--oha-passport-text-light);
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+.form-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--oha-passport-spacing);
+    margin-top: var(--oha-passport-spacing-large);
+}
+
+/* ===== BUTTON STYLES ===== */
+.oha-btn-primary,
+.oha-btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--oha-passport-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    min-height: 44px; /* Touch target */
+}
+
+.oha-btn-primary {
+    background: var(--oha-passport-accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.oha-btn-primary:hover:not(:disabled) {
+    background: #e55a2b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+.oha-btn-primary:disabled {
+    background: var(--oha-passport-secondary);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.oha-btn-secondary {
+    background: transparent;
+    color: var(--oha-passport-text);
+    border: 2px solid var(--oha-passport-border);
+}
+
+.oha-btn-secondary:hover:not(:disabled) {
+    border-color: var(--oha-passport-accent);
+    color: var(--oha-passport-accent);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+/* ===== QR CODE SECTION ===== */
+.oha-qr-section {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing-large);
+    box-shadow: var(--oha-passport-shadow);
+    border: 1px solid var(--oha-passport-border);
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-qr-section h4 {
+    color: var(--oha-passport-accent);
+    font-family: var(--oha-passport-font-primary);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.qr-display-card {
+    display: inline-block;
+    background: white;
+    padding: var(--oha-passport-spacing);
+    border-radius: var(--oha-passport-radius);
+    box-shadow: var(--oha-passport-shadow);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.qr-image {
+    display: block;
+    max-width: 250px;
+    height: auto;
+    margin: 0 auto var(--oha-passport-spacing) auto;
+    border-radius: var(--oha-passport-radius);
+}
+
+.qr-character {
+    font-weight: 600;
+    color: var(--oha-passport-primary);
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.qr-expires {
+    color: var(--oha-passport-secondary);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.qr-refreshed {
+    color: var(--oha-passport-success);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+/* ===== SCANNER INTERFACE ===== */
+.oha-scanner-header {
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-scanner-header h3 {
+    font-family: var(--oha-passport-font-primary);
+    font-size: 2rem;
+    color: var(--oha-passport-accent);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0 0 0.5rem 0;
+}
+
+.oha-event-status {
+    margin-bottom: var(--oha-passport-spacing-large);
+    text-align: center;
+}
+
+.event-status {
+    padding: var(--oha-passport-spacing);
+    border-radius: var(--oha-passport-radius);
+    font-weight: 600;
+}
+
+.event-status.event-active {
+    background: rgba(39, 174, 96, 0.2);
+    border: 2px solid var(--oha-passport-success);
+    color: var(--oha-passport-success);
+}
+
+.event-status.event-inactive {
+    background: rgba(243, 156, 18, 0.2);
+    border: 2px solid var(--oha-passport-warning);
+    color: var(--oha-passport-warning);
+}
+
+.camera-container {
+    position: relative;
+    max-width: 400px;
+    margin: 0 auto var(--oha-passport-spacing-large) auto;
+    border-radius: var(--oha-passport-radius);
+    overflow: hidden;
+    background: var(--oha-passport-input-bg);
+    border: 2px solid var(--oha-passport-border);
+    aspect-ratio: 1;
+}
+
+.camera-container.active {
+    border-color: var(--oha-passport-accent);
+    box-shadow: var(--oha-passport-glow);
+}
+
+#camera-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.scan-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.scan-frame {
+    width: 200px;
+    height: 200px;
+    border: 3px solid var(--oha-passport-accent);
+    border-radius: var(--oha-passport-radius);
+    position: relative;
+    margin-bottom: var(--oha-passport-spacing);
+    animation: scanPulse 2s infinite;
+}
+
+@keyframes scanPulse {
+    0%, 100% { border-color: var(--oha-passport-accent); }
+    50% { border-color: rgba(255, 107, 53, 0.5); }
+}
+
+.scanner-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--oha-passport-spacing);
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.manual-input {
+    background: var(--oha-passport-card-bg);
+    padding: var(--oha-passport-spacing);
+    border-radius: var(--oha-passport-radius);
+    border: 1px solid var(--oha-passport-border);
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.manual-input input {
+    width: 100%;
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+/* ===== SCAN RESULTS ===== */
+.scan-result {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing-large);
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing-large);
+    box-shadow: var(--oha-passport-shadow);
+}
+
+.scan-result.success {
+    border: 2px solid var(--oha-passport-success);
+    background: rgba(39, 174, 96, 0.1);
+}
+
+.scan-result.error {
+    border: 2px solid var(--oha-passport-error);
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.result-icon {
+    font-size: 3rem;
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.scan-result h4 {
+    color: var(--oha-passport-text);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+/* Post-scan action buttons — Scan More / View My Passport */
+.oha-scan-after-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.oha-scan-after-actions .oha-btn-primary,
+.oha-scan-after-actions .oha-btn-secondary {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+}
+
+/* Stamp collected checkmark icon */
+.result-icon.oha-stamp-check {
+    font-size: 2.4rem;
+    font-weight: 900;
+    color: var(--oha-passport-success);
+    line-height: 1;
+}
+
+/* "View My Passport" link below scanner interface */
+.oha-scanner-passport-link {
+    text-align: center;
+    padding: 10px 0 6px;
+}
+
+.oha-scanner-passport-link a {
+    color: var(--oha-passport-accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 107, 53, 0.3);
+    padding-bottom: 1px;
+    transition: border-color 0.2s;
+}
+
+.oha-scanner-passport-link a:hover {
+    border-color: var(--oha-passport-accent);
+}
+
+/* ===== STAMPS SECTION ===== */
+.oha-stamps-header {
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-stamps-header h3 {
+    font-family: var(--oha-passport-font-primary);
+    font-size: 2rem;
+    color: var(--oha-passport-accent);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0 0 0.5rem 0;
+}
+
+.stamp-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--oha-passport-spacing);
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.stat-card {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius);
+    padding: var(--oha-passport-spacing);
+    text-align: center;
+    border: 1px solid var(--oha-passport-border);
+    box-shadow: var(--oha-passport-shadow);
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--oha-passport-accent);
+    font-family: var(--oha-passport-font-mono);
+    display: block;
+}
+
+.stat-card .stat-label {
+    font-size: 0.8rem;
+    color: var(--oha-passport-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+/* Stamps List */
+.stamp-item {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius);
+    padding: var(--oha-passport-spacing);
+    margin-bottom: var(--oha-passport-spacing);
+    border: 1px solid var(--oha-passport-border);
+    transition: all 0.3s ease;
+}
+
+.stamp-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--oha-passport-shadow);
+    border-color: var(--oha-passport-accent);
+}
+
+.stamp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.stamp-partner {
+    font-weight: 600;
+    color: var(--oha-passport-accent);
+    font-size: 1.1rem;
+}
+
+.stamp-date {
+    color: var(--oha-passport-text-muted);
+    font-size: 0.8rem;
+    font-family: var(--oha-passport-font-mono);
+}
+
+.stamp-haunt {
+    color: var(--oha-passport-text-muted);
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.stamp-type {
+    background: var(--oha-passport-accent);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: inline-block;
+    font-weight: 600;
+}
+
+/* ===== EMPTY STATES ===== */
+.oha-empty-state {
+    text-align: center;
+    padding: var(--oha-passport-spacing-large);
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    border: 2px dashed var(--oha-passport-border);
+}
+
+.oha-empty-state .empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--oha-passport-spacing);
+    opacity: 0.7;
+}
+
+.oha-empty-state h4 {
+    color: var(--oha-passport-accent);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.oha-empty-state a {
+    display: inline-block;
+    margin: 0.5rem;
+}
+
+/* ===== LOADING STATES ===== */
+.oha-loading {
+    text-align: center;
+    padding: var(--oha-passport-spacing-large);
+    color: var(--oha-passport-text-muted);
+}
+
+.oha-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--oha-passport-border);
+    border-top: 4px solid var(--oha-passport-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--oha-passport-spacing) auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== MESSAGES ===== */
+.oha-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    left: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: var(--oha-passport-spacing);
+    border-radius: var(--oha-passport-radius);
+    font-weight: 600;
+    z-index: 10000;
+    animation: slideInDown 0.3s ease;
+    box-shadow: var(--oha-passport-shadow);
+}
+
+.oha-message-success {
+    background: var(--oha-passport-success);
+    color: white;
+}
+
+.oha-message-error {
+    background: var(--oha-passport-error);
+    color: white;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== DISCLAIMER ===== */
+.oha-disclaimer {
+    background: var(--oha-passport-input-bg);
+    border-left: 4px solid var(--oha-passport-warning);
+    border-radius: 0 var(--oha-passport-radius) var(--oha-passport-radius) 0;
+    padding: var(--oha-passport-spacing);
+    margin-top: var(--oha-passport-spacing-large);
+    font-size: 0.85rem;
+    color: var(--oha-passport-text-muted);
+    line-height: 1.5;
+}
+
+.oha-disclaimer p {
+    margin: 0;
+}
+
+.oha-disclaimer strong {
+    color: var(--oha-passport-warning);
+}
+
+/* ===== INSTRUCTIONS ===== */
+.oha-instructions {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius);
+    padding: var(--oha-passport-spacing);
+    margin-top: var(--oha-passport-spacing-large);
+    border: 1px solid var(--oha-passport-border);
+}
+
+.oha-instructions h4 {
+    color: var(--oha-passport-accent);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.oha-instructions ol,
+.oha-instructions ul {
+    color: var(--oha-passport-text-muted);
+    line-height: 1.6;
+}
+
+.oha-instructions ol li,
+.oha-instructions ul li {
+    margin-bottom: 0.5rem;
+}
+
+.oha-tips {
+    background: rgba(255, 107, 53, 0.1);
+    border-radius: var(--oha-passport-radius);
+    padding: var(--oha-passport-spacing);
+    margin-top: var(--oha-passport-spacing);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+.oha-tips strong {
+    color: var(--oha-passport-accent);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Large tablets and small desktops */
+@media (min-width: 768px) {
+    .oha-passport-container,
+    .oha-scanner-container,
+    .oha-stamps-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--oha-passport-spacing-large);
+    }
+    
+    .passport-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .form-actions {
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .camera-container {
+        max-width: 300px;
+    }
+    
+    .oha-message {
+        right: 40px;
+        left: auto;
+        max-width: 400px;
+    }
+}
+
+/* Large desktops */
+@media (min-width: 1200px) {
+    .oha-passport-container,
+    .oha-scanner-container,
+    .oha-stamps-container {
+        max-width: 1000px;
+    }
+    
+    /* Side-by-side layout for larger screens */
+    .passport-card-display {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--oha-passport-spacing-large);
+        align-items: start;
+    }
+    
+    .passport-header {
+        grid-column: span 2;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .qr-image {
+        max-width: 200px; /* Smaller on high DPI for better clarity */
+    }
+}
+
+/* Dark mode preference support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --oha-passport-bg: #0d0d0d;
+        --oha-passport-card-bg: #1f1f1f;
+        --oha-passport-input-bg: #262626;
+        --oha-passport-border: #333333;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .scan-frame {
+        animation: none;
+        border-color: var(--oha-passport-accent);
+    }
+}
+
+/* ========================================
+   Vendor Check-in Result Card (v1.2.0)
+   ======================================== */
+
+.oha-vendor-result {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing-large);
+    border: 2px solid var(--oha-passport-success);
+    background: rgba(39, 174, 96, 0.08);
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+.vendor-result-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--oha-passport-accent);
+    margin-bottom: 0.5rem;
+}
+
+.vendor-result-booth {
+    font-size: 0.9rem;
+    color: var(--oha-passport-text-muted);
+    margin-bottom: 0.5rem;
+    font-family: var(--oha-passport-font-mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.vendor-result-desc {
+    color: var(--oha-passport-text-muted);
+    font-style: italic;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+.vendor-result-link a {
+    color: var(--oha-passport-accent);
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+
+.vendor-stamp-msg {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--oha-passport-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.vendor-stamp-msg.stamp-success {
+    background: rgba(39, 174, 96, 0.2);
+    color: var(--oha-passport-success);
+}
+
+.vendor-stamp-msg.stamp-already {
+    background: rgba(243, 156, 18, 0.2);
+    color: var(--oha-passport-warning);
+}
+
+/* ========================================
+   Scavenger Hunt UI (v1.2.0)
+   ======================================== */
+
+.oha-scavenger-container {
+    background: var(--oha-passport-bg);
+    color: var(--oha-passport-text);
+    padding: var(--oha-passport-spacing);
+    font-family: var(--oha-passport-font-body);
+}
+
+.oha-scavenger-header {
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-scavenger-header h3 {
+    font-family: var(--oha-passport-font-primary);
+    font-size: 2rem;
+    color: var(--oha-passport-accent);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0 0 0.5rem 0;
+}
+
+/* Hunt progress bar */
+.oha-hunt-progress-wrap,
+.hunt-progress-mini {
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-hunt-progress {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius);
+    padding: var(--oha-passport-spacing);
+    border: 1px solid var(--oha-passport-border);
+}
+
+.hunt-complete-banner {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--oha-passport-accent);
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(45,27,61,0.15));
+    border-radius: var(--oha-passport-radius);
+}
+
+.hunt-progress-bar {
+    background: var(--oha-passport-border);
+    border-radius: 20px;
+    height: 14px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.hunt-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--oha-passport-accent), #ff9966);
+    border-radius: 20px;
+    transition: width 0.5s ease;
+    min-width: 4px;
+}
+
+.hunt-progress-label {
+    text-align: center;
+    color: var(--oha-passport-text-muted);
+    font-size: 0.85rem;
+    font-family: var(--oha-passport-font-mono);
+}
+
+/* Locations checklist */
+.oha-hunt-locations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--oha-passport-spacing-large);
+}
+
+.hunt-loc {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius);
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--oha-passport-border);
+    transition: border-color 0.2s;
+}
+
+.hunt-loc.found {
+    border-color: var(--oha-passport-success);
+    background: rgba(39, 174, 96, 0.08);
+}
+
+.hunt-loc-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+
+.hunt-loc-name {
+    font-weight: 600;
+    color: var(--oha-passport-success);
+}
+
+.hunt-loc-hint {
+    color: var(--oha-passport-text-muted);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+/* Embedded hunt scanner */
+.oha-hunt-scanner {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing);
+    border: 1px solid var(--oha-passport-border);
+    margin-bottom: var(--oha-passport-spacing-large);
+}
+
+.oha-hunt-scanner h4 {
+    color: var(--oha-passport-accent);
+    text-align: center;
+    margin-bottom: var(--oha-passport-spacing);
+}
+
+/* Location scan result */
+.oha-location-result {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing-large);
+    border: 2px solid var(--oha-passport-accent);
+}
+
+.location-result-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--oha-passport-accent);
+    margin-bottom: 0.5rem;
+}
+
+.location-result-desc {
+    color: var(--oha-passport-text-muted);
+    font-style: italic;
+    margin-bottom: 0.75rem;
+}
+
+.location-stamp-msg {
+    margin: 0.75rem 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--oha-passport-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.location-stamp-msg.stamp-success {
+    background: rgba(39, 174, 96, 0.2);
+    color: var(--oha-passport-success);
+}
+
+.location-stamp-msg.stamp-already {
+    background: rgba(243, 156, 18, 0.2);
+    color: var(--oha-passport-warning);
+}
+
+/* Hunt completion badge */
+.hunt-completion-badge {
+    text-align: center;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--oha-passport-accent), var(--oha-passport-primary));
+    border-radius: var(--oha-passport-radius);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 0.75rem 0;
+    animation: huntComplete 0.5s ease;
+}
+
+@keyframes huntComplete {
+    0%   { transform: scale(0.8); opacity: 0; }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Hunt leaderboard */
+.oha-hunt-leaderboard {
+    background: var(--oha-passport-card-bg);
+    border-radius: var(--oha-passport-radius-large);
+    padding: var(--oha-passport-spacing);
+    border: 1px solid var(--oha-passport-border);
+    margin-top: var(--oha-passport-spacing-large);
+}
+
+.oha-hunt-leaderboard h4 {
+    color: var(--oha-passport-accent);
+    margin-bottom: var(--oha-passport-spacing);
+    text-align: center;
+}
+
+/* ========================================
+   Admin card styling
+   ======================================== */
+
+.oha-ph-admin-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 16px 0;
+    max-width: 1000px;
+}
+
+.oha-ph-admin-card h2 {
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Print styles */
+@media print {
+    .oha-passport-container,
+    .oha-scanner-container,
+    .oha-stamps-container {
+        background: white;
+        color: black;
+    }
+    
+    .oha-btn-primary,
+    .oha-btn-secondary {
+        display: none;
+    }
+    
+    .camera-container,
+    .scanner-controls {
+        display: none;
+    }
+    
+    .qr-display-card {
+        background: white;
+        border: 1px solid black;
+    }
+}
+
+/* Accessibility improvements */
+.oha-btn-primary:focus,
+.oha-btn-secondary:focus,
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+    outline: 3px solid var(--oha-passport-accent);
+    outline-offset: 2px;
+}
+
+/* Screen reader only text */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --oha-passport-accent: #ff8000;
+        --oha-passport-border: #ffffff;
+        --oha-passport-text: #ffffff;
+    }
+}
+
+/* ===== BADGE CIRCLES — [oha_my_badges] ===== */
+#oha-my-badges-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 0;
+}
+
+.oha-badge-circle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 80px;
+}
+
+.oha-badge-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.oha-badge-icon img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    border-radius: 0;
+}
+
+.oha-badge-name {
+    font-size: 11px;
+    text-align: center;
+    color: var(--oha-passport-text-muted);
+    line-height: 1.2;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Unlocked state */
+.oha-badge-circle.unlocked .oha-badge-icon {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.oha-badge-circle.unlocked .oha-badge-name {
+    color: var(--oha-passport-text);
+}
+
+/* Locked state */
+.oha-badge-circle.locked .oha-badge-icon {
+    filter: grayscale(1);
+    opacity: 0.3;
+    border: 2px dashed #666;
+    box-shadow: none;
+    background-color: #333 !important;
+}
+.oha-badge-circle.locked .oha-badge-name {
+    color: #555;
+}
+
+/* Slight scatter rotation per badge (applied via inline style in JS) */
+.oha-badge-circle.unlocked .oha-badge-icon {
+    transform-origin: center;
+}
+
+/* Compact mode */
+#oha-my-badges-wrap[data-compact="true"] .oha-badge-icon,
+#oha-my-badges-wrap[data-compact="1"] .oha-badge-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+}
+#oha-my-badges-wrap[data-compact="true"] .oha-badge-name,
+#oha-my-badges-wrap[data-compact="1"] .oha-badge-name {
+    display: none;
+}
+#oha-my-badges-wrap[data-compact="true"] .oha-badge-circle,
+#oha-my-badges-wrap[data-compact="1"] .oha-badge-circle {
+    width: 40px;
+    gap: 0;
+}
+
+/* ===== PASSPORT PROGRESS BAR — [oha_passport_progress] ===== */
+#oha-passport-progress {
+    padding: 8px 0;
+}
+
+.oha-progress-label {
+    font-size: 13px;
+    color: var(--oha-passport-text-muted);
+    margin-bottom: 6px;
+}
+
+.oha-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--oha-passport-border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.oha-progress-fill {
+    height: 100%;
+    background: var(--oha-passport-accent);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.oha-progress-link {
+    font-size: 12px;
+    color: var(--oha-passport-accent);
+    text-decoration: none;
+}
+.oha-progress-link:hover {
+    text-decoration: underline;
+}
+
+/* ===== CONNECTIONS LIST — [oha_connections] ===== */
+#oha-connections-wrap {
+    padding: 4px 0;
+}
+
+.oha-connection-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--oha-passport-border);
+    font-size: 14px;
+    color: var(--oha-passport-text);
+}
+.oha-connection-item:last-child {
+    border-bottom: none;
+}
+
+.oha-connection-name {
+    font-weight: 600;
+}
+.oha-connection-haunt {
+    font-size: 12px;
+    color: var(--oha-passport-text-muted);
+}
+.oha-connection-date {
+    font-size: 11px;
+    color: var(--oha-passport-text-light);
+    white-space: nowrap;
+}
+
+/* ===== BADGE UNLOCK TOAST ===== */
+.oha-badge-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: #1a1a2e;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 24px;
+    border: 1px solid var(--oha-passport-accent);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 99999;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+.oha-badge-toast.oha-badge-toast-visible {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+.oha-badge-toast.oha-badge-toast-hiding {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.8);
+}
