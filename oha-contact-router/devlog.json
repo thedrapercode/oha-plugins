@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-contact-router",
-    "version":  "1.0.1",
+    "version":  "1.0.2",
     "entries":  [
                     {
                         "date":  "2026-05-02",
@@ -29,6 +29,13 @@
                         "type":  "feature",
                         "summary":  "Send confirmation receipt email to submitter on successful form submission",
                         "notes":  "Confirmation sent only when wp_mail to recipients succeeds. Subject: We received your message - Ohio Haunters Association. Body includes category name and board@ fallback contact."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "1.0.2",
+                        "type":  "fix",
+                        "summary":  "Success message not showing and panel disappearing after form submit",
+                        "notes":  "Two root causes fixed: (1) form.reset() was triggering dark theme JS that listened for the reset event and hid the parent panel -- removed form.reset() from the success path, form now resets on panel close/reopen instead. (2) showResult() now sets result.style.display=block as an inline style so no theme CSS can suppress the message regardless of specificity."
                     }
                 ]
 }

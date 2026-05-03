@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Contact Router
  * Description: Routed contact form cards for the OHA website. Each card category sends to independently configured recipients.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: OHA
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_CR_VERSION', '1.0.1' );
+define( 'OHA_CR_VERSION', '1.0.2' );
 define( 'OHA_CR_URL', plugin_dir_url( __FILE__ ) );
 
 class OHA_Contact_Router {

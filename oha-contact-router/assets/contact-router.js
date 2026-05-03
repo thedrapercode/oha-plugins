@@ -41,13 +41,15 @@
     }
 
     function clearResult() {
-        result.className  = 'oha-cr-result';
-        result.textContent = '';
+        result.className    = 'oha-cr-result';
+        result.textContent  = '';
+        result.style.display = '';
     }
 
     function showResult(type, msg) {
-        result.className  = 'oha-cr-result is-' + type;
-        result.textContent = msg;
+        result.className    = 'oha-cr-result is-' + type;
+        result.textContent  = msg;
+        result.style.display = 'block'; // inline style wins over any theme CSS conflict
     }
 
     function setSubmitting(active) {
@@ -107,7 +109,8 @@
                 setSubmitting(false);
                 if (res.success) {
                     showResult('success', res.data.message);
-                    form.reset();
+                    // Do NOT call form.reset() here — some themes listen for the reset
+                    // event and hide parent panels. Form is reset in closePanel/openPanel instead.
                 } else {
                     showResult('error', (res.data && res.data.message) || 'Something went wrong. Please try again.');
                 }
