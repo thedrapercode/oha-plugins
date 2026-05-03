@@ -1,0 +1,27 @@
+{
+    "plugin":  "oha-contact-router",
+    "version":  "1.0.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "New standalone routed contact form plugin with 6 category cards",
+                        "notes":  "Cards: membership, vendors, convention, sponsorship, website, media. Each has configurable email recipients. Clicking a card shows an inline AJAX form."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Admin settings page for fallback email, BCC, per-category routing, and icon URL overrides",
+                        "notes":  "Settings \u003e OHA Contact Router. Fallback: board@ohiohaunters.com. BCC: webmasterohiohaunters@gmail.com. Icon URL field per category overrides built-in SVG."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Dark OHA theme CSS with high-specificity selectors throughout",
+                        "notes":  "All selectors prefixed with .oha-cr-wrap. Critical properties use !important. Colors: #0d0000 card bg, #AD3119 accent, #E76653 light accent, #FF0000 required asterisk."
+                    }
+                ]
+}
