@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Contact Router
  * Description: Routed contact form cards for the OHA website. Each card category sends to independently configured recipients.
- * Version: 1.0.2
+ * Version: 1.1.0
  * Author: OHA
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_CR_VERSION', '1.0.2' );
+define( 'OHA_CR_VERSION', '1.1.0' );
 define( 'OHA_CR_URL', plugin_dir_url( __FILE__ ) );
 
 class OHA_Contact_Router {
@@ -47,8 +47,13 @@ class OHA_Contact_Router {
                 'icon'  => '<rect x="3" y="10" width="18" height="11" rx="1"/><path d="M3 10l2-7h14l2 7"/><line x1="12" y1="10" x2="12" y2="21"/><line x1="7.5" y1="10" x2="7.5" y2="21"/><line x1="16.5" y1="10" x2="16.5" y2="21"/>',
             ],
             'convention' => [
-                'label' => 'Convention and Tickets',
-                'desc'  => 'Event information, schedules, or ticket support',
+                'label' => 'Convention',
+                'desc'  => 'Event information, schedules, or general convention questions',
+                'icon'  => '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+            ],
+            'tickets' => [
+                'label' => 'Tickets',
+                'desc'  => 'Ticket purchases, issues, or questions - handled by our venue',
                 'icon'  => '<path d="M15 5H9a2 2 0 0 0-2 2v2a2 2 0 0 1 0 4v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2z"/><line x1="12" y1="5" x2="12" y2="8"/><line x1="12" y1="11" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="19"/>',
             ],
             'sponsorship' => [

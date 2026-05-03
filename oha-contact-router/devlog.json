@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-contact-router",
-    "version":  "1.0.2",
+    "version":  "1.1.0",
     "entries":  [
                     {
                         "date":  "2026-05-02",
@@ -36,6 +36,13 @@
                         "type":  "fix",
                         "summary":  "Success message not showing and panel disappearing after form submit",
                         "notes":  "Two root causes fixed: (1) form.reset() was triggering dark theme JS that listened for the reset event and hid the parent panel -- removed form.reset() from the success path, form now resets on panel close/reopen instead. (2) showResult() now sets result.style.display=block as an inline style so no theme CSS can suppress the message regardless of specificity."
+                    },
+                    {
+                        "date":  "2026-05-03",
+                        "version":  "1.1.0",
+                        "type":  "change",
+                        "summary":  "Split Convention and Tickets category into two separate cards: Convention and Tickets",
+                        "notes":  "Tickets card routes to venue email; both categories are independently configurable in settings. Slug convention keeps old option key; new slug is tickets."
                     }
                 ]
 }
