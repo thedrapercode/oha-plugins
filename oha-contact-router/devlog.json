@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-contact-router",
-    "version":  "1.1.0",
+    "version":  "1.2.0",
     "entries":  [
                     {
                         "date":  "2026-05-02",
@@ -43,6 +43,13 @@
                         "type":  "change",
                         "summary":  "Split Convention and Tickets category into two separate cards: Convention and Tickets",
                         "notes":  "Tickets card routes to venue email; both categories are independently configurable in settings. Slug convention keeps old option key; new slug is tickets."
+                    },
+                    {
+                        "date":  "2026-05-03",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "URL hash auto-opens matching contact card form on page load",
+                        "notes":  "Matches window.location.hash against card slug (data-category) or label (data-label), case-insensitive. Works for all 7 cards. Example: /contact-us#tickets or /contact-us#Tickets."
                     }
                 ]
 }

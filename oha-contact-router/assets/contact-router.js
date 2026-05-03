@@ -73,6 +73,23 @@
 
     closeBtn.addEventListener('click', closePanel);
 
+    // Auto-open via URL hash: #Tickets, #tickets, #convention, etc.
+    // Matches against card slug (data-category) or label (data-label), case-insensitive.
+    (function () {
+        var hash = window.location.hash.replace('#', '').toLowerCase().trim();
+        if (!hash) return;
+        var match = null;
+        cards.forEach(function (c) {
+            if (c.dataset.category === hash || c.dataset.label.toLowerCase() === hash) {
+                match = c;
+            }
+        });
+        if (match) {
+            openPanel(match.dataset.category, match.dataset.label);
+            match.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }());
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
 
