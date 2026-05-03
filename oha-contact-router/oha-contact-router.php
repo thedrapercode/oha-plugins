@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Contact Router
  * Description: Routed contact form cards for the OHA website. Each card category sends to independently configured recipients.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: OHA
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_CR_VERSION', '1.0.0' );
+define( 'OHA_CR_VERSION', '1.0.1' );
 define( 'OHA_CR_URL', plugin_dir_url( __FILE__ ) );
 
 class OHA_Contact_Router {
@@ -316,7 +316,16 @@ class OHA_Contact_Router {
         $sent = wp_mail( $recipients, $subject, $body, $headers );
 
         if ( $sent ) {
-            wp_send_json_success( [ 'message' => 'Your message has been sent. We will follow up at the email address you provided.' ] );
+            $confirm_subject = 'We received your message - Ohio Haunters Association';
+            $confirm_body    = "Hello {$name},\r\n\r\n"
+                             . "Thank you for reaching out to the Ohio Haunters Association. This is a confirmation that we received your message under the category \"{$cat_label}\".\r\n\r\n"
+                             . "A board member will follow up with you as soon as possible. If your matter is urgent, you may also reach us at board@ohiohaunters.com.\r\n\r\n"
+                             . "Ohio Haunters Association\r\n"
+                             . "https://ohiohaunters.com";
+            $confirm_headers = [ 'Content-Type: text/plain; charset=UTF-8' ];
+            wp_mail( $email, $confirm_subject, $confirm_body, $confirm_headers );
+
+            wp_send_json_success( [ 'message' => 'Your message has been sent. A confirmation has been emailed to you.' ] );
         } else {
             wp_send_json_error( [ 'message' => 'There was a problem sending your message. Please try again or contact us directly at board@ohiohaunters.com.' ] );
         }

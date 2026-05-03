@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-contact-router",
-    "version":  "1.0.0",
+    "version":  "1.0.1",
     "entries":  [
                     {
                         "date":  "2026-05-02",
@@ -22,6 +22,13 @@
                         "type":  "feature",
                         "summary":  "Dark OHA theme CSS with high-specificity selectors throughout",
                         "notes":  "All selectors prefixed with .oha-cr-wrap. Critical properties use !important. Colors: #0d0000 card bg, #AD3119 accent, #E76653 light accent, #FF0000 required asterisk."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "1.0.1",
+                        "type":  "feature",
+                        "summary":  "Send confirmation receipt email to submitter on successful form submission",
+                        "notes":  "Confirmation sent only when wp_mail to recipients succeeds. Subject: We received your message - Ohio Haunters Association. Body includes category name and board@ fallback contact."
                     }
                 ]
 }
