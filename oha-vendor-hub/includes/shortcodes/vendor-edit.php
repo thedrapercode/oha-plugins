@@ -86,21 +86,26 @@ function oha_vh_get_app_for_user() {
 
 /**
  * Send magic link email to vendor.
+ *
+ * Subject and body are read from WP options (editable in Vendor Hub Settings).
+ * Placeholders: {first_name}, {link}
+ *
+ * @param string $email         Recipient email address.
+ * @param string $token         32-char edit token.
+ * @param string $edit_page_url URL of the page containing [oha_vendor_edit].
+ * @param string $first_name    Optional vendor first name for {first_name} placeholder.
  */
-function oha_vh_send_edit_link($email, $token, $edit_page_url) {
+function oha_vh_send_edit_link($email, $token, $edit_page_url, $first_name = '') {
     $link = add_query_arg('edit_token', $token, $edit_page_url);
-    $site = get_bloginfo('name');
 
-    $subject = 'Update Your ' . $site . ' Vendor Information';
-    $body  = "Hello,\n\n";
-    $body .= "You requested a link to update your vendor information for the Ohio Haunters Convention.\n\n";
-    $body .= "Click the link below to open your vendor profile editor:\n";
-    $body .= $link . "\n\n";
-    $body .= "This link is valid for 24 hours. After it expires, you can request a new one by\n";
-    $body .= "visiting the same page and entering your email address again.\n\n";
-    $body .= "If you did not request this link, you can safely ignore this email.\n\n";
-    $body .= "Questions? Contact us at info@ohiohaunters.com\n\n";
-    $body .= "-- The OHA Team";
+    $default_subject = 'Update Your Vendor Information - Ohio Haunters Convention';
+    $default_body    = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
+
+    $subject = get_option('oha_vhcpt_edit_link_subject', $default_subject);
+    $body    = get_option('oha_vhcpt_edit_link_body',    $default_body);
+
+    $subject = str_replace(['{first_name}', '{link}'], [$first_name, $link], $subject);
+    $body    = str_replace(['{first_name}', '{link}'], [$first_name, $link], $body);
 
     wp_mail($email, $subject, $body);
 }
@@ -192,10 +197,11 @@ add_shortcode('oha_vendor_edit', function() {
                 ]);
 
                 if (!empty($apps)) {
-                    $found_id  = $apps[0]->ID;
-                    $new_token = oha_vh_generate_edit_token($found_id);
-                    $edit_url  = trailingslashit(get_permalink() ?: home_url('/'));
-                    oha_vh_send_edit_link($submitted_email, $new_token, $edit_url);
+                    $found_id   = $apps[0]->ID;
+                    $new_token  = oha_vh_generate_edit_token($found_id);
+                    $edit_url   = trailingslashit(get_permalink() ?: home_url('/'));
+                    $first_name = get_post_meta($found_id, 'first_name', true);
+                    oha_vh_send_edit_link($submitted_email, $new_token, $edit_url, $first_name);
                 }
 
                 set_transient($rate_key, 1, 5 * MINUTE_IN_SECONDS);

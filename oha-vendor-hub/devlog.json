@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.7.2",
+    "version":  "3.8.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -162,6 +162,27 @@
                         "type":  "fix",
                         "summary":  "Set form field labels to white in vendor edit form for readability on red background",
                         "notes":  "Added .oha-vh-edit-wrap .oha-vh-row label { color:#fff; } in vendor-edit.php inline styles. Scoped to edit wrap only so intake form labels are unaffected."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.8.0",
+                        "type":  "feature",
+                        "summary":  "Added Send Edit Links admin page under Vendor Applications with status filter, count, send, and test email buttons",
+                        "notes":  "New file: includes/admin/send-edit-links.php. Submenu: Vendor Applications \u003e Send Edit Links. Generates a real 24h token per vendor, sends via wp_mail directly. Test email goes to current admin email using first vendor record on file."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.8.0",
+                        "type":  "feature",
+                        "summary":  "Added editable edit link email subject and body fields to Vendor Hub Settings",
+                        "notes":  "New WP options: oha_vhcpt_edit_link_subject, oha_vhcpt_edit_link_body. Saved in Application Status section of settings-page.php. Supports {first_name} and {link} placeholders."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.8.0",
+                        "type":  "change",
+                        "summary":  "Updated oha_vh_send_edit_link() to read subject/body from options and support {first_name} and {link} placeholders",
+                        "notes":  "Function signature now accepts optional  param. Default body changed from You requested a link to Here is a link. Call site in magic-link flow updated to pass first_name from post meta."
                     }
                 ]
 }

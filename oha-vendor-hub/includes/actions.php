@@ -1212,6 +1212,236 @@ add_action('wp_ajax_oha_vh_admin_override_status', function() {
 });
 
 
+/* ==========================================================================
+   Send Edit Links — v3.8.0
+   Admin tool: generate personalized magic-link edit emails for vendors
+   filtered by status. Submenu page: Vendor Applications > Send Edit Links.
+   ========================================================================== */
+
+/**
+ * Helper: Get vendors matching given statuses with post ID and first name.
+ * Returns array of ['app_id', 'email', 'first_name', 'company'].
+ * Deduplicates by email address.
+ *
+ * @param array $statuses Status strings to match against _oha_status meta.
+ * @return array
+ */
+function oha_vh_get_vendors_for_edit_links(array $statuses) {
+    global $wpdb;
+
+    if (empty($statuses)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+
+    $rows = $wpdb->get_results($wpdb->prepare(
+        "SELECT p.ID,
+                pm_email.meta_value  AS email,
+                pm_fn.meta_value     AS first_name,
+                pm_cn.meta_value     AS company_name
+         FROM {$wpdb->posts} p
+         LEFT JOIN {$wpdb->postmeta} pm_status ON pm_status.post_id = p.ID AND pm_status.meta_key = '_oha_status'
+         LEFT JOIN {$wpdb->postmeta} pm_email   ON pm_email.post_id  = p.ID AND pm_email.meta_key  = 'email'
+         LEFT JOIN {$wpdb->postmeta} pm_fn      ON pm_fn.post_id     = p.ID AND pm_fn.meta_key     = 'first_name'
+         LEFT JOIN {$wpdb->postmeta} pm_cn      ON pm_cn.post_id     = p.ID AND pm_cn.meta_key     = 'company_name'
+         WHERE p.post_type   = 'vendor_application'
+           AND p.post_status != 'trash'
+           AND COALESCE(pm_status.meta_value, 'Submitted') IN ({$placeholders})",
+        $statuses
+    ));
+
+    $result = [];
+    $seen   = [];
+
+    foreach ((array) $rows as $row) {
+        $email = sanitize_email($row->email ?? '');
+        if (empty($email) || !is_email($email)) {
+            continue;
+        }
+        if (isset($seen[$email])) {
+            continue;
+        }
+        $seen[$email] = true;
+
+        $result[] = [
+            'app_id'     => (int) $row->ID,
+            'email'      => $email,
+            'first_name' => sanitize_text_field($row->first_name ?? ''),
+            'company'    => sanitize_text_field($row->company_name ?? ''),
+        ];
+    }
+
+    return $result;
+}
+
+/**
+ * AJAX: Count vendors matching selected statuses (for the Send Edit Links page).
+ */
+add_action('wp_ajax_oha_vh_edit_links_count', function() {
+    check_ajax_referer('oha_vh_send_edit_links', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized');
+    }
+
+    $statuses = isset($_POST['vendor_statuses']) && is_array($_POST['vendor_statuses'])
+        ? array_map('sanitize_text_field', $_POST['vendor_statuses'])
+        : [];
+
+    if (empty($statuses)) {
+        wp_send_json_success(['count' => 0]);
+        return;
+    }
+
+    $vendors = oha_vh_get_vendors_for_edit_links($statuses);
+    wp_send_json_success(['count' => count($vendors)]);
+});
+
+/**
+ * AJAX: Generate tokens and send edit-link emails to vendors by status.
+ * Sends individually via wp_mail — no JEmail dependency needed.
+ */
+add_action('wp_ajax_oha_vh_edit_links_send', function() {
+    check_ajax_referer('oha_vh_send_edit_links', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized');
+    }
+
+    $statuses = isset($_POST['vendor_statuses']) && is_array($_POST['vendor_statuses'])
+        ? array_map('sanitize_text_field', $_POST['vendor_statuses'])
+        : [];
+
+    if (empty($statuses)) {
+        wp_send_json_error('Select at least one vendor status.');
+        return;
+    }
+
+    $edit_page_id = (int) get_option('oha_vhcpt_vendor_edit_page_id', 0);
+    if (!$edit_page_id) {
+        wp_send_json_error('Vendor Edit Page is not configured in settings.');
+        return;
+    }
+
+    $edit_page_url = trailingslashit(get_permalink($edit_page_id));
+    if (!$edit_page_url) {
+        wp_send_json_error('Could not resolve Vendor Edit Page URL.');
+        return;
+    }
+
+    $vendors = oha_vh_get_vendors_for_edit_links($statuses);
+    if (empty($vendors)) {
+        wp_send_json_error('No vendors found matching the selected statuses.');
+        return;
+    }
+
+    $sent_count  = 0;
+    $error_count = 0;
+
+    foreach ($vendors as $v) {
+        if (!function_exists('oha_vh_generate_edit_token') || !function_exists('oha_vh_send_edit_link')) {
+            $error_count++;
+            continue;
+        }
+
+        $token = oha_vh_generate_edit_token($v['app_id']);
+        $sent  = oha_vh_send_edit_link($v['email'], $token, $edit_page_url, $v['first_name']);
+
+        // wp_mail returns true on success
+        if ($sent !== false) {
+            $sent_count++;
+        } else {
+            $error_count++;
+        }
+    }
+
+    $message = $sent_count . ' edit link' . ($sent_count === 1 ? '' : 's') . ' sent successfully.';
+    if ($error_count > 0) {
+        $message .= ' ' . $error_count . ' failed — check server email settings.';
+    }
+
+    wp_send_json_success(['sent' => $sent_count, 'errors' => $error_count, 'message' => $message]);
+});
+
+/**
+ * AJAX: Send a test edit-link email to the current admin.
+ * Uses the first vendor_application on file to generate a real token so the
+ * admin can click through and verify the form works end-to-end.
+ * Subject is prefixed with [TEST] so it is easy to identify in the inbox.
+ */
+add_action('wp_ajax_oha_vh_test_edit_link', function() {
+    check_ajax_referer('oha_vh_send_edit_links', 'nonce');
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized');
+    }
+
+    $edit_page_id = (int) get_option('oha_vhcpt_vendor_edit_page_id', 0);
+    if (!$edit_page_id) {
+        wp_send_json_error('Vendor Edit Page is not configured in settings.');
+        return;
+    }
+
+    $edit_page_url = trailingslashit(get_permalink($edit_page_id));
+
+    // Find the first vendor application to use as test data
+    $apps = get_posts([
+        'post_type'      => 'vendor_application',
+        'post_status'    => 'any',
+        'posts_per_page' => 1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+    ]);
+
+    if (empty($apps)) {
+        wp_send_json_error('No vendor applications exist yet. Create one first so the test link resolves to a real record.');
+        return;
+    }
+
+    $app_id     = $apps[0]->ID;
+    $first_name = get_post_meta($app_id, 'first_name', true) ?: 'Vendor';
+    $company    = get_post_meta($app_id, 'company_name', true) ?: 'Test Company';
+
+    $admin_email = wp_get_current_user()->user_email;
+    if (!is_email($admin_email)) {
+        wp_send_json_error('Your admin user does not have a valid email address.');
+        return;
+    }
+
+    if (!function_exists('oha_vh_generate_edit_token') || !function_exists('oha_vh_send_edit_link')) {
+        wp_send_json_error('Edit link functions not loaded. Make sure vendor-edit.php is included.');
+        return;
+    }
+
+    $token = oha_vh_generate_edit_token($app_id);
+    $link  = add_query_arg('edit_token', $token, $edit_page_url);
+
+    // Build email using the saved template but override subject with [TEST] prefix
+    $default_subject = 'Update Your Vendor Information - Ohio Haunters Convention';
+    $default_body    = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
+
+    $subject = '[TEST] ' . get_option('oha_vhcpt_edit_link_subject', $default_subject);
+    $body    = get_option('oha_vhcpt_edit_link_body', $default_body);
+
+    $subject = str_replace(['{first_name}', '{link}'], [$first_name, $link], $subject);
+    $body    = str_replace(['{first_name}', '{link}'], [$first_name, $link], $body);
+
+    $body = "[TEST EMAIL — sent to admin, not the vendor]\n"
+          . "Vendor record used: #{$app_id} ({$company})\n"
+          . "This link is real and will open the edit form for that vendor.\n\n"
+          . $body;
+
+    $sent = wp_mail($admin_email, $subject, $body);
+
+    if ($sent) {
+        wp_send_json_success(
+            'Test email sent to ' . $admin_email . '. '
+            . 'It uses vendor record #' . $app_id . ' (' . esc_html($company) . '). '
+            . 'Click the link in the email to verify the edit form opens correctly.'
+        );
+    } else {
+        wp_send_json_error('wp_mail() returned false. Check server email settings (FluentSMTP, etc.).');
+    }
+});
+
 /**
  * Helper: Get all vendor email addresses matching given statuses.
  * Returns array of ['email', 'user_id', 'display_name'].

@@ -150,6 +150,14 @@ function oha_vhcpt_settings_page(){
             update_option('oha_vhcpt_vendor_edit_page_id', intval($_POST['vendor_edit_page_id']));
         }
 
+        // Vendor edit link email template
+        if (isset($_POST['edit_link_subject'])) {
+            update_option('oha_vhcpt_edit_link_subject', sanitize_text_field(wp_unslash($_POST['edit_link_subject'])));
+        }
+        if (isset($_POST['edit_link_body'])) {
+            update_option('oha_vhcpt_edit_link_body', sanitize_textarea_field(wp_unslash($_POST['edit_link_body'])));
+        }
+
         // Vendor Card Grid settings
         update_option( 'oha_vhcpt_cards_placeholder_id',  absint( isset( $_POST['cards_placeholder_id'] )  ? $_POST['cards_placeholder_id']  : 0 ) );
         update_option( 'oha_vhcpt_cards_placeholder_url', esc_url_raw( isset( $_POST['cards_placeholder_url'] ) ? wp_unslash( $_POST['cards_placeholder_url'] ) : '' ) );
@@ -273,6 +281,24 @@ function oha_vhcpt_settings_page(){
                         <?php if ($vendor_edit_page_id): ?>
                             <p class="description"><strong>Current page:</strong> <a href="<?php echo esc_url(get_permalink($vendor_edit_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($vendor_edit_page_id)); ?></a></p>
                         <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="edit_link_subject">Edit Link Email Subject</label></th>
+                    <td>
+                        <input type="text" id="edit_link_subject" name="edit_link_subject" class="large-text"
+                            value="<?php echo esc_attr(get_option('oha_vhcpt_edit_link_subject', 'Update Your Vendor Information - Ohio Haunters Convention')); ?>">
+                        <p class="description">Subject line sent when a vendor receives an edit link. Placeholder: <code>{first_name}</code></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="edit_link_body">Edit Link Email Body</label></th>
+                    <td>
+                        <?php
+                        $edit_link_body_default = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
+                        ?>
+                        <textarea id="edit_link_body" name="edit_link_body" rows="10" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_edit_link_body', $edit_link_body_default)); ?></textarea>
+                        <p class="description">Body of the vendor edit link email. Placeholders: <code>{first_name}</code> (vendor first name), <code>{link}</code> (the secure edit link — required).</p>
                     </td>
                 </tr>
             </table>
