@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.20.0",
+    "version":  "3.20.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -456,6 +456,13 @@
                         "type":  "feature",
                         "summary":  "Added [oha_pwa_settings] shortcode: app info, restore dismissed content, clear saved data",
                         "notes":  "All localStorage-only. Sections: App Info (version/connection/PWA mode), Restore Dismissed (onboarding keys oha_ob_install_done + oha_ob_notif_done, happenings key oha_happenings_hidden_v1), Clear Saved Data (oha_favorites, oha_favorite_vendors with confirm dialog). Dark themed, pointer-events not needed (full page)."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.20.1",
+                        "type":  "fix",
+                        "summary":  "Find Booth link now shows on vendor cards even when booth has no number assigned",
+                        "notes":  "Bug: condition used  (empty string = falsy) as gate instead of checking whether vendor exists in booth_map at all. Fixed to use  = array_key_exists(). Link text is Find Booth X on Map when number exists, or Find on Map when no number set."
                     }
                 ]
 }

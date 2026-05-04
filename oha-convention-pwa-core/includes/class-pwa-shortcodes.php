@@ -1897,8 +1897,9 @@ class OHA_PWA_Shortcodes {
                 $products = ! empty( $card_fields['products'] ) ? get_post_meta( $vendor->ID, 'product_type', true ) : '';
                 $social   = ! empty( $card_fields['social'] )   ? get_post_meta( $vendor->ID, 'company_social', true ) : '';
 
-                // Booth number from lookup map
-                $booth_number = $booth_map[ (string) $vendor->ID ] ?? '';
+                // Booth number from lookup map (may be empty string if no number assigned)
+                $has_booth    = array_key_exists( (string) $vendor->ID, $booth_map );
+                $booth_number = $has_booth ? (string) $booth_map[ (string) $vendor->ID ] : '';
             ?>
             <div class="oha-vendor-card"
                  data-vendor-id="<?php echo esc_attr( $vendor->ID ); ?>"
@@ -1930,10 +1931,10 @@ class OHA_PWA_Shortcodes {
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
-                <?php if ( $booth_number && $convention_map_url ) : ?>
+                <?php if ( $has_booth && $convention_map_url ) : ?>
                 <a class="oha-vendor-locate-btn"
                    href="<?php echo esc_url( rtrim( $convention_map_url, '/' ) . '/?oha_vendor=' . $vendor->ID ); ?>">
-                    &#128205; Find Booth <?php echo esc_html( $booth_number ); ?> on Map
+                    &#128205; <?php echo $booth_number ? 'Find Booth ' . esc_html( $booth_number ) . ' on Map' : 'Find on Map'; ?>
                 </a>
                 <?php endif; ?>
             </div>
