@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.8.3",
+    "version":  "2.8.4",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -645,6 +645,13 @@
                         "type":  "fix",
                         "summary":  "Remove overflow:hidden from body scroll lock so filter sheet can animate in from below",
                         "notes":  "body.oha-map-page-active had overflow:hidden which clipped the filter sheet panel at the body bottom edge during its slide-up animation. The panel starts at translateY(100%) = below the body boundary, and overflow:hidden prevented it from entering view. position:fixed on body already prevents scroll; overflow:hidden is only needed on html."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.8.4",
+                        "type":  "fix",
+                        "summary":  "List view button changed to position:fixed so it stays visible above PWA nav bar",
+                        "notes":  "position:absolute inside map area means the button can end up behind the PWA nav bar if any page header pushes the map wrapper down. Changed to position:fixed with bottom:calc(--oha-mobile-ui-offset + 20px) and z-index:200 so it is always viewport-relative and above the nav bar."
                     }
                 ]
 }

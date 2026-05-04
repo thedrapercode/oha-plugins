@@ -853,11 +853,13 @@ body.oha-map-page-active {
  * Floating List View toggle pill — bottom center
  * --------------------------------------------------------------------- */
 .oha-mob-list-toggle-btn {
-    position: absolute;
-    bottom: 20px;
+    /* Fixed positioning keeps the button above the PWA nav bar regardless of
+       whether the map wrapper extends below the viewport due to page headers. */
+    position: fixed;
+    bottom: calc(var(--oha-mobile-ui-offset, 110px) + 20px);
     left: 50%;
     transform: translateX(-50%);
-    z-index: 20;
+    z-index: 200;
     display: flex;
     align-items: center;
     gap: 8px;
