@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.8.0",
+    "version":  "2.8.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -624,6 +624,13 @@
                         "type":  "fix",
                         "summary":  "get_booths now returns booths without a _booth_year meta so legacy booths appear on map",
                         "notes":  "Meta query uses OR relation: year matches active_year OR _booth_year NOT EXISTS. Booths created before year tracking was added were invisible."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.8.1",
+                        "type":  "fix",
+                        "summary":  "X/Y position inputs now accept 2 decimal places (step changed from 0.1 to 0.01)",
+                        "notes":  "booth_x and booth_y inputs in render_location_meta_box had step=0.1 which blocked saving values like 80.38 stored by the placement tool."
                     }
                 ]
 }

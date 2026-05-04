@@ -138,14 +138,14 @@ class OHA_Convention_Data {
             <tr>
                 <th><label><?php _e('X Position (%)', 'oha-modern-map'); ?></label></th>
                 <td>
-                    <input type="number" name="booth_x" value="<?php echo esc_attr($x); ?>" min="0" max="100" step="0.1" style="width:100px">
+                    <input type="number" name="booth_x" value="<?php echo esc_attr($x); ?>" min="0" max="100" step="0.01" style="width:100px">
                     <p class="description"><?php _e('Set visually using OHA Map > Booth Placement', 'oha-modern-map'); ?></p>
                 </td>
             </tr>
             <tr>
                 <th><label><?php _e('Y Position (%)', 'oha-modern-map'); ?></label></th>
                 <td>
-                    <input type="number" name="booth_y" value="<?php echo esc_attr($y); ?>" min="0" max="100" step="0.1" style="width:100px">
+                    <input type="number" name="booth_y" value="<?php echo esc_attr($y); ?>" min="0" max="100" step="0.01" style="width:100px">
                     <p class="description"><?php _e('Set visually using OHA Map > Booth Placement', 'oha-modern-map'); ?></p>
                 </td>
             </tr>
