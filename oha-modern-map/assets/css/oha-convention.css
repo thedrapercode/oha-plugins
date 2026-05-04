@@ -674,7 +674,8 @@
  * ===================================================================== */
 html.oha-map-page-active { overflow: hidden; }
 body.oha-map-page-active {
-    overflow: hidden;
+    /* position:fixed prevents page scroll; overflow must stay visible so
+       the filter sheet panel can animate in from below the body boundary. */
     position: fixed;
     width: 100%;
 }
