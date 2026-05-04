@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.20.2",
+    "version":  "3.21.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -470,6 +470,20 @@
                         "type":  "change",
                         "summary":  "Removed em dashes from [oha_pwa_download] shortcode output text",
                         "notes":  "Replaced all \u0026#8212; instances with hyphens, commas, colons, or rephrased sentences per CLAUDE.md no-em-dash rule."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.21.0",
+                        "type":  "feature",
+                        "summary":  "Volunteer portal now shows full Volunteer Hub schedule after password auth",
+                        "notes":  "build_volunteer_schedule_html() in class-pwa-notifications.php queries wp_oha_volunteer_shifts/assignments/areas/volunteers directly. Shows all dates with day-tab switcher (ohaVolSchedSwitch JS global), time slots, and area cards with first name + last initial. Returns empty string if VH tables missing."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.21.0",
+                        "type":  "feature",
+                        "summary":  "Volunteer portal includes collapsible Volunteer Handbook from Volunteer Hub shortcode",
+                        "notes":  "build_volunteer_handbook_html() calls do_shortcode([oha_volunteer_handbook]) if shortcode exists. Collapsed by default with +/- toggle (ohaVolHandbookToggle JS global). Dark-mode CSS overrides applied via .oha-vol-handbook-body selectors in class-pwa-shortcodes.php volunteer_area CSS block. Print button hidden."
                     }
                 ]
 }

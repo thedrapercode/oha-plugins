@@ -335,7 +335,184 @@ class OHA_PWA_Notifications {
             $html .= '</div>';
         }
 
+        // ── Volunteer Schedule (from Volunteer Hub DB if active) ───────────────
+        $sched_html = self::build_volunteer_schedule_html();
+        if ( $sched_html ) {
+            $html .= $sched_html;
+        }
+
+        // ── Volunteer Handbook (collapsible, from Volunteer Hub shortcode) ─────
+        $handbook_html = self::build_volunteer_handbook_html();
+        if ( $handbook_html ) {
+            $html .= $handbook_html;
+        }
+
         $html .= '<button class="oha-volunteer-logout">Log Out</button>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Builds the volunteer schedule section from Volunteer Hub DB tables.
+    // Shows all dates, areas, and assigned volunteers (first name + last initial).
+    // Returns '' if Volunteer Hub tables are not present or no shifts exist.
+    // ─────────────────────────────────────────────────────────────────────────
+    private static function build_volunteer_schedule_html() {
+        global $wpdb;
+
+        $shifts_table = $wpdb->prefix . 'oha_volunteer_shifts';
+        if ( ! $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $shifts_table ) ) ) {
+            return '';
+        }
+
+        $shift_dates = $wpdb->get_col(
+            "SELECT DISTINCT shift_date FROM {$wpdb->prefix}oha_volunteer_shifts ORDER BY shift_date ASC"
+        );
+        if ( empty( $shift_dates ) ) {
+            return '';
+        }
+
+        $dates_data = [];
+
+        foreach ( $shift_dates as $date ) {
+            $rows = $wpdb->get_results( $wpdb->prepare(
+                "SELECT
+                    COALESCE(a.alt_name, a.area_name) AS area_name,
+                    a.color,
+                    a.icon,
+                    s.shift_type,
+                    s.shift_start,
+                    s.shift_end,
+                    CASE
+                        WHEN asgn.volunteer_id IS NOT NULL
+                            THEN CONCAT(v.first_name, ' ', LEFT(v.last_name, 1), '.')
+                        ELSE COALESCE(asgn.manual_name, '')
+                    END AS vol_name
+                FROM {$wpdb->prefix}oha_volunteer_assignments asgn
+                LEFT JOIN {$wpdb->prefix}oha_volunteer_shifts s ON asgn.shift_id = s.id
+                LEFT JOIN {$wpdb->prefix}oha_volunteer_areas a ON asgn.area_id = a.id
+                LEFT JOIN {$wpdb->prefix}oha_volunteers v ON asgn.volunteer_id = v.id
+                WHERE s.shift_date = %s
+                ORDER BY s.shift_start ASC, a.area_name ASC",
+                $date
+            ) );
+
+            if ( empty( $rows ) ) continue;
+
+            $slots = [];
+            foreach ( $rows as $row ) {
+                if ( $row->shift_type === 'all_day' || ! $row->shift_start ) {
+                    $tk    = 'all_day';
+                    $label = 'All Day';
+                } else {
+                    $tk    = $row->shift_start . '-' . ( $row->shift_end ?? '' );
+                    $label = date( 'g:i A', strtotime( $row->shift_start ) );
+                    if ( $row->shift_end ) {
+                        $label .= ' - ' . date( 'g:i A', strtotime( $row->shift_end ) );
+                    }
+                }
+
+                if ( ! isset( $slots[ $tk ] ) ) {
+                    $slots[ $tk ] = [ 'label' => $label, 'sort' => $row->shift_start ?? '', 'areas' => [] ];
+                }
+
+                $ak = $row->area_name;
+                if ( ! isset( $slots[ $tk ]['areas'][ $ak ] ) ) {
+                    $slots[ $tk ]['areas'][ $ak ] = [ 'color' => $row->color, 'icon' => $row->icon, 'vols' => [] ];
+                }
+                if ( $row->vol_name ) {
+                    $slots[ $tk ]['areas'][ $ak ]['vols'][] = $row->vol_name;
+                }
+            }
+
+            // Sort: all_day first, then chronological
+            uksort( $slots, function( $a, $b ) use ( $slots ) {
+                if ( $a === 'all_day' ) return -1;
+                if ( $b === 'all_day' ) return 1;
+                return strcmp( $slots[ $a ]['sort'], $slots[ $b ]['sort'] );
+            } );
+
+            $dates_data[ $date ] = $slots;
+        }
+
+        if ( empty( $dates_data ) ) {
+            return '';
+        }
+
+        $html  = '<div class="oha-vol-section">';
+        $html .= '<h3 class="oha-vol-section-title">Volunteer Schedule</h3>';
+        $html .= '<p class="oha-vol-sched-sub">All assigned volunteers by area and shift.</p>';
+        $html .= '<div class="oha-vol-sched-wrap">';
+
+        if ( count( $dates_data ) > 1 ) {
+            $html .= '<div class="oha-vol-sched-date-tabs">';
+            $first = true;
+            foreach ( $dates_data as $date => $slots ) {
+                $dlabel = date( 'D M j', strtotime( $date ) );
+                $active = $first ? ' active' : '';
+                $html  .= '<button class="oha-vol-sched-date-btn' . $active . '"'
+                        . ' data-date="' . esc_attr( $date ) . '"'
+                        . ' onclick="ohaVolSchedSwitch(this,\'' . esc_attr( $date ) . '\')">'
+                        . esc_html( $dlabel ) . '</button>';
+                $first  = false;
+            }
+            $html .= '</div>';
+        }
+
+        $first = true;
+        foreach ( $dates_data as $date => $slots ) {
+            $style = $first ? '' : ' style="display:none;"';
+            $html .= '<div class="oha-vol-sched-panel" data-date="' . esc_attr( $date ) . '"' . $style . '>';
+            foreach ( $slots as $tk => $slot ) {
+                $html .= '<div class="oha-vol-sched-slot">';
+                $html .= '<div class="oha-vol-sched-time">' . esc_html( $slot['label'] ) . '</div>';
+                $html .= '<div class="oha-vol-sched-areas">';
+                foreach ( $slot['areas'] as $area_name => $area ) {
+                    $color  = esc_attr( $area['color'] ?: '#555555' );
+                    $icon   = $area['icon'] ? '<span class="oha-vol-sched-area-icon">' . esc_html( $area['icon'] ) . '</span> ' : '';
+                    $html  .= '<div class="oha-vol-sched-area-block" style="border-left-color:' . $color . '">';
+                    $html  .= '<div class="oha-vol-sched-area-name">' . $icon . esc_html( $area_name ) . '</div>';
+                    if ( ! empty( $area['vols'] ) ) {
+                        $html .= '<div class="oha-vol-sched-vols">' . implode( ', ', array_map( 'esc_html', $area['vols'] ) ) . '</div>';
+                    }
+                    $html .= '</div>';
+                }
+                $html .= '</div></div>';
+            }
+            $html .= '</div>';
+            $first = false;
+        }
+
+        $html .= '</div>'; // .oha-vol-sched-wrap
+        $html .= '</div>'; // .oha-vol-section
+
+        return $html;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Renders the Volunteer Handbook as a collapsible section.
+    // Uses the Volunteer Hub [oha_volunteer_handbook] shortcode if active.
+    // Returns '' if Volunteer Hub is not installed.
+    // ─────────────────────────────────────────────────────────────────────────
+    private static function build_volunteer_handbook_html() {
+        if ( ! shortcode_exists( 'oha_volunteer_handbook' ) ) {
+            return '';
+        }
+
+        $content = do_shortcode( '[oha_volunteer_handbook]' );
+        if ( empty( trim( $content ) ) ) {
+            return '';
+        }
+
+        $html  = '<div class="oha-vol-section oha-vol-handbook-outer">';
+        $html .= '<button class="oha-vol-handbook-toggle" onclick="ohaVolHandbookToggle(this)">';
+        $html .= '<h3 class="oha-vol-section-title">Volunteer Handbook</h3>';
+        $html .= '<span class="oha-vol-hb-arrow">+</span>';
+        $html .= '</button>';
+        $html .= '<div class="oha-vol-handbook-body" style="display:none;">';
+        $html .= $content;
+        $html .= '</div>';
         $html .= '</div>';
 
         return $html;

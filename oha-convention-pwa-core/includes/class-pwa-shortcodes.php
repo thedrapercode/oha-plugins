@@ -289,6 +289,32 @@ class OHA_PWA_Shortcodes {
 /* Refresh button */
 #oha-vol-refresh { background: #1a1a2e; border: 1px solid #444; color: #aaa; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-bottom: 14px; display: block; }
 #oha-vol-refresh:hover { border-color: #4CAF50; color: #fff; }
+/* Volunteer schedule section */
+.oha-vol-sched-sub { font-size: 12px; color: #888; margin: -6px 0 12px; }
+.oha-vol-sched-date-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.oha-vol-sched-date-btn { background: #222; border: 1px solid #444; color: #aaa; padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.oha-vol-sched-date-btn.active { background: #AD3119; border-color: #AD3119; color: #fff; }
+.oha-vol-sched-slot { margin-bottom: 16px; }
+.oha-vol-sched-time { font-size: 13px; font-weight: 700; color: #fff; padding: 4px 0 6px; border-bottom: 1px solid #2a2a2a; margin-bottom: 8px; }
+.oha-vol-sched-areas { display: flex; flex-direction: column; gap: 6px; }
+.oha-vol-sched-area-block { border-left: 3px solid #555; padding: 7px 10px; background: #1a1a1a; border-radius: 0 8px 8px 0; }
+.oha-vol-sched-area-name { font-size: 13px; font-weight: 600; color: #ddd; }
+.oha-vol-sched-area-icon { font-size: 14px; line-height: 1; }
+.oha-vol-sched-vols { font-size: 12px; color: #888; margin-top: 4px; line-height: 1.5; }
+/* Handbook collapsible */
+.oha-vol-handbook-outer { padding: 0 !important; overflow: hidden; }
+.oha-vol-handbook-toggle { width: 100%; background: none; border: none; color: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 18px 16px; gap: 12px; }
+.oha-vol-handbook-toggle .oha-vol-section-title { margin: 0; }
+.oha-vol-hb-arrow { font-size: 22px; color: #AD3119; font-weight: 700; flex-shrink: 0; line-height: 1; }
+.oha-vol-handbook-body { padding: 0 16px 16px; border-top: 1px solid #2a2a2a; }
+.oha-vol-handbook-body .handbook-download { display: none !important; }
+.oha-vol-handbook-body .oha-vh-handbook { color: #ddd; }
+.oha-vol-handbook-body h1, .oha-vol-handbook-body h2, .oha-vol-handbook-body h3 { color: #e07060 !important; border-color: #e07060 !important; }
+.oha-vol-handbook-body .handbook-header { border-color: #e07060 !important; }
+.oha-vol-handbook-body p, .oha-vol-handbook-body li { color: #ccc !important; }
+.oha-vol-handbook-body h4 { color: #ddd !important; background: transparent !important; }
+.oha-vol-handbook-body section { background: transparent !important; border-color: #333 !important; border-radius: 8px; }
+.oha-vol-handbook-body .handbook-content { padding: 0; }
 </style>
     <div id="oha-vol-locked">
         <h3>Volunteer Access</h3>
@@ -385,6 +411,23 @@ class OHA_PWA_Shortcodes {
         }
     });
 })();
+function ohaVolSchedSwitch(btn, date) {
+    var wrap = btn.closest('.oha-vol-sched-wrap');
+    if (!wrap) return;
+    wrap.querySelectorAll('.oha-vol-sched-date-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.date === date);
+    });
+    wrap.querySelectorAll('.oha-vol-sched-panel').forEach(function(p) {
+        p.style.display = p.dataset.date === date ? '' : 'none';
+    });
+}
+function ohaVolHandbookToggle(btn) {
+    var body = btn.nextElementSibling;
+    var arrow = btn.querySelector('.oha-vol-hb-arrow');
+    var open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : '';
+    if (arrow) arrow.textContent = open ? '+' : '-';
+}
 </script>
         <?php
         return ob_get_clean();
