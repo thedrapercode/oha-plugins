@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.8.0",
+    "version":  "3.8.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -183,6 +183,13 @@
                         "type":  "change",
                         "summary":  "Updated oha_vh_send_edit_link() to read subject/body from options and support {first_name} and {link} placeholders",
                         "notes":  "Function signature now accepts optional  param. Default body changed from You requested a link to Here is a link. Call site in magic-link flow updated to pass first_name from post meta."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.8.1",
+                        "type":  "change",
+                        "summary":  "Removed product_type lock from vendor edit form so vendors can update their description at any status",
+                        "notes":  "Previously locked when status was Agreement Signed or Paid. Lock removed from save logic and form display. Status note banner also removed."
                     }
                 ]
 }

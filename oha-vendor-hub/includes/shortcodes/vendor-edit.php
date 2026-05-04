@@ -254,9 +254,7 @@ add_shortcode('oha_vendor_edit', function() {
                 'website'        => sanitize_text_field(wp_unslash($_POST['website'] ?? '')),
             ];
 
-            if (!$locked) {
-                $fields_to_save['product_type'] = sanitize_textarea_field(wp_unslash($_POST['product_type'] ?? ''));
-            }
+            $fields_to_save['product_type'] = sanitize_textarea_field(wp_unslash($_POST['product_type'] ?? ''));
 
             // Required field check
             foreach (['first_name', 'last_name', 'company_name', 'email', 'phone'] as $req) {
@@ -328,9 +326,6 @@ add_shortcode('oha_vendor_edit', function() {
     ?>
     <div class="oha-vh-edit-wrap">
         <h3>Update Your Vendor Information</h3>
-        <?php if ($locked): ?>
-            <p class="oha-vh-status-note">Your application is currently <strong><?php echo esc_html($status); ?></strong>. Contact info and logo can still be updated, but your product description is locked.</p>
-        <?php endif; ?>
 
         <form class="oha-vh-form" method="post" enctype="multipart/form-data">
             <?php wp_nonce_field('oha_vhcpt_vendor_edit_' . $app_id, 'oha_vh_edit_nonce'); ?>
@@ -399,12 +394,8 @@ add_shortcode('oha_vendor_edit', function() {
             </div>
 
             <div class="oha-vh-row">
-                <label>Products / Description<?php echo $locked ? ' <span style="font-weight:normal;font-size:.85em;">(locked — agreement signed)</span>' : ' *'; ?></label>
-                <?php if ($locked): ?>
-                    <p style="margin:0;padding:0.5em 0;color:#555;"><?php echo nl2br(esc_html(get_post_meta($app_id, 'product_type', true))); ?></p>
-                <?php else: ?>
-                    <textarea id="ve_product_type" name="product_type" rows="4" required><?php echo esc_textarea(get_post_meta($app_id, 'product_type', true)); ?></textarea>
-                <?php endif; ?>
+                <label>Products / Description *</label>
+                <textarea id="ve_product_type" name="product_type" rows="4" required><?php echo esc_textarea(get_post_meta($app_id, 'product_type', true)); ?></textarea>
             </div>
 
             <div class="oha-vh-row">
