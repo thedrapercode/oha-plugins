@@ -1,0 +1,31 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#cccccc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#999999;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+  
+  <!-- Simple instructor icon -->
+  <g transform="translate(100,100)" fill="#666666">
+    <!-- Head -->
+    <circle cx="0" cy="-25" r="25" fill="#666666"/>
+    
+    <!-- Body -->
+    <ellipse cx="0" cy="15" rx="35" ry="45" fill="#666666"/>
+    
+    <!-- Graduation cap -->
+    <rect x="-30" y="-55" width="60" height="8" rx="4" fill="#333333"/>
+    <polygon points="0,-60 8,-50 -8,-50" fill="#333333"/>
+    
+    <!-- Simple face -->
+    <circle cx="-8" cy="-30" r="2" fill="#444444"/>
+    <circle cx="8" cy="-30" r="2" fill="#444444"/>
+    <ellipse cx="0" cy="-20" rx="6" ry="3" fill="#444444"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="100" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#666666">Instructor</text>
+</svg>

@@ -1,0 +1,41 @@
+# OHA Convention PWA - GoDaddy CDN Compatibility Rules
+# Add these rules to your WordPress root .htaccess file
+
+<IfModule mod_headers.c>
+    # Service Worker - MUST NOT BE CACHED
+    <FilesMatch "convention-sw\.js$">
+        Header set Content-Type "application/javascript; charset=utf-8"
+        Header set Service-Worker-Allowed "/"
+        Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+        Header set X-Robots-Tag "none"
+        
+        # Tell GoDaddy CDN not to cache this
+        Header set CDN-Cache-Control "no-cache"
+    </FilesMatch>
+    
+    # PWA Manifest - Short cache only
+    <FilesMatch "convention-manifest\.json$">
+        Header set Content-Type "application/json; charset=utf-8"
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # PWA Assets - Can be cached but with version checking
+    <FilesMatch "pwa-(register|install|utils)\.js$">
+        Header set Cache-Control "public, max-age=3600, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+# Ensure service worker can be registered from any scope
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Serve service worker with proper headers
+    RewriteRule ^convention-sw\.js$ /index.php?rest_route=/convention-sw.js [QSA,L]
+    
+    # Serve manifest with proper headers
+    RewriteRule ^convention-manifest\.json$ /index.php?rest_route=/convention-manifest.json [QSA,L]
+</IfModule>

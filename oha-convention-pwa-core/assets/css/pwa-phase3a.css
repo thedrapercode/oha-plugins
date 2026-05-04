@@ -1,0 +1,993 @@
+/**
+ * Phase 3A Styles
+ * iOS Onboarding, Notifications, FAQ, Volunteer Area
+ */
+
+/* ========================================
+   iOS Onboarding Modal
+   ======================================== */
+
+.oha-ios-onboarding-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    padding: 20px;
+}
+
+.oha-ios-onboarding-modal.visible {
+    opacity: 1;
+}
+
+.oha-ios-onboarding-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.oha-ios-onboarding-header {
+    background: linear-gradient(135deg, #AD3119 0%, #8B0000 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.oha-ios-onboarding-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.oha-ios-onboarding-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.oha-ios-onboarding-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.oha-ios-onboarding-body {
+    padding: 24px;
+}
+
+.oha-ios-onboarding-body p {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.oha-ios-onboarding-body ul {
+    margin: 16px 0;
+    padding-left: 24px;
+}
+
+.oha-ios-onboarding-body li {
+    margin: 8px 0;
+    font-size: 15px;
+}
+
+.oha-ios-steps {
+    background: #f5f5f5;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.oha-ios-steps h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    color: #AD3119;
+}
+
+.oha-ios-steps ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.oha-ios-steps li {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+.oha-ios-onboarding-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.oha-ios-onboarding-enable {
+    flex: 1;
+    padding: 14px 24px;
+    background: #AD3119;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.oha-ios-onboarding-enable:hover {
+    background: #8B0000;
+    transform: translateY(-2px);
+}
+
+.oha-ios-onboarding-skip {
+    padding: 14px 24px;
+    background: transparent;
+    color: #666;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.oha-ios-onboarding-skip:hover {
+    border-color: #AD3119;
+    color: #AD3119;
+}
+
+/* ========================================
+   Notification Toast
+   ======================================== */
+
+.oha-notification-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 999998;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s;
+}
+
+.oha-notification-toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ========================================
+   FAQ Chatbot
+   ======================================== */
+
+.oha-faq-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.oha-faq-search {
+    width: 100%;
+    padding: 14px 20px;
+    border: 2px solid #AD3119;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.oha-faq-search::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.oha-faq-results {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.oha-faq-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.oha-faq-question {
+    padding: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.oha-faq-question:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.oha-faq-question::after {
+    content: '▼';
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.oha-faq-item.active .oha-faq-question::after {
+    transform: rotate(180deg);
+}
+
+.oha-faq-answer {
+    padding: 0 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+
+.oha-faq-item.active .oha-faq-answer {
+    padding: 16px;
+    max-height: 500px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.oha-faq-no-results {
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.7;
+}
+
+/* ========================================
+   Volunteer Password Area
+   ======================================== */
+
+.oha-volunteer-password-form {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 24px;
+    border-radius: 12px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.oha-volunteer-password-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px 20px;
+    border: 2px solid #AD3119;
+    border-radius: 8px;
+    font-size: 16px;
+    margin: 12px 0;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-align: center;
+}
+
+.oha-volunteer-password-submit {
+    padding: 14px 32px;
+    background: #AD3119;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.oha-volunteer-password-submit:hover {
+    background: #8B0000;
+    transform: translateY(-2px);
+}
+
+.oha-volunteer-content {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 24px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.oha-volunteer-content h2,
+.oha-volunteer-content h3 {
+    color: #AD3119;
+    margin-top: 24px;
+}
+
+.oha-volunteer-content a {
+    color: #AD3119;
+    text-decoration: underline;
+}
+
+/* ========================================
+   What's Happening Now
+   ======================================== */
+
+.oha-happening-now {
+    background: linear-gradient(135deg, #AD3119 0%, #8B0000 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.oha-happening-now h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-happening-event {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.oha-happening-event:last-child {
+    margin-bottom: 0;
+}
+
+.oha-happening-event-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.oha-happening-event-details {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.oha-happening-no-events {
+    text-align: center;
+    padding: 20px;
+    opacity: 0.7;
+}
+
+/* ========================================
+   Mobile Responsive
+   ======================================== */
+
+@media (max-width: 480px) {
+    .oha-ios-onboarding-content {
+        margin: 0;
+        border-radius: 0;
+        max-height: 100vh;
+    }
+
+    .oha-ios-onboarding-header {
+        border-radius: 0;
+    }
+
+    .oha-ios-onboarding-actions {
+        flex-direction: column;
+    }
+
+    .oha-notification-toast {
+        left: 20px;
+        right: 20px;
+    }
+}
+
+/* ========================================
+   Notification State Machine Modals (v3.6.0)
+   Pre-permission modal + Settings guide modal
+   ======================================== */
+
+/* Shared overlay */
+.oha-notif-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.oha-notif-modal-overlay.visible {
+    opacity: 1;
+}
+
+/* Modal card */
+.oha-notif-modal {
+    background: #1a1a1a;
+    color: #f0f0f0;
+    border-radius: 16px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    transform: translateY(16px);
+    transition: transform 0.3s ease;
+}
+
+.oha-notif-modal-overlay.visible .oha-notif-modal {
+    transform: translateY(0);
+}
+
+.oha-notif-modal-header {
+    background: linear-gradient(135deg, #AD3119 0%, #8B0000 100%);
+    padding: 20px 24px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.oha-notif-modal-icon {
+    font-size: 28px;
+    line-height: 1;
+}
+
+.oha-notif-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #fff;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.oha-notif-modal-body {
+    padding: 20px 24px;
+}
+
+.oha-notif-modal-body p {
+    margin: 0 0 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #ccc;
+}
+
+.oha-notif-modal-body ul {
+    margin: 8px 0 16px;
+    padding-left: 4px;
+    list-style: none;
+}
+
+.oha-notif-modal-body ul li {
+    padding: 6px 0;
+    font-size: 15px;
+}
+
+/* Numbered guide steps */
+.oha-guide-steps {
+    margin: 8px 0 12px;
+    padding-left: 20px;
+}
+
+.oha-guide-steps li {
+    margin: 10px 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #e0e0e0;
+}
+
+.oha-guide-steps li small {
+    display: block;
+    color: #999;
+    font-size: .85em;
+    margin-top: 2px;
+}
+
+.oha-guide-steps li strong {
+    color: #fff;
+}
+
+.oha-notif-modal-actions {
+    padding: 0 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Primary CTA */
+.oha-notif-btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    background: #AD3119;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.oha-notif-btn-primary:hover,
+.oha-notif-btn-primary:focus {
+    background: #c73820;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+/* Secondary CTA */
+.oha-notif-btn-secondary {
+    width: 100%;
+    padding: 12px 24px;
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #444;
+    border-radius: 10px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.oha-notif-btn-secondary:hover,
+.oha-notif-btn-secondary:focus {
+    color: #fff;
+    border-color: #666;
+    outline: none;
+}
+
+/* ========================================
+   Notification Bell Button (in .oha-pwa-nav)
+   ======================================== */
+
+.oha-notification-bell {
+    position: relative;
+}
+
+/* Default: not subscribed */
+.oha-notification-bell .bell-icon {
+    font-style: normal;
+}
+
+/* Granted: green accent */
+.oha-notification-bell.granted {
+    color: #4ade80;
+    border-bottom-color: #4ade80;
+}
+
+/* Denied: orange warning */
+.oha-notification-bell.denied {
+    color: #fb923c;
+    border-bottom-color: #fb923c;
+}
+
+/* ========================================
+   Toast variants (v3.6.0)
+   ======================================== */
+
+.oha-notification-toast.success { background: #16a34a; }
+.oha-notification-toast.warning { background: #d97706; }
+.oha-notification-toast.error   { background: #dc2626; }
+.oha-notification-toast.info    { background: #2563eb; }
+
+/* ========================================
+   iOS install nudge banner
+   ======================================== */
+
+.oha-ios-nudge {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99998;
+    transform: translateY(100%);
+    transition: transform 0.35s ease;
+}
+
+.oha-ios-nudge.visible {
+    transform: translateY(0);
+}
+
+.oha-ios-nudge-content {
+    background: #1a1a1a;
+    color: #f0f0f0;
+    padding: 16px 20px;
+    border-top: 2px solid #AD3119;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.oha-ios-nudge-content strong {
+    font-size: 15px;
+}
+
+.oha-ios-nudge-content p {
+    margin: 0;
+    font-size: 14px;
+    color: #ccc;
+    line-height: 1.4;
+}
+
+.oha-ios-nudge-content button {
+    align-self: flex-end;
+    padding: 8px 20px;
+    background: #AD3119;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ========================================
+   Responsive adjustments (v3.6.0 modals)
+   ======================================== */
+
+@media (max-width: 480px) {
+    .oha-notif-modal {
+        border-radius: 12px 12px 0 0;
+        max-width: 100%;
+    }
+
+    .oha-notif-modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+}
+
+/* ========================================
+   OHA BELL POPUP TEXT FIX (v3.7.3)
+   Force white background + black text in
+   notification modals so they're readable
+   even when the theme overrides dark styles.
+   Scoped uniquely to avoid touching any other
+   page text.
+   ======================================== */
+
+.oha-notif-modal {
+    background: #ffffff !important;
+    color: #111111 !important;
+}
+.oha-notif-modal-body p {
+    color: #222222 !important;
+}
+.oha-notif-modal-body ul li {
+    color: #222222 !important;
+}
+.oha-guide-steps li {
+    color: #222222 !important;
+}
+.oha-guide-steps li small {
+    color: #555555 !important;
+}
+.oha-guide-steps li strong {
+    color: #111111 !important;
+}
+/* Secondary button: dark text/border for light card */
+.oha-notif-btn-secondary {
+    color: #555555 !important;
+    border-color: #cccccc !important;
+}
+.oha-notif-btn-secondary:hover,
+.oha-notif-btn-secondary:focus {
+    color: #111111 !important;
+    border-color: #999999 !important;
+}
+
+/* ========================================
+   BOARD NOTIFICATIONS LABEL FIX (v3.7.3)
+   Labels inside the light #f5f5f5 form need
+   explicit dark colour — theme white text
+   is invisible on the light form background.
+   ======================================== */
+
+.oha-board-notifications label {
+    color: #111111 !important;
+}
+
+/* ========================================
+   INSTALL BOTTOM SHEET (v3.7.3)
+   Replaces the floating install button with
+   an engaging, benefit-driven bottom sheet.
+   ======================================== */
+
+.oha-install-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 999988;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+.oha-install-sheet-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.oha-install-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999989;
+    background: #1a1a1a;
+    border-radius: 20px 20px 0 0;
+    padding: 8px 20px max(28px, env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 540px;
+    margin: 0 auto;
+}
+.oha-install-sheet.visible {
+    transform: translateY(0);
+}
+
+.oha-install-sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    margin: 8px auto 18px;
+}
+
+.oha-install-sheet-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.oha-install-sheet-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: #AD3119;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    line-height: 1;
+    overflow: hidden;
+}
+.oha-install-sheet-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+.oha-install-sheet-title {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+.oha-install-sheet-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #aaaaaa;
+    line-height: 1.4;
+}
+
+.oha-install-sheet-benefits {
+    list-style: none;
+    margin: 0 0 22px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.oha-install-sheet-benefits li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #dddddd;
+    line-height: 1.3;
+}
+.oha-install-sheet-benefits .benefit-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+}
+
+.oha-install-sheet-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.oha-install-sheet-btn-install {
+    width: 100%;
+    padding: 15px;
+    background: #AD3119;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.oha-install-sheet-btn-install:hover,
+.oha-install-sheet-btn-install:active {
+    background: #c73820;
+    transform: scale(0.98);
+}
+.oha-install-sheet-btn-later {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: #777777;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ========================================
+   ANDROID SYSTEM NOTIFICATION GUIDE (v3.7.3)
+   Shown after Chrome site permission is granted
+   to walk Android users through enabling Chrome
+   app system notifications (second permission).
+   ======================================== */
+
+.oha-android-guide-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 999990;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+.oha-android-guide-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.oha-android-guide {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999991;
+    background: #111111;
+    border-radius: 20px 20px 0 0;
+    padding: 8px 20px max(28px, env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 540px;
+    margin: 0 auto;
+}
+.oha-android-guide.visible {
+    transform: translateY(0);
+}
+
+.oha-android-guide-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    margin: 8px auto 18px;
+}
+.oha-android-guide-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(173, 49, 25, 0.2);
+    border: 1px solid rgba(173, 49, 25, 0.5);
+    color: #ff7b5c;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.oha-android-guide h3 {
+    color: #ffffff;
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 700;
+}
+.oha-android-guide-intro {
+    color: #bbbbbb;
+    font-size: 14px;
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+.oha-android-guide-steps {
+    list-style: none;
+    margin: 0 0 20px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.oha-android-guide-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 14px;
+    color: #cccccc;
+    line-height: 1.4;
+}
+.oha-android-guide-steps li:last-child {
+    border-bottom: none;
+}
+.oha-android-guide-steps .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    background: #AD3119;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.oha-android-guide-steps li strong {
+    color: #ffffff;
+}
+
+.oha-android-guide-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.oha-android-guide-btn-settings {
+    width: 100%;
+    padding: 15px;
+    background: #AD3119;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+.oha-android-guide-btn-settings:hover,
+.oha-android-guide-btn-settings:active {
+    background: #c73820;
+}
+.oha-android-guide-btn-done {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: #777777;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}

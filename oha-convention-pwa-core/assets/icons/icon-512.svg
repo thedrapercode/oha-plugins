@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#FF4500"/>
+  <text x="256" y="230" font-size="140" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="Arial">OHA</text>
+  <text x="256" y="320" font-size="50" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="Arial">Convention</text>
+  <text x="256" y="370" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="Arial">2026</text>
+</svg>

@@ -1,0 +1,422 @@
+/**
+ * OHA Convention PWA - Styles
+ * 
+ * Styling for PWA components and UI elements
+ */
+
+/* ========================================
+   PWA Install Button
+   ======================================== */
+
+.oha-pwa-install-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #d32f2f 0%, #8b0000 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(211, 47, 47, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(100px);
+    transition: all 0.3s ease;
+}
+
+.oha-pwa-install-floating.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.oha-pwa-install-floating:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(211, 47, 47, 0.5);
+}
+
+.oha-pwa-install-floating svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* ========================================
+   PWA Update Notice
+   ======================================== */
+
+.oha-pwa-update-notice {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    animation: slideDown 0.3s ease;
+}
+
+.oha-pwa-update-content {
+    background: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 90vw;
+}
+
+.oha-pwa-update-content p {
+    margin: 0;
+    font-weight: 600;
+    color: #333;
+}
+
+.oha-pwa-update-content button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#oha-pwa-update-btn {
+    background: #d32f2f;
+    color: white;
+}
+
+#oha-pwa-update-btn:hover {
+    background: #b71c1c;
+}
+
+#oha-pwa-dismiss-btn {
+    background: #f5f5f5;
+    color: #666;
+}
+
+#oha-pwa-dismiss-btn:hover {
+    background: #e0e0e0;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* ========================================
+   iOS Install Hint
+   ======================================== */
+
+.oha-pwa-ios-hint {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.9) 100%);
+    color: white;
+    padding: 24px;
+    z-index: 9999;
+    animation: slideUp 0.3s ease;
+}
+
+.oha-pwa-ios-content {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.oha-pwa-ios-content p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+.oha-pwa-ios-content p:first-child {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.oha-pwa-ios-content strong {
+    color: #2196F3;
+}
+
+#oha-pwa-ios-dismiss {
+    margin-top: 16px;
+    padding: 10px 24px;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Offline Indicator - COMPLETELY DISABLED
+   ======================================== */
+
+/* Force hide any offline indicators */
+body.offline::before,
+body.offline::after,
+body::before[content*="offline"],
+body::before[content*="Offline"],
+.oha-offline-badge,
+.offline-indicator,
+.offline-banner,
+.offline-notice,
+[class*="offline-"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* Remove any padding that might have been for offline banner */
+body.offline {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* If OHA Schedule plugin adds offline message, hide it */
+.oha-schedule-offline-message,
+.schedule-offline-notice,
+[class*="cached-data"],
+[class*="offline-mode"] {
+    display: none !important;
+}
+
+/* ========================================
+   PWA Notification Messages
+   ======================================== */
+    border-radius: 8px;
+    font-weight: 600;
+    z-index: 9998;
+    animation: fadeInOut 3s ease forwards;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ========================================
+   PWA Standalone Mode Adjustments
+   ======================================== */
+
+body.pwa-standalone {
+    /* Add padding for iOS safe areas */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide admin bar in standalone mode */
+body.pwa-standalone #wpadminbar {
+    display: none !important;
+}
+
+/* ========================================
+   Loading States
+   ======================================== */
+
+.oha-pwa-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   Favorite Button Styles
+   ======================================== */
+
+.oha-favorite-btn {
+    background: transparent;
+    border: 2px solid #d32f2f;
+    color: #d32f2f;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.oha-favorite-btn:hover {
+    background: #d32f2f;
+    color: white;
+}
+
+.oha-favorite-btn.is-favorite {
+    background: #d32f2f;
+    color: white;
+}
+
+.oha-favorite-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ========================================
+   Add to Calendar Button
+   ======================================== */
+
+.oha-add-calendar-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.oha-add-calendar-btn:hover {
+    background: #388E3C;
+    transform: translateY(-1px);
+}
+
+.oha-add-calendar-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ========================================
+   Share Button
+   ======================================== */
+
+.oha-share-btn {
+    background: #2196F3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.oha-share-btn:hover {
+    background: #1976D2;
+    transform: translateY(-1px);
+}
+
+/* ========================================
+   Mobile Optimizations
+   ======================================== */
+
+@media (max-width: 768px) {
+    .oha-pwa-install-floating {
+        bottom: 70px;
+        right: 12px;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    
+    .oha-pwa-update-content {
+        flex-direction: column;
+        padding: 12px 16px;
+    }
+    
+    .oha-pwa-update-content button {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   Dark Mode Support (if theme supports it)
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    .oha-pwa-update-content {
+        background: #1e1e1e;
+        color: white;
+    }
+    
+    .oha-pwa-update-content p {
+        color: white;
+    }
+    
+    #oha-pwa-dismiss-btn {
+        background: #333;
+        color: #ccc;
+    }
+    
+    #oha-pwa-dismiss-btn:hover {
+        background: #444;
+    }
+}
+
+/* --- Standalone Event Card ([oha_pwa_event_card] shortcode) --- */
+.oha-pwa-standalone-event {
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid #f0b429;
+    padding: 16px 20px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.oha-pwa-standalone-event .oha-standalone-title {
+    margin: 8px 0 6px;
+    font-size: 1.2em;
+}
+.oha-pwa-standalone-event .oha-standalone-time,
+.oha-pwa-standalone-event .oha-standalone-room {
+    margin: 4px 0;
+    color: #555;
+    font-size: 0.95em;
+}
+
+/* --- Promoted / Featured Event Badge (schedule hub views) --- */
+.oha-promoted-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: linear-gradient(135deg, #f0b429 0%, #d97706 100%);
+    color: #fff; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 4px; margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(217,119,6,0.4);
+}
+.oha-promoted-badge--inline  { font-size: 10px; padding: 2px 8px; margin-bottom: 4px; }
+.oha-promoted-badge--compact {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    background: linear-gradient(135deg, #f0b429, #d97706);
+    color: #fff; text-transform: uppercase;
+    padding: 1px 7px; border-radius: 3px;
+    margin-right: 6px; vertical-align: middle;
+}

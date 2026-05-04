@@ -1,0 +1,461 @@
+{
+    "plugin":  "OHA Convention PWA Core",
+    "version":  "3.20.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.20.0",
+                        "type":  "feature",
+                        "summary":  "Add oha_pwa_convention_map_url option to PWA Settings for Find Booth link target",
+                        "notes":  "New field in PWA Settings beside scanner/passport URL fields. Saved via esc_url_raw. Default placeholder /convention/2026-convention/map/."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.20.0",
+                        "type":  "feature",
+                        "summary":  "Add Find Booth button to [oha_convention_vendors] vendor cards when booth is linked",
+                        "notes":  "Button appears only when vendor has a booth linked via _booth_vendor_hub_id and oha_pwa_convention_map_url is set. Links to map page with ?oha_vendor={post_id} deep link. Zero AJAX - booth map built in PHP at render time from single oha_booth query."
+                    },
+                    {
+                        "date":  "2026-05-03",
+                        "version":  "3.19.0",
+                        "type":  "feature",
+                        "summary":  "Incident report system: new Reports tab in board dashboard with form, photo upload, draft save, and reports list",
+                        "notes":  "Photos compressed client-side via Canvas (1200px/JPEG 0.8), base64-uploaded, saved to uploads/oha-incidents/YYYY-MM/. Draft auto-saves all text fields to localStorage. New DB table wp_oha_incident_reports."
+                    },
+                    {
+                        "date":  "2026-05-03",
+                        "version":  "3.19.0",
+                        "type":  "feature",
+                        "summary":  "Volunteer portal restructured with structured sections: Event Times, Emergency Info, Radio Channels, Venue Details, Key Contacts",
+                        "notes":  "New WP options: oha_pwa_vol_schedule, oha_pwa_vol_venue_info, oha_pwa_vol_emergency, oha_pwa_vol_radio, oha_pwa_vol_contacts. All pipe-delimited textarea fields. volunteer_auth REST now returns rendered HTML via build_volunteer_html(). Emergency section rendered with red highlight."
+                    },
+                    {
+                        "date":  "2026-05-03",
+                        "version":  "3.19.0",
+                        "type":  "feature",
+                        "summary":  "Incident Reports admin page added under Settings menu for viewing and browser-printing all filed reports",
+                        "notes":  "Settings \u003e Incident Reports. Shows full table of all reports with photos. Print-stylesheet-friendly for PDF generation."
+                    },
+                    {
+                        "date":  "2026-05-03",
+                        "version":  "3.19.0",
+                        "type":  "feature",
+                        "summary":  "DB auto-upgrade: wp_oha_incident_reports table created on plugins_loaded when db version is behind",
+                        "notes":  "Added version check in plugins_loaded hook so existing installs get the new table without plugin reactivation."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "3.18.1",
+                        "type":  "fix",
+                        "summary":  "Added X-Accel-Expires: 0 and CDN bypass headers to perfecty-push-sw.js response",
+                        "notes":  "force_nocache_headers() now includes perfecty-push-sw.js alongside convention-sw.js. serve_perfecty_proxy_worker() also gets CDN-Cache-Control, Surrogate-Control, and X-Accel-Expires: 0 headers. Missing X-Accel-Expires was causing GoDaddy CDN to cache the 404 response for the Perfecty proxy SW, preventing new push notification subscriptions. Purge GoDaddy CDN cache after uploading this version."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "3.18.1",
+                        "type":  "fix",
+                        "summary":  "Perfecty SDK file lookup now searches multiple candidate paths for version compatibility",
+                        "notes":  "serve_perfecty_proxy_worker() previously hardcoded one path. Now checks 4 candidate locations in order. Handles Perfecty plugin updates that may reorganize the SDK file location."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "3.18.1",
+                        "type":  "change",
+                        "summary":  "Added missing shortcodes to reference table in PWA Settings admin page",
+                        "notes":  "oha_pwa_settings, oha_convention_vendors, and oha_convention_passport were not listed in the General tab shortcode reference table."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "3.18.0",
+                        "type":  "feature",
+                        "summary":  "FAQ search upgraded to Fuse.js fuzzy matching with typo tolerance and relevance ranking",
+                        "notes":  "Bundled fuse.min.js v7.0.0 in assets/js/. Enqueued before oha-pwa-phase3a-features as a dependency. FAQ.init() builds a Fuse instance with question weighted 0.7, answer 0.3, threshold 0.4, ignoreLocation true. search() uses Fuse and falls back to substring match if Fuse is unavailable. fuse.min.js added to OPTIONAL_CACHE_FILES in service worker for offline support."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "3.18.0",
+                        "type":  "fix",
+                        "summary":  "Fixed backslash multiplication in settings save caused by WordPress auto-slashing POST data",
+                        "notes":  "WordPress wp_magic_quotes() adds slashes to all $_POST data. Every save without wp_unslash() stored slashed values that got re-slashed on subsequent saves. Fixed by wrapping all sanitize_text_field, sanitize_textarea_field, and wp_kses_post calls in save_settings() with wp_unslash(). URL fields (esc_url_raw) are unaffected. Also applies to App Download Page text/textarea fields and video title field."
+                    },
+                    {
+                        "date":  "2026-05-02",
+                        "version":  "3.17.0",
+                        "type":  "feature",
+                        "summary":  "Added admin toggle to show or hide the scan FAB in the app nav bar",
+                        "notes":  "New WP option oha_pwa_show_scan_fab (default: 1). Registered in class-pwa-settings.php, shown as a checkbox in the General tab below the Scanner Page URL field. Passed to JS as ohaNavConfig.show_scan_fab. In createNavigation(), if the value is \u00270\u0027 the FAB is skipped entirely. Unchecking hides the button from users without removing any scanner or passport functionality."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "3.16.1",
+                        "type":  "change",
+                        "summary":  "FAB scan button moved to fixed bottom-right corner; all 5 nav tabs now render uniformly",
+                        "notes":  "Previous embedded flex-item design caused off-center appearance (2 tabs left, 3 right). New approach: FAB appended to body as a separate fixed element (right:16px, bottom:72px + safe-area). Nav createNavigation() renders all 5 tabs with a single forEach loop. disableAppMode() now also removes #oha-fab-scan."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "3.16.0",
+                        "type":  "feature",
+                        "summary":  "FAB scan button redesigned as embedded nav flex item connecting visually to the nav bar",
+                        "notes":  "Old fixed-position circle replaced with a flex-item button using align-self:flex-start and margin-top:-22px to pop above the nav bar edge. Dark border ring (rgba(20,20,20,0.97)) matches nav bg for visual connection. Rounded top corners (16px 16px 10px 10px) taper into the bar. Orange gradient retained. No separate show/hide rules needed - shown/hidden with the nav automatically."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "3.16.0",
+                        "type":  "change",
+                        "summary":  "FAB routes to scanner page via new oha_pwa_scanner_url setting; tab label font bumped to 11px",
+                        "notes":  "ohaNavConfig.scanner_url added to wp_localize_script (reads oha_pwa_scanner_url WP option). oha_pwa_passport_url and oha_pwa_scanner_url both registered in class-pwa-settings.php General tab with esc_url_raw save. Tab label font-size raised from 10px to 11px."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "3.16.0",
+                        "type":  "feature",
+                        "summary":  "Scan QR Codes button added to [oha_convention_passport] page hero for logged-in users",
+                        "notes":  "Button only renders when user is logged in and has a passport profile. Links to oha_pwa_scanner_url option. Step 3 in How Trading Works updated to reference scanner page."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "Removed /vendors and /vendor from SW isConventionScope() — matched non-convention vendor pages",
+                        "notes":  "isConventionScope() in class-pwa-service-worker.php still had \u0027/vendors\u0027 and \u0027/vendor\u0027 in its conventionPaths array. This caused the service worker to intercept and cache requests on /vendor-hub/, /vendor-applications/, and similar non-convention pages. PHP is_convention_page() had these removed in v3.7.9 but the SW was never updated to match. Removed both entries and added a comment explaining why."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "board/content REST endpoint changed from GET to POST so auth token travels in request body",
+                        "notes":  "Token was appended as ?token=... query parameter on a GET request. GET parameters appear in web server access logs, browser history, and HTTP Referer headers. Changed endpoint method to POST and updated board_content() to read token from get_json_params()[\u0027token\u0027]. Updated loadBoardContent() JS fetch to POST with body JSON.stringify({token:token}) and X-WP-Nonce header. POST requests are also not cached by the Cache API so this also resolves M4 (SW caching board content)."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "Added Cache-Control: no-store header to board/content REST response",
+                        "notes":  "board_content() now calls $response-\u003eheader(\u0027Cache-Control\u0027,\u0027no-store\u0027) before returning so board notes and emergency contacts are never stored in any HTTP cache layer. The POST method change also prevents SW Cache API caching."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "Board and volunteer passwords now stored as wp_hash_password() hashes, not plaintext",
+                        "notes":  "class-pwa-settings.php save_settings() now wraps new password values in wp_hash_password() before calling update_option(). Password fields no longer pre-populate from stored value (value=\u0027\u0027 with informational placeholder) to prevent exposing hashes in admin page source. Verify side (board_auth, volunteer_auth in class-pwa-notifications.php) now tries wp_check_password() first; if that fails, falls back to hash_equals() for sites with existing plaintext passwords, and transparently re-hashes the stored value on successful legacy login. Existing deployments do not require manual password reset."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "HappeningNow.render() XSS fixed -- event title/room/time now HTML-escaped before innerHTML insert",
+                        "notes":  "pwa-phase3a-features.js HappeningNow.render() built innerHTML via template literals with raw event.title, event.room, event.time, event.startsIn values read from data-event-* attributes. data attributes decode HTML entities, so a title containing \u0026lt;img onerror=alert(1)\u0026gt; stored in the DB and echoed via PHP esc_attr() would be re-activated by innerHTML. Added OHAPhase3A.escHtml() utility (string replace on \u0026/\u003c\u003e/\") and applied it to all four interpolated values in both the current-events and coming-up-next loops."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "[oha_pwa_debug] shortcode now restricted to manage_options capability",
+                        "notes":  "shortcode-pwa-debug.php had no auth check -- any logged-in or anonymous visitor who placed the shortcode on a page could see WP plugin version, REQUEST_URI, Perfecty subscriber count, VAPID key status, and service worker scope info. Added if(!current_user_can(\u0027manage_options\u0027)) return \u0027\u0027; at the top of the callback. This shortcode is a development/diagnostic tool and should only be visible to site admins."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "REQUEST_URI now path-only for all strpos() routing checks -- query strings no longer trigger matches",
+                        "notes":  "maybe_serve_pwa_files(), is_convention_request(), force_nocache_headers(), and is_convention_page() all used raw $_SERVER[\u0027REQUEST_URI\u0027] which includes ?query_string. A URL like /shop/?ref=convention-sw.js would match the SW serve check. Changed all four functions to use parse_url($_SERVER[\u0027REQUEST_URI\u0027]??\u0027\u0027, PHP_URL_PATH)?:\u0027\u0027 so only the actual path component is tested."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "3.11.6",
+                        "type":  "security",
+                        "summary":  "REST error messages in notification JS now HTML-escaped before .html() / innerHTML injection",
+                        "notes":  "board_notifications shortcode (jQuery .html()) and board_dashboard notification tab (innerHTML) were inserting data.message and xhr.responseJSON.message directly without escaping. A crafted REST error message could inject HTML. Added escHtml() helper in both script blocks and applied it to all data.message / err.message insertions in the error/failure branches."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.5",
+                        "type":  "fix",
+                        "summary":  "Perfecty dequeue used wrong script handle since v3.7.7 -- corrected to \u0027perfecty-push\u0027",
+                        "notes":  "restrict_perfecty_to_convention() was calling wp_dequeue_script(\u0027perfecty-push-notifications\u0027) which never matched anything. Perfecty registers its script and style with handle \u0027perfecty-push\u0027 (via $this-\u003eplugin_name = \u0027perfecty-push\u0027 in class-perfecty-push.php). The wrong handle meant Perfecty\u0027s SDK loaded on every page of the site since v3.7.7. Fixed by using the correct handle. This is why the bell and notification popup appeared site-wide even after previous fixes."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.4",
+                        "type":  "fix",
+                        "summary":  "Bell and notification popup now restricted to /convention/ pages only",
+                        "notes":  "pwa-notifications.js was enqueued on every page of the site whenever Perfecty was active. Added wp_dequeue_script(\u0027oha-pwa-notifications\u0027) to restrict_perfecty_to_convention() so it is removed on non-convention pages at priority 20, same as Perfecty\u0027s own scripts. Bell and popup modal now only appear on pages under /convention/."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.3",
+                        "type":  "fix",
+                        "summary":  "Bell and push fully suppressed when Perfecty Push plugin is deactivated",
+                        "notes":  "WordPress keeps the perfecty_push option in the database after the plugin is deactivated, so the previous check against vapid_public_key and widget_enabled was not sufficient. Added class_exists(\u0027Perfecty_Push_Public\u0027) as a required gate. Both ohaNotifConfig.enabled and the pwa-notifications.js enqueue are now false/skipped when the class is absent, so deactivating Perfecty in WP Admin immediately stops the bell and popup modal from appearing."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.2",
+                        "type":  "fix",
+                        "summary":  "PWA bell button now respects Perfecty Push widget_enabled setting",
+                        "notes":  "ohaNotifConfig.enabled was only checking for a VAPID key, so the PWA bell in .oha-pwa-nav was always injected even when the Perfecty widget was disabled in settings. Fixed by also checking widget_enabled in the perfecty_push option. pwa-notifications.js is also not enqueued when the widget is disabled, preventing the bell from being injected at all. The Perfecty SDK itself already respects this flag via PerfectyPushOptions.enabled."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.1",
+                        "type":  "fix",
+                        "summary":  "Favorites list showed \u0027Vendor\u0027/no logo due to stale localStorage from old JS",
+                        "notes":  "Old VendorFavorites JS stored name:\u0027Vendor\u0027 and no logo because the selector did not match .oha-vendor-name and data-logo did not exist yet. Fix: favorite_vendors() now queries all paid vendor_application posts in PHP, builds a lookup keyed by post ID, and outputs it as window.ohaVendorLookup before the shortcode HTML. The JS renderer merges fresh server data (name, logo, website) over whatever is in localStorage, so old saved entries display correctly without the user needing to re-favorite."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.1",
+                        "type":  "fix",
+                        "summary":  "Heart favorite button was invisible (dark circle, no contrast)",
+                        "notes":  "Button had background:rgba(0,0,0,.52) but no color:white, so the heart emoji had no explicit color and blended into the dark background. Added color:white, border:1.5px solid rgba(255,255,255,.3), increased font-size from 18px to 20px, added line-height:1. is-favorite state now also brightens border to rgba(255,255,255,.4)."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.0",
+                        "type":  "feature",
+                        "summary":  "[oha_convention_vendors] redesigned as single-column full-width image cards",
+                        "notes":  "Cards now use a 5:3 aspect-ratio image area with object-fit:contain and padding on a dark background. Gradient overlay at image bottom shows vendor name and website URL. Floating heart button (oha-vendor-favorite-btn, position:absolute top-right) is pre-rendered in PHP so JS only updates state without adding a second button. Card has box-shadow for depth. Booth number fetched via single batch query on oha_booth CPT (post_type_exists guard) and stored in data-booth attribute. data-logo and data-website also stored for localStorage persistence."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.0",
+                        "type":  "feature",
+                        "summary":  "[oha_favorite_vendors] renamed to \u0027My Must-See Vendors\u0027 with thumbnail and map navigation",
+                        "notes":  "Complete rewrite of favorite_vendors() shortcode. Shows 58x58 vendor logo thumbnail (from localStorage v.logo), company name, website URL (cleaned), and booth chip if assigned. Cards with a booth are tappable and navigate to /convention/2026-convention/map/?oha_vendor=ID so the map plugin can highlight the booth. Remove button (X, top-right, stopPropagation) removes from localStorage and re-renders. CSV export button removed. esc() helper function used for XSS-safe HTML generation."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.11.0",
+                        "type":  "change",
+                        "summary":  "VendorFavorites JS now stores logo/website/booth and uses heart emoji toggle",
+                        "notes":  "attachEventListeners() now reads data-name (priority), data-logo, data-website, data-booth from the card element and stores them in localStorage. updateButtonStates() changed from star text (\u0027Favorite Vendor\u0027/\u0027FAVORITED\u0027 + inline background style) to heart emoji (\u0026#129293; unfavorited, \u0026#10084; favorited) with CSS class is-favorite controlling the button background."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Vendors tab restored to bottom nav with shopping bags icon; nav expanded to 6 tabs",
+                        "notes":  "APP_CONFIG.tabs in app-navigation.js now has 6 entries: Schedule / Map / My OHC / Vendors / Passport / Info. Vendors uses icon 🛍️ and url /convention/2026-convention/vendors/. Tab CSS adjusted for 6-tab fit: icon 20px (22px active), label 10px, tab padding 6px 2px, container padding 4px."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Vendor cards now have data-vendor-id and data-name attributes for favorites integration",
+                        "notes":  "The pwa-phase3a-features.js VendorFavorites.init() looks for .oha-vendor-card[data-vendor-id] to attach heart/favorite buttons. Adding data-vendor-id (post ID) and data-name (company name) to each card div enables this automatically with no JS changes."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Vendor card optional fields (website, products, social) toggled via admin settings",
+                        "notes":  "New oha_pwa_vendor_card_fields WP option (array with website/products/social booleans, default: website on). Registered in register_settings(), loaded in render_general_tab(), rendered as checkboxes in new Vendor Cards section, saved in save_settings(). convention_vendors() reads the option and conditionally renders: website (meta key: website, target=_blank), product_type (meta key: product_type), social (meta key: company_social). Added CSS: .oha-vendor-products, .oha-vendor-website, .oha-vendor-social scoped to .oha-vendors-wrap."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.10.0",
+                        "type":  "change",
+                        "summary":  "Vendor count text changed to \u0027Currently X Vendors Announced, more coming soon!\u0027",
+                        "notes":  "Previous text was \u0027{count} confirmed vendor{s}\u0027. New text softens expectations: \u0027Currently X Vendors Announced, more coming soon!\u0027. Singular/plural logic preserved (Vendor vs Vendors)."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.9.0",
+                        "type":  "feature",
+                        "summary":  "New [oha_convention_passport] shortcode for the pre-event Haunt Passport page",
+                        "notes":  "Registered in OHA_PWA_Shortcodes. Checks oha_passport_hub_active() to detect Passport Hub. Server-side: resolves logged-in user profile and whether the pre-event demo stamp has been claimed, so checklist renders correctly on page load without JS. Hero card shows days-until-convention countdown from oha_pwa_convention_start option. Logged-in flow: pre-event checklist (Create Profile / Claim Beginner Stamp), embedded [oha_actor_passport] card (via do_shortcode), demo stamp claim card (AJAX to oha_award_demo_stamp in Passport Hub, stamp_type=demo, event_slug=pre-event), How Trading Works explainer, embedded [oha_my_stamps] collection. Not-logged-in flow: login prompt + how-it-works only. Passport Hub inactive: notice only. Demo stamp AJAX nonce is oha_passport_hub_nonce, rendered inline and also available via window.ohaPassportHub.nonce (Passport Hub JS localization). Requires OHA Passport Hub v1.3.0+."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "3.9.0",
+                        "type":  "change",
+                        "summary":  "Bottom nav Vendors tab replaced with Passport tab in app-navigation.js",
+                        "notes":  "Changed APP_CONFIG.tabs entry from {id:\u0027vendors\u0027, icon:\u0027store emoji\u0027, label:\u0027Vendors\u0027, url:\u0027/convention/2026-convention/vendors/\u0027} to {id:\u0027passport\u0027, icon:\u0027passport emoji\u0027, label:\u0027Passport\u0027, url:\u0027/convention/2026-convention/passport/\u0027}. The passport page is more strategically important before the event than the vendors tab (vendors are accessible via the convention home page). setActiveTab() path-matching works naturally because \u0027passport\u0027 appears in the URL."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.8.0",
+                        "type":  "feature",
+                        "summary":  "[oha_pwa_onboarding] now auto-collapses completed steps and shows a Setup Complete banner",
+                        "notes":  "Each step collapses to a tappable checkmark summary row when completed (Install App -\u003e \u0027App Installed\u0027, Enable Notifications -\u003e \u0027Notifications Enabled\u0027). Tapping the collapsed row expands it again to review. When all steps are finished, the entire onboarding widget hides and shows a green \u0027Setup Complete\u0027 banner with a \u0027See all steps\u0027 toggle. The steps container (including the \u0027You\u0027re All Set\u0027 section with schedule/my-ohc links) is still accessible via the toggle. State persisted in localStorage keys oha_ob_install_done and oha_ob_notif_done so the banner shows immediately on every subsequent page load without re-running the install/notification checks. On partial completion, completed steps are pre-collapsed and only the remaining incomplete steps run their status checks. Emojis replaced with HTML entities (\u0026#NNNNN;) to avoid UTF-8 BOM issues in PHP string literals."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.8.0",
+                        "type":  "feature",
+                        "summary":  "New [oha_convention_home] shortcode for the /convention/ home page",
+                        "notes":  "Outputs a styled welcome page consisting of: a hero card (Welcome badge, title, subtitle, quick-action buttons to Schedule/Map/Vendors, tips chips), a 2-column info grid (What is this event / First time here), and a Happenings section with news items and action buttons. All styles are scoped to .oha-conv-home to avoid conflicts. Happenings items are editable via PWA Settings \u003e General \u003e Home Page Happenings (Title|Description one per line, falls back to 3 hardcoded defaults if empty). Nav hint bar (bottom): uses position:fixed, shown every time but dismissed per-session via sessionStorage key oha_nav_hint_v1. Happenings section can be hidden per-device via the \u0027Don\u0027t show this again\u0027 button (localStorage key oha_happenings_hidden_v1). Intended usage: place [oha_pwa_onboarding] above [oha_convention_home] on the WordPress /convention/ page. The page should always show on app open (not redirect away)."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.8.0",
+                        "type":  "feature",
+                        "summary":  "Added oha_pwa_happenings WP option and Home Page Happenings field in PWA Settings General tab",
+                        "notes":  "New textarea in PWA Settings \u003e General tab (above PWA Info). Registered as oha_pwa_happenings. Format: Title|Description one per line. Saved via sanitize_textarea_field. [oha_convention_home] reads this option and falls back to 3 hardcoded defaults when empty. [oha_convention_home] and [oha_pwa_onboarding] both added to the Shortcode Reference table in the General tab."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.9",
+                        "type":  "fix",
+                        "summary":  "Removed \u0027/vendor\u0027 from is_convention_page() URI patterns — was loading PWA on vendor hub pages",
+                        "notes":  "is_convention_page() had \u0027/vendor\u0027 in its URI pattern list. This matched any URL containing \u0027vendor\u0027 including non-convention pages like /vendor-hub/, /vendor-applications/, etc. used by the OHA Vendor Hub plugin. The PWA would load app-navigation.js (which adds oha-app-mode to body) and all PWA CSS on those pages, overriding vendor hub fonts, backgrounds, and card styles. Convention vendor pages are always under /convention/ which already matches the \u0027/convention\u0027 pattern. Removed \u0027/vendor\u0027 from the patterns array entirely."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.8",
+                        "type":  "security",
+                        "summary":  "Board dashboard and volunteer area passwords moved fully server-side — no longer visible in page source",
+                        "notes":  "Security fix: both protected areas previously echoed passwords into front-end JavaScript (board: var PW=\u0027...\u0027; volunteer: window.ohaVolunteerConfig.password). Any visitor could read the password by viewing page source or opening browser devtools. Fix: POST /oha/v1/board/auth and POST /oha/v1/volunteer/auth endpoints verify the password server-side using hash_equals() and the stored WP option value. The password is never sent to the browser. Board endpoint returns a 32-char hex token (bin2hex(random_bytes(16))) stored as a 4-hour transient keyed by SHA-256 hash. GET /oha/v1/board/content requires that token and returns notes + contacts as JSON. Volunteer endpoint returns wp_kses_post HTML content directly. Both auth endpoints include IP-based brute-force protection: 10 attempts per scope per 15 minutes via set_transient, 429 response when locked. Board JS now calls fetch(AUTH_URL) on submit and stores the token in sessionStorage(\u0027oha_board_token\u0027); loadBoardContent(token, doUnlock) fetches and renders notes/contacts via REST. Session restore: checks for stored token and calls loadBoardContent(token, true) on page load. Volunteer JS uses inline fetch to REST, caches content in sessionStorage(\u0027oha_volunteer_content\u0027). pwa-phase3a-features.js is unchanged — VolunteerArea.init() only fires when window.ohaVolunteerConfig exists; removing wp_localize_script means it silently no-ops."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.8",
+                        "type":  "fix",
+                        "summary":  "Version bump to 3.7.8 forces SW cache bust on all devices",
+                        "notes":  "OHA_PWA_VERSION drives CACHE_VERSION in the convention SW. Bump ensures all devices reload updated plugin assets."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.7",
+                        "type":  "fix",
+                        "summary":  "Perfecty Push scripts, styles, and wp_head output now restricted to /convention/ pages only",
+                        "notes":  "Perfecty Push was loading its SDK JS, CSS, and PerfectyPushOptions config block (plus unleash_stalled DB call) on every page of the site. Added restrict_perfecty_to_convention() hooked at wp_enqueue_scripts priority 20 to dequeue perfecty-push-notifications script and style on non-convention pages. Added suppress_perfecty_head_if_not_convention() hooked at wp_head priority 1 to remove Perfecty\u0027s print_head callback via $wp_filter iterator using instanceof Perfecty_Push_Public check. Added private is_convention_request() helper that checks REQUEST_URI for /convention. The OHA PWA plugin handles subscriptions independently via pwa-notifications.js + Perfecty REST API so Perfecty SDK JS is not needed site-wide."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.6",
+                        "type":  "fix",
+                        "summary":  "Perfecty proxy SW now injects badge and icon defaults to prevent Chrome Detected Spam on Android",
+                        "notes":  "Chrome on Android flags push notifications as spam when the notification has no badge (Android status bar icon) or no icon. Perfecty Push never includes badge in its payload and only includes icon if its admin setting is configured. Fixed by monkey-patching self.registration.showNotification in serve_perfecty_proxy_worker() before importScripts() loads Perfecty\u0027s SDK. The patch sets badge to badge-72.png and fills in icon with icon-192.png if Perfecty sent an empty string. The patch only overrides values that are missing so intentional Perfecty settings still take precedence."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.6",
+                        "type":  "fix",
+                        "summary":  "Version bump to 3.7.6 forces SW cache bust on all devices",
+                        "notes":  "OHA_PWA_VERSION drives the CACHE_VERSION constant in the convention SW. Bumping ensures devices pick up the updated proxy SW on next visit."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.5",
+                        "type":  "feature",
+                        "summary":  "Added [oha_board_dashboard] shortcode — password-protected board dashboard with 5 tabs",
+                        "notes":  "New shortcode for convention-day board operations. Auth: shared password stored in oha_pwa_board_password WP option, checked client-side via JS, session persisted with sessionStorage \u0027oha_board_auth\u0027 (same pattern as volunteer/crew areas). Tab 1 - Notifications: full push notification send form (title, message, image URL, tap-URL with page chips) calling /oha/v1/notifications/send REST endpoint. Tab 2 - Live Stats: AJAX fetch from /oha/v1/notifications/stats on first tab open, shows subscribers, total installs, active installs (30d), iOS/Android/Other breakdown, Refresh button. Tab 3 - Board Notes: renders oha_pwa_board_notes WP option (wp_kses_post), set in admin before convention. Tab 4 - Emergency Contacts: parses oha_pwa_board_contacts (newline-separated Name | Role | Phone lines) into tap-to-call cards. Tab 5 - Quick Links: grid linking to My OHC, Schedule, Vendors, WP Admin, Perfecty Push admin, and a Clear My Cache button (calls window.ohaPWAClearCache or Caches API fallback). Logout button clears sessionStorage and re-shows password gate."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.5",
+                        "type":  "feature",
+                        "summary":  "Added Board Hub settings tab to PWA Settings admin page",
+                        "notes":  "New tab in class-pwa-settings.php between Volunteer Area and FAQ Chatbot. Registers oha_pwa_board_password (text, plain input), oha_pwa_board_notes (rich text via wp_editor), oha_pwa_board_contacts (textarea, Name|Role|Phone one per line). Save: sanitize_text_field / wp_kses_post / sanitize_textarea_field. Added [oha_board_dashboard] row to shortcode reference table in General tab."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.5",
+                        "type":  "fix",
+                        "summary":  "Bumped plugin version to 3.7.5 to force PWA cache bust",
+                        "notes":  "OHA_PWA_VERSION drives CACHE_VERSION in the service worker and all JS/CSS ?ver= query strings. Version bump forces SW to detect new bytes, install, and bust all oha-convention-v* caches."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.4",
+                        "type":  "feature",
+                        "summary":  "Added [oha_convention_vendors] shortcode — responsive vendor card grid",
+                        "notes":  "Queries vendor_application posts with _oha_status IN (Paid, paid, PAID). Sorted A-Z by company_name post meta using WP_Query named meta_query clause + orderby. Each card shows: logo (from _company_logo_id attachment → 200x200 thumbnail, falls back to _company_logo_url direct URL, then haunted-house placeholder \u0026#127962; if neither). Card shows company name below logo. Dark Halloween theme: black cards (#111), blood-red glow border (rgba(173,49,25,.4)) with hover lift and box-shadow. Responsive grid: repeat(auto-fill, minmax(160px, 1fr)). Empty state shows \u0027🎃 Vendor announcements coming soon!\u0027. Confirmed vendor count shown above grid. Optional title attribute. Drop [oha_convention_vendors] on the vendors page."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "3.7.4",
+                        "type":  "fix",
+                        "summary":  "Bumped plugin version to 3.7.4 to force PWA cache bust",
+                        "notes":  "OHA_PWA_VERSION drives CACHE_VERSION in the service worker and all JS/CSS ?ver= query strings. Without a bump, installed PWAs on Android serve the old shortcode-less code from their SW cache. Version bump forces SW to detect new bytes, install, and bust all oha-convention-v* caches."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "fix",
+                        "summary":  "Fixed [oha_notification_subscribe] shortcode not registering proxy SW on non-convention pages",
+                        "notes":  "pwa-register.js returns early on pages that don\u0027t match the convention URL pattern (e.g. the FAQ page). The shortcode IIFE now self-registers /perfecty-push-sw.js at the Perfecty scope via navigator.serviceWorker.getRegistration() check, so subscriptions work on any page that has the shortcode. Previously showed \u0027Perfecty SW not ready\u0027 error on FAQ."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "fix",
+                        "summary":  "Fixed notification bell incorrectly showing \u0027Blocked\u0027 when Chrome permission was granted but SW failed",
+                        "notes":  "showSettingsGuide(platform) was called on SW/subscription failure even when Notification.permission was \u0027granted\u0027, causing the UI to tell the user notifications were blocked when they weren\u0027t. Added subscriptionFailed boolean parameter: true shows \u0027Setup incomplete - please retry\u0027 with a Retry button; false shows the platform-specific settings guide. Also removed the sessionStorage rate-limit that prevented re-showing on retry. Both call sites that had the wrong case were corrected."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "fix",
+                        "summary":  "Fixed [oha_pwa_onboarding] shortcode always showing \u0027OneSignal not loaded\u0027 error",
+                        "notes":  "The shortcode was polling window.OneSignalDeferred which never loads in the Perfecty branch. Replaced with: urlBase64ToUint8Array() helper, subscribeViaPerfecty(onSuccess, onError) which registers proxy SW if needed, polls until SW is active, calls pushManager.subscribe(), then POSTs to Perfecty REST /v1/push/users. New checkNotificationStatus() reads Notification.permission directly. Enable button handler calls requestPermission() then subscribeViaPerfecty()."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "feature",
+                        "summary":  "Added [oha_local_notification_test] admin-only shortcode for validating local notification delivery",
+                        "notes":  "Admin-only (manage_options). Renders a form with title and message inputs. On submit fires navigator.serviceWorker.ready.then(reg =\u003e reg.showNotification()) - the exact same code path as pwa-reminders.js 5-minute schedule reminders. Shows diagnostic readout on load: SW API support, Notification.permission, all registered SW scopes. Invisible to non-admins. Useful for verifying the reminder system works before convention without needing to create real events."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "fix",
+                        "summary":  "Bumped plugin version to force Android PWA cache update",
+                        "notes":  "CACHE_VERSION in the service worker is tied to OHA_PWA_VERSION via PHP echo. Bumping the version string changes the SW file content, which the browser detects as a new SW and installs it, busting all oha-convention-v* caches. Also changes all JS/CSS query strings (?ver=) forcing fresh asset downloads. Required because the Android PWA was not picking up code changes."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "feature",
+                        "summary":  "Added POST /oha/v1/notifications/send REST endpoint with immediate cron spawn",
+                        "notes":  "Board members (edit_pages) and admins (manage_options) can POST {title, message, url} with WP nonce. Handler calls Perfecty_Push_Lib_Payload::build() then Perfecty_Push_Lib_Push_Server::schedule_broadcast_async() to queue the broadcast. Immediately after queuing, fires wp_remote_get(wp-cron.php?doing_wp_cron, blocking:false) so cron wakes in a background PHP process and Perfecty processes the queue within seconds instead of waiting for the next scheduled cron interval. Returns {id, recipients} on success."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "fix",
+                        "summary":  "Fixed [oha_board_notifications] shortcode still checking dead OneSignal credentials",
+                        "notes":  "The shortcode was checking get_option(\u0027oha_pwa_onesignal_enabled\u0027) and related options which are no longer set, so it always showed \u0027Push notifications not configured\u0027. Replaced with class_exists(\u0027Perfecty_Push_Lib_Push_Server\u0027) check. Now shows live subscriber count from wp_perfecty_push_users on load. Removed the Volunteers/Attendees segment selector (Perfecty broadcasts to all users, no segment support). Send button POSTs to the new /oha/v1/notifications/send endpoint."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "fix",
+                        "summary":  "Removed OneSignal references from [oha_pwa_debug] shortcode",
+                        "notes":  "The \u0027Push Notifications (Phase 3A)\u0027 section was checking oha_pwa_onesignal_enabled, oha_pwa_onesignal_app_id options and polling window.OHANotifications.getDebugInfo() which is OneSignal-specific. Replaced with: Perfecty Plugin Active (class_exists check), VAPID Key Configured (perfecty_push option check), Subscribers (live count from wp_perfecty_push_users), plus client-side Notification.permission check and pushManager.getSubscription() check across all SW registrations. Section renamed to \u0027Push Notifications (Perfecty)\u0027."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "note",
+                        "summary":  "Android and Chrome desktop push notifications confirmed working in foreground and background",
+                        "notes":  "After switching to Perfecty Push (self-hosted VAPID), server-side sends to FCM succeeded (Perfecty logs: Succeeded: 2, Failed: 0). Background delivery on Android requires both Chrome per-site notification permission AND Android system Chrome app notification permission - two separate grants. The UX barrier of two permission steps was considered too high for convention attendees. Decision: accept foreground-only push as acceptable for convention use. The 5-minute schedule reminders (pwa-reminders.js) are client-side setTimeout and work independently of push - they fire via navigator.serviceWorker.ready when the PWA is open, which is the primary convention use case."
+                    },
+                    {
+                        "date":  "2026-03-12",
+                        "version":  "3.7.2",
+                        "type":  "note",
+                        "summary":  "WP-Cron must be triggered externally for reliable Perfecty push delivery",
+                        "notes":  "WordPress pseudo-cron only fires on page visits. Low-traffic periods mean Perfecty\u0027s notification queue sits unprocessed. Recommended fix: set up cron-job.org (free) to hit /wp-cron.php?doing_wp_cron every 1-5 minutes. Optionally add define(\u0027DISABLE_WP_CRON\u0027, true) to wp-config.php to prevent double-runs. The new /oha/v1/notifications/send endpoint spawns cron non-blocking immediately after queuing, so board member sends go out within seconds regardless of cron schedule."
+                    },
+                    {
+                        "date":  "2026-04-02",
+                        "version":  "3.13.1",
+                        "type":  "fix",
+                        "summary":  "SW offline cache miss fixed: await cache.put() and add ignoreVary to caches.match()",
+                        "notes":  "handleDynamicRequest in class-pwa-service-worker.php was not awaiting cache.put(), allowing the SW to terminate before the write completed. caches.match() also lacked ignoreVary:true, causing cache lookups to fail when WordPress Vary:Cookie response headers caused a request header mismatch between cache time and offline retrieval. Both issues caused /convention/ pages (e.g. my-ohc) to show the offline fallback screen even after multiple prior online visits."
+                    },
+                    {
+                        "date":  "2026-04-15",
+                        "version":  "3.15.0",
+                        "type":  "feature",
+                        "summary":  "Added [oha_pwa_settings] shortcode: app info, restore dismissed content, clear saved data",
+                        "notes":  "All localStorage-only. Sections: App Info (version/connection/PWA mode), Restore Dismissed (onboarding keys oha_ob_install_done + oha_ob_notif_done, happenings key oha_happenings_hidden_v1), Clear Saved Data (oha_favorites, oha_favorite_vendors with confirm dialog). Dark themed, pointer-events not needed (full page)."
+                    }
+                ]
+}
