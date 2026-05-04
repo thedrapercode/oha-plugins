@@ -261,14 +261,15 @@
                 ],
             });
 
-            // No beforeId — adds on top of 'background' so the image is visible.
-            // (Booth layers are added later by addBoothLayers and will sit above this.)
+            // Insert the raster layer below booth layers if they already exist
+            // (floor switches re-add this layer; without beforeId it lands on top of pins).
+            var beforeId = self.map.getLayer('booth-hitzone') ? 'booth-hitzone' : undefined;
             self.map.addLayer({
                 id:     'floorplan-raster',
                 type:   'raster',
                 source: 'floorplan',
                 paint:  { 'raster-opacity': 1.0 },
-            });
+            }, beforeId);
 
             if (cb) cb();
         },

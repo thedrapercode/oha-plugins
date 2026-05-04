@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.8.1",
+    "version":  "2.8.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -631,6 +631,13 @@
                         "type":  "fix",
                         "summary":  "X/Y position inputs now accept 2 decimal places (step changed from 0.1 to 0.01)",
                         "notes":  "booth_x and booth_y inputs in render_location_meta_box had step=0.1 which blocked saving values like 80.38 stored by the placement tool."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.8.2",
+                        "type":  "fix",
+                        "summary":  "Floor plan image no longer renders on top of booth pins when switching floors",
+                        "notes":  "loadFloor() now passes beforeId=booth-hitzone when adding floorplan-raster so the raster layer is always below booth layers. On initial load booth layers do not exist yet so beforeId is undefined (correct). On floor switches the raster was being appended to the top of the layer stack covering all pins."
                     }
                 ]
 }
