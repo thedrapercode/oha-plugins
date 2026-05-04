@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.5.0",
+    "version":  "2.7.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -519,6 +519,69 @@
                         "type":  "fix",
                         "summary":  "Fixed old 7-region polygons showing: stale oha_map_regions DB option overrode new 5-region defaults",
                         "notes":  "get_regions() called get_option(\u0027oha_map_regions\u0027, defaults). If the option was saved when 7 regions existed (slugs east/west), it returned old data and the new 5-region polygons were never used. Fixed by checking for isset($regions[\u0027east\u0027]) || isset($regions[\u0027west\u0027]) and falling back to defaults if found. Existing custom region overrides without east/west keys continue to work."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Added vendor Save/Remove favorites button to booth detail card (vendor type only)",
+                        "notes":  "Writes to localStorage oha_favorite_vendors, same key used by PWA [oha_favorite_vendors] shortcode. Stored data: {id, name, logo, booth}. Button reflects saved state on card open. _currentBoothCard stored on instance for click handler."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "fix",
+                        "summary":  "Added vendorHubId and description to GeoJSON booth properties",
+                        "notes":  "vendorHubId was missing from boothsToGeoJSON so map-click cards could not read vendor hub ID for favorites. description field now passed from PHP get_booths() post_content."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "fix",
+                        "summary":  "Replaced emoji HTML entities in booth card info rows with inline SVG icons",
+                        "notes":  "clock emoji (\u0026#x23F0;) and person emoji (\u0026#x1F464;) replaced with inline SVG to comply with no-emojis rule in CLAUDE.md."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Added booth description from post_content; non-vendor booths can show details via WP editor",
+                        "notes":  "get_booths() now reads post_content (wp_strip_all_tags, 40 words) into description field. showBoothCard uses description || vendorDesc."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Floor switching moved to persistent floating pills on mobile map; removed from filter sheet",
+                        "notes":  "Two pill buttons float top-left below the filter pill (.oha-mob-floor-bar). Only shown when floors \u003e 1. Removed floor section from filter sheet since always visible now."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Added food_truck booth type with amber color distinct from food type",
+                        "notes":  "Key: food_truck, label: Food Truck, color: #e67e22. Icon reuses conv-food.svg. Added to TYPE_COLORS and TYPE_ICONS in JS and all three PHP helper methods."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "fix",
+                        "summary":  "Reduced booth pin circle radius and hitzone to reduce overlap on dense floor plans",
+                        "notes":  "circle-radius changed from 5/9/14 to 3/5/7 at zoom 6/12/18. hitzone radius 20px to 14px. Icon size scaled down to match. All now derived from pinSize setting."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "feature",
+                        "summary":  "Added Booth Pin Size setting in Convention Settings admin (range 2-20, default 5)",
+                        "notes":  "Stored as pin_size in oha_convention_settings. Passed to JS as config.pinSize. addBoothLayers computes hitzone, r6, r18, icon sizes proportionally from this base value."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.0",
+                        "type":  "fix",
+                        "summary":  "Floor plan image URLs include attachment modified-time as cache-bust param",
+                        "notes":  "?v=UNIX_TIMESTAMP appended using get_post_modified_time on image_id at render time. Changes automatically when admin replaces the floor plan image in WordPress Media. Busts browser, CDN, and PWA service worker cache."
                     }
                 ]
 }

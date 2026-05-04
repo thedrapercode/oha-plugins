@@ -1701,6 +1701,15 @@ class OHA_Map_Admin {
                             <input type="text" name="conv[venue_name]" id="conv_venue_name" value="<?php echo esc_attr($settings['venue_name']); ?>" class="regular-text" placeholder="Greater Columbus Convention Center">
                         </td>
                     </tr>
+                    <tr>
+                        <th><label for="conv_pin_size"><?php _e('Booth Pin Size', 'oha-modern-map'); ?></label></th>
+                        <td>
+                            <input type="number" name="conv[pin_size]" id="conv_pin_size"
+                                   value="<?php echo esc_attr($settings['pin_size'] ?? 5); ?>"
+                                   min="2" max="20" step="1" style="width:80px">
+                            <p class="description"><?php _e('Circle radius of booth pins at normal zoom, in pixels. Default: 5. Increase if pins are hard to tap; decrease if they overlap.', 'oha-modern-map'); ?></p>
+                        </td>
+                    </tr>
                 </table>
 
                 <!-- Floors -->
@@ -1943,6 +1952,7 @@ class OHA_Map_Admin {
             'event_name'  => sanitize_text_field($data['event_name'] ?? ''),
             'event_dates' => sanitize_text_field($data['event_dates'] ?? ''),
             'venue_name'  => sanitize_text_field($data['venue_name'] ?? ''),
+            'pin_size'    => max(2, min(20, intval($data['pin_size'] ?? 5))),
             'floors'      => [],
         ];
 

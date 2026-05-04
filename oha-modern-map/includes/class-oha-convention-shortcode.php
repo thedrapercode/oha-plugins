@@ -61,12 +61,22 @@ class OHA_Convention_Shortcode {
         $types     = OHA_Convention_Data::get_booth_types();
         $is_mobile = ($atts['mobile'] === 'true');
 
-        // Build floor JS data (id, label, image_url, bg_color)
+        // Build floor JS data (id, label, image_url, bg_color).
+        // Append ?v={modified_time} to the image URL so that replacing the
+        // floor plan image busts the browser cache, CDN cache, and PWA service
+        // worker cache automatically — no manual cache clearing needed.
         $floors_js = array_map(function($f) {
+            $image_url = $f['image_url'] ?? '';
+            if ($image_url && !empty($f['image_id'])) {
+                $modified = get_post_modified_time('U', true, (int) $f['image_id']);
+                if ($modified) {
+                    $image_url = add_query_arg('v', $modified, $image_url);
+                }
+            }
             return [
                 'id'       => (int) $f['id'],
                 'label'    => $f['label'],
-                'imageUrl' => $f['image_url'] ?? '',
+                'imageUrl' => $image_url,
                 'bgColor'  => $f['bg_color'] ?? '#1a1a2e',
             ];
         }, $floors);
@@ -104,6 +114,18 @@ class OHA_Convention_Shortcode {
                     <span class="oha-mob-pill-text"><?php _e('Filters', 'oha-modern-map'); ?></span>
                     <span class="oha-mob-pill-badge" style="display:none">0</span>
                 </button>
+
+                <!-- Floating floor switcher (persistent, below filter pill) -->
+                <?php if (count($floors) > 1) : ?>
+                <div class="oha-mob-floor-bar">
+                    <?php foreach ($floors as $f) : ?>
+                    <button class="oha-mob-floor-pill oha-floor-btn <?php echo ((int) $f['id'] === $floor_id) ? 'active' : ''; ?>"
+                            data-floor="<?php echo esc_attr($f['id']); ?>">
+                        <?php echo esc_html($f['label']); ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
 
                 <!-- Floating top-right: Search -->
                 <div class="oha-mob-top-right">
@@ -171,20 +193,6 @@ class OHA_Convention_Shortcode {
                 <div class="oha-mob-sheet-panel">
                     <div class="oha-mob-sheet-handle"></div>
                     <div class="oha-mob-sheet-body">
-
-                        <?php if (count($floors) > 1) : ?>
-                        <div class="oha-mob-filter-section">
-                            <span class="oha-mob-section-label"><?php _e('Floor', 'oha-modern-map'); ?></span>
-                            <div class="oha-floor-pills">
-                                <?php foreach ($floors as $f) : ?>
-                                <button class="oha-pill oha-floor-btn <?php echo ((int) $f['id'] === $floor_id) ? 'active' : ''; ?>"
-                                        data-floor="<?php echo esc_attr($f['id']); ?>">
-                                    <?php echo esc_html($f['label']); ?>
-                                </button>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        <?php endif; ?>
 
                         <div class="oha-mob-filter-section">
                             <span class="oha-mob-section-label"><?php _e('Type', 'oha-modern-map'); ?></span>
@@ -272,6 +280,7 @@ class OHA_Convention_Shortcode {
                 'initialFloor' => $floor_id,
                 'showList'     => true,
                 'mobile'       => true,
+                'pinSize'      => intval($settings['pin_size'] ?? 5),
                 'eventName'    => $settings['event_name'] ?? '',
                 'venueName'    => $settings['venue_name'] ?? '',
             ]); ?>;
@@ -427,16 +436,17 @@ class OHA_Convention_Shortcode {
         <script>
         (function() {
             var convData = <?php echo wp_json_encode([
-                'mapId'       => $map_id . '-map',
-                'wrapperId'   => $map_id,
-                'ajaxUrl'     => admin_url('admin-ajax.php'),
-                'nonce'       => wp_create_nonce('oha_map_nonce'),
-                'pluginUrl'   => OHA_MODERN_MAP_URL,
-                'floors'      => $floors_js,
-                'initialFloor'=> $floor_id,
-                'showList'    => $atts['show_list'] === 'true',
-                'eventName'   => $settings['event_name'] ?? '',
-                'venueName'   => $settings['venue_name'] ?? '',
+                'mapId'        => $map_id . '-map',
+                'wrapperId'    => $map_id,
+                'ajaxUrl'      => admin_url('admin-ajax.php'),
+                'nonce'        => wp_create_nonce('oha_map_nonce'),
+                'pluginUrl'    => OHA_MODERN_MAP_URL,
+                'floors'       => $floors_js,
+                'initialFloor' => $floor_id,
+                'showList'     => $atts['show_list'] === 'true',
+                'pinSize'      => intval($settings['pin_size'] ?? 5),
+                'eventName'    => $settings['event_name'] ?? '',
+                'venueName'    => $settings['venue_name'] ?? '',
             ]); ?>;
             window.ohaConventionConfig = window.ohaConventionConfig || [];
             window.ohaConventionConfig.push(convData);

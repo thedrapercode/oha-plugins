@@ -322,6 +322,12 @@ class OHA_Convention_Data {
             $height_pct     = (float) get_post_meta($post->ID, '_booth_height', true);
             $booth_year     = get_post_meta($post->ID, '_booth_year', true) ?: $year;
 
+            // Booth description from post content (editor field)
+            $description = '';
+            if (!empty($post->post_content)) {
+                $description = wp_trim_words(wp_strip_all_tags($post->post_content), 40, '...');
+            }
+
             // Post thumbnail
             $thumbnail = '';
             if (has_post_thumbnail($post->ID)) {
@@ -379,6 +385,7 @@ class OHA_Convention_Data {
                 'contact'        => $contact,
                 'website'        => $website,
                 'color'          => $color,
+                'description'    => $description,
                 'thumbnail'      => $thumbnail,
                 'vendor_id'      => $vendor_id,
                 'vendor_hub_id'  => $vendor_hub_id,
@@ -689,6 +696,7 @@ class OHA_Convention_Data {
             'event_name'  => '',
             'event_dates' => '',
             'venue_name'  => '',
+            'pin_size'    => 5,
             'floors'      => [
                 [
                     'id'        => 1,
@@ -725,41 +733,44 @@ class OHA_Convention_Data {
 
     public static function get_booth_types() {
         return apply_filters('oha_convention_booth_types', [
-            'vendor'   => __('Vendor', 'oha-modern-map'),
-            'food'     => __('Food & Drink', 'oha-modern-map'),
-            'restroom' => __('Restrooms', 'oha-modern-map'),
-            'class'    => __('Class / Seminar', 'oha-modern-map'),
-            'stage'    => __('Stage / Performance', 'oha-modern-map'),
-            'info'     => __('Information', 'oha-modern-map'),
-            'exit'     => __('Exit / Entrance', 'oha-modern-map'),
-            'general'  => __('General', 'oha-modern-map'),
+            'vendor'     => __('Vendor', 'oha-modern-map'),
+            'food'       => __('Food & Drink', 'oha-modern-map'),
+            'food_truck' => __('Food Truck', 'oha-modern-map'),
+            'restroom'   => __('Restrooms', 'oha-modern-map'),
+            'class'      => __('Class / Seminar', 'oha-modern-map'),
+            'stage'      => __('Stage / Performance', 'oha-modern-map'),
+            'info'       => __('Information', 'oha-modern-map'),
+            'exit'       => __('Exit / Entrance', 'oha-modern-map'),
+            'general'    => __('General', 'oha-modern-map'),
         ]);
     }
 
     public static function get_color_for_type($type) {
         $colors = [
-            'vendor'   => '#ff6b35',
-            'food'     => '#ffd700',
-            'restroom' => '#00b4d8',
-            'class'    => '#9d4edd',
-            'stage'    => '#e74c3c',
-            'info'     => '#27ae60',
-            'exit'     => '#95a5a6',
-            'general'  => '#7f8c8d',
+            'vendor'     => '#ff6b35',
+            'food'       => '#ffd700',
+            'food_truck' => '#e67e22',
+            'restroom'   => '#00b4d8',
+            'class'      => '#9d4edd',
+            'stage'      => '#e74c3c',
+            'info'       => '#27ae60',
+            'exit'       => '#95a5a6',
+            'general'    => '#7f8c8d',
         ];
         return $colors[$type] ?? '#7f8c8d';
     }
 
     public static function get_icon_for_type($type) {
         $icons = [
-            'vendor'   => 'conv-vendor',
-            'food'     => 'conv-food',
-            'restroom' => 'conv-restroom',
-            'class'    => 'conv-class',
-            'stage'    => 'conv-stage',
-            'info'     => 'conv-info',
-            'exit'     => 'conv-exit',
-            'general'  => 'conv-general',
+            'vendor'     => 'conv-vendor',
+            'food'       => 'conv-food',
+            'food_truck' => 'conv-food',
+            'restroom'   => 'conv-restroom',
+            'class'      => 'conv-class',
+            'stage'      => 'conv-stage',
+            'info'       => 'conv-info',
+            'exit'       => 'conv-exit',
+            'general'    => 'conv-general',
         ];
         return $icons[$type] ?? 'conv-general';
     }

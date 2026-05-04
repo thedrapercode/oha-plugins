@@ -761,6 +761,48 @@
 }
 
 /* -----------------------------------------------------------------------
+ * Persistent floor pill bar — top left, below filter pill
+ * --------------------------------------------------------------------- */
+.oha-mob-floor-bar {
+    position: absolute;
+    top: 54px;
+    left: 14px;
+    z-index: 20;
+    display: flex;
+    gap: 5px;
+}
+
+.oha-mob-floor-pill {
+    display: flex;
+    align-items: center;
+    background: rgba(22, 33, 62, 0.88);
+    color: var(--oha-text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background var(--oha-transition), color var(--oha-transition), border-color var(--oha-transition);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.oha-mob-floor-pill.active {
+    background: var(--oha-accent);
+    color: #fff;
+    border-color: var(--oha-accent);
+}
+
+.oha-mob-floor-pill:hover:not(.active) {
+    background: rgba(22, 33, 62, 1);
+    color: var(--oha-text);
+}
+
+/* -----------------------------------------------------------------------
  * Top-right action button group (search icon, etc.)
  * --------------------------------------------------------------------- */
 .oha-mob-top-right {
@@ -1077,4 +1119,37 @@
     flex: 1 1 auto;
     overflow-y: auto;
     overscroll-behavior: contain;
+}
+
+/* -----------------------------------------------------------------------
+ * Booth card — Favorite button (vendors only)
+ * --------------------------------------------------------------------- */
+.oha-conv-card-fav-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 4px 16px 16px;
+    padding: 11px 16px;
+    background: rgba(255, 107, 53, 0.1);
+    border: 1.5px solid var(--oha-accent);
+    border-radius: 8px;
+    color: var(--oha-accent);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: background var(--oha-transition), color var(--oha-transition);
+    line-height: 1;
+}
+
+.oha-conv-card-fav-btn:hover {
+    background: rgba(255, 107, 53, 0.22);
+}
+
+.oha-conv-card-fav-btn.active {
+    background: var(--oha-accent);
+    color: #fff;
+}
+
+.oha-conv-card-fav-btn.active:hover {
+    background: #e55c2a;
 }

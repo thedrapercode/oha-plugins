@@ -25,26 +25,28 @@
 
     // Map type key → default marker color
     var TYPE_COLORS = {
-        vendor:   '#ff6b35',
-        food:     '#ffd700',
-        restroom: '#00b4d8',
-        class:    '#9d4edd',
-        stage:    '#e74c3c',
-        info:     '#27ae60',
-        exit:     '#95a5a6',
-        general:  '#7f8c8d',
+        vendor:     '#ff6b35',
+        food:       '#ffd700',
+        food_truck: '#e67e22',
+        restroom:   '#00b4d8',
+        class:      '#9d4edd',
+        stage:      '#e74c3c',
+        info:       '#27ae60',
+        exit:       '#95a5a6',
+        general:    '#7f8c8d',
     };
 
     // Icon names used with map.addImage (must match SVG files loaded)
     var TYPE_ICONS = {
-        vendor:   'conv-vendor',
-        food:     'conv-food',
-        restroom: 'conv-restroom',
-        class:    'conv-class',
-        stage:    'conv-stage',
-        info:     'conv-info',
-        exit:     'conv-exit',
-        general:  'conv-general',
+        vendor:     'conv-vendor',
+        food:       'conv-food',
+        food_truck: 'conv-food',
+        restroom:   'conv-restroom',
+        class:      'conv-class',
+        stage:      'conv-stage',
+        info:       'conv-info',
+        exit:       'conv-exit',
+        general:    'conv-general',
     };
 
     /* -----------------------------------------------------------------------
@@ -341,6 +343,17 @@
         addBoothLayers: function () {
             var self = this;
 
+            // Pin size: admin-configurable radius at zoom 12 (default 5).
+            // All other sizes scale proportionally from this base.
+            var s        = self.config.pinSize || 5;
+            var hitzone  = Math.round(s * 2.8);
+            var r6       = Math.round(s * 0.6 * 10) / 10;
+            var r18      = Math.round(s * 1.4 * 10) / 10;
+            var iconBase = s / 5;   // 1.0 at default size 5
+            var i6       = Math.round(iconBase * 0.20 * 1000) / 1000;
+            var i12      = Math.round(iconBase * 0.32 * 1000) / 1000;
+            var i18      = Math.round(iconBase * 0.45 * 1000) / 1000;
+
             // Empty source — data populated after AJAX
             self.map.addSource('booths', {
                 type:    'geojson',
@@ -348,13 +361,13 @@
                 cluster: false,
             });
 
-            // Hit zone (transparent large circle for easier tapping on mobile)
+            // Hit zone (transparent circle for easier tapping on mobile)
             self.map.addLayer({
                 id:     'booth-hitzone',
                 type:   'circle',
                 source: 'booths',
                 paint:  {
-                    'circle-radius':  20,
+                    'circle-radius':  hitzone,
                     'circle-opacity': 0,
                     'circle-color':   'transparent',
                 },
@@ -369,9 +382,9 @@
                     'circle-color':        ['get', 'typeColor'],
                     'circle-radius':       [
                         'interpolate', ['linear'], ['zoom'],
-                        6,  5,
-                        12, 9,
-                        18, 14,
+                        6,  r6,
+                        12, s,
+                        18, r18,
                     ],
                     'circle-stroke-color': 'rgba(255,255,255,0.85)',
                     'circle-stroke-width': 1.5,
@@ -388,9 +401,9 @@
                     'icon-image':         ['get', 'icon'],
                     'icon-size':          [
                         'interpolate', ['linear'], ['zoom'],
-                        6,  0.3,
-                        12, 0.45,
-                        18, 0.65,
+                        6,  i6,
+                        12, i12,
+                        18, i18,
                     ],
                     'icon-allow-overlap': true,
                     'icon-anchor':        'center',
@@ -492,26 +505,28 @@
                     type: 'Feature',
                     geometry: { type: 'Point', coordinates: [lng, lat] },
                     properties: {
-                        id:         b.id,
-                        title:      b.title || '',
-                        number:     b.number || '',
-                        type:       b.type || 'general',
-                        typeLabel:  b.type_label || '',
-                        typeColor:  b.type_color || '#7f8c8d',
-                        icon:       b.icon || 'conv-general',
-                        floor:      b.floor || 1,
-                        status:     b.status || 'open',
-                        hours:      b.hours || '',
-                        contact:    b.contact || '',
-                        website:    b.website || '',
-                        thumbnail:  b.thumbnail || '',
-                        vendorName: b.vendor_name || '',
-                        vendorLogo: b.vendor_logo || '',
-                        vendorDesc: b.vendor_desc || '',
-                        vendorId:   b.vendor_id || 0,
-                        editUrl:    b.edit_url || '',
-                        x:          b.x,
-                        y:          b.y,
+                        id:           b.id,
+                        title:        b.title || '',
+                        number:       b.number || '',
+                        type:         b.type || 'general',
+                        typeLabel:    b.type_label || '',
+                        typeColor:    b.type_color || '#7f8c8d',
+                        icon:         b.icon || 'conv-general',
+                        floor:        b.floor || 1,
+                        status:       b.status || 'open',
+                        hours:        b.hours || '',
+                        contact:      b.contact || '',
+                        website:      b.website || '',
+                        description:  b.description || '',
+                        thumbnail:    b.thumbnail || '',
+                        vendorName:   b.vendor_name || '',
+                        vendorLogo:   b.vendor_logo || '',
+                        vendorDesc:   b.vendor_desc || '',
+                        vendorHubId:  b.vendor_hub_id || 0,
+                        vendorId:     b.vendor_id || 0,
+                        editUrl:      b.edit_url || '',
+                        x:            b.x,
+                        y:            b.y,
                     },
                 };
             });
@@ -649,15 +664,19 @@
 
             // Normalize — might be from GeoJSON properties (serialized) or raw booth object
             var b = typeof props === 'string' ? JSON.parse(props) : props;
+            self._currentBoothCard = b;
             // Property names vary (camelCase from GeoJSON vs snake_case from AJAX)
-            var displayName = b.vendorName || b.vendor_name || b.title || '';
-            var logo        = b.vendorLogo || b.vendor_logo || b.thumbnail || '';
-            var vendorDesc  = b.vendorDesc || b.vendor_desc || '';
-            var typeLabel   = b.typeLabel  || b.type_label  || '';
-            var typeColor   = b.typeColor  || b.type_color  || '#7f8c8d';
-            var statusMap   = { open: 'Open', closed: 'Closed', tbd: 'TBD' };
-            var status      = statusMap[b.status] || '';
-            var statusClass = b.status === 'open' ? 'open' : (b.status === 'closed' ? 'closed' : 'tbd');
+            var displayName  = b.vendorName || b.vendor_name || b.title || '';
+            var logo         = b.vendorLogo || b.vendor_logo || b.thumbnail || '';
+            var vendorDesc   = b.vendorDesc || b.vendor_desc || '';
+            var description  = b.description || vendorDesc || '';
+            var typeLabel    = b.typeLabel   || b.type_label  || '';
+            var typeColor    = b.typeColor   || b.type_color  || '#7f8c8d';
+            var vendorHubId  = b.vendorHubId || b.vendor_hub_id || 0;
+            var isVendorType = (b.type || '').toLowerCase() === 'vendor';
+            var statusMap    = { open: 'Open', closed: 'Closed', tbd: 'TBD' };
+            var status       = statusMap[b.status] || '';
+            var statusClass  = b.status === 'open' ? 'open' : (b.status === 'closed' ? 'closed' : 'tbd');
 
             var html = '';
 
@@ -674,16 +693,26 @@
             html += '</div>';
             html += '</div>';
 
-            if (vendorDesc) {
-                html += '<p class="oha-conv-card-desc">' + escHtml(vendorDesc) + '</p>';
+            if (description) {
+                html += '<p class="oha-conv-card-desc">' + escHtml(description) + '</p>';
             }
 
+            var iconClock  = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><polyline points="8,4.5 8,8 10.5,10"/></svg>';
+            var iconPerson = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c0-2.76 2.24-5 5-5s5 2.24 5 5"/></svg>';
+
             var infoRows = '';
-            if (b.hours)   infoRows += '<div class="oha-conv-card-row"><span class="oha-conv-card-icon">&#x23F0;</span>' + escHtml(b.hours) + '</div>';
-            if (b.contact) infoRows += '<div class="oha-conv-card-row"><span class="oha-conv-card-icon">&#x1F464;</span>' + escHtml(b.contact) + '</div>';
+            if (b.hours)   infoRows += '<div class="oha-conv-card-row"><span class="oha-conv-card-icon">' + iconClock  + '</span>' + escHtml(b.hours)   + '</div>';
+            if (b.contact) infoRows += '<div class="oha-conv-card-row"><span class="oha-conv-card-icon">' + iconPerson + '</span>' + escHtml(b.contact) + '</div>';
             if (b.website) infoRows += '<div class="oha-conv-card-row"><a href="' + escHtml(b.website) + '" target="_blank" rel="noopener" class="oha-conv-card-link">Visit Website</a></div>';
 
             if (infoRows) html += '<div class="oha-conv-card-info">' + infoRows + '</div>';
+
+            if (isVendorType && vendorHubId) {
+                var isFav = self.isFavoriteVendor(vendorHubId);
+                html += '<button class="oha-conv-card-fav-btn' + (isFav ? ' active' : '') + '" data-vendor-hub-id="' + escHtml(String(vendorHubId)) + '" aria-label="' + (isFav ? 'Remove from saved vendors' : 'Save to My Vendors') + '">'
+                    + (isFav ? 'Remove from Saved' : 'Save to My Vendors')
+                    + '</button>';
+            }
 
             if (b.editUrl) {
                 html += '<a href="' + escHtml(b.editUrl) + '" class="oha-conv-card-edit" target="_blank">Edit Booth</a>';
@@ -944,6 +973,13 @@
                 self.hideBoothCard();
             });
 
+            // Favorites button — vendor booths only
+            $sheet.on('click', '.oha-conv-card-fav-btn', function () {
+                if (self._currentBoothCard) {
+                    self.toggleFavoriteVendor(self._currentBoothCard, $(this));
+                }
+            });
+
             // Swipe-down to dismiss
             var startY = 0;
             var $panel = $sheet.find('.oha-bottom-sheet-panel');
@@ -954,6 +990,46 @@
                 var delta = e.changedTouches[0].clientY - startY;
                 if (delta > 80) self.hideBoothCard();
             }, { passive: true });
+        },
+
+        /* -------------------------------------------------------------------
+         * Vendor Favorites  (localStorage key: 'oha_favorite_vendors')
+         * Shared with the PWA's favorite vendors system.
+         * ----------------------------------------------------------------- */
+
+        getFavoriteVendors: function () {
+            try { return JSON.parse(localStorage.getItem('oha_favorite_vendors') || '{}'); }
+            catch (e) { return {}; }
+        },
+
+        saveFavoriteVendors: function (favorites) {
+            try { localStorage.setItem('oha_favorite_vendors', JSON.stringify(favorites)); }
+            catch (e) {}
+        },
+
+        isFavoriteVendor: function (vendorHubId) {
+            return !!this.getFavoriteVendors()[String(vendorHubId)];
+        },
+
+        toggleFavoriteVendor: function (b, $btn) {
+            var vendorHubId = String(b.vendorHubId || b.vendor_hub_id || 0);
+            if (!vendorHubId || vendorHubId === '0') return;
+            var favorites = this.getFavoriteVendors();
+            if (favorites[vendorHubId]) {
+                delete favorites[vendorHubId];
+                $btn.text('Save to My Vendors').removeClass('active')
+                    .attr('aria-label', 'Save to My Vendors');
+            } else {
+                favorites[vendorHubId] = {
+                    id:    parseInt(vendorHubId, 10),
+                    name:  b.vendorName  || b.vendor_name  || b.title || '',
+                    logo:  b.vendorLogo  || b.vendor_logo  || b.thumbnail || '',
+                    booth: b.number || '',
+                };
+                $btn.text('Remove from Saved').addClass('active')
+                    .attr('aria-label', 'Remove from saved vendors');
+            }
+            this.saveFavoriteVendors(favorites);
         },
 
         /* -------------------------------------------------------------------
