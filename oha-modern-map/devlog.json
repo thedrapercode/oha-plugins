@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.7.0",
+    "version":  "2.7.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -582,6 +582,13 @@
                         "type":  "fix",
                         "summary":  "Floor plan image URLs include attachment modified-time as cache-bust param",
                         "notes":  "?v=UNIX_TIMESTAMP appended using get_post_modified_time on image_id at render time. Changes automatically when admin replaces the floor plan image in WordPress Media. Busts browser, CDN, and PWA service worker cache."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.7.1",
+                        "type":  "fix",
+                        "summary":  "Fix vendor_hub_id never saved to booth meta due to wrong POST key in both JS save paths",
+                        "notes":  "admin-placement.js had two $.post calls sending vendor_id instead of vendor_hub_id. PHP save_booth_placement reads [vendor_hub_id] so the value was always 0, meaning _booth_vendor_hub_id was never written. This broke the Find Booth link in PWA vendor cards and the oha_vendor deep-link on the map. After installing this fix, re-save each vendor booth in Booth Placement admin to populate _booth_vendor_hub_id for existing booths."
                     }
                 ]
 }
