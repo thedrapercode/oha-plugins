@@ -92,8 +92,7 @@ function oha_pwa_download_shortcode( $atts ) {
 
 <!-- ── MOBILE INSTALL BANNER (JS shows on mobile only) ─────────────────── -->
 <div class="oha-dl-mobile-banner" id="oha-dl-mobile-banner" style="display:none;">
-    <span id="oha-dl-mob-label">&#128242; You&#8217;re on mobile</span>
-    &#8212; install this as a free app in seconds. No App Store needed!
+    <span id="oha-dl-mob-label">&#128242; You&#8217;re on mobile</span>. Install this as a free app in seconds. No App Store needed!
     <a href="#oha-dl-how-to-install" class="oha-dl-mob-cta">Show Me How &#8595;</a>
 </div>
 
@@ -148,7 +147,7 @@ function oha_pwa_download_shortcode( $atts ) {
 <!-- ── DESKTOP: GET IT ON YOUR PHONE (hidden on mobile by CSS + JS) ─────── -->
 <div class="oha-dl-section oha-dl-desktop-only">
     <h2 class="oha-dl-section-title">&#128242; Get It On Your Phone</h2>
-    <p class="oha-dl-section-sub">You&#8217;re on a desktop &#8212; send this page to your phone and install in seconds.</p>
+    <p class="oha-dl-section-sub">You&#8217;re on a desktop. Send this page to your phone and install in seconds.</p>
     <div class="oha-dl-bridge">
         <div class="oha-dl-bridge-qr">
             <img src="<?php echo esc_attr( $qr_src ); ?>" width="160" height="160"
@@ -157,7 +156,7 @@ function oha_pwa_download_shortcode( $atts ) {
         </div>
         <div class="oha-dl-bridge-or">or</div>
         <div class="oha-dl-bridge-share">
-            <strong>Use Chrome &#8212; Send to Your Devices</strong>
+            <strong>Use Chrome: Send to Your Devices</strong>
             <ol class="oha-dl-steps oha-dl-steps-sm" style="margin-top:10px;">
                 <li><span class="oha-dl-step-n">1</span><div class="oha-dl-step-body">Click the <strong>&#8942; three-dot menu</strong> in Chrome</div></li>
                 <li><span class="oha-dl-step-n">2</span><div class="oha-dl-step-body">Choose <strong>&#8220;Cast, save, and share&#8221;</strong></div></li>
@@ -232,7 +231,7 @@ function oha_pwa_download_shortcode( $atts ) {
             <?php endif; ?>
             <div class="oha-dl-feature-icon">&#128717;</div>
             <h3>Vendor Favorites</h3>
-            <p>Browse all vendors and heart the ones you must visit. Your must-see list is always one tap away &#8212; even offline.</p>
+            <p>Browse all vendors and heart the ones you must visit. Your must-see list is always one tap away, even offline.</p>
             <div class="oha-dl-feature-tags">
                 <span>&#10084;&#65039; Save Vendors</span><span>&#128506; Find on Map</span>
             </div>
@@ -264,7 +263,7 @@ function oha_pwa_download_shortcode( $atts ) {
             <?php endif; ?>
             <div class="oha-dl-feature-icon">&#128276;</div>
             <h3>Push Notifications</h3>
-            <p>Get real-time alerts from convention organizers &#8212; schedule changes, special announcements, and reminders for saved sessions.</p>
+            <p>Get real-time alerts from convention organizers: schedule changes, special announcements, and reminders for saved sessions.</p>
             <div class="oha-dl-feature-tags">
                 <span>&#128226; Announcements</span><span>&#9200; Reminders</span><span>&#128680; Alerts</span>
             </div>
@@ -319,9 +318,9 @@ function oha_pwa_download_shortcode( $atts ) {
             <button id="oha-dl-android-native-btn" class="oha-dl-btn oha-dl-btn-primary oha-dl-btn-block">&#128242; Tap Here to Install Now</button>
         </div>
         <ol class="oha-dl-steps">
-            <li><span class="oha-dl-step-n">1</span><div class="oha-dl-step-body"><strong>Open this page in Chrome</strong><span>Make sure you&#8217;re in Google Chrome &#8212; not a browser inside Gmail, Facebook, or another app.</span></div></li>
+            <li><span class="oha-dl-step-n">1</span><div class="oha-dl-step-body"><strong>Open this page in Chrome</strong><span>Make sure you&#8217;re in Google Chrome, not a browser inside Gmail, Facebook, or another app.</span></div></li>
             <li><span class="oha-dl-step-n">2</span><div class="oha-dl-step-body"><strong>Tap the three-dot menu &#8942; in the top-right</strong><span>It&#8217;s the vertical dots in the upper-right corner of Chrome.</span></div></li>
-            <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body"><strong>Tap &#8220;Add to Home Screen&#8221; or &#8220;Install App&#8221;</strong><span>You may also see an install banner pop up at the bottom &#8212; tap that!</span></div></li>
+            <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body"><strong>Tap &#8220;Add to Home Screen&#8221; or &#8220;Install App&#8221;</strong><span>You may also see an install banner pop up at the bottom. Tap that instead.</span></div></li>
             <li><span class="oha-dl-step-n">4</span><div class="oha-dl-step-body"><strong>Tap &#8220;Install&#8221;</strong><span>The app will be added to your home screen and app drawer.</span></div></li>
             <li><span class="oha-dl-step-n">5</span><div class="oha-dl-step-body"><strong>Open it from your home screen &#127881;</strong><span>Tap the new icon for the full-screen app experience!</span></div></li>
         </ol>
@@ -334,7 +333,7 @@ function oha_pwa_download_shortcode( $atts ) {
             <li><span class="oha-dl-step-n">1</span><div class="oha-dl-step-body"><strong>Open this page in Safari</strong><span>Copy the link and paste it into Safari if you&#8217;re currently in another browser.</span></div></li>
             <li><span class="oha-dl-step-n">2</span><div class="oha-dl-step-body"><strong>Tap the Share button &#9096;&#65039;</strong><span>The Share button (a box with an upward arrow) is at the bottom on iPhone, top-right on iPad.</span></div></li>
             <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body"><strong>Scroll down and tap &#8220;Add to Home Screen&#8221;</strong><span>Scroll down in the share sheet if you don&#8217;t see it right away.</span></div></li>
-            <li><span class="oha-dl-step-n">4</span><div class="oha-dl-step-body"><strong>Name it and tap &#8220;Add&#8221;</strong><span>We suggest &#8220;OHC 2026&#8221; &#8212; tap Add in the top-right corner to confirm.</span></div></li>
+            <li><span class="oha-dl-step-n">4</span><div class="oha-dl-step-body"><strong>Name it and tap &#8220;Add&#8221;</strong><span>We suggest &#8220;OHC 2026&#8221;. Tap Add in the top-right corner to confirm.</span></div></li>
             <li><span class="oha-dl-step-n">5</span><div class="oha-dl-step-body"><strong>Open it from your Home Screen &#127881;</strong><span>Find the new icon and tap it for the full-screen, native app experience!</span></div></li>
         </ol>
         <div class="oha-dl-tip">&#128161; <strong>Push notifications on iPhone require iOS 16.4 or later.</strong> Go to Settings &#8594; General &#8594; Software Update to check. Notifications require opening the app from your Home Screen (not Safari).</div>
@@ -357,7 +356,7 @@ function oha_pwa_download_shortcode( $atts ) {
     <p class="oha-dl-section-sub">Notifications make the app dramatically more useful at the convention.</p>
     <div class="oha-dl-notif-reasons">
         <div class="oha-dl-notif-reason"><span class="oha-dl-notif-ico">&#9200;</span><div><strong>5-Minute Session Reminders</strong><p>Save sessions to favorites and get an automatic heads-up 5 minutes before they start. Never walk in late.</p></div></div>
-        <div class="oha-dl-notif-reason"><span class="oha-dl-notif-ico">&#128226;</span><div><strong>Live Convention Announcements</strong><p>Real-time messages from OHA organizers &#8212; schedule changes, room moves, special events, and more.</p></div></div>
+        <div class="oha-dl-notif-reason"><span class="oha-dl-notif-ico">&#128226;</span><div><strong>Live Convention Announcements</strong><p>Real-time messages from OHA organizers: schedule changes, room moves, special events, and more.</p></div></div>
         <div class="oha-dl-notif-reason"><span class="oha-dl-notif-ico">&#128680;</span><div><strong>Emergency and Time-Sensitive Alerts</strong><p>Stay informed if something important happens at the venue. No spam &#8212; only what matters.</p></div></div>
     </div>
     <h3 class="oha-dl-sub-title">How to Enable Notifications</h3>
@@ -369,7 +368,7 @@ function oha_pwa_download_shortcode( $atts ) {
         <ol class="oha-dl-steps oha-dl-steps-sm">
             <li><span class="oha-dl-step-n">1</span><div class="oha-dl-step-body"><strong>Install and open the app</strong> from your home screen (steps above)</div></li>
             <li><span class="oha-dl-step-n">2</span><div class="oha-dl-step-body"><strong>Tap &#8220;Enable Notifications&#8221;</strong> anywhere you see it in the app</div></li>
-            <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body">When Chrome asks &#8220;Allow notifications?&#8221; &#8212; tap <strong>Allow</strong></div></li>
+            <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body">When Chrome asks &#8220;Allow notifications?&#8221;, tap <strong>Allow</strong></div></li>
             <li><span class="oha-dl-step-n">4</span><div class="oha-dl-step-body">If still not working: <strong>Settings &#8594; Apps &#8594; Chrome &#8594; Notifications &#8594; turn ON</strong></div></li>
         </ol>
     </div>
@@ -378,7 +377,7 @@ function oha_pwa_download_shortcode( $atts ) {
         <ol class="oha-dl-steps oha-dl-steps-sm">
             <li><span class="oha-dl-step-n">1</span><div class="oha-dl-step-body"><strong>Install from Safari</strong> and open the app from your Home Screen</div></li>
             <li><span class="oha-dl-step-n">2</span><div class="oha-dl-step-body"><strong>Tap &#8220;Enable Notifications&#8221;</strong> in the app</div></li>
-            <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body">When iOS asks &#8220;Allow Notifications?&#8221; &#8212; tap <strong>Allow</strong></div></li>
+            <li><span class="oha-dl-step-n">3</span><div class="oha-dl-step-body">When iOS asks &#8220;Allow Notifications?&#8221;, tap <strong>Allow</strong></div></li>
             <li><span class="oha-dl-step-n">4</span><div class="oha-dl-step-body">Missed it? <strong>Settings &#8594; Notifications &#8594; scroll to the app &#8594; Allow &#8594; ON</strong></div></li>
         </ol>
     </div>

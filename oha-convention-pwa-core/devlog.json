@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.20.1",
+    "version":  "3.20.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -463,6 +463,13 @@
                         "type":  "fix",
                         "summary":  "Find Booth link now shows on vendor cards even when booth has no number assigned",
                         "notes":  "Bug: condition used  (empty string = falsy) as gate instead of checking whether vendor exists in booth_map at all. Fixed to use  = array_key_exists(). Link text is Find Booth X on Map when number exists, or Find on Map when no number set."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "3.20.2",
+                        "type":  "change",
+                        "summary":  "Removed em dashes from [oha_pwa_download] shortcode output text",
+                        "notes":  "Replaced all \u0026#8212; instances with hyphens, commas, colons, or rephrased sentences per CLAUDE.md no-em-dash rule."
                     }
                 ]
 }
