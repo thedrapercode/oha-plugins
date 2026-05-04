@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <radialGradient id="fg" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="60%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#b8860b"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Glow ring -->
+  <circle cx="24" cy="24" r="22" fill="#ffd700" opacity="0.25" filter="url(#glow)"/>
+  <!-- Skull body -->
+  <ellipse cx="24" cy="21" rx="13" ry="13" fill="url(#fg)" stroke="#b8860b" stroke-width="1.2"/>
+  <!-- Skull jaw -->
+  <rect x="16" y="30" width="16" height="8" rx="3" fill="url(#fg)" stroke="#b8860b" stroke-width="1"/>
+  <!-- Eye sockets -->
+  <ellipse cx="19.5" cy="20" rx="3.5" ry="4" fill="#1a1a1a"/>
+  <ellipse cx="28.5" cy="20" rx="3.5" ry="4" fill="#1a1a1a"/>
+  <!-- Nose -->
+  <path d="M22.5 26 L24 24.5 L25.5 26 L24.8 27.2 H23.2 Z" fill="#1a1a1a"/>
+  <!-- Teeth -->
+  <rect x="17.5" y="31.5" width="3" height="4" rx="1" fill="#1a1a1a"/>
+  <rect x="22.5" y="31.5" width="3" height="4" rx="1" fill="#1a1a1a"/>
+  <rect x="27.5" y="31.5" width="3" height="4" rx="1" fill="#1a1a1a"/>
+  <!-- Crown -->
+  <polygon points="11,14 14,7 18,12 24,5 30,12 34,7 37,14" fill="#ff6b35" stroke="#c0392b" stroke-width="1" stroke-linejoin="round"/>
+  <!-- Crown gems -->
+  <circle cx="24" cy="8" r="2" fill="#ffd700"/>
+  <circle cx="17" cy="11" r="1.5" fill="#ff4444"/>
+  <circle cx="31" cy="11" r="1.5" fill="#ff4444"/>
+</svg>

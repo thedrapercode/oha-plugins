@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="eg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00b4d8"/>
+      <stop offset="100%" stop-color="#0077b6"/>
+    </linearGradient>
+  </defs>
+  <!-- Calendar base -->
+  <rect x="6" y="12" width="36" height="32" rx="4" fill="url(#eg)" stroke="#005f8e" stroke-width="1.2"/>
+  <!-- Calendar header (dark bar) -->
+  <rect x="6" y="12" width="36" height="10" rx="4" fill="#00485e"/>
+  <rect x="6" y="17" width="36" height="5" fill="#00485e"/>
+  <!-- Ring posts -->
+  <rect x="14" y="8" width="3.5" height="9" rx="1.5" fill="#005f8e" stroke="#003d52" stroke-width="0.8"/>
+  <rect x="30.5" y="8" width="3.5" height="9" rx="1.5" fill="#005f8e" stroke="#003d52" stroke-width="0.8"/>
+  <!-- Calendar grid dots (stylized) -->
+  <circle cx="14" cy="29" r="2.5" fill="white" opacity="0.9"/>
+  <circle cx="22" cy="29" r="2.5" fill="white" opacity="0.9"/>
+  <circle cx="30" cy="29" r="2.5" fill="white" opacity="0.9"/>
+  <circle cx="38" cy="29" r="2.5" fill="white" opacity="0.6"/>
+  <circle cx="14" cy="37" r="2.5" fill="white" opacity="0.6"/>
+  <circle cx="22" cy="37" r="2.5" fill="white" opacity="0.6"/>
+  <!-- Highlight day (skull-shaped for spooky theme) -->
+  <circle cx="30" cy="37" r="4" fill="#ffd700"/>
+  <ellipse cx="30" cy="36.5" rx="2.8" ry="3" fill="#1a1a1a"/>
+  <ellipse cx="28.8" cy="35.8" rx="1" ry="1.2" fill="#ffd700"/>
+  <ellipse cx="31.2" cy="35.8" rx="1" ry="1.2" fill="#ffd700"/>
+</svg>

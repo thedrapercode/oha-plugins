@@ -1,0 +1,1145 @@
+/* ==========================================================================
+   OHA Modern Map v2.0.0 — MapLibre GL JS Edition
+   Dark haunt aesthetic • Mobile-first • PWA-ready
+   ========================================================================== */
+
+/* ── CSS Custom Properties ─────────────────────────────────────────────── */
+:root {
+    --oha-accent:        #ff6b35;
+    --oha-accent-dark:   #c0392b;
+    --oha-featured:      #ffd700;
+    --oha-home-haunt:    #9d4edd;
+    --oha-event:         #00b4d8;
+    --oha-professional:  #ff6b35;
+    --oha-free:          #888888;
+    --oha-bg-dark:       #1a1a2e;
+    --oha-bg-card:       #16213e;
+    --oha-bg-controls:   rgba(22, 33, 62, 0.95);
+    --oha-text-primary:  #f0f0f0;
+    --oha-text-secondary:#a0a8c0;
+    --oha-border:        rgba(255, 107, 53, 0.2);
+    --oha-shadow:        0 8px 32px rgba(0, 0, 0, 0.5);
+    --oha-radius:        12px;
+    --oha-radius-sm:     8px;
+    --oha-transition:    0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Wrapper ───────────────────────────────────────────────────────────── */
+.oha-map-wrapper {
+    position:      relative;
+    background:    var(--oha-bg-dark);
+    border-radius: var(--oha-radius);
+    overflow:      hidden;
+    font-family:   -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size:     14px;
+    color:         var(--oha-text-primary);
+    box-shadow:    var(--oha-shadow);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Controls Bar ──────────────────────────────────────────────────────── */
+.oha-map-controls {
+    background:  var(--oha-bg-controls);
+    border-bottom: 1px solid var(--oha-border);
+    padding:     12px 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.oha-map-controls-inner {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       12px 20px;
+    align-items: flex-start;
+}
+
+.oha-filter-group {
+    display:     flex;
+    flex-direction: column;
+    gap:         6px;
+    min-width:   0;
+}
+
+.oha-filter-label {
+    font-size:     10px;
+    font-weight:   700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color:         var(--oha-text-secondary);
+}
+
+/* ── Region Pills ──────────────────────────────────────────────────────── */
+.oha-region-pills {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       6px;
+}
+
+.oha-pill {
+    background:    rgba(255,255,255,0.06);
+    border:        1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    color:         var(--oha-text-primary);
+    cursor:        pointer;
+    font-size:     12px;
+    font-weight:   500;
+    padding:       5px 12px;
+    transition:    background var(--oha-transition), border-color var(--oha-transition);
+    white-space:   nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.oha-pill:hover {
+    background:    rgba(255,107,53,0.2);
+    border-color:  var(--oha-accent);
+}
+
+.oha-pill.active {
+    background:    var(--oha-accent);
+    border-color:  var(--oha-accent);
+    color:         #ffffff;
+    font-weight:   700;
+}
+
+/* ── Type Toggles ──────────────────────────────────────────────────────── */
+.oha-type-toggles {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       6px;
+}
+
+.oha-toggle {
+    cursor: pointer;
+}
+
+.oha-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity:  0;
+    width:    0;
+    height:   0;
+}
+
+.oha-toggle-label {
+    display:       flex;
+    align-items:   center;
+    gap:           5px;
+    background:    rgba(255,255,255,0.06);
+    border:        1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    color:         var(--oha-text-secondary);
+    font-size:     12px;
+    font-weight:   500;
+    padding:       5px 11px;
+    transition:    all var(--oha-transition);
+    user-select:   none;
+}
+
+.oha-toggle input:checked + .oha-toggle-label {
+    border-color: var(--oha-accent);
+    color:        var(--oha-text-primary);
+    background:   rgba(255,107,53,0.15);
+}
+
+/* Type-specific checked colors */
+.oha-toggle input[value="featured"]:checked + .oha-toggle-label  { border-color: var(--oha-featured);   background: rgba(255,215,0,0.12); }
+.oha-toggle input[value="home_haunt"]:checked + .oha-toggle-label { border-color: var(--oha-home-haunt); background: rgba(157,78,221,0.15); }
+.oha-toggle input[value="free"]:checked + .oha-toggle-label       { border-color: #666; }
+
+/* Type icon dots */
+.oha-icon { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.oha-icon-featured    { background: var(--oha-featured); }
+.oha-icon-professional { background: var(--oha-professional); }
+.oha-icon-home         { background: var(--oha-home-haunt); }
+.oha-icon-free         { background: var(--oha-free); }
+
+/* ── Layer Toggle Buttons ──────────────────────────────────────────────── */
+.oha-layer-toggles {
+    display: flex;
+    gap:     6px;
+}
+
+.oha-layer-btn {
+    display:     flex;
+    align-items: center;
+    gap:         5px;
+    background:  rgba(255,255,255,0.06);
+    border:      1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    color:       var(--oha-text-secondary);
+    cursor:      pointer;
+    font-size:   12px;
+    font-weight: 600;
+    padding:     5px 12px;
+    transition:  all var(--oha-transition);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.oha-layer-btn:hover {
+    background:   rgba(255,107,53,0.15);
+    border-color: var(--oha-accent);
+    color:        var(--oha-text-primary);
+}
+
+.oha-layer-btn.active {
+    background:   rgba(255,107,53,0.2);
+    border-color: var(--oha-accent);
+    color:        var(--oha-text-primary);
+}
+
+.oha-layer-btn[data-layer="events"].active {
+    background:   rgba(0,180,216,0.2);
+    border-color: var(--oha-event);
+}
+
+.oha-layer-icon {
+    width:  14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ── View Toggle ───────────────────────────────────────────────────────── */
+.oha-view-toggle {
+    display: flex;
+    gap:     4px;
+}
+
+.oha-view-btn {
+    display:       flex;
+    align-items:   center;
+    gap:           4px;
+    background:    rgba(255,255,255,0.06);
+    border:        1px solid rgba(255,255,255,0.12);
+    border-radius: var(--oha-radius-sm);
+    color:         var(--oha-text-secondary);
+    cursor:        pointer;
+    font-size:     12px;
+    font-weight:   500;
+    padding:       5px 10px;
+    transition:    all var(--oha-transition);
+}
+
+.oha-view-btn svg {
+    width:  14px;
+    height: 14px;
+}
+
+.oha-view-btn.active {
+    background:   rgba(255,107,53,0.2);
+    border-color: var(--oha-accent);
+    color:        var(--oha-text-primary);
+}
+
+/* ── Map Content ───────────────────────────────────────────────────────── */
+.oha-map-content { position: relative; }
+
+.oha-map-view,
+.oha-list-view {
+    display: none;
+}
+
+.oha-map-view.active,
+.oha-list-view.active {
+    display: block;
+}
+
+/* ── MapLibre Container ────────────────────────────────────────────────── */
+.oha-map-container {
+    width: 100%;
+}
+
+/* MapLibre canvas fills container */
+.oha-map-container .maplibregl-map {
+    width:  100% !important;
+    height: 100% !important;
+}
+
+/* Minimal attribution */
+.maplibregl-ctrl-attrib {
+    background: rgba(22,33,62,0.7) !important;
+    color:      var(--oha-text-secondary) !important;
+    font-size:  10px !important;
+}
+
+.maplibregl-ctrl-attrib a {
+    color: var(--oha-accent) !important;
+}
+
+/* Remove default MapLibre controls (we use custom ones) */
+.maplibregl-ctrl-group {
+    display: none;
+}
+
+/* ── Custom Map Overlay Controls ───────────────────────────────────────── */
+.oha-map-overlay-controls {
+    position: absolute;
+    top:      12px;
+    right:    12px;
+    z-index:  10;
+    display:  flex;
+    flex-direction: column;
+    gap:      4px;
+}
+
+.oha-map-control {
+    width:         36px;
+    height:        36px;
+    background:    rgba(22,33,62,0.92);
+    border:        1px solid var(--oha-border);
+    border-radius: var(--oha-radius-sm);
+    color:         var(--oha-text-primary);
+    cursor:        pointer;
+    display:       flex;
+    align-items:   center;
+    justify-content: center;
+    transition:    background var(--oha-transition), border-color var(--oha-transition);
+    backdrop-filter: blur(6px);
+}
+
+.oha-map-control svg {
+    width:  16px;
+    height: 16px;
+}
+
+.oha-map-control:hover {
+    background:   rgba(255,107,53,0.25);
+    border-color: var(--oha-accent);
+}
+
+/* ── Loading Indicator ─────────────────────────────────────────────────── */
+.oha-map-loading {
+    position:        absolute;
+    top:             50%;
+    left:            50%;
+    transform:       translate(-50%, -50%);
+    z-index:         20;
+    background:      rgba(22,33,62,0.88);
+    border:          1px solid var(--oha-border);
+    border-radius:   var(--oha-radius);
+    padding:         24px 32px;
+    text-align:      center;
+    display:         none;
+    backdrop-filter: blur(8px);
+    pointer-events:  none;
+}
+
+.oha-map-loading p {
+    margin:    8px 0 0;
+    color:     var(--oha-text-secondary);
+    font-size: 13px;
+}
+
+.oha-spinner {
+    width:        32px;
+    height:       32px;
+    border:       3px solid rgba(255,107,53,0.2);
+    border-top:   3px solid var(--oha-accent);
+    border-radius: 50%;
+    margin:       0 auto;
+    animation:    oha-spin 0.8s linear infinite;
+}
+
+@keyframes oha-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Results Counter ───────────────────────────────────────────────────── */
+.oha-results-counter {
+    position:    absolute;
+    bottom:      12px;
+    left:        12px;
+    z-index:     10;
+    background:  rgba(22,33,62,0.88);
+    border:      1px solid var(--oha-border);
+    border-radius: 20px;
+    padding:     4px 12px;
+    font-size:   12px;
+    font-weight: 600;
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+    opacity:     0;
+    transform:   translateY(4px);
+    transition:  opacity var(--oha-transition), transform var(--oha-transition);
+}
+
+.oha-results-counter.has-results {
+    opacity:   1;
+    transform: translateY(0);
+}
+
+.oha-count {
+    color:       var(--oha-accent);
+    margin-right: 4px;
+}
+
+/* ── Bottom Sheet (Google Maps-style) ──────────────────────────────────── */
+.oha-bottom-sheet {
+    position:  absolute;
+    inset:     0;
+    z-index:   100;
+    pointer-events: none;
+}
+
+.oha-bottom-sheet.active {
+    pointer-events: all;
+}
+
+/* Scrim overlay */
+.oha-bottom-sheet-overlay {
+    position:   absolute;
+    inset:      0;
+    background: rgba(0,0,0,0);
+    transition: background var(--oha-transition);
+    cursor:     pointer;
+}
+
+.oha-bottom-sheet.active .oha-bottom-sheet-overlay {
+    background: rgba(0,0,0,0.35);
+}
+
+/* Panel */
+.oha-bottom-sheet-panel {
+    position:       absolute;
+    bottom:         0;
+    left:           0;
+    right:          0;
+    background:     var(--oha-bg-card);
+    border-radius:  var(--oha-radius) var(--oha-radius) 0 0;
+    border-top:     1px solid var(--oha-border);
+    max-height:     72vh;
+    overflow-y:     auto;
+    transform:      translateY(100%);
+    transition:     transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change:    transform;
+    touch-action:   pan-y;
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--oha-accent) transparent;
+}
+
+.oha-bottom-sheet-panel::-webkit-scrollbar { width: 4px; }
+.oha-bottom-sheet-panel::-webkit-scrollbar-track { background: transparent; }
+.oha-bottom-sheet-panel::-webkit-scrollbar-thumb { background: var(--oha-accent); border-radius: 2px; }
+
+.oha-bottom-sheet.active .oha-bottom-sheet-panel {
+    transform: translateY(0);
+}
+
+/* Drag handle */
+.oha-bottom-sheet-handle {
+    width:        36px;
+    height:       4px;
+    background:   rgba(255,255,255,0.2);
+    border-radius: 2px;
+    margin:       12px auto 0;
+    flex-shrink:  0;
+}
+
+.oha-bottom-sheet-content {
+    padding: 0 0 env(safe-area-inset-bottom);
+}
+
+/* ── Popup / Card ───────────────────────────────────────────────────────── */
+.oha-popup-card {
+    overflow: hidden;
+}
+
+.oha-popup-thumb {
+    width:              100%;
+    height:             180px;
+    background-size:    cover;
+    background-position: center;
+    background-color:   var(--oha-bg-dark);
+}
+
+.oha-popup-body {
+    padding: 16px 18px 20px;
+}
+
+.oha-popup-badges {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       6px;
+    margin-bottom: 8px;
+}
+
+.oha-badge {
+    border-radius:  12px;
+    font-size:      10px;
+    font-weight:    700;
+    letter-spacing: 0.06em;
+    padding:        3px 9px;
+    text-transform: uppercase;
+    display:        inline-block;
+}
+
+.oha-badge-featured     { background: rgba(255,215,0,0.2);    color: var(--oha-featured);   border: 1px solid rgba(255,215,0,0.4); }
+.oha-badge-professional { background: rgba(255,107,53,0.18);   color: var(--oha-accent);     border: 1px solid rgba(255,107,53,0.35); }
+.oha-badge-home_haunt   { background: rgba(157,78,221,0.18);   color: var(--oha-home-haunt); border: 1px solid rgba(157,78,221,0.35); }
+.oha-badge-free         { background: rgba(136,136,136,0.15); color: #aaa;                  border: 1px solid rgba(136,136,136,0.3); }
+.oha-badge-event        { background: rgba(0,180,216,0.18);   color: var(--oha-event);      border: 1px solid rgba(0,180,216,0.35); }
+.oha-badge-status       { background: transparent; }
+.oha-badge-open         { color: #4caf50; border-color: rgba(76,175,80,0.4); }
+.oha-badge-seasonal     { color: #ff9800; border-color: rgba(255,152,0,0.4); }
+.oha-badge-closed       { color: #f44336; border-color: rgba(244,67,54,0.4); }
+
+.oha-popup-title {
+    color:       var(--oha-text-primary);
+    font-size:   17px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin:      0 0 12px;
+}
+
+.oha-popup-info {
+    display:       flex;
+    flex-direction: column;
+    gap:           8px;
+    margin-bottom: 14px;
+}
+
+.oha-info-row {
+    display:     flex;
+    align-items: flex-start;
+    gap:         8px;
+    font-size:   13px;
+    color:       var(--oha-text-secondary);
+}
+
+.oha-info-icon {
+    width:     15px;
+    height:    15px;
+    color:     var(--oha-accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.oha-info-row a {
+    color: var(--oha-accent);
+    text-decoration: none;
+}
+
+.oha-info-row a:hover { text-decoration: underline; }
+
+/* Upcoming events sub-section */
+.oha-popup-events {
+    background:    rgba(0,180,216,0.07);
+    border:        1px solid rgba(0,180,216,0.2);
+    border-radius: var(--oha-radius-sm);
+    margin-bottom: 14px;
+    padding:       10px 12px;
+}
+
+.oha-popup-events-title {
+    color:         var(--oha-event);
+    font-size:     11px;
+    font-weight:   700;
+    letter-spacing: 0.07em;
+    margin:        0 0 8px;
+    text-transform: uppercase;
+}
+
+.oha-popup-events-list {
+    list-style: none;
+    margin:     0;
+    padding:    0;
+    display:    flex;
+    flex-direction: column;
+    gap:        6px;
+}
+
+.oha-popup-events-list li {
+    display:       flex;
+    flex-direction: column;
+    gap:           2px;
+}
+
+.oha-popup-events-list a {
+    color:       var(--oha-text-primary);
+    font-size:   13px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.oha-popup-events-list a:hover { color: var(--oha-event); }
+
+.oha-event-date {
+    color:     var(--oha-text-secondary);
+    font-size: 11px;
+}
+
+/* CTA button */
+.oha-popup-cta {
+    display:         block;
+    text-align:      center;
+    width:           100%;
+    box-sizing:      border-box;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.oha-btn-primary {
+    background:    linear-gradient(135deg, var(--oha-accent) 0%, var(--oha-accent-dark) 100%);
+    border:        none;
+    border-radius: var(--oha-radius-sm);
+    color:         #ffffff;
+    cursor:        pointer;
+    display:       inline-flex;
+    align-items:   center;
+    justify-content: center;
+    font-size:     13px;
+    font-weight:   700;
+    letter-spacing: 0.03em;
+    padding:       10px 20px;
+    text-decoration: none;
+    transition:    opacity var(--oha-transition), transform var(--oha-transition);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.oha-btn-primary:hover {
+    opacity:   0.9;
+    transform: translateY(-1px);
+    color:     #ffffff;
+    text-decoration: none;
+}
+
+.oha-btn-primary:active { transform: translateY(0); }
+
+/* ── List View ──────────────────────────────────────────────────────────── */
+.oha-list-container {
+    overflow-y:    auto;
+    padding:       12px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--oha-accent) transparent;
+}
+
+.oha-list-container::-webkit-scrollbar        { width: 4px; }
+.oha-list-container::-webkit-scrollbar-track  { background: transparent; }
+.oha-list-container::-webkit-scrollbar-thumb  { background: var(--oha-accent); border-radius: 2px; }
+
+.oha-listing-card {
+    background:    var(--oha-bg-card);
+    border:        1px solid var(--oha-border);
+    border-radius: var(--oha-radius);
+    margin-bottom: 10px;
+    overflow:      hidden;
+    transition:    border-color var(--oha-transition), transform var(--oha-transition);
+}
+
+.oha-listing-card:hover {
+    border-color: var(--oha-accent);
+    transform:    translateY(-2px);
+}
+
+.oha-type-featured .oha-listing-card,
+.oha-listing-card.oha-type-featured {
+    border-color: rgba(255,215,0,0.35);
+}
+
+.oha-card-thumb {
+    height:             120px;
+    background-size:    cover;
+    background-position: center;
+    background-color:   var(--oha-bg-dark);
+}
+
+.oha-card-body {
+    padding: 12px 14px 14px;
+}
+
+.oha-card-badges {
+    display:       flex;
+    gap:           5px;
+    margin-bottom: 6px;
+}
+
+.oha-card-title {
+    color:       var(--oha-text-primary);
+    font-size:   14px;
+    font-weight: 700;
+    margin:      0 0 5px;
+}
+
+.oha-card-address {
+    color:     var(--oha-text-secondary);
+    font-size: 12px;
+    margin:    0 0 10px;
+}
+
+.oha-card-btn {
+    font-size: 12px;
+    padding:   7px 14px;
+}
+
+.oha-list-empty {
+    text-align: center;
+    padding:    32px;
+    color:      var(--oha-text-secondary);
+}
+
+/* ── Region Selector Shortcode ─────────────────────────────────────────── */
+.oha-region-selector {
+    padding: 20px 0;
+}
+
+.oha-region-selector-header {
+    text-align:    center;
+    margin-bottom: 24px;
+}
+
+.oha-region-selector-header h2 {
+    color:       var(--oha-text-primary);
+    font-size:   clamp(20px, 4vw, 28px);
+    font-weight: 700;
+    margin:      0 0 8px;
+}
+
+.oha-region-selector-header p {
+    color:     var(--oha-text-secondary);
+    font-size: 15px;
+    margin:    0;
+}
+
+.oha-region-grid {
+    display:               grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap:                   12px;
+}
+
+.oha-region-card {
+    background:    var(--oha-bg-card);
+    border:        1px solid var(--oha-border);
+    border-radius: var(--oha-radius);
+    color:         var(--oha-text-primary);
+    display:       flex;
+    flex-direction: column;
+    gap:           4px;
+    padding:       18px 20px;
+    text-decoration: none;
+    transition:    border-color var(--oha-transition), transform var(--oha-transition), background var(--oha-transition);
+}
+
+.oha-region-card:hover {
+    background:  rgba(255,107,53,0.1);
+    border-color: var(--oha-accent);
+    color:       var(--oha-text-primary);
+    text-decoration: none;
+    transform:   translateY(-2px);
+}
+
+.oha-region-card h3 {
+    color:       var(--oha-text-primary);
+    font-size:   15px;
+    font-weight: 700;
+    margin:      0;
+}
+
+.oha-region-count {
+    color:     var(--oha-text-secondary);
+    font-size: 13px;
+}
+
+.oha-region-arrow {
+    color:     var(--oha-accent);
+    font-size: 18px;
+    margin-top: auto;
+    padding-top: 6px;
+}
+
+/* ── Responsive — Tablet ───────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .oha-map-controls-inner {
+        gap: 10px 14px;
+    }
+}
+
+/* ── Responsive — Mobile ───────────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .oha-map-controls {
+        padding: 10px 12px;
+    }
+
+    .oha-map-controls-inner {
+        flex-direction: column;
+        gap:            10px;
+    }
+
+    .oha-region-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: none;
+    }
+    .oha-region-pills::-webkit-scrollbar { display: none; }
+
+    .oha-pill {
+        flex-shrink: 0;
+    }
+
+    .oha-type-toggles {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .oha-type-toggles::-webkit-scrollbar { display: none; }
+
+    .oha-view-toggle,
+    .oha-layer-toggles {
+        flex-wrap: nowrap;
+    }
+
+    .oha-popup-thumb {
+        height: 150px;
+    }
+
+    .oha-bottom-sheet-panel {
+        max-height: 80vh;
+    }
+
+    .oha-results-counter {
+        bottom: 14px;
+        left:   50%;
+        transform: translateX(-50%) translateY(4px);
+    }
+
+    .oha-results-counter.has-results {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .oha-map-overlay-controls {
+        top:   8px;
+        right: 8px;
+    }
+
+    .oha-map-control {
+        width:  32px;
+        height: 32px;
+    }
+
+    .oha-map-control svg {
+        width:  14px;
+        height: 14px;
+    }
+
+    .oha-region-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 400px) {
+    .oha-region-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Prevent body scroll when sheet is open (mobile) ───────────────────── */
+body.oha-sheet-open {
+    overflow: hidden;
+    touch-action: none;
+}
+
+/* ── Safe area support (iPhone notch/home bar) ─────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .oha-bottom-sheet-panel {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* ==========================================================================
+   MOBILE MAP MODE (v2.4.0)
+   Floating filter pill + slide-up sheet — shown below 640px via media query
+   ========================================================================== */
+
+/* Pill bar — always in DOM, hidden desktop, shown mobile */
+.oha-mob-map-pill-bar {
+    display: none;
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    gap: 8px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.oha-mob-filter-pill,
+.oha-mob-reset-pill {
+    pointer-events: all;
+    background: rgba(26, 26, 46, 0.92);
+    border: 1px solid rgba(255, 107, 53, 0.5);
+    color: var(--oha-text-primary, #f0f0f0);
+    padding: 10px 18px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.oha-mob-filter-pill:hover,
+.oha-mob-reset-pill:hover {
+    background: rgba(40, 40, 70, 0.95);
+    border-color: rgba(255, 107, 53, 0.8);
+}
+
+.oha-mob-reset-pill {
+    padding: 10px 12px;
+}
+
+.oha-mob-pill-badge {
+    background: var(--oha-accent, #ff6b35);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+/* Mobile filter overlay */
+.oha-mob-filter-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 28;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.oha-mob-filter-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Mobile filter sheet */
+.oha-mob-filter-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--oha-bg-dark, #1a1a2e);
+    border-radius: 16px 16px 0 0;
+    z-index: 29;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.oha-mob-filter-sheet.open {
+    transform: translateY(0);
+}
+
+.oha-mob-filter-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    margin: 12px auto 0;
+}
+
+.oha-mob-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--oha-text-primary, #f0f0f0);
+}
+
+.oha-mob-filter-done {
+    background: none;
+    border: none;
+    color: var(--oha-accent, #ff6b35);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.oha-mob-filter-body {
+    padding: 16px;
+}
+
+.oha-mob-filter-section {
+    margin-bottom: 20px;
+}
+
+.oha-mob-filter-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--oha-text-secondary, #a0a8c0);
+    margin: 0 0 10px;
+    font-weight: 600;
+}
+
+.oha-mob-region-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.oha-mob-filter-count {
+    text-align: center;
+    color: var(--oha-text-secondary, #a0a8c0);
+    font-size: 13px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+}
+
+/* Show pill bar, hide desktop controls on mobile */
+@media (max-width: 640px) {
+    .oha-mob-map-pill-bar {
+        display: flex;
+    }
+
+    .oha-map-controls {
+        display: none !important;
+    }
+
+    .oha-map-container {
+        height: calc(100vh - var(--oha-mobile-ui-offset, 80px)) !important;
+    }
+}
+
+@media (min-width: 641px) {
+    .oha-mob-map-pill-bar {
+        display: none !important;
+    }
+
+    .oha-mob-filter-sheet,
+    .oha-mob-filter-overlay {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   REGION INFO SHEET (v2.4.0)
+   Slide-up panel showing region description, population, highlights
+   ========================================================================== */
+
+.oha-region-info-sheet {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    pointer-events: none;
+}
+
+.oha-region-info-sheet.open {
+    pointer-events: all;
+}
+
+.oha-region-info-sheet .oha-bottom-sheet-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.oha-region-info-sheet.open .oha-bottom-sheet-overlay {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.oha-region-info-sheet .oha-bottom-sheet-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--oha-bg-card, #16213e);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    touch-action: pan-y;
+}
+
+.oha-region-info-sheet.open .oha-bottom-sheet-panel {
+    transform: translateY(0);
+}
+
+/* Region info card content */
+.oha-region-info-card {
+    padding: 20px 20px 8px;
+}
+
+.oha-region-info-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--oha-text-primary, #f0f0f0);
+    margin: 0 0 4px;
+    line-height: 1.2;
+}
+
+.oha-region-info-pop {
+    font-size: 13px;
+    color: var(--oha-accent, #ff6b35);
+    margin: 0 0 14px;
+    font-weight: 500;
+}
+
+.oha-region-info-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--oha-text-secondary, #a0a8c0);
+    margin-bottom: 16px;
+}
+
+.oha-region-info-hl-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--oha-text-secondary, #a0a8c0);
+    margin: 0 0 8px;
+    font-weight: 600;
+}
+
+.oha-region-info-highlights {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px;
+}
+
+.oha-region-info-highlights li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 14px;
+    color: var(--oha-text-primary, #f0f0f0);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-region-info-highlights li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--oha-accent, #ff6b35);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.oha-region-explore-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 16px;
+}

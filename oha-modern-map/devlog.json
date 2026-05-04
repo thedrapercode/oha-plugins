@@ -1,0 +1,524 @@
+{
+    "plugin":  "OHA Modern Map",
+    "version":  "2.5.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.5.0",
+                        "type":  "change",
+                        "summary":  "Add jquery-ui-sortable to admin script dependencies for floor reorder feature",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.5.0",
+                        "type":  "fix",
+                        "summary":  "Convention map deep link: fix oha_vendor param matching vendor_hub_id not vendor_id",
+                        "notes":  "checkDeepLink was comparing vendorSlug against b.vendor_id (GeoDirectory ID). Should be b.vendor_hub_id (vendor_application post ID). The PWA vendor cards use vendor_application IDs."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.5.0",
+                        "type":  "feature",
+                        "summary":  "Convention map: show vendor name below booth number at zoom 12+ in pin label",
+                        "notes":  "booth-label layer text-field updated with step expression. Zoom 10-11 shows number only. Zoom 12+ shows number plus vendor name on two lines when both are present. text-max-width bumped to 12."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.5.0",
+                        "type":  "fix",
+                        "summary":  "Booth placement: fix wrong coordinates when page is scrolled (clientX/Y to pageX/Y)",
+                        "notes":  "coordsFromEvent used clientX/clientY (viewport-relative) against offset() (document-relative). Scroll offset corrupted all placed booth positions. Also fixed touchend crash where touches[] is empty - now uses changedTouches."
+                    },
+                    {
+                        "date":  "2026-05-04",
+                        "version":  "2.5.0",
+                        "type":  "feature",
+                        "summary":  "Convention Settings: add Remove Floor button and drag-to-reorder for floor list",
+                        "notes":  "Uses jQuery UI Sortable (bundled with WP). reindexFloors() renumbers name/id attrs after sort or remove. Blocks remove if only one floor remains."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Created modern map plugin with region-based navigation",
+                        "notes":  "Initial release. Includes 5 Ohio regions auto-assigned by lat/lng. Icon hierarchy for Featured, Professional, Home Haunt, and Free listings. Smart clustering, mobile-first bottom sheet UI, dark themed maps. Works with GeoDirectory free using categories. Two shortcodes available."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added category mapping system in admin",
+                        "notes":  "New admin page at OHA Map \u003e Category Mapping. Allows mapping existing GeoDirectory category slugs to listing types. Supports comma-separated multiple slugs per type. No need to change existing categories in GeoDirectory."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added custom icon image upload system",
+                        "notes":  "New admin page at OHA Map \u003e Custom Icons. Upload PNG icons to replace default colored circles. Uses WordPress media library. Icons stored in options table. Recommended 32x32px PNG."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added unlimited custom listing types",
+                        "notes":  "Users can add custom types beyond the 4 defaults in Category Mapping page. Each custom type gets own filter toggle, icon settings, and category mapping. Examples: Escape Rooms, Haunted Trails, Seasonal Events."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.1.0",
+                        "type":  "fix",
+                        "summary":  "Fixed syntax error in admin class file",
+                        "notes":  "Removed stray PHP closing tag on line 665. Added proper render_regions_page method declaration. Error caused plugin activation failure."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.1.0",
+                        "type":  "change",
+                        "summary":  "Updated plugin folder structure",
+                        "notes":  "New structure uses versioned outer folder with clean inner folder. Allows version tracking while keeping WordPress folder name clean. Includes devlog.json in root."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.1.0",
+                        "type":  "note",
+                        "summary":  "Created comprehensive documentation",
+                        "notes":  "Documentation includes setup guides for GeoDirectory free, category mapping instructions, changelog, and folder structure explanation. Total 12 documentation files included."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Added Google Maps support with API key option",
+                        "notes":  "New map provider setting in admin. Choose Leaflet (free) or Google Maps (requires API key). Both support dark theme. Fixes blank map issue for users whose hosting blocks Leaflet tile servers."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.2.0",
+                        "type":  "change",
+                        "summary":  "Rewrote JavaScript to support dual map providers",
+                        "notes":  "JavaScript detects map provider and initializes correct library. Supports Leaflet with tile layers or Google Maps with styled maps. Markers, clustering, and features work on both providers."
+                    },
+                    {
+                        "date":  "2026-02-18",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Fixed blank Leaflet map issue",
+                        "notes":  "Issue caused by tile server blocks or CORS problems. Added error messaging. Users can switch to Google Maps if Leaflet tiles blocked by hosting provider."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Fixed all listings missing from map -- GeoDirectory stores coords in custom table not wp_postmeta",
+                        "notes":  "Root cause: plugin used get_post_meta() and meta_query for latitude/longitude, which always returns empty for GeoDirectory fields. GD stores all listing data in wp_geodir_gd_place_detail (joined table), not wp_postmeta. Rewrote get_listings() to use a direct SQL JOIN: SELECT p.ID, p.post_title, pd.* FROM wp_posts p INNER JOIN detail_table pd ON pd.post_id = p.ID. Using pd.* avoids failures when optional column names differ from defaults."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Fixed all non-featured maps showing blank -- shortcode type=\u0027all\u0027 was filtering out every listing",
+                        "notes":  "Shortcode defaults to type=\u0027all\u0027. PHP get_listings() was treating \u0027all\u0027 as a literal type name and filtering out everything since no listing has type \u0027all\u0027. Only shortcodes with type=\u0027featured\u0027 worked. Fixed by treating \u0027all\u0027 and empty string as no filter: if ($type \u0026\u0026 $type !== \u0027all\u0027 \u0026\u0026 $listing_type !== $type)."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Fixed AJAX returning parsererror despite valid data -- UTF-8 BOM in PHP files corrupted JSON output",
+                        "notes":  "PowerShell file edits using System.Text.Encoding.UTF8 write a UTF-8 BOM at the start of files. PHP outputs the BOM before any content, breaking jQuery JSON parsing (statusText: parsererror). AJAX response contained full listing data but jQuery discarded it. Fixed by stripping BOMs from all PHP files using WriteAllBytes with bytes[3..] before packaging the zip."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Added configurable GeoDirectory field name mapping in admin Settings",
+                        "notes":  "Some sites use non-standard GeoDirectory column names (e.g. attraction_phone_number instead of phone). Added GeoDirectory Field Mapping section in Settings page with inputs for post_type, lat_field, lng_field, phone_field, email_field, website_field. Stored in oha_map_fields option. Defaults to standard GD column names."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Added Diagnostics admin page for live debugging of GeoDirectory data and AJAX responses",
+                        "notes":  "New submenu at OHA Map \u003e Diagnostics. Shows: GD active status, detail table name and existence, all column names, 15-row coordinate sample, and live AJAX test button. Used to identify that SQL was crashing due to missing pd.phone and pd.website columns on this site."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Added GeoDirectory category icon support as fallback marker icon",
+                        "notes":  "Listing data now includes gd_icon_url field. Reads ct_cat_icon term meta from the listing\u0027s default GeoDirectory category. Supports both attachment ID and relative src path formats. JS icon priority: (1) custom icon from OHA Map \u003e Custom Icons, (2) GD category icon, (3) colored circle SVG."
+                    },
+                    {
+                        "date":  "2026-02-23",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Fixed admin Settings page outputting literal PHP code as visible HTML text",
+                        "notes":  "The line $fields = self::get_field_settings(); was placed inside the HTML output block (after the PHP closing tag ?\u003e) instead of inside the PHP section. This caused the line to render as visible text on the Settings page and made all field mapping inputs empty. Moved the variable assignment to the PHP section before the HTML begins."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.2.0",
+                        "type":  "change",
+                        "summary":  "Added Requires Plugins: geodirectory header (WP 6.5+ dependency declaration)",
+                        "notes":  "WordPress 6.5 introduced the Requires Plugins header for declaring plugin dependencies. When GeoDirectory is not active, WordPress will show a dependency warning before allowing this plugin to activate."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Migrated map engine from Leaflet to MapLibre GL JS v4 (WebGL)",
+                        "notes":  "Complete frontend rewrite replacing Leaflet/Google Maps with MapLibre GL JS v4 (open-source BSD-2-Clause fork of Mapbox GL JS). WebGL GPU rendering delivers 60fps smooth pan/zoom on mobile. Removed all Leaflet and Google Maps script/style enqueues. Added MapLibre CDN (maplibre-gl@4) CSS and JS. All PHP data logic (class-oha-map-data.php, class-oha-map-regions.php) preserved intact."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added MapTiler tile provider with admin API key and style settings",
+                        "notes":  "New MapTiler settings section in admin Settings page. Fields: API Key (oha_map_maptiler option), Map Style dropdown (Basic Dark default, Bright, Satellite, Custom URL), Custom Style URL (shown when Custom selected). get_tile_style_url() builds: https://api.maptiler.com/maps/{style}/style.json?key={key}. Falls back to OpenFreeMap dark tiles (https://tiles.openfreemap.org/styles/dark) when no API key is set. Zero JS dependency on Leaflet tile servers."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added precise Ohio region fills with data-driven GeoJSON expressions",
+                        "notes":  "Added regions_to_geojson() static method to class-oha-map-regions.php. Converts PHP [lat,lng] polygon arrays to a GeoJSON FeatureCollection with correct [lng,lat] coordinate flip and closed rings. MapLibre region-fills layer uses data-driven fill-color from feature properties. Selected region shows 25% opacity fill; unselected regions show 4% ambient fill. Separate region-fills-selected and region-fills-hover layers with filter expressions for reactive highlighting without full re-render. region-labels layer hides at zoom \u003e 9."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added admin Region Colors page with per-region fill and outline color pickers",
+                        "notes":  "New submenu page OHA Map \u003e Region Colors. Color picker inputs for fill color and outline color for each of the 7 Ohio regions. Stored in oha_map_region_colors option as associative array keyed by region slug. Default colors are Halloween-themed: Northwest=pumpkin orange (#ff6b35), Northeast=haunted purple (#9d4edd), Central=blood red (#c0392b), East=eerie green (#27ae60), West=amber (#e67e22), Southwest=deep purple (#8e44ad), Southeast=dark orange (#d35400). Colors pass through regions_to_geojson() as GeoJSON feature properties."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added Events for GeoDirectory integration as toggleable map layer",
+                        "notes":  "New get_events() and ajax_get_events() methods in class-oha-map-data.php. Detects Events for GeoDirectory by checking wp_geodir_gd_event_detail table existence before querying. SQL JOINs wp_posts + wp_geodir_gd_event_detail + wp_geodir_event_schedule, filtering to end_date \u003e= CURDATE() to show only upcoming/active events. Returns: id, title, lat, lng, start_date, end_date, start_time, end_time, all_day, address, permalink, thumbnail, region. Applies oha_map_events filter hook for extensibility. Registered wp_ajax_oha_get_map_events and wp_ajax_nopriv_oha_get_map_events actions."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added Events map layer with separate source, clustering, and layer toggles",
+                        "notes":  "Separate events GeoJSON source with MapLibre clustering. events-clusters circle layer (teal #00b4d8), events-cluster-count symbol layer, events-unclustered symbol layer using icon-event SVG. Events layer toggle button added to controls (Haunts / Events layer pills). setLayerVisibility() toggles MapLibre layout visibility for entire layer group. showEventsByDefault admin setting controls initial visibility state on page load."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added admin Events Layer settings section",
+                        "notes":  "New Events Layer section in admin Settings page. Fields: Enable Events Layer toggle (oha_map_events[enabled]), Show Events by Default on page load toggle (oha_map_events[show_by_default]), Layer button label text. get_events_settings() getter method returns array with enabled, show_by_default, label keys."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added 5 custom SVG marker icons for listing types and events",
+                        "notes":  "Created assets/images/icons/ directory with 5 hand-crafted Halloween-themed SVG icons. icon-featured.svg: crowned skull with radial gold gradient and glow filter. icon-professional.svg: haunted house silhouette with glowing windows, chimney, crescent moon. icon-home-haunt.svg: friendly ghost with radial purple gradient, eye shine, wavy skirt. icon-free.svg: tombstone with RIP text, cross, grass base. icon-event.svg: calendar with teal gradient and skull on highlighted day. Icons loaded with map.loadImage() via Promise.all() before layers are added to avoid race conditions. Custom admin-uploaded icons override defaults per-type."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added data-driven icon sizing and sort-key for featured haunt priority",
+                        "notes":  "MapLibre symbol layers use data-driven expressions for icon-image ([\u0027get\u0027,\u0027markerIcon\u0027]), icon-size ([\u0027get\u0027,\u0027iconSize\u0027]), and symbol-sort-key ([\u0027get\u0027,\u0027sortKey\u0027]). Sort key values: featured=100, professional=50, home_haunt=30, free=10. Featured markers always render above all other types. Icon sizes: featured=0.72, professional=0.60, home_haunt=0.52, free=0.46. icon-allow-overlap: true ensures all markers always visible."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Added admin Card Fields page for configurable listing card content",
+                        "notes":  "New submenu page OHA Map \u003e Card Fields. Checkbox list of available card sections: Thumbnail Image, Listing Type Badge, Haunt Status Badge (Open/Seasonal/Closed), Address, Phone Number, Website Link, Email Address, View Details Button, Upcoming Events Section, Short Description. Stored in oha_map_card_fields option. get_card_fields() getter. buildHauntCardHTML() in JS conditionally renders each section based on the option. Includes nearby events matching by ±0.15 degree proximity to listing coordinates."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "feature",
+                        "summary":  "Replaced Leaflet bottom sheet with Google Maps-style slide-up panel",
+                        "notes":  "New .oha-bottom-sheet structure: .oha-bottom-sheet-overlay (scrim) + .oha-bottom-sheet-panel (slide-up panel). CSS: translateY(100%) to translateY(0) transition at 0.32s cubic-bezier, will-change: transform for GPU compositing. Drag handle bar (36x4px, centered, rounded). Swipe-to-dismiss: touch delta \u003e 80px triggers hide with panel animating back down. Body scroll lock (overflow:hidden on body) while panel is open. safe-area-inset-bottom respected for iPhone notch/home bar. Card sections: thumbnail (16:9 aspect ratio), type badge row, status badge, info grid with address/phone/website/email, upcoming events subsection, CTA view details button."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "change",
+                        "summary":  "Rewrote CSS from Leaflet overrides to MapLibre container and enhanced dark theme",
+                        "notes":  "Complete CSS rewrite (~844 lines). Replaced all .leaflet-* and .marker-cluster DOM class overrides with MapLibre equivalents. CSS variables: --oha-bg-dark, --oha-bg-card, --oha-bg-controls, --oha-event. Badge color system: featured=gold, professional=orange, home_haunt=purple, event=teal, status open=green/seasonal=amber/closed=red. Layer toggle pills with active state per layer type. Mobile: horizontal scroll region pills (overflow-x auto, nowrap), safe area insets. Results counter positioned at bottom-center on mobile via translateX(-50%)."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "change",
+                        "summary":  "Rewrote shortcode HTML for MapLibre, layer toggles, and inline SVG controls",
+                        "notes":  "Updated class-oha-map-shortcode.php: added Haunts / Events layer toggle buttons to controls section using inline SVG icons (removed dashicons dependency). Rebuilt bottom sheet HTML with .oha-bottom-sheet-overlay and .oha-bottom-sheet-panel structure. Added aria attributes for accessibility. Added \u0027Other/free\u0027 type filter checkbox. Gets events config from OHA_Map_Admin::get_events_settings() to conditionally render events toggle."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "fix",
+                        "summary":  "Fixed broken brace nesting in save_settings() that prevented fields option from saving",
+                        "notes":  "In v1.2.0, the if (isset($_POST[\u0027clustering\u0027])) block was missing its closing brace, causing the if (isset($_POST[\u0027fields\u0027])) block (GeoDirectory field mapping) to be nested inside it. This meant the fields option only saved when the clustering checkbox was also present in the POST data. Fixed by restructuring all save blocks in class-oha-map-admin.php with correct independent braces."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.0.0",
+                        "type":  "note",
+                        "summary":  "v2.0.0 packaged as oha-modern-map-v2.0.0.zip with forward-slash paths verified",
+                        "notes":  "Packaged using PowerShell ZipFile::Open() + CreateEntryFromFile() with .Replace(\u0027\\\u0027,\u0027/\u0027) on all entry names. Verified 18 files all use forward-slash paths with unzip -l (no Windows backslash paths that break WordPress plugin install). v1.2.0 backed up as oha-modern-map-v1.2.0.zip.bak before overwrite. All PHP files verified BOM-free before zipping."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added Convention Mode — indoor floor plan map for OHA conventions",
+                        "notes":  "New [oha_convention_map] and [oha_convention_directory] shortcodes. MapLibre GL JS \u0027type: image\u0027 source renders uploaded floorplan images in a fake [0,0]→[1,1] coordinate space with no geographic tiles. Booth positions stored as X/Y percentages, converted to [lng,lat] coordinates client-side. Full MapLibre layer stack: booth-hitzone (wide tap target), booth-bg (circle per type color), booth-icon (symbol), booth-label (at zoom ≥10). Separate oha-convention-map.js and oha-convention.css assets. New AJAX action oha_get_convention_booths registered."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added oha_booth custom post type with meta boxes for booth location, type, and details",
+                        "notes":  "New CPT oha_booth (class-oha-convention-data.php). Post title = booth display name. Meta boxes: Booth Location and Type (number, type dropdown, floor selector, X/Y % position, W/H % size, status, custom color), and Booth Details (hours, contact, website, GeoDirectory vendor ID). CPT appears under OHA Map admin menu (show_in_menu: oha-modern-map). Supports: title, thumbnail, editor."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added 8 booth types with theme-matched SVG icons",
+                        "notes":  "Types: vendor (orange store), food (golden cauldron), restroom (male/female figures), class (purple scroll/book), stage (red curtains/spotlight), info (green info circle), exit (dark door with running figure), general (pin drop). SVG icons created in assets/images/icons/ as conv-{type}.svg. Icons loaded via Promise.all(map.loadImage()) with canvas-drawn colored circle fallback. Data-driven icon-image expression on booth-icon layer."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added multi-floor support with floor switcher pills",
+                        "notes":  "Convention settings store an array of floors: {id, label, image_id, image_url, bg_color}. switchFloor() removes the previous raster image source and adds the new one. Background color updates via setPaintProperty. Floor selector pills rendered only when floor count \u003e 1. Each booth has a floor meta field; applyFilters() shows only booths matching the active floor. Floors managed via OHA Map \u003e Convention Mode admin page."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added deep linking support for booths and vendors (?oha_booth=217, ?oha_vendor=slug)",
+                        "notes":  "checkDeepLink() reads URLSearchParams on page load. ?oha_booth=217 finds booth by number field, switches to correct floor if needed, calls flyToBooth() and showBoothCard(). ?oha_vendor=slug finds booth by vendor_id match. Both auto-open the bottom sheet card. Useful for linking directly to a specific vendor\u0027s booth from GeoDirectory listing or email campaigns."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added optional GeoDirectory vendor linkage for booths",
+                        "notes":  "Booth meta field _booth_vendor_id stores GeoDirectory post ID. When set and GeoDirectory active, get_booths() calls geodir_get_post_info($vendor_id) to pull vendor_name, vendor_desc, and vendor_logo from the GD listing into the booth data. Convention map bottom sheet card and directory cards display vendor branding if linked. Linkage is optional — booths work without it."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added Convention Mode admin page (OHA Map \u003e Convention Mode)",
+                        "notes":  "New submenu page with: Enable/disable toggle, event name/dates/venue fields, per-floor config (label, floorplan image upload via WP media library, background color picker). Floor rows are dynamically addable with JS. Shortcode reference table included. Links to oha_booth post list and add-new screens. Settings stored in oha_convention_settings option. Added oha_convention_settings to activation defaults."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "feature",
+                        "summary":  "Added [oha_convention_directory] shortcode for text-based booth listings",
+                        "notes":  "Standalone searchable card grid of all booths. Attributes: floor (filter by floor, 0=all), type (filter by type), columns (1-6, default 3), class (extra CSS). Cards show: thumbnail or vendor logo, booth number, name, type badge, hours, website link. Client-side JS search filters by title and number. No map required — can be embedded in a separate page or tab. Fully responsive grid."
+                    },
+                    {
+                        "date":  "2026-03-16",
+                        "version":  "2.1.0",
+                        "type":  "note",
+                        "summary":  "v2.1.0 packaged as oha-modern-map-v2.1.0.zip",
+                        "notes":  "Added files: includes/class-oha-convention-data.php, includes/class-oha-convention-shortcode.php, assets/js/oha-convention-map.js, assets/css/oha-convention.css, assets/images/icons/conv-{vendor,food,restroom,class,stage,info,exit,general}.svg. Modified files: oha-modern-map.php (version 2.1.0, convention class includes, AJAX hooks, CSS/JS enqueues, activation defaults), includes/class-oha-map-admin.php (Convention Mode submenu + render/save methods). All existing haunt map features preserved without changes."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "2.2.0",
+                        "type":  "feature",
+                        "summary":  "Added visual Booth Placement admin tool (OHA Map \u003e Booth Placement)",
+                        "notes":  "New admin page renders the floor plan image with DOM-overlay booth pins. Click anywhere on the image to place a new booth; drag existing pins to reposition. Panel on the right shows booth form fields: number, vendor search, type, status, hours, color, year. Pins are color-coded by type. Save and Delete buttons call AJAX handlers. Touch drag support included (touchstart/touchmove/touchend). Data config output by PHP render_placement_page() as an inline ohaPlacementConfig JS object."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "2.2.0",
+                        "type":  "feature",
+                        "summary":  "Added vendor hub integration to booth placement via searchable type-ahead dropdown",
+                        "notes":  "New AJAX handler ajax_get_vendor_hub_list() searches vendor_application CPT posts where _oha_status is Paid or Agreement Signed. Returns {id, name, status, logo} per result. Placement tool shows a live search field; selecting a vendor fills _booth_vendor_hub_id on the booth post and shows company name + color-coded status badge. get_booths() now checks _booth_vendor_hub_id first (vendor_application meta) before falling back to GeoDirectory linkage."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "2.2.0",
+                        "type":  "feature",
+                        "summary":  "Added year-to-year convention support with _booth_year meta and active_year setting",
+                        "notes":  "All booth posts now store a _booth_year meta field (defaults to active_year from convention settings). get_booths() filters by _booth_year so only the active year\u0027s booths appear on the front end and in the placement tool. Convention Settings page has a new Convention Year text field (active_year) saved to oha_convention_settings. Changing active_year switches the entire view without deleting old booths."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "2.2.0",
+                        "type":  "feature",
+                        "summary":  "Added Clone Booth Positions to New Year in Convention Settings admin page",
+                        "notes":  "New section below Floor Plans in Convention Settings. Enter a target year and click Clone -- calls ajax_clone_year_layout() which duplicates all booth posts from the active year to the new year. Clones copy: title, number, type, floor, x, y, width, height, color, status (reset to tbd). Cleared on clones: _booth_vendor_hub_id, _booth_vendor_id, hours, contact, website. Returns count of cloned posts. After cloning, admin manually updates Convention Year field and reassigns vendors in Booth Placement."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "2.2.0",
+                        "type":  "feature",
+                        "summary":  "Added ajax_save_booth_placement and ajax_delete_booth_placement AJAX handlers",
+                        "notes":  "ajax_save_booth_placement() creates (booth_id=0) or updates existing oha_booth posts from the placement tool. Saves all meta fields and returns the full booth data array for immediate pin rendering. ajax_delete_booth_placement() calls wp_trash_post(). Both require manage_options capability and verify oha_map_nonce. Registered as wp_ajax_ (admin only) in oha-modern-map.php."
+                    },
+                    {
+                        "date":  "2026-03-17",
+                        "version":  "2.2.0",
+                        "type":  "note",
+                        "summary":  "v2.2.0 packaged as modern-map-oha-v2.2.0.zip",
+                        "notes":  "New files: assets/js/admin-placement.js, assets/css/admin-placement.css. Modified files: includes/class-oha-convention-data.php (booth_year, vendor_hub_id, 4 new AJAX methods), includes/class-oha-map-admin.php (active_year field, clone year section, Booth Placement submenu + render_placement_page), oha-modern-map.php (version 2.2.0, 4 new AJAX registrations, placement asset enqueue). Packaging: ZipFile::Open() + CreateEntryFromFile() with forward-slash paths, BOM check on all PHP files."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.0",
+                        "type":  "feature",
+                        "summary":  "Added mobile=\u0027true\u0027 attribute to [oha_convention_map] for full-screen app map experience",
+                        "notes":  "New mobile attribute on [oha_convention_map] shortcode. When mobile=true: no controls bar; map fills full content area height (calc(100dvh - var(--oha-mobile-ui-offset, 110px))); touch-action:none on map container to contain pinch-zoom within the map frame. Use --oha-mobile-ui-offset CSS variable (default 110px) to account for PWA header + bottom nav height."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.0",
+                        "type":  "feature",
+                        "summary":  "Added floating filters pill and bottom-sheet filter panel for mobile mode",
+                        "notes":  "Replaces the bulky controls bar with a dark navy floating pill (top-left) showing \u0027Filters\u0027 and an active-filter count badge. Tapping opens a slide-up bottom sheet with floor tabs (if multiple floors) and type filter pills. Sheet dismisses via Done button, overlay tap, or swipe-down gesture. All filter state syncs with the map in real time."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.0",
+                        "type":  "feature",
+                        "summary":  "Added floating search bar and map/list view toggle pill for mobile mode",
+                        "notes":  "Search icon button (top-right) toggles a full-width search bar that overlays the map top. Live search filters booths as user types. A floating \u0027List View\u0027 pill (bottom-center) toggles between exclusive map view and list view -- not side-by-side. List view has its own topbar with Map/Filters buttons. Switching from list to map via tapping a booth or the Map button is animated. Booth card (bottom sheet) always triggers a map-view switch first."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.0",
+                        "type":  "note",
+                        "summary":  "v2.3.0 packaged as modern-map-oha-v2.3.0.zip",
+                        "notes":  "Modified files: includes/class-oha-convention-shortcode.php (mobile attribute, new mobile HTML branch, same JS config + mobile:true flag), assets/css/oha-convention.css (appended mobile mode styles section), assets/js/oha-convention-map.js (isMobile/listViewActive constructor props, initMobileUI(), openFilterSheet/closeFilterSheet, showListView/showMapView, updateFilterBadge, flyToBooth/showBoothCard mobile guard), oha-modern-map.php (version 2.3.0). All existing non-mobile shortcode output and JS paths completely unchanged."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Fixed mobile map stuck on loading by adding 100vh fallback for browsers without dvh support",
+                        "notes":  "Added height: calc(100vh - ...) fallback before the dvh line in .oha-conv-mobile. Without this, browsers lacking dvh support computed a 0 height on the wrapper, causing MapLibre to init with 0 height and never firing the load event."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Fixed mobile map layout timing by calling map.resize() 50ms after MapLibre init",
+                        "notes":  "Added setTimeout map.resize() call after new maplibregl.Map() when isMobile is true. Also added window resize handler. This ensures MapLibre fills the container even if CSS flex layout has not fully resolved at init time."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.1",
+                        "type":  "fix",
+                        "summary":  "Fixed filter sheet and bottom sheet slide-up animations clipped by overflow:hidden on wrapper",
+                        "notes":  "Removed overflow:hidden from .oha-conv-mobile. The filter sheet panel and bottom sheet panel start at translateY(100%) and slide up from below. overflow:hidden clipped them invisibly. Removing it is safe because all overlay elements are position:absolute and do not affect document scroll."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.2",
+                        "type":  "fix",
+                        "summary":  "Fixed boot() to check maplibregl.Map exists before init to handle partial CDN script load",
+                        "notes":  "A partially-executed CDN script passes typeof maplibregl !== \u0027undefined\u0027 but Map constructor is not yet defined. Added check: typeof maplibregl.Map !== \u0027function\u0027. This prevents a silent TypeError that left the spinner running."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.2",
+                        "type":  "fix",
+                        "summary":  "Fixed mobile map height: set explicit px height on wrapper and map-area before MapLibre init",
+                        "notes":  "Moved height calculation to before new maplibregl.Map() so MapLibre always gets a non-zero container. Also added map.resize() call at end of load callback chain and window resize handler."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.2",
+                        "type":  "fix",
+                        "summary":  "Fixed floor plan image invisible: addLayer beforeId \u0027background\u0027 rendered image behind background",
+                        "notes":  "Removed the \u0027background\u0027 beforeId argument from addLayer for floorplan-raster. MapLibre addLayer(layer, beforeId) inserts BEFORE the specified layer (visually underneath it). Without beforeId the layer is added on top of background, making the floor plan visible."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.2",
+                        "type":  "feature",
+                        "summary":  "Added 15s spinner timeout safeguard and map error logging for easier debugging",
+                        "notes":  "If the map.on(\u0027load\u0027) callback chain stalls for any reason (icon network hang, JS error), hideLoading() is called after 15s so the map is usable. map.on(\u0027error\u0027) logs to console with a clear prefix."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.3.3",
+                        "type":  "fix",
+                        "summary":  "Fixed haunt map and convention map showing no markers by updating loadImage to MapLibre v4 Promise API",
+                        "notes":  "Root cause: MapLibre GL JS v4 removed the callback form of map.loadImage(url, callback). The callback was never invoked, so the internal Promise resolve() was never called, Promise.all hung forever, and loadHaunts/booth loading was never reached. Both oha-modern-map.js and oha-convention-map.js updated to use the v4 Promise API: map.loadImage(url).then(response =\u003e { img = response.data }).catch(() =\u003e { fallback }). Affects all haunt markers and all convention booth icons."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Replaced 7 bounding-box regions with 5 county-accurate polygon regions (NW, NE, Central, SW, SE)",
+                        "notes":  "Previous 7-region system used crude axis-aligned rectangles causing awkward map views. New 5 regions (Northwest 20 counties, Northeast 16, Central 14, Southwest 21, Southeast 17) use polygon vertices tracing actual Ohio county PLSS grid lines. Out-of-state haunts fall back to nearest region centroid via Euclidean distance instead of being dropped."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Region selection uses fitBounds() for dynamic viewport-aware zoom on all screen sizes",
+                        "notes":  "Replaced fixed flyTo() + zoom integer with map.fitBounds([[west_lng, south_lat], [east_lng, north_lat]], {padding, speed}). Padding is 20px on mobile (\u003c640px) and 60px on desktop. Each region has explicit bounds in PHP stored as [[south_lat, west_lng], [north_lat, east_lng]] and converted to MapLibre order in regions_to_geojson(). All-Ohio reset uses fitBounds([[-84.82,38.38],[-80.52,41.98]])."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Added Ohio state outline GeoJSON layer to visually distinguish Ohio from surrounding states",
+                        "notes":  "New get_ohio_outline_geojson() method in OHA_Map_Regions returns a simplified ~28-point Ohio state boundary polygon as a GeoJSON Feature (coordinates in [lng,lat] order for GeoJSON). Passed to JS as ohaMapSettings.ohioOutline. addRegionLayers() adds source \u0027ohio-outline\u0027 and layer \u0027ohio-state-outline\u0027 (line type, orange #ff6b35, 2.5px, 80% opacity) after existing region fill layers."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Added mobile floating filter pill with slide-up sheet on haunt map",
+                        "notes":  "Below 640px, the desktop controls bar is hidden and a floating pill bar appears at bottom of map with a Filters pill (shows active filter count badge) and a reset pill. Tapping the pill opens a slide-up sheet containing region tabs, type toggles, and haunt count. CSS media queries handle show/hide automatically. Pattern matches the convention map mobile UI. Pill badge shows count of active filters (region + type narrowing)."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.0",
+                        "type":  "feature",
+                        "summary":  "Added region info slide-up panel with population, highlights, and Explore Haunts button",
+                        "notes":  "Clicking a region fill polygon (not a haunt marker) opens a bottom sheet showing the region name, estimated population, description, and up to 4 highlight locations. An Explore Haunts button closes the panel and filters haunts to that region. Content is admin-configurable via the new Region Info admin page (OHA Map \u003e Region Info), stored in oha_map_region_info WP option. JS checks queryRenderedFeatures for haunt markers before opening to prevent conflict."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.0",
+                        "type":  "change",
+                        "summary":  "Region color defaults updated for 5 regions; added Region Info admin page",
+                        "notes":  "oha_map_region_colors defaults trimmed from 7 to 5 slugs (removed east and west). New Region Info submenu page added under OHA Map admin menu. New get_region_info() and get_default_region_info() static methods added to OHA_Map_Admin. regionInfo and ohioOutline keys added to wp_localize_script for oha-modern-map."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.1",
+                        "type":  "fix",
+                        "summary":  "Fixed region info panel never opening: $wrapper was undefined in addRegionLayers click handler",
+                        "notes":  "addRegionLayers(map, mapId) has no $wrapper parameter. The click handler on region-fills called showRegionInfoPanel($wrapper, slug) where $wrapper was undefined, silently throwing a JS error. Fixed by deriving $wrapper from mapId: $(\u0027#\u0027 + mapId)."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.1",
+                        "type":  "fix",
+                        "summary":  "Fixed region zoom: bounds from ohaMapSettings.regions were in PHP [lat,lng] order, not MapLibre [lng,lat] order",
+                        "notes":  "PHP stores region bounds as [[south_lat, west_lng], [north_lat, east_lng]]. MapLibre fitBounds() expects [[west_lng, south_lat], [east_lng, north_lat]]. getRegionData() was returning the raw PHP array, causing fitBounds to receive swapped coordinates and zoom to the wrong location. Fixed by swapping both pairs in getRegionData() when reading from ohaMapSettings.regions."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "2.4.1",
+                        "type":  "fix",
+                        "summary":  "Fixed old 7-region polygons showing: stale oha_map_regions DB option overrode new 5-region defaults",
+                        "notes":  "get_regions() called get_option(\u0027oha_map_regions\u0027, defaults). If the option was saved when 7 regions existed (slugs east/west), it returned old data and the new 5-region polygons were never used. Fixed by checking for isset($regions[\u0027east\u0027]) || isset($regions[\u0027west\u0027]) and falling back to defaults if found. Existing custom region overrides without east/west keys continue to work."
+                    }
+                ]
+}

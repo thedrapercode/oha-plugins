@@ -1,0 +1,56 @@
+/**
+ * OHA Modern Map Admin Styles
+ */
+
+.oha-shortcode-examples {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.oha-shortcode-examples h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.oha-shortcode-examples code {
+    display: block;
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.oha-shortcode-examples p {
+    margin: 5px 0 20px;
+    color: #666;
+}
+
+.oha-color-picker {
+    max-width: 100px;
+}
+
+.form-table th {
+    width: 250px;
+}
+
+.form-table td input[type="number"] {
+    max-width: 80px;
+}
+
+.form-table td .description {
+    font-style: italic;
+    color: #666;
+}
+
+.widefat th {
+    font-weight: 600;
+}
+
+.widefat td small {
+    color: #666;
+}

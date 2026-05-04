@@ -1,0 +1,1080 @@
+/**
+ * OHA Convention Map — Styles
+ * Indoor floor plan map and directory.
+ */
+
+/* -----------------------------------------------------------------------
+ * CSS Variables
+ * --------------------------------------------------------------------- */
+.oha-convention-wrapper {
+    --oha-bg-dark:     #1a1a2e;
+    --oha-bg-card:     #16213e;
+    --oha-bg-controls: rgba(22, 33, 62, 0.97);
+    --oha-accent:      #ff6b35;
+    --oha-text:        #e8e8f0;
+    --oha-text-muted:  rgba(232, 232, 240, 0.55);
+    --oha-border:      rgba(255, 255, 255, 0.08);
+    --oha-radius:      10px;
+    --oha-transition:  0.22s ease;
+    --oha-shadow:      0 4px 24px rgba(0, 0, 0, 0.5);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--oha-text);
+    box-sizing: border-box;
+    position: relative;
+}
+
+.oha-convention-wrapper *,
+.oha-convention-wrapper *::before,
+.oha-convention-wrapper *::after {
+    box-sizing: inherit;
+}
+
+/* -----------------------------------------------------------------------
+ * Controls Bar
+ * --------------------------------------------------------------------- */
+.oha-conv-controls {
+    background: var(--oha-bg-controls);
+    border-bottom: 1px solid var(--oha-border);
+    padding: 10px 14px;
+    backdrop-filter: blur(12px);
+}
+
+.oha-conv-controls-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+}
+
+/* Event Header */
+.oha-conv-event-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 14px;
+    border-right: 1px solid var(--oha-border);
+}
+
+.oha-conv-event-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--oha-accent);
+    line-height: 1.2;
+}
+
+.oha-conv-event-dates,
+.oha-conv-venue {
+    font-size: 0.72rem;
+    color: var(--oha-text-muted);
+    line-height: 1.3;
+}
+
+/* -----------------------------------------------------------------------
+ * Filter Pills — reusing .oha-pill from main map CSS
+ * --------------------------------------------------------------------- */
+.oha-floor-pills,
+.oha-conv-type-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.oha-conv-type-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.oha-conv-type-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--type-color, #7f8c8d);
+    flex-shrink: 0;
+}
+
+/* -----------------------------------------------------------------------
+ * Search
+ * --------------------------------------------------------------------- */
+.oha-conv-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.oha-conv-search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--oha-text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.oha-conv-search {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--oha-border);
+    border-radius: 20px;
+    padding: 7px 14px 7px 34px;
+    font-size: 0.83rem;
+    color: var(--oha-text);
+    outline: none;
+    width: 190px;
+    transition: border-color var(--oha-transition), width var(--oha-transition);
+}
+
+.oha-conv-search::placeholder {
+    color: var(--oha-text-muted);
+}
+
+.oha-conv-search:focus {
+    border-color: var(--oha-accent);
+    width: 230px;
+}
+
+/* Counter */
+.oha-conv-counter {
+    font-size: 0.78rem;
+    color: var(--oha-text-muted);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.oha-conv-count {
+    font-weight: 700;
+    color: var(--oha-text);
+}
+
+/* -----------------------------------------------------------------------
+ * Body layout: map + list side by side
+ * --------------------------------------------------------------------- */
+.oha-conv-body {
+    display: flex;
+    gap: 0;
+    position: relative;
+}
+
+/* -----------------------------------------------------------------------
+ * Map Area
+ * --------------------------------------------------------------------- */
+.oha-conv-map-area {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.oha-conv-map {
+    width: 100%;
+    background: var(--oha-bg-dark);
+    display: block;
+}
+
+/* Override MapLibre default attribution */
+.oha-convention-wrapper .maplibregl-ctrl-attrib {
+    background: rgba(22, 33, 62, 0.7) !important;
+    color: rgba(255,255,255,0.4) !important;
+    font-size: 10px !important;
+}
+
+.oha-convention-wrapper .maplibregl-ctrl-attrib a {
+    color: rgba(255,255,255,0.4) !important;
+}
+
+/* Zoom overlay controls */
+.oha-conv-map-overlay-controls {
+    position: absolute;
+    bottom: 80px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+}
+
+.oha-conv-zoom-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--oha-bg-card);
+    border: 1px solid var(--oha-border);
+    border-radius: 8px;
+    color: var(--oha-text);
+    cursor: pointer;
+    transition: background var(--oha-transition), transform var(--oha-transition);
+    padding: 0;
+    line-height: 1;
+    box-shadow: var(--oha-shadow);
+}
+
+.oha-conv-zoom-btn:hover {
+    background: rgba(255, 107, 53, 0.2);
+    border-color: var(--oha-accent);
+    transform: scale(1.08);
+}
+
+.oha-conv-zoom-btn:active {
+    transform: scale(0.95);
+}
+
+/* Loading overlay */
+.oha-conv-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--oha-bg-dark);
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--oha-text-muted);
+    z-index: 5;
+    pointer-events: none;
+}
+
+.oha-conv-spinner {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(255, 107, 53, 0.25);
+    border-top-color: var(--oha-accent);
+    border-radius: 50%;
+    animation: oha-spin 0.75s linear infinite;
+}
+
+@keyframes oha-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* -----------------------------------------------------------------------
+ * List Panel
+ * --------------------------------------------------------------------- */
+.oha-conv-list-panel {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--oha-bg-card);
+    border-left: 1px solid var(--oha-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.oha-conv-list-header {
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid var(--oha-border);
+}
+
+.oha-conv-list-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--oha-text-muted);
+}
+
+.oha-conv-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.oha-conv-list::-webkit-scrollbar { width: 4px; }
+.oha-conv-list::-webkit-scrollbar-track { background: transparent; }
+.oha-conv-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+.oha-conv-list-empty {
+    padding: 24px 14px;
+    font-size: 0.83rem;
+    color: var(--oha-text-muted);
+    text-align: center;
+}
+
+.oha-conv-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--oha-border);
+    transition: background var(--oha-transition);
+    border-left: 3px solid transparent;
+}
+
+.oha-conv-list-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.oha-conv-list-item.highlighted {
+    background: rgba(255, 107, 53, 0.1);
+    border-left-color: var(--item-color, var(--oha-accent));
+}
+
+.oha-conv-list-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.oha-conv-list-thumb-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.oha-conv-list-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.oha-conv-list-num {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--item-color, var(--oha-accent));
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.oha-conv-list-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--oha-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.oha-conv-list-type {
+    font-size: 0.7rem;
+    color: var(--oha-text-muted);
+}
+
+/* -----------------------------------------------------------------------
+ * Bottom Sheet (reuses .oha-bottom-sheet from main map CSS; extend here)
+ * --------------------------------------------------------------------- */
+.oha-conv-bottom-sheet .oha-bottom-sheet-panel {
+    max-height: 72vh;
+}
+
+/* Booth card content */
+.oha-conv-card-thumb-wrap {
+    width: 100%;
+    aspect-ratio: 16/7;
+    overflow: hidden;
+    border-radius: var(--oha-radius) var(--oha-radius) 0 0;
+    margin: -0px;
+}
+
+.oha-conv-card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.oha-conv-card-header {
+    padding: 14px 16px 8px;
+}
+
+.oha-conv-card-number {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--oha-accent);
+    margin-bottom: 4px;
+}
+
+.oha-conv-card-title {
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--oha-text);
+    line-height: 1.3;
+}
+
+.oha-conv-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.oha-conv-card-type {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.oha-conv-card-status {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.oha-conv-card-status.open    { background: rgba(39, 174, 96, 0.2);  color: #2ecc71; }
+.oha-conv-card-status.closed  { background: rgba(231, 76, 60, 0.2);  color: #e74c3c; }
+.oha-conv-card-status.tbd     { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+
+.oha-conv-card-desc {
+    padding: 0 16px 10px;
+    font-size: 0.83rem;
+    color: var(--oha-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.oha-conv-card-info {
+    padding: 0 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.oha-conv-card-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.83rem;
+    color: var(--oha-text-muted);
+    line-height: 1.4;
+}
+
+.oha-conv-card-icon {
+    font-style: normal;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    margin-top: 1px;
+}
+
+.oha-conv-card-link {
+    color: var(--oha-accent);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.83rem;
+}
+
+.oha-conv-card-link:hover {
+    text-decoration: underline;
+}
+
+.oha-conv-card-edit {
+    display: block;
+    margin: 4px 16px 16px;
+    font-size: 0.75rem;
+    color: var(--oha-text-muted);
+    text-decoration: none;
+    text-align: right;
+}
+
+.oha-conv-card-edit:hover {
+    color: var(--oha-accent);
+}
+
+/* -----------------------------------------------------------------------
+ * Directory Shortcode [oha_convention_directory]
+ * --------------------------------------------------------------------- */
+.oha-conv-directory {
+    --dir-cols: 3;
+}
+
+.oha-conv-dir-search-row {
+    margin-bottom: 16px;
+}
+
+.oha-conv-dir-search {
+    width: 100%;
+    max-width: 360px;
+    padding: 9px 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--oha-text);
+    outline: none;
+}
+
+.oha-conv-dir-search:focus {
+    border-color: #ff6b35;
+}
+
+.oha-conv-dir-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--dir-cols), 1fr);
+    gap: 16px;
+}
+
+.oha-conv-dir-card {
+    background: #16213e;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-top: 3px solid var(--booth-color, #ff6b35);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.oha-conv-dir-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.oha-conv-dir-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+}
+
+.oha-conv-dir-info {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.oha-conv-dir-number {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--booth-color, #ff6b35);
+}
+
+.oha-conv-dir-name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e8e8f0;
+    line-height: 1.3;
+}
+
+.oha-conv-dir-type-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    color: rgba(232,232,240,0.7);
+    align-self: flex-start;
+}
+
+.oha-conv-dir-hours {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: rgba(232,232,240,0.55);
+}
+
+.oha-conv-dir-link {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #ff6b35;
+    text-decoration: none;
+}
+
+.oha-conv-dir-link:hover {
+    text-decoration: underline;
+}
+
+.oha-conv-dir-empty {
+    color: rgba(232,232,240,0.5);
+    font-size: 0.9rem;
+    padding: 20px 0;
+}
+
+/* -----------------------------------------------------------------------
+ * Responsive
+ * --------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .oha-conv-body {
+        flex-direction: column;
+    }
+
+    .oha-conv-list-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--oha-border);
+        max-height: 240px;
+    }
+
+    .oha-conv-controls-inner {
+        gap: 8px;
+    }
+
+    .oha-conv-event-header {
+        border-right: none;
+        padding-right: 0;
+        border-bottom: 1px solid var(--oha-border);
+        padding-bottom: 6px;
+        width: 100%;
+    }
+
+    .oha-floor-pills,
+    .oha-conv-type-filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .oha-floor-pills::-webkit-scrollbar,
+    .oha-conv-type-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .oha-conv-search {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .oha-conv-dir-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .oha-conv-map-overlay-controls {
+        bottom: 16px;
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .oha-conv-dir-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .oha-conv-list-panel {
+        max-height: 200px;
+    }
+}
+
+/* =======================================================================
+ * MOBILE APP MODE  [oha_convention_map mobile="true"]
+ * Full-height map with floating overlay controls — no bulky controls bar.
+ * ===================================================================== */
+
+/* -----------------------------------------------------------------------
+ * Wrapper — fills available content area height
+ * --------------------------------------------------------------------- */
+.oha-conv-mobile {
+    position: relative;
+    height: calc(100vh - var(--oha-mobile-ui-offset, 110px));
+    height: calc(100dvh - var(--oha-mobile-ui-offset, 110px));
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    background: var(--oha-bg-dark);
+}
+
+/* Map area fills wrapper */
+.oha-conv-mobile .oha-conv-map-area {
+    position: relative;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+}
+
+/* Map div fills its container — touch-action:none prevents page pinch/zoom */
+.oha-conv-mobile .oha-conv-map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+/* Bottom sheet sits above everything inside the mobile wrapper */
+.oha-conv-mobile .oha-conv-bottom-sheet {
+    z-index: 100;
+}
+
+/* Zoom controls — nudge up to clear the list view pill */
+.oha-conv-mobile .oha-conv-map-overlay-controls {
+    bottom: 72px;
+    right: 14px;
+}
+
+/* -----------------------------------------------------------------------
+ * Floating Filters Pill — top left
+ * --------------------------------------------------------------------- */
+.oha-mob-filters-pill {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(22, 33, 62, 0.9);
+    color: var(--oha-text);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    padding: 9px 14px 9px 12px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background var(--oha-transition);
+    line-height: 1;
+}
+
+.oha-mob-filters-pill:hover {
+    background: rgba(22, 33, 62, 1);
+}
+
+.oha-mob-pill-text {
+    color: var(--oha-text);
+}
+
+.oha-mob-pill-badge {
+    background: var(--oha-accent);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 7px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* -----------------------------------------------------------------------
+ * Top-right action button group (search icon, etc.)
+ * --------------------------------------------------------------------- */
+.oha-mob-top-right {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+}
+
+.oha-mob-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(22, 33, 62, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    color: var(--oha-text);
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background var(--oha-transition);
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.oha-mob-action-btn:hover {
+    background: rgba(22, 33, 62, 1);
+}
+
+/* -----------------------------------------------------------------------
+ * Floating List View toggle pill — bottom center
+ * --------------------------------------------------------------------- */
+.oha-mob-list-toggle-btn {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(22, 33, 62, 0.92);
+    color: var(--oha-text);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 24px;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    white-space: nowrap;
+    transition: background var(--oha-transition);
+    line-height: 1;
+}
+
+.oha-mob-list-toggle-btn:hover {
+    background: rgba(22, 33, 62, 1);
+}
+
+/* -----------------------------------------------------------------------
+ * Search bar — slides down from top of map area
+ * --------------------------------------------------------------------- */
+.oha-mob-search-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    padding: 10px 12px;
+    background: rgba(22, 33, 62, 0.97);
+    border-bottom: 1px solid var(--oha-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.oha-mob-search-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--oha-border);
+    border-radius: 24px;
+    padding: 9px 14px;
+}
+
+.oha-mob-search-inner .oha-conv-search {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.9rem;
+    color: var(--oha-text);
+    outline: none;
+    width: auto;
+    min-width: 0;
+}
+
+.oha-mob-search-close {
+    background: none;
+    border: none;
+    color: var(--oha-text-muted);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* -----------------------------------------------------------------------
+ * Filter sheet — slides up from bottom over the map
+ * --------------------------------------------------------------------- */
+.oha-mob-filter-sheet {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+}
+
+.oha-mob-filter-sheet.active {
+    pointer-events: all;
+}
+
+.oha-mob-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.oha-mob-filter-sheet.active .oha-mob-overlay {
+    opacity: 1;
+}
+
+.oha-mob-sheet-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--oha-bg-card);
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--oha-border);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 78vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.oha-mob-filter-sheet.active .oha-mob-sheet-panel {
+    transform: translateY(0);
+}
+
+.oha-mob-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    margin: 12px auto 8px;
+    flex-shrink: 0;
+}
+
+.oha-mob-sheet-body {
+    padding: 4px 20px 28px;
+}
+
+.oha-mob-filter-section {
+    margin-bottom: 22px;
+}
+
+.oha-mob-section-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--oha-text-muted);
+    margin-bottom: 10px;
+}
+
+.oha-mob-filter-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--oha-border);
+    margin-top: 4px;
+}
+
+.oha-mob-filter-count {
+    font-size: 0.83rem;
+    color: var(--oha-text-muted);
+}
+
+.oha-mob-filter-count .oha-conv-count {
+    font-weight: 700;
+    color: var(--oha-text);
+}
+
+.oha-mob-sheet-done {
+    background: var(--oha-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 22px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity var(--oha-transition);
+    line-height: 1;
+}
+
+.oha-mob-sheet-done:hover {
+    opacity: 0.88;
+}
+
+/* -----------------------------------------------------------------------
+ * List view — full overlay replacing map, toggled by pill
+ * --------------------------------------------------------------------- */
+.oha-mob-list-view {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    background: var(--oha-bg-dark);
+}
+
+.oha-mob-list-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--oha-bg-card);
+    border-bottom: 1px solid var(--oha-border);
+    flex-shrink: 0;
+    min-height: 54px;
+}
+
+.oha-mob-map-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--oha-text);
+    border: 1px solid var(--oha-border);
+    border-radius: 20px;
+    padding: 7px 13px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    transition: background var(--oha-transition);
+    line-height: 1;
+}
+
+.oha-mob-map-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.oha-mob-list-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--oha-text);
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Filter icon button in list topbar */
+.oha-mob-list-filter-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--oha-border);
+    border-radius: 50%;
+    color: var(--oha-text);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background var(--oha-transition);
+    padding: 0;
+}
+
+.oha-mob-list-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.oha-mob-list-filter-btn .oha-mob-pill-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    min-width: 14px;
+}
+
+/* Scrollable list inside list view */
+.oha-mob-list-view .oha-conv-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <radialGradient id="sg" cx="50%" cy="80%" r="60%">
+      <stop offset="0%" stop-color="#ff3333"/>
+      <stop offset="100%" stop-color="#7a0000"/>
+    </radialGradient>
+  </defs>
+  <!-- Stage platform -->
+  <path d="M4 34 L44 34 L40 42 H8 Z" fill="#2d0000" stroke="#7a0000" stroke-width="1"/>
+  <!-- Stage top -->
+  <rect x="6" y="26" width="36" height="8" rx="2" fill="url(#sg)"/>
+  <!-- Curtains left -->
+  <path d="M6 6 Q4 18 8 26" fill="none" stroke="#8b0000" stroke-width="5" stroke-linecap="round"/>
+  <!-- Curtains right -->
+  <path d="M42 6 Q44 18 40 26" fill="none" stroke="#8b0000" stroke-width="5" stroke-linecap="round"/>
+  <!-- Spotlight beam -->
+  <path d="M24 6 L18 26 L30 26 Z" fill="rgba(255,220,0,0.15)"/>
+  <!-- Spotlight circle -->
+  <circle cx="24" cy="6" r="5" fill="#ffd700" opacity="0.8"/>
+  <circle cx="24" cy="6" r="3" fill="#fff" opacity="0.6"/>
+  <!-- Star on stage -->
+  <polygon points="24,18 25.5,22 30,22 26.5,24.5 27.8,29 24,26.5 20.2,29 21.5,24.5 18,22 22.5,22"
+           fill="#ffd700" opacity="0.8"/>
+</svg>

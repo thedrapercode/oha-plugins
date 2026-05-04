@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <!-- Background -->
+  <rect x="2" y="2" width="44" height="44" rx="6" fill="#2d3436"/>
+  <rect x="4" y="4" width="40" height="40" rx="5" fill="#636e72" opacity="0.4"/>
+  <!-- Door frame -->
+  <rect x="14" y="10" width="20" height="28" rx="2" fill="none" stroke="#95a5a6" stroke-width="2"/>
+  <!-- Door open (right side) -->
+  <path d="M26 10 L34 13 L34 38 L26 38 Z" fill="#7f8c8d" opacity="0.5"/>
+  <!-- Running figure -->
+  <circle cx="17" cy="18" r="3" fill="#ffffff"/>
+  <path d="M17 21 L15 30 M17 21 L20 28" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M15 30 L13 36 M15 30 L17 36" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M17 23 L14 27 M17 23 L21 25" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <!-- Arrow pointing right (exit direction) -->
+  <path d="M28 24 L36 24 M32 20 L36 24 L32 28" stroke="#27ae60" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="hg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff8c5a"/>
+      <stop offset="100%" stop-color="#c0392b"/>
+    </linearGradient>
+  </defs>
+  <!-- House base -->
+  <rect x="10" y="26" width="28" height="18" rx="1" fill="url(#hg)" stroke="#8b2500" stroke-width="1.2"/>
+  <!-- Roof -->
+  <polygon points="6,26 24,8 42,26" fill="#8b2500" stroke="#5c1a00" stroke-width="1.2" stroke-linejoin="round"/>
+  <!-- Door -->
+  <rect x="20" y="34" width="8" height="10" rx="2" fill="#1a1a1a"/>
+  <circle cx="27" cy="39" r="1" fill="#ff6b35"/>
+  <!-- Windows - glowing orange -->
+  <rect x="11" y="29" width="8" height="7" rx="1" fill="#ffd700" opacity="0.9"/>
+  <rect x="29" y="29" width="8" height="7" rx="1" fill="#ffd700" opacity="0.9"/>
+  <!-- Window cross -->
+  <line x1="15" y1="29" x2="15" y2="36" stroke="#b8860b" stroke-width="0.8"/>
+  <line x1="11" y1="32.5" x2="19" y2="32.5" stroke="#b8860b" stroke-width="0.8"/>
+  <line x1="33" y1="29" x2="33" y2="36" stroke="#b8860b" stroke-width="0.8"/>
+  <line x1="29" y1="32.5" x2="37" y2="32.5" stroke="#b8860b" stroke-width="0.8"/>
+  <!-- Chimney -->
+  <rect x="30" y="10" width="5" height="9" rx="0.5" fill="#5c1a00" stroke="#3d0f00" stroke-width="0.8"/>
+  <!-- Moon (spooky atmosphere) -->
+  <circle cx="39" cy="7" r="4" fill="#ffd700" opacity="0.8"/>
+  <circle cx="41" cy="6" r="3.2" fill="#1a1a2e" opacity="0.9"/>
+</svg>

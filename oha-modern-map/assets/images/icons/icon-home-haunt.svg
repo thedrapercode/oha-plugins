@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <radialGradient id="gg" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#d7b3f7"/>
+      <stop offset="100%" stop-color="#7b2d8b"/>
+    </radialGradient>
+  </defs>
+  <!-- Ghost body -->
+  <ellipse cx="24" cy="20" rx="14" ry="16" fill="url(#gg)" opacity="0.92"/>
+  <!-- Ghost bottom wavy skirt -->
+  <path d="M10 30 Q10 38 14 36 Q16 40 19 37 Q22 42 24 38 Q26 42 29 37 Q32 40 34 36 Q38 38 38 30 Z" fill="url(#gg)" opacity="0.92"/>
+  <!-- Eyes -->
+  <ellipse cx="19" cy="18" rx="3.5" ry="4" fill="#1a1a1a"/>
+  <ellipse cx="29" cy="18" rx="3.5" ry="4" fill="#1a1a1a"/>
+  <!-- Eye shine -->
+  <circle cx="20.5" cy="16.5" r="1.2" fill="white" opacity="0.7"/>
+  <circle cx="30.5" cy="16.5" r="1.2" fill="white" opacity="0.7"/>
+  <!-- Smile -->
+  <path d="M19 24 Q24 28 29 24" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Sparkles -->
+  <circle cx="8" cy="12" r="1.5" fill="#9d4edd" opacity="0.7"/>
+  <circle cx="40" cy="10" r="1.2" fill="#b46ef0" opacity="0.6"/>
+  <circle cx="12" cy="38" r="1" fill="#9d4edd" opacity="0.5"/>
+  <circle cx="37" cy="36" r="1" fill="#b46ef0" opacity="0.5"/>
+  <!-- Ghost aura -->
+  <ellipse cx="24" cy="24" rx="18" ry="18" fill="none" stroke="#9d4edd" stroke-width="0.8" opacity="0.3"/>
+</svg>

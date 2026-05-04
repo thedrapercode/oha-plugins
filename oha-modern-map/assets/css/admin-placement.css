@@ -1,0 +1,231 @@
+/**
+ * OHA Convention Map - Booth Placement Tool Styles
+ * Admin CSS for the Booth Placement page
+ */
+
+/* ---------------------------------------------------------------
+   Layout
+--------------------------------------------------------------- */
+
+.oha-placement-floor-tabs {
+    margin: 12px 0 14px;
+}
+
+.oha-placement-floor-tabs .oha-floor-tab {
+    margin-right: 4px;
+    background: #f0f0f1;
+    border-color: #c3c4c7;
+    color: #3c434a;
+}
+
+.oha-placement-floor-tabs .oha-floor-tab.active {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.oha-placement-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------
+   Canvas
+--------------------------------------------------------------- */
+
+.oha-placement-canvas-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#oha-placement-canvas {
+    position: relative;
+    display: inline-block;
+    cursor: crosshair;
+    user-select: none;
+    -webkit-user-select: none;
+    line-height: 0;
+}
+
+#oha-placement-img {
+    display: block;
+    max-width: 100%;
+    border: 2px solid #c3c4c7;
+    border-radius: 4px;
+    background: #1a1a2e;
+}
+
+#oha-placement-img-placeholder {
+    width: 600px;
+    max-width: 100%;
+    height: 400px;
+    border: 2px dashed #c3c4c7;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f6f7f7;
+    color: #999;
+    font-size: 14px;
+}
+
+/* ---------------------------------------------------------------
+   Booth Pins
+--------------------------------------------------------------- */
+
+.oha-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    cursor: grab;
+    z-index: 10;
+    line-height: 1;
+}
+
+.oha-pin:active,
+.oha-pin.is-dragging {
+    cursor: grabbing;
+    z-index: 100;
+    opacity: 0.85;
+}
+
+.oha-pin-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--pin-color, #ff6b35);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: box-shadow 0.15s ease;
+    margin: 0 auto;
+}
+
+.oha-pin.selected .oha-pin-dot {
+    box-shadow:
+        0 0 0 3px #fff,
+        0 0 0 5px var(--pin-color, #ff6b35),
+        0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.oha-pin-label {
+    font-size: 10px;
+    white-space: nowrap;
+    text-align: center;
+    margin-top: 3px;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+/* ---------------------------------------------------------------
+   Detail Panel
+--------------------------------------------------------------- */
+
+.oha-placement-panel {
+    width: 300px;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 18px 16px;
+    min-height: 200px;
+    position: sticky;
+    top: 32px;
+}
+
+.oha-placement-panel h3 {
+    margin: 0 0 14px;
+    padding: 0 0 10px;
+    border-bottom: 1px solid #dcdcde;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+/* ---------------------------------------------------------------
+   Vendor Search
+--------------------------------------------------------------- */
+
+.oha-vendor-search-results {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    background: #fff;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.oha-vendor-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f1;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.oha-vendor-item:last-child {
+    border-bottom: none;
+}
+
+.oha-vendor-item:hover {
+    background: #f0f6fc;
+}
+
+.oha-vendor-none {
+    color: #999;
+    cursor: default;
+    font-style: italic;
+}
+
+.oha-vendor-none:hover {
+    background: transparent;
+}
+
+/* ---------------------------------------------------------------
+   Color Picker Override (keep compact in panel)
+--------------------------------------------------------------- */
+
+.oha-placement-panel .wp-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.oha-placement-panel .wp-color-result {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------
+   Responsive
+--------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .oha-placement-layout {
+        flex-direction: column;
+    }
+
+    .oha-placement-panel {
+        width: 100%;
+        position: static;
+    }
+}

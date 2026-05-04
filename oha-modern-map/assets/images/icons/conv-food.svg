@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="fg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffe066"/>
+      <stop offset="100%" stop-color="#f0a500"/>
+    </linearGradient>
+  </defs>
+  <!-- Pumpkin cauldron / bowl shape -->
+  <ellipse cx="24" cy="34" rx="16" ry="7" fill="#8b4513"/>
+  <path d="M8 28 Q8 34 24 34 Q40 34 40 28 L38 22 H10 Z" fill="#a0522d"/>
+  <!-- Steam wisps -->
+  <path d="M17 20 Q15 14 17 10 Q19 6 17 2" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M24 18 Q22 12 24 8 Q26 4 24 0" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M31 20 Q29 14 31 10 Q33 6 31 2" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Food inside cauldron (liquid) -->
+  <ellipse cx="24" cy="26" rx="13" ry="5" fill="url(#fg)" opacity="0.9"/>
+  <!-- Bubbles -->
+  <circle cx="18" cy="25" r="2" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="27" cy="24" r="1.5" fill="rgba(255,255,255,0.35)"/>
+  <circle cx="32" cy="26" r="1.8" fill="rgba(255,255,255,0.3)"/>
+</svg>
