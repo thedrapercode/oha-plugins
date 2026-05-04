@@ -278,11 +278,12 @@ class OHA_Convention_Shortcode {
                 'pluginUrl'    => OHA_MODERN_MAP_URL,
                 'floors'       => $floors_js,
                 'initialFloor' => $floor_id,
-                'showList'     => true,
-                'mobile'       => true,
-                'pinSize'      => intval($settings['pin_size'] ?? 5),
-                'eventName'    => $settings['event_name'] ?? '',
-                'venueName'    => $settings['venue_name'] ?? '',
+                'showList'      => true,
+                'mobile'        => true,
+                'pinSize'       => intval($settings['pin_size'] ?? 5),
+                'deepLinkZoom'  => intval($settings['deep_link_zoom'] ?? 10),
+                'eventName'     => $settings['event_name'] ?? '',
+                'venueName'     => $settings['venue_name'] ?? '',
             ]); ?>;
             window.ohaConventionConfig = window.ohaConventionConfig || [];
             window.ohaConventionConfig.push(convData);
@@ -443,10 +444,11 @@ class OHA_Convention_Shortcode {
                 'pluginUrl'    => OHA_MODERN_MAP_URL,
                 'floors'       => $floors_js,
                 'initialFloor' => $floor_id,
-                'showList'     => $atts['show_list'] === 'true',
-                'pinSize'      => intval($settings['pin_size'] ?? 5),
-                'eventName'    => $settings['event_name'] ?? '',
-                'venueName'    => $settings['venue_name'] ?? '',
+                'showList'      => $atts['show_list'] === 'true',
+                'pinSize'       => intval($settings['pin_size'] ?? 5),
+                'deepLinkZoom'  => intval($settings['deep_link_zoom'] ?? 10),
+                'eventName'     => $settings['event_name'] ?? '',
+                'venueName'     => $settings['venue_name'] ?? '',
             ]); ?>;
             window.ohaConventionConfig = window.ohaConventionConfig || [];
             window.ohaConventionConfig.push(convData);

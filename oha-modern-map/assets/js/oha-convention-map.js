@@ -115,6 +115,22 @@
                 setTimeout(function () { self.boot(); }, 400);
                 return;
             }
+            // Lock page scroll in mobile mode so overlays stay in place and
+            // touch events reach MapLibre instead of the browser's scroll handler.
+            if (self.isMobile) {
+                var sy = window.scrollY || window.pageYOffset || 0;
+                document.documentElement.classList.add('oha-map-page-active');
+                document.body.classList.add('oha-map-page-active');
+                document.body.style.top = '-' + sy + 'px';
+                // Restore scroll position when map is left (popstate / pagehide)
+                window.addEventListener('pagehide', function onLeave() {
+                    document.documentElement.classList.remove('oha-map-page-active');
+                    document.body.classList.remove('oha-map-page-active');
+                    document.body.style.top = '';
+                    window.scrollTo(0, sy);
+                    window.removeEventListener('pagehide', onLeave);
+                });
+            }
             self.initMap();
         },
 
@@ -187,6 +203,8 @@
                             self.hideLoading();
                             // Ensure MapLibre fills the container now that content is visible
                             if (self.isMobile && self.map) self.map.resize();
+                            // Fit the floor plan to the container so pins are visible at a usable zoom
+                            try { self.map.fitBounds([[0, 0], [1, 1]], { padding: 20, duration: 0 }); } catch(e) {}
                             self.checkDeepLink();
                             self.initControls();
                             self.initBottomSheet();
@@ -643,9 +661,10 @@
             }
             var lng = (parseFloat(booth.x) || 0) / 100;
             var lat = 1 - (parseFloat(booth.y) || 0) / 100;
+            var targetZoom = this.config.deepLinkZoom || 10;
             this.map.flyTo({
                 center: [lng, lat],
-                zoom:   Math.max(this.map.getZoom(), 14),
+                zoom:   targetZoom,
                 duration: 500,
             });
         },

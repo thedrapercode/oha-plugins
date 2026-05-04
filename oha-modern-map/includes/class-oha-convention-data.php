@@ -284,8 +284,12 @@ class OHA_Convention_Data {
             $year = $settings['active_year'] ?? date('Y');
         }
 
+        // Match booths for the active year OR booths that have no year set
+        // (created before year tracking was added).
         $meta_query = [
+            'relation' => 'OR',
             ['key' => '_booth_year', 'value' => $year, 'compare' => '='],
+            ['key' => '_booth_year', 'compare' => 'NOT EXISTS'],
         ];
 
         if ($floor_id) {
@@ -696,8 +700,9 @@ class OHA_Convention_Data {
             'event_name'  => '',
             'event_dates' => '',
             'venue_name'  => '',
-            'pin_size'    => 5,
-            'floors'      => [
+            'pin_size'       => 5,
+            'deep_link_zoom' => 10,
+            'floors'         => [
                 [
                     'id'        => 1,
                     'label'     => 'Main Hall',

@@ -669,6 +669,17 @@
 }
 
 /* =======================================================================
+ * PAGE SCROLL LOCK — applied to html/body when mobile map is active
+ * Prevents page scroll from drifting the map wrapper off-screen.
+ * ===================================================================== */
+html.oha-map-page-active { overflow: hidden; }
+body.oha-map-page-active {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+}
+
+/* =======================================================================
  * MOBILE APP MODE  [oha_convention_map mobile="true"]
  * Full-height map with floating overlay controls — no bulky controls bar.
  * ===================================================================== */
