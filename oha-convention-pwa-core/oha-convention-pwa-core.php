@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Convention PWA Core
  * Description: PWA for OHA Convention 2026 — Schedule, Push Notifications, Offline Support. Actor Passport and Badge Trading require the OHA Passport Hub plugin.
- * Version: 3.21.0
+ * Version: 3.22.0
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-convention-pwa
@@ -202,7 +202,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants — all names used by every included class must be defined here
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PWA_VERSION',    '3.21.0' );
+define( 'OHA_PWA_VERSION',    '3.22.0' );
 define( 'OHA_PWA_DIR',        plugin_dir_path( __FILE__ ) );   // used by stable includes
 define( 'OHA_PWA_URL',        plugin_dir_url( __FILE__ ) );    // used by stable includes
 define( 'OHA_PWA_SCOPE',      '/convention/' );                // used by service worker & manifest
@@ -659,6 +659,22 @@ class OHA_Convention_PWA_Core {
 	}
 
 	// ─────────────────────────────────────────────────────────────────────────
+	// Static convention SW file management
+	//
+	// GoDaddy's Nginx serves .js extensions as static files before PHP runs,
+	// so the do_parse_request intercept never fires for /convention-sw.js.
+	// We generate the SW content and write it as a physical file to ABSPATH
+	// so Nginx finds a real file without needing to reach PHP.
+	// Must be called after plugins_loaded (needs rest_url, constants, options).
+	// ─────────────────────────────────────────────────────────────────────────
+	public static function write_convention_static_sw() {
+		$static_sw_path = ABSPATH . 'convention-sw.js';
+		$content = OHA_PWA_Service_Worker::generate();
+		file_put_contents( $static_sw_path, $content );
+		update_option( 'oha_pwa_sw_written_version', OHA_PWA_VERSION );
+	}
+
+	// ─────────────────────────────────────────────────────────────────────────
 	// Static Perfecty SW file management
 	//
 	// GoDaddy's Nginx serves .js extensions as static files before PHP runs,
@@ -740,6 +756,15 @@ class OHA_Convention_PWA_Core {
 // ─────────────────────────────────────────────────────────────────────────────
 add_action( 'plugins_loaded', function() {
 	OHA_Convention_PWA_Core::get_instance();
+
+	// Regenerate static convention-sw.js whenever the plugin version changes.
+	// GoDaddy Nginx serves .js files directly before PHP runs, so the physical
+	// file must be kept current. This runs on every request but the option
+	// check makes it a no-op after the first load of any given version.
+	if ( get_option( 'oha_pwa_sw_written_version' ) !== OHA_PWA_VERSION ) {
+		OHA_Convention_PWA_Core::write_convention_static_sw();
+	}
+
 	// Run table upgrade when DB schema version is behind (safe to run on every update).
 	if ( get_option( 'oha_pwa_db_version' ) !== '2.0' ) {
 		OHA_PWA_Database::create_tables();
@@ -756,8 +781,9 @@ register_activation_hook( __FILE__, function() {
 	OHA_PWA_Database::create_tables();
 	OHA_PWA_Database::add_indexes();
 
-	// Write static perfecty-push-sw.js to web root so GoDaddy Nginx can serve it
-	// directly without needing to reach PHP (Nginx intercepts .js before WordPress).
+	// Write static convention-sw.js and perfecty-push-sw.js to web root so
+	// GoDaddy Nginx can serve them directly (Nginx intercepts .js before WordPress).
+	OHA_Convention_PWA_Core::write_convention_static_sw();
 	OHA_Convention_PWA_Core::write_perfecty_static_sw();
 } );
 

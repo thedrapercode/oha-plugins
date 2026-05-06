@@ -439,6 +439,8 @@ function ohaVolHandbookToggle(btn) {
     // map deep-link (tap card → map tab at vendor booth), remove button.
     // ─────────────────────────────────────────────────────────────────────
     public function favorite_vendors( $atts ) {
+        $convention_map_url = get_option( 'oha_pwa_convention_map_url', '/convention/2026-convention/map/' );
+
         // Build a server-side lookup of all paid vendors so the renderer
         // always shows fresh name/logo/website regardless of what was saved
         // in localStorage (handles stale data from previous plugin versions).
@@ -499,8 +501,6 @@ function ohaVolHandbookToggle(btn) {
             -webkit-tap-highlight-color: transparent;
             transition: background .18s;
         }
-        .oha-msv-card.has-booth { cursor: pointer; }
-        .oha-msv-card.has-booth:active { background: rgba(173,49,25,.18); }
         .oha-msv-thumb {
             width: 58px; height: 58px;
             border-radius: 8px;
@@ -538,11 +538,18 @@ function ohaVolHandbookToggle(btn) {
             border-radius: 4px;
             padding: 2px 7px;
         }
-        .oha-msv-map-hint {
-            display: block;
-            font-size: 10px; color: rgba(255,255,255,.28);
-            margin-top: 2px;
+        .oha-msv-locate-btn {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 4px 10px;
+            font-size: 11px; font-weight: 600;
+            color: #fff;
+            background: #AD3119;
+            border-radius: 5px;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
         }
+        .oha-msv-locate-btn:hover { background: #c73a1f; color: #fff; }
         .oha-msv-remove {
             position: absolute;
             top: 8px; right: 8px;
@@ -565,7 +572,7 @@ function ohaVolHandbookToggle(btn) {
         </div>
         <script>
         jQuery(document).ready(function($) {
-            var MAP_BASE = '/convention/2026-convention/map/';
+            var MAP_BASE = <?php echo wp_json_encode( rtrim( $convention_map_url, '/' ) . '/' ); ?>;
             var lookup   = window.ohaVendorLookup || {};
 
             function esc(str) {
@@ -596,9 +603,7 @@ function ohaVolHandbookToggle(btn) {
 
                     // Skip if this vendor ID is no longer in the paid vendor list
                     // (i.e. they lost Paid status) — still show with whatever we have
-                    html += '<div class="oha-msv-card' + (hasBooth ? ' has-booth' : '') + '"';
-                    if (hasBooth) html += ' data-map-url="' + esc(mapUrl) + '"';
-                    html += '>';
+                    html += '<div class="oha-msv-card">';
 
                     // Thumbnail
                     html += '<div class="oha-msv-thumb">';
@@ -617,7 +622,7 @@ function ohaVolHandbookToggle(btn) {
                     }
                     if (hasBooth) {
                         html += '<span class="oha-msv-booth">&#128205; Booth ' + esc(v.booth) + '</span>';
-                        html += '<span class="oha-msv-map-hint">Tap to find on map</span>';
+                        html += '<a class="oha-msv-locate-btn" href="' + esc(mapUrl) + '">Locate Booth on Map</a>';
                     }
                     html += '</div>';
 
@@ -635,11 +640,6 @@ function ohaVolHandbookToggle(btn) {
                     delete f[id];
                     localStorage.setItem('oha_favorite_vendors', JSON.stringify(f));
                     renderFavoriteVendors();
-                });
-
-                container.on('click', '.oha-msv-card.has-booth', function() {
-                    var url = $(this).data('map-url');
-                    if (url) window.location.href = url;
                 });
             }
 

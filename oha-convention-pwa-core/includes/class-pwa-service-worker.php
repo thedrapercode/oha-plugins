@@ -38,19 +38,27 @@ const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const CACHE_IMAGES = `${CACHE_VERSION}-images`;
 const CACHE_API = `${CACHE_VERSION}-api`;
 
+// Network-first timeout: if network doesn't respond within this many ms, serve from cache.
+// Keeps the app snappy on slow/spotty connections without waiting for a full network timeout.
+const NETWORK_TIMEOUT_MS = 3000;
+
 // Files to cache immediately on install (only essential files that definitely exist)
 const STATIC_CACHE_FILES = [
     '<?php echo OHA_PWA_SCOPE; ?>'
 ];
 
-// Optional files to cache (won't fail if they don't exist)
+// Optional files to cache on install (won't fail if they don't exist or return non-ok)
 const OPTIONAL_CACHE_FILES = [
     '<?php echo OHA_PWA_SCOPE; ?>schedule/',
     '<?php echo OHA_PWA_SCOPE; ?>vendors/',
     '<?php echo OHA_PWA_SCOPE; ?>map/',
     '<?php echo OHA_PWA_URL; ?>assets/css/pwa-styles.css',
     '<?php echo OHA_PWA_URL; ?>assets/js/pwa-utils.js',
-    '<?php echo OHA_PWA_URL; ?>assets/js/fuse.min.js'
+    '<?php echo OHA_PWA_URL; ?>assets/js/fuse.min.js',
+    // MapLibre GL JS — loaded from unpkg CDN by the map plugin.
+    // Pre-cached here so the convention map page works offline.
+    'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js',
+    'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css'
 ];
 
 /**
@@ -130,13 +138,21 @@ self.addEventListener('activate', event => {
  */
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
-    
-    // CRITICAL: Only handle convention paths
+
+    // Intercept pre-cached external CDN resources (e.g. MapLibre from unpkg).
+    // These are outside convention scope but were cached on SW install so they
+    // must be served from cache when offline rather than hitting the network.
+    if (url.hostname !== self.location.hostname && isPreCachedExternal(url)) {
+        event.respondWith(handleStaticRequest(event.request));
+        return;
+    }
+
+    // CRITICAL: Only handle convention paths for same-origin requests
     if (!isConventionScope(url.pathname)) {
         // Let browser handle normally - don't interfere
         return;
     }
-    
+
     // Route different request types
     if (url.pathname.startsWith(API_BASE)) {
         event.respondWith(handleApiRequest(event.request));
@@ -145,7 +161,6 @@ self.addEventListener('fetch', event => {
     } else if (isStaticAsset(url.pathname)) {
         event.respondWith(handleStaticRequest(event.request));
     } else if (isSchedulePage(url.pathname)) {
-        // Schedule pages always try network first for freshest content
         event.respondWith(handleScheduleRequest(event.request));
     } else {
         event.respondWith(handleDynamicRequest(event.request));
@@ -165,118 +180,51 @@ function isSchedulePage(pathname) {
  * Handle schedule pages - ALWAYS network first for fresh content
  */
 async function handleScheduleRequest(request) {
-    try {
-        const response = await fetch(request);
-        
+    // Same network-first-with-timeout pattern as handleDynamicRequest.
+    // Schedule pages store a timestamp header so offline viewers know the data age.
+    const networkPromise = fetch(request).then(async response => {
         if (response.ok) {
             const cache = await caches.open(CACHE_DYNAMIC);
-            // Store with timestamp header
             const clonedResponse = response.clone();
             const headers = new Headers(clonedResponse.headers);
             headers.set('X-Cached-At', new Date().toISOString());
-            
-            cache.put(request, new Response(clonedResponse.body, {
+            await cache.put(request, new Response(clonedResponse.body, {
                 status: clonedResponse.status,
                 statusText: clonedResponse.statusText,
                 headers: headers
             }));
         }
-        
         return response;
-    } catch (error) {
-        console.log('[SW] Network failed for schedule, using cache:', request.url);
-        const cachedResponse = await caches.match(request);
-        
-        if (cachedResponse) {
-            // Add indicator that this is cached content
-            const headers = new Headers(cachedResponse.headers);
-            headers.set('X-Served-From-Cache', 'true');
-            const cachedAt = headers.get('X-Cached-At') || 'Unknown time';
-            headers.set('X-Cache-Age', cachedAt);
-            
-            return new Response(cachedResponse.body, {
-                status: cachedResponse.status,
-                statusText: cachedResponse.statusText,
-                headers: headers
-            });
-        }
-        
-        // No cache available
-        return new Response(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Schedule Unavailable - OHC</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body {
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                        background: linear-gradient(135deg, #8B0000 0%, #2b0000 100%);
-                        color: white;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 20px;
-                    }
-                    .container {
-                        text-align: center;
-                        max-width: 600px;
-                    }
-                    h1 {
-                        font-size: 2.5em;
-                        margin-bottom: 20px;
-                    }
-                    .icon {
-                        font-size: 5em;
-                        margin-bottom: 20px;
-                    }
-                    p {
-                        font-size: 1.2em;
-                        line-height: 1.6;
-                        margin-bottom: 15px;
-                    }
-                    .btn {
-                        display: inline-block;
-                        background: #FF4500;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        margin-top: 20px;
-                        font-weight: 600;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="icon">📅</div>
-                    <h1>Schedule Unavailable Offline</h1>
-                    <p>You need to be online to view the schedule for the first time.</p>
-                    <p>Once loaded, it will be available offline.</p>
-                    <a href="<?php echo OHA_PWA_SCOPE; ?>" class="btn">Back to Home</a>
-                </div>
-                <script>
-                    // Auto-refresh when connection returns
-                    window.addEventListener('online', function() {
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1000);
-                    });
-                </script>
-            </body>
-            </html>
-        `, {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: {
-                'Content-Type': 'text/html',
-                'Cache-Control': 'no-store'
-            }
-        });
+    }).catch(() => null);
+
+    const cachedResponse = await caches.match(request, { ignoreVary: true });
+
+    if (cachedResponse) {
+        const timeoutPromise = new Promise(resolve =>
+            setTimeout(() => resolve(null), NETWORK_TIMEOUT_MS)
+        );
+        const winner = await Promise.race([networkPromise, timeoutPromise]);
+        if (winner && winner.ok) return winner;
+        console.log('[SW] Serving schedule from cache (network slow/offline):', request.url);
+        return cachedResponse;
     }
+
+    const response = await networkPromise;
+    if (response) return response;
+
+    // No cache and offline — fall back to convention home
+    const homeResponse = await caches.match(CONVENTION_SCOPE, { ignoreVary: true });
+    if (homeResponse) return homeResponse;
+
+    return new Response(
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OHA Convention</title>' +
+        '<style>body{background:#1a1a1a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}' +
+        'h2{margin:0 0 12px}p{opacity:.8;margin:0}</style></head>' +
+        '<body><div><h2>Convention App</h2><p>Connect to the internet to load this page.</p>' +
+        '<script>window.addEventListener("online",function(){window.location.reload()});<\/script>' +
+        '</div></body></html>',
+        { status: 503, headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' } }
+    );
 }
 
 /**
@@ -311,7 +259,7 @@ async function handleApiRequest(request) {
         
         if (response.ok) {
             const cache = await caches.open(CACHE_API);
-            cache.put(request, response.clone());
+            await cache.put(request, response.clone());
         }
         
         return response;
@@ -348,7 +296,7 @@ async function handleImageRequest(request) {
         
         if (response.ok) {
             const cache = await caches.open(CACHE_IMAGES);
-            cache.put(request, response.clone());
+            await cache.put(request, response.clone());
         }
         
         return response;
@@ -378,7 +326,7 @@ async function handleStaticRequest(request) {
         
         if (response.ok) {
             const cache = await caches.open(CACHE_STATIC);
-            cache.put(request, response.clone());
+            await cache.put(request, response.clone());
         }
         
         return response;
@@ -389,123 +337,59 @@ async function handleStaticRequest(request) {
 }
 
 /**
- * Handle dynamic HTML pages - Network first, cache fallback
+ * Handle dynamic HTML pages.
+ * Strategy: if we have a cached version, race the network against NETWORK_TIMEOUT_MS.
+ * Whichever wins is returned. If network wins it also updates the cache in the background.
+ * If timeout wins (slow/no connection), the cached page loads immediately.
+ * If no cache exists yet, we wait for the network with no timeout.
  */
 async function handleDynamicRequest(request) {
-    try {
-        const response = await fetch(request);
-        
+    // Start network fetch immediately — runs whether we use it or not.
+    // On success it updates the cache; on failure it resolves to null.
+    const networkPromise = fetch(request).then(async response => {
         if (response.ok) {
             const cache = await caches.open(CACHE_DYNAMIC);
             await cache.put(request, response.clone());
         }
-
         return response;
-    } catch (error) {
-        console.log('[SW] Network failed, trying cache:', request.url);
-        const cachedResponse = await caches.match(request, { ignoreVary: true });
-        
-        if (cachedResponse) {
-            return cachedResponse;
+    }).catch(() => null);
+
+    const cachedResponse = await caches.match(request, { ignoreVary: true });
+
+    if (cachedResponse) {
+        // We have cache — race network vs timeout.
+        // If network responds fast enough, return fresh. Otherwise return cache.
+        const timeoutPromise = new Promise(resolve =>
+            setTimeout(() => resolve(null), NETWORK_TIMEOUT_MS)
+        );
+        const winner = await Promise.race([networkPromise, timeoutPromise]);
+        if (winner && winner.ok) {
+            return winner;
         }
-        
-        // Return custom styled offline page
-        return new Response(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Offline - OHA Convention</title>
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    body {
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                        background: linear-gradient(135deg, #8B0000 0%, #2b0000 100%);
-                        color: white;
-                        min-height: 100vh;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 20px;
-                    }
-                    .container {
-                        text-align: center;
-                        max-width: 600px;
-                    }
-                    h1 {
-                        font-size: 3em;
-                        margin-bottom: 20px;
-                        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-                    }
-                    .icon {
-                        font-size: 5em;
-                        margin-bottom: 20px;
-                        opacity: 0.8;
-                    }
-                    p {
-                        font-size: 1.2em;
-                        line-height: 1.6;
-                        margin-bottom: 15px;
-                        opacity: 0.9;
-                    }
-                    .available-pages {
-                        background: rgba(255,255,255,0.1);
-                        border-radius: 10px;
-                        padding: 20px;
-                        margin-top: 30px;
-                    }
-                    .available-pages h2 {
-                        margin-bottom: 15px;
-                        font-size: 1.5em;
-                    }
-                    .page-link {
-                        display: inline-block;
-                        background: #FF4500;
-                        color: white;
-                        text-decoration: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        margin: 8px;
-                        font-weight: 600;
-                        transition: all 0.2s;
-                    }
-                    .page-link:hover {
-                        background: #FF6347;
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="icon">🔌</div>
-                    <h1>You're Offline</h1>
-                    <p>This page isn't available offline yet.</p>
-                    <p>Check your internet connection and try again.</p>
-                    
-                    <div class="available-pages">
-                        <h2>📱 Available Offline:</h2>
-                        <a href="<?php echo OHA_PWA_SCOPE; ?>" class="page-link">Convention Home</a>
-                    </div>
-                </div>
-                
-                <script>
-                    // Auto-refresh when back online
-                    window.addEventListener('online', function() {
-                        window.location.reload();
-                    });
-                </script>
-            </body>
-            </html>
-        `, {
-            status: 503,
-            headers: {
-                'Content-Type': 'text/html',
-                'Cache-Control': 'no-store'
-            }
-        });
+        console.log('[SW] Serving from cache (network slow/offline):', request.url);
+        return cachedResponse;
     }
+
+    // No cache yet — must wait for network.
+    const response = await networkPromise;
+    if (response) return response;
+
+    // Complete offline with no cache — serve convention home as app shell fallback.
+    // Avoids a jarring full-page offline screen; home is always in STATIC_CACHE_FILES.
+    console.log('[SW] No cache, falling back to convention home:', request.url);
+    const homeResponse = await caches.match(CONVENTION_SCOPE, { ignoreVary: true });
+    if (homeResponse) return homeResponse;
+
+    // Last resort: minimal message (no large offline graphic)
+    return new Response(
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OHA Convention</title>' +
+        '<style>body{background:#1a1a1a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}' +
+        'h2{margin:0 0 12px}p{opacity:.8;margin:0 0 20px}a{color:#e65c00}</style></head>' +
+        '<body><div><h2>Convention App</h2><p>Connect to the internet to load this page.</p>' +
+        '<script>window.addEventListener("online",function(){window.location.reload()});<\/script>' +
+        '</div></body></html>',
+        { status: 503, headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' } }
+    );
 }
 
 /**
@@ -520,6 +404,15 @@ function isImage(pathname) {
  */
 function isStaticAsset(pathname) {
     return /\.(css|js|woff|woff2|ttf|eot)$/i.test(pathname);
+}
+
+/**
+ * Helper: Check if request is for a pre-cached external CDN resource.
+ * These are cross-origin URLs we cache during SW install (e.g. MapLibre from unpkg).
+ * Must be kept in sync with OPTIONAL_CACHE_FILES above.
+ */
+function isPreCachedExternal(url) {
+    return url.href.includes('maplibre-gl');
 }
 
 /**

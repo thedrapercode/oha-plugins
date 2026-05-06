@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.21.0",
+    "version":  "3.22.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -484,6 +484,55 @@
                         "type":  "feature",
                         "summary":  "Volunteer portal includes collapsible Volunteer Handbook from Volunteer Hub shortcode",
                         "notes":  "build_volunteer_handbook_html() calls do_shortcode([oha_volunteer_handbook]) if shortcode exists. Collapsed by default with +/- toggle (ohaVolHandbookToggle JS global). Dark-mode CSS overrides applied via .oha-vol-handbook-body selectors in class-pwa-shortcodes.php volunteer_area CSS block. Print button hidden."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "fix",
+                        "summary":  "Write physical convention-sw.js to web root so GoDaddy Nginx serves it before PHP",
+                        "notes":  "GoDaddy Nginx intercepts .js URLs as static files before PHP runs, so do_parse_request never fired for /convention-sw.js. Added write_convention_static_sw() that generates and writes the file to ABSPATH. Runs on activation and auto-regenerates on plugins_loaded when oha_pwa_sw_written_version option does not match OHA_PWA_VERSION."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "fix",
+                        "summary":  "Add await to all cache.put() calls in SW handlers so assets are reliably cached",
+                        "notes":  "handleScheduleRequest, handleApiRequest, handleImageRequest, and handleStaticRequest all had fire-and-forget cache.put() calls. SW termination before completion meant CSS/JS/images were not saved. Also added ignoreVary:true to handleScheduleRequest caches.match()."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "feature",
+                        "summary":  "Network-first with 3s timeout in SW dynamic handlers for fast offline loading",
+                        "notes":  "handleDynamicRequest and handleScheduleRequest now race the network against a 3-second timer. If cache exists and network is slow or offline, cache is served immediately. Network fetch continues in background and updates cache when it completes."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "feature",
+                        "summary":  "Pre-cache MapLibre CDN JS and CSS so convention map works offline",
+                        "notes":  "Added unpkg.com/maplibre-gl@4 JS and CSS to OPTIONAL_CACHE_FILES. Added isPreCachedExternal() helper and fetch event handler so runtime MapLibre requests are served from cache when offline."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "change",
+                        "summary":  "Offline fallback now serves cached convention home instead of full offline page",
+                        "notes":  "handleDynamicRequest and handleScheduleRequest no longer show the jarring full-page offline screen. Fallback serves CONVENTION_SCOPE from cache. Only shows a minimal message if home is also not cached."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "fix",
+                        "summary":  "[oha_favorite_vendors] restore visible Locate Booth on Map button on each card",
+                        "notes":  "The visible button was lost in the v3.11.0 rewrite. Replaced faint oha-msv-map-hint text with a real anchor button oha-msv-locate-btn. Removed whole-card tap-to-navigate in favor of explicit button."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.0",
+                        "type":  "fix",
+                        "summary":  "[oha_favorite_vendors] map URL now reads oha_pwa_convention_map_url option",
+                        "notes":  "MAP_BASE was hardcoded to /convention/2026-convention/map/. Now reads from get_option(oha_pwa_convention_map_url) with that URL as fallback, consistent with how oha_convention_vendors builds its links."
                     }
                 ]
 }
