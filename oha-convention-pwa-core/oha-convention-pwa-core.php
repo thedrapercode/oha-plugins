@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Convention PWA Core
  * Description: PWA for OHA Convention 2026 — Schedule, Push Notifications, Offline Support. Actor Passport and Badge Trading require the OHA Passport Hub plugin.
- * Version: 3.22.1
+ * Version: 3.22.2
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-convention-pwa
@@ -202,7 +202,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants — all names used by every included class must be defined here
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PWA_VERSION',    '3.22.1' );
+define( 'OHA_PWA_VERSION',    '3.22.2' );
 define( 'OHA_PWA_DIR',        plugin_dir_path( __FILE__ ) );   // used by stable includes
 define( 'OHA_PWA_URL',        plugin_dir_url( __FILE__ ) );    // used by stable includes
 define( 'OHA_PWA_SCOPE',      '/convention/' );                // used by service worker & manifest

@@ -1956,7 +1956,7 @@ function ohaVolHandbookToggle(btn) {
                     <?php else : ?>
                         <div class="oha-vendor-placeholder">&#127962;</div>
                     <?php endif; ?>
-                    <button class="oha-vendor-favorite-btn" data-vendor-id="<?php echo esc_attr( $vendor->ID ); ?>" aria-label="Add to Must-See Vendors">&#129293;</button>
+                    <button class="oha-vendor-favorite-btn" data-vendor-id="<?php echo esc_attr( $vendor->ID ); ?>" data-booth="<?php echo esc_attr( $booth_number ); ?>" aria-label="Add to Must-See Vendors">&#129293;</button>
                     <div class="oha-vendor-img-overlay">
                         <span class="oha-vendor-name"><?php echo esc_html( $company_name ); ?></span>
                         <?php if ( $website_display ) : ?>

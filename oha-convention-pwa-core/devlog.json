@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.22.1",
+    "version":  "3.22.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -540,6 +540,13 @@
                         "type":  "fix",
                         "summary":  "Move SW file generation from plugins_loaded to init hook to prevent crash on activation",
                         "notes":  "rest_url() calls -\u003eusing_index_permalinks() which is null at plugins_loaded. WordPress initializes  after that hook. Moving to init priority 1 fixes the fatal error. plugins_loaded now only calls get_instance() and the DB upgrade check."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.2",
+                        "type":  "fix",
+                        "summary":  "Add data-booth to heart button in [oha_convention_vendors] so booth is stored when favoriting",
+                        "notes":  "pwa-phase3a-features.js reads data-booth from closest([data-vendor-id]) which resolves to the button itself (not the parent card) because both have data-vendor-id. Adding data-booth to the button ensures booth is stored in localStorage when hearted from the vendors page. Map plugin cards work because their buttons do not have data-vendor-id so closest() correctly finds the parent."
                     }
                 ]
 }
