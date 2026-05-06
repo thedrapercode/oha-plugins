@@ -918,14 +918,13 @@
                 self.renderList();
             });
 
-            // List View toggle pill (map view) → show list
+            // Toggle pill — switches between list view and map view
             $w.on('click', '.oha-mob-list-toggle-btn', function () {
-                self.showListView();
-            });
-
-            // Map View button (list view topbar) → show map
-            $w.on('click', '.oha-mob-map-toggle-btn', function () {
-                self.showMapView();
+                if (self.listViewActive) {
+                    self.showMapView();
+                } else {
+                    self.showListView();
+                }
             });
 
             // Zoom buttons (floating bottom-right)
@@ -965,6 +964,7 @@
             var $lv = this.$wrapper.find('.oha-mob-list-view');
             $lv.show().attr('aria-hidden', 'false');
             this.listViewActive = true;
+            this.$wrapper.find('.oha-mob-list-toggle-btn').addClass('is-list-active');
             this.renderList();
         },
 
@@ -972,6 +972,7 @@
             this.$wrapper.find('.oha-mob-list-view')
                 .hide().attr('aria-hidden', 'true');
             this.listViewActive = false;
+            this.$wrapper.find('.oha-mob-list-toggle-btn').removeClass('is-list-active');
         },
 
         updateFilterBadge: function () {

@@ -850,28 +850,25 @@ body.oha-map-page-active {
 }
 
 /* -----------------------------------------------------------------------
- * Floating List View toggle pill — bottom center
+ * List/Map toggle pill — top left (replaces old filter pill + old bottom toggle)
  * --------------------------------------------------------------------- */
 .oha-mob-list-toggle-btn {
-    /* Fixed positioning keeps the button above the PWA nav bar regardless of
-       whether the map wrapper extends below the viewport due to page headers. */
-    position: fixed;
-    bottom: calc(var(--oha-mobile-ui-offset, 110px) + 20px);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 200;
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 30;
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(22, 33, 62, 0.92);
+    gap: 7px;
+    background: rgba(22, 33, 62, 0.9);
     color: var(--oha-text);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 24px;
-    padding: 10px 20px;
-    font-size: 0.85rem;
+    padding: 9px 14px 9px 12px;
+    font-size: 0.83rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     white-space: nowrap;
@@ -881,6 +878,25 @@ body.oha-map-page-active {
 
 .oha-mob-list-toggle-btn:hover {
     background: rgba(22, 33, 62, 1);
+}
+
+.oha-toggle-to-list,
+.oha-toggle-to-map {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.oha-mob-list-toggle-btn .oha-toggle-to-map {
+    display: none;
+}
+
+.oha-mob-list-toggle-btn.is-list-active .oha-toggle-to-list {
+    display: none;
+}
+
+.oha-mob-list-toggle-btn.is-list-active .oha-toggle-to-map {
+    display: flex;
 }
 
 /* -----------------------------------------------------------------------
@@ -1056,7 +1072,7 @@ body.oha-map-page-active {
 .oha-mob-list-topbar {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
     padding: 10px 14px;
     background: var(--oha-bg-card);
     border-bottom: 1px solid var(--oha-border);
@@ -1090,7 +1106,6 @@ body.oha-map-page-active {
     font-size: 0.88rem;
     font-weight: 700;
     color: var(--oha-text);
-    flex: 1;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;

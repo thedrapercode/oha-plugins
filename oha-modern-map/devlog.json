@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.8.4",
+    "version":  "2.9.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -652,6 +652,34 @@
                         "type":  "fix",
                         "summary":  "List view button changed to position:fixed so it stays visible above PWA nav bar",
                         "notes":  "position:absolute inside map area means the button can end up behind the PWA nav bar if any page header pushes the map wrapper down. Changed to position:fixed with bottom:calc(--oha-mobile-ui-offset + 20px) and z-index:200 so it is always viewport-relative and above the nav bar."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "2.9.0",
+                        "type":  "change",
+                        "summary":  "Remove filter button from mobile convention map; floor maps now top position",
+                        "notes":  "Filter pill removed from top-left. Floor switcher bar stays at same absolute position. Filter sheet HTML remains in DOM but is no longer triggerable."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "2.9.0",
+                        "type":  "change",
+                        "summary":  "List View toggle moved to top-left pill, replaces old bottom-center button",
+                        "notes":  "Button now position:absolute top:14px left:14px z-index:30, above list view overlay (z-index:25). Old fixed bottom-center button removed."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "2.9.0",
+                        "type":  "feature",
+                        "summary":  "List View toggle now switches bidirectionally between list and map view",
+                        "notes":  "Single button replaces separate List pill and Map button. Shows List View icon/text in map mode, Map View icon/text in list mode via is-list-active CSS class toggled in JS showListView/showMapView."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "2.9.0",
+                        "type":  "change",
+                        "summary":  "Remove filter button from list view topbar; topbar now shows only the event name centered",
+                        "notes":  "oha-mob-list-filter-btn and oha-mob-map-toggle-btn removed from list topbar HTML. Topbar uses justify-content:center now."
                     }
                 ]
 }

@@ -105,17 +105,24 @@ class OHA_Convention_Shortcode {
                     <span><?php _e('Loading floor plan...', 'oha-modern-map'); ?></span>
                 </div>
 
-                <!-- Floating top-left: Filters pill -->
-                <button class="oha-mob-filters-pill" data-mob-action="open-filters"
-                        aria-label="<?php esc_attr_e('Open filters', 'oha-modern-map'); ?>">
-                    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
-                        <path d="M3 5h14M6 10h8M9 15h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                    <span class="oha-mob-pill-text"><?php _e('Filters', 'oha-modern-map'); ?></span>
-                    <span class="oha-mob-pill-badge" style="display:none">0</span>
+                <!-- Floating top-left: List/Map toggle pill -->
+                <button class="oha-mob-list-toggle-btn" aria-label="<?php esc_attr_e('Toggle list view', 'oha-modern-map'); ?>">
+                    <span class="oha-toggle-to-list">
+                        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                            <path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        </svg>
+                        <?php _e('List View', 'oha-modern-map'); ?>
+                    </span>
+                    <span class="oha-toggle-to-map">
+                        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+                            <path d="M1 4l6 2 6-2 6 2v12l-6-2-6 2-6-2V4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                            <path d="M7 6v12M13 4v12" stroke="currentColor" stroke-width="1.4"/>
+                        </svg>
+                        <?php _e('Map View', 'oha-modern-map'); ?>
+                    </span>
                 </button>
 
-                <!-- Floating floor switcher (persistent, below filter pill) -->
+                <!-- Floating floor switcher (persistent, below toggle pill) -->
                 <?php if (count($floors) > 1) : ?>
                 <div class="oha-mob-floor-bar">
                     <?php foreach ($floors as $f) : ?>
@@ -175,13 +182,6 @@ class OHA_Convention_Shortcode {
                     </button>
                 </div>
 
-                <!-- Floating bottom-center: List View toggle pill -->
-                <button class="oha-mob-list-toggle-btn">
-                    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
-                        <path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    </svg>
-                    <span><?php _e('List View', 'oha-modern-map'); ?></span>
-                </button>
 
             </div><!-- .oha-conv-map-area -->
 
@@ -228,23 +228,9 @@ class OHA_Convention_Shortcode {
             --------------------------------------------------------------- -->
             <div class="oha-mob-list-view" style="display:none" aria-hidden="true">
                 <div class="oha-mob-list-topbar">
-                    <button class="oha-mob-map-toggle-btn">
-                        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
-                            <path d="M1 4l6 2 6-2 6 2v12l-6-2-6 2-6-2V4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                            <path d="M7 6v12M13 4v12" stroke="currentColor" stroke-width="1.4"/>
-                        </svg>
-                        <span><?php _e('Map', 'oha-modern-map'); ?></span>
-                    </button>
                     <span class="oha-mob-list-title">
                         <?php echo esc_html($settings['event_name'] ?? __('Booths', 'oha-modern-map')); ?>
                     </span>
-                    <button class="oha-mob-list-filter-btn" data-mob-action="open-filters"
-                            aria-label="<?php esc_attr_e('Filter booths', 'oha-modern-map'); ?>">
-                        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                            <path d="M3 5h14M6 10h8M9 15h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                        </svg>
-                        <span class="oha-mob-pill-badge" style="display:none">0</span>
-                    </button>
                 </div>
                 <div class="oha-conv-list" role="list"
                      aria-label="<?php esc_attr_e('Booth list', 'oha-modern-map'); ?>">
