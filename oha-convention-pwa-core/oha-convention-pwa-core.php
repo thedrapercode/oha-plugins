@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Convention PWA Core
  * Description: PWA for OHA Convention 2026 — Schedule, Push Notifications, Offline Support. Actor Passport and Badge Trading require the OHA Passport Hub plugin.
- * Version: 3.22.0
+ * Version: 3.22.1
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-convention-pwa
@@ -202,7 +202,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants — all names used by every included class must be defined here
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PWA_VERSION',    '3.22.0' );
+define( 'OHA_PWA_VERSION',    '3.22.1' );
 define( 'OHA_PWA_DIR',        plugin_dir_path( __FILE__ ) );   // used by stable includes
 define( 'OHA_PWA_URL',        plugin_dir_url( __FILE__ ) );    // used by stable includes
 define( 'OHA_PWA_SCOPE',      '/convention/' );                // used by service worker & manifest
@@ -757,19 +757,21 @@ class OHA_Convention_PWA_Core {
 add_action( 'plugins_loaded', function() {
 	OHA_Convention_PWA_Core::get_instance();
 
-	// Regenerate static convention-sw.js whenever the plugin version changes.
-	// GoDaddy Nginx serves .js files directly before PHP runs, so the physical
-	// file must be kept current. This runs on every request but the option
-	// check makes it a no-op after the first load of any given version.
-	if ( get_option( 'oha_pwa_sw_written_version' ) !== OHA_PWA_VERSION ) {
-		OHA_Convention_PWA_Core::write_convention_static_sw();
-	}
-
 	// Run table upgrade when DB schema version is behind (safe to run on every update).
 	if ( get_option( 'oha_pwa_db_version' ) !== '2.0' ) {
 		OHA_PWA_Database::create_tables();
 	}
 } );
+
+// Regenerate static convention-sw.js on init, not plugins_loaded.
+// rest_url() calls $wp_rewrite->using_index_permalinks() which is null at
+// plugins_loaded — $wp_rewrite is initialized by WordPress after that hook fires.
+// init runs after $wp_rewrite is set up, so rest_url() works correctly here.
+add_action( 'init', function() {
+	if ( get_option( 'oha_pwa_sw_written_version' ) !== OHA_PWA_VERSION ) {
+		OHA_Convention_PWA_Core::write_convention_static_sw();
+	}
+}, 1 );
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Activation — create ALL database tables (fixed schema)

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.22.0",
+    "version":  "3.22.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -533,6 +533,13 @@
                         "type":  "fix",
                         "summary":  "[oha_favorite_vendors] map URL now reads oha_pwa_convention_map_url option",
                         "notes":  "MAP_BASE was hardcoded to /convention/2026-convention/map/. Now reads from get_option(oha_pwa_convention_map_url) with that URL as fallback, consistent with how oha_convention_vendors builds its links."
+                    },
+                    {
+                        "date":  "2026-05-05",
+                        "version":  "3.22.1",
+                        "type":  "fix",
+                        "summary":  "Move SW file generation from plugins_loaded to init hook to prevent crash on activation",
+                        "notes":  "rest_url() calls -\u003eusing_index_permalinks() which is null at plugins_loaded. WordPress initializes  after that hook. Moving to init priority 1 fixes the fatal error. plugins_loaded now only calls get_instance() and the DB upgrade check."
                     }
                 ]
 }
