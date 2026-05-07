@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.9.0",
+    "version":  "2.9.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -680,6 +680,13 @@
                         "type":  "change",
                         "summary":  "Remove filter button from list view topbar; topbar now shows only the event name centered",
                         "notes":  "oha-mob-list-filter-btn and oha-mob-map-toggle-btn removed from list topbar HTML. Topbar uses justify-content:center now."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "2.9.1",
+                        "type":  "fix",
+                        "summary":  "Change booth AJAX from POST to GET so PWA service worker can cache the response offline",
+                        "notes":  "ajax_get_booths now reads from  and skips nonce check (read-only public data, nopriv endpoint). JS loadBooths() changed to type:GET with no nonce param, giving a stable URL (/wp-admin/admin-ajax.php?action=oha_get_convention_booths\u0026floor=0) that the SW caches on first online visit and serves offline."
                     }
                 ]
 }

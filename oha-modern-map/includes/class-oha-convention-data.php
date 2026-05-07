@@ -411,9 +411,11 @@ class OHA_Convention_Data {
      * AJAX: Returns booth list for the requested floor and year.
      */
     public static function ajax_get_booths() {
-        check_ajax_referer('oha_map_nonce', 'nonce');
-        $floor = isset($_POST['floor']) ? intval($_POST['floor']) : 0;
-        $year  = isset($_POST['year'])  ? sanitize_text_field($_POST['year']) : '';
+        // No nonce check: read-only public endpoint. GET method used by the
+        // convention map JS so the PWA service worker can cache the response
+        // at a stable URL (/wp-admin/admin-ajax.php?action=oha_get_convention_booths&floor=0).
+        $floor = isset($_REQUEST['floor']) ? intval($_REQUEST['floor']) : 0;
+        $year  = isset($_REQUEST['year'])  ? sanitize_text_field($_REQUEST['year']) : '';
         wp_send_json_success(self::get_booths($floor, $year));
     }
 

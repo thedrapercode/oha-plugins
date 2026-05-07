@@ -493,10 +493,9 @@
             var self = this;
             $.ajax({
                 url:  self.config.ajaxUrl,
-                type: 'POST',
+                type: 'GET',
                 data: {
                     action: 'oha_get_convention_booths',
-                    nonce:  self.config.nonce,
                     floor:  0, // load all floors, filter client-side
                 },
                 success: function (response) {
