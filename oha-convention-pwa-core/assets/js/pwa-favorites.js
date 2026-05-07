@@ -397,11 +397,11 @@
         
         if (events.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <div style="font-size: 4em; margin-bottom: 20px;">⭐</div>
-                    <h2>No favorites yet!</h2>
-                    <p>Browse the schedule and tap "Add to Favorites" on events you want to attend.</p>
-                    <a href="/convention/2026-convention/schedule/" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #FF4500; color: white; text-decoration: none; border-radius: 8px;">Browse Schedule</a>
+                <div style="text-align:center;padding:28px 20px 32px;">
+                    <div style="font-size:2em;opacity:.4;margin-bottom:10px;">&#9733;</div>
+                    <p style="margin:0 0 6px;font-weight:700;font-size:15px;color:#eee;">No saved sessions yet.</p>
+                    <p style="margin:0 0 18px;font-size:13px;color:rgba(255,255,255,.55);line-height:1.5;">Browse the schedule and tap the star on any session to save it here for quick access during the convention.</p>
+                    <a href="/convention/2026-convention/schedule/" style="display:inline-block;padding:10px 20px;background:rgba(173,49,25,.85);color:#fff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:.02em;">Browse Schedule</a>
                 </div>
             `;
             return;

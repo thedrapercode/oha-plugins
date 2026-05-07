@@ -55,10 +55,12 @@ const OPTIONAL_CACHE_FILES = [
     '<?php echo OHA_PWA_URL; ?>assets/css/pwa-styles.css',
     '<?php echo OHA_PWA_URL; ?>assets/js/pwa-utils.js',
     '<?php echo OHA_PWA_URL; ?>assets/js/fuse.min.js',
-    // MapLibre GL JS — loaded from unpkg CDN by the map plugin.
-    // Pre-cached here so the convention map page works offline.
-    'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js',
-    'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css'
+    // MapLibre GL JS — bundled locally in the map plugin (no CDN dependency).
+    // Pre-cached here so the convention map works fully offline even on first install.
+<?php if (defined('OHA_MODERN_MAP_URL')): ?>
+    '<?php echo OHA_MODERN_MAP_URL; ?>assets/vendor/maplibre/maplibre-gl.js',
+    '<?php echo OHA_MODERN_MAP_URL; ?>assets/vendor/maplibre/maplibre-gl.css'
+<?php endif; ?>
 ];
 
 /**
@@ -149,13 +151,7 @@ self.addEventListener('fetch', event => {
     // Only handle GET requests — POST/PUT/etc pass through untouched
     if (event.request.method !== 'GET') return;
 
-    // Pre-cached external CDN resources (e.g. MapLibre from unpkg)
-    if (url.hostname !== self.location.hostname && isPreCachedExternal(url)) {
-        event.respondWith(handleStaticRequest(event.request));
-        return;
-    }
-
-    // Skip all other cross-origin requests
+    // Skip all cross-origin requests (MapLibre is now bundled locally — no CDN intercept needed)
     if (url.hostname !== self.location.hostname) return;
 
     // Static assets (JS/CSS/fonts) from anywhere on this domain.
@@ -431,15 +427,6 @@ function isImage(pathname) {
  */
 function isStaticAsset(pathname) {
     return /\.(css|js|woff|woff2|ttf|eot)$/i.test(pathname);
-}
-
-/**
- * Helper: Check if request is for a pre-cached external CDN resource.
- * These are cross-origin URLs we cache during SW install (e.g. MapLibre from unpkg).
- * Must be kept in sync with OPTIONAL_CACHE_FILES above.
- */
-function isPreCachedExternal(url) {
-    return url.href.includes('maplibre-gl');
 }
 
 /**

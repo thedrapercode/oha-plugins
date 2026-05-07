@@ -94,11 +94,8 @@
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(favorites));
             
             // Track in analytics
-            if (window.gtag) {
-                gtag('event', 'vendor_favorited', {
-                    'vendor_id': vendorData.id,
-                    'vendor_name': vendorData.name
-                });
+            if (window.OHAAnalytics) {
+                OHAAnalytics.trackVendorFavorite('add', vendorData.id, vendorData.name);
             }
             
             this.showNotification('Vendor added to favorites!');
@@ -106,8 +103,12 @@
         
         removeFavorite: function(vendorId) {
             const favorites = this.getFavorites();
+            const vendorName = favorites[vendorId] ? favorites[vendorId].name : vendorId;
             delete favorites[vendorId];
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(favorites));
+            if (window.OHAAnalytics) {
+                OHAAnalytics.trackVendorFavorite('remove', vendorId, vendorName);
+            }
             this.showNotification('Vendor removed from favorites');
         },
         
@@ -118,9 +119,9 @@
                 const vendorId = $(this).attr('data-vendor-id');
 
                 if (favorites[vendorId]) {
-                    $(this).addClass('is-favorite').html('&#10084;');
+                    $(this).addClass('is-favorite').html('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="18" height="18"><path fill="currentColor" d="M10 3C6.69 3 4 5.69 4 9c0 2.08 1.06 3.9 2.67 5H7v2h6v-2h.33C14.94 12.9 16 11.08 16 9c0-3.31-2.69-6-6-6z"/><circle cx="8" cy="9" r="1.2" fill="white"/><circle cx="12" cy="9" r="1.2" fill="white"/></svg>');
                 } else {
-                    $(this).removeClass('is-favorite').html('&#129293;');
+                    $(this).removeClass('is-favorite').html('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3C6.69 3 4 5.69 4 9c0 2.08 1.06 3.9 2.67 5H7v2h6v-2h.33C14.94 12.9 16 11.08 16 9c0-3.31-2.69-6-6-6z"/><circle cx="8" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="9" r="1.2" fill="currentColor" stroke="none"/></svg>');
                 }
             });
         },

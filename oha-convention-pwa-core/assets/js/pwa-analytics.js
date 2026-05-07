@@ -48,7 +48,10 @@
         
         // Track offline/online transitions
         OHAAnalytics.trackNetworkStatus();
-        
+
+        // Track active session time
+        OHAAnalytics.trackSessionTime();
+
         console.log('[Analytics] GA4 initialized successfully');
     };
     
@@ -165,7 +168,78 @@
             'result_count': resultCount
         });
     };
-    
+
+    /**
+     * Track vendor map click (locate on map button)
+     */
+    OHAAnalytics.trackVendorMapClick = function(vendorId, vendorName, booth) {
+        this.trackEvent('vendor_map_click', {
+            'event_category': 'Vendors',
+            'event_label': vendorName,
+            'vendor_id': vendorId,
+            'vendor_name': vendorName,
+            'vendor_booth': booth || ''
+        });
+    };
+
+    /**
+     * Track vendor favorite add or remove
+     */
+    OHAAnalytics.trackVendorFavorite = function(action, vendorId, vendorName) {
+        this.trackEvent('vendor_favorite', {
+            'event_category': 'Vendors',
+            'event_label': action + ': ' + vendorName,
+            'favorite_action': action,
+            'vendor_id': vendorId,
+            'vendor_name': vendorName
+        });
+    };
+
+    /**
+     * Track active session time via Page Visibility API.
+     * Accumulates time while tab/app is visible; sends on pagehide or going hidden.
+     */
+    OHAAnalytics.trackSessionTime = function() {
+        var visibleStart = Date.now();
+        var accumulatedMs = 0;
+
+        function pause() {
+            if (visibleStart !== null) {
+                accumulatedMs += Date.now() - visibleStart;
+                visibleStart = null;
+            }
+        }
+
+        function resume() {
+            if (visibleStart === null) {
+                visibleStart = Date.now();
+            }
+        }
+
+        function flush() {
+            pause();
+            var seconds = Math.round(accumulatedMs / 1000);
+            if (seconds < 2) return;
+            if (!window.gtag) return;
+            gtag('event', 'active_session_time', {
+                'event_category': 'Engagement',
+                'event_label': 'Active seconds',
+                'value': seconds,
+                'non_interaction': true
+            });
+        }
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                flush();
+            } else {
+                resume();
+            }
+        });
+
+        window.addEventListener('pagehide', flush);
+    };
+
     // Initialize on page load
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', OHAAnalytics.init);

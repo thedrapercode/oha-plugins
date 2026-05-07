@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.22.3",
+    "version":  "3.23.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -561,6 +561,83 @@
                         "type":  "fix",
                         "summary":  "Add ignoreVary:true to handleApiRequest cache lookup to fix Vary:Cookie header mismatch",
                         "notes":  "WordPress sets Vary:Cookie on AJAX responses. Without ignoreVary:true, caches.match() always misses and offline returns error JSON instead of cached data."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "fix",
+                        "summary":  "Bundle MapLibre GL JS 4.7.1 locally; remove CDN dependency for offline venue reliability",
+                        "notes":  "Files at assets/vendor/maplibre/. SW updated to cache local paths instead of CDN. Critical for brick jail venue with no reliable internet."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add offline status bar to convention map showing cached data timestamp or error message",
+                        "notes":  "showStatusBar() in oha-convention-map.js. CSS in oha-convention.css. Timestamp stored in localStorage oha_conv_booth_updated."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "change",
+                        "summary":  "Redesign My OHC empty state: smaller icon, tighter layout, browse schedule link",
+                        "notes":  "In pwa-favorites.js renderMySchedule(). Mobile PWA space optimization."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "change",
+                        "summary":  "Replace heart icon with skull SVG on vendor favorite buttons throughout the app",
+                        "notes":  "In pwa-phase3a-features.js updateButtonStates(). Filled skull = favorited, outline skull = not favorited. Convention theme."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add vendor search input to convention_vendors shortcode",
+                        "notes":  "Inline JS filters .oha-vendor-card by data-name on input. No server round-trip."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "change",
+                        "summary":  "Update convention_vendors heading and subtext; remove vendor count line",
+                        "notes":  "Default title changed to Convention Vendor Hall. Subtext prompts map and favorites actions."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add text size accessibility: Normal, Large, Largest options in App Settings",
+                        "notes":  "Body class oha-text-large / oha-text-largest. Anti-FOUC IIFE in pwa-utils.js. CSS overrides in pwa-styles.css for vendor, MSV, settings, schedule, map card elements. Nav tabs intentionally excluded."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add Refresh Convention Data button to App Settings that sends clearCache SW message",
+                        "notes":  "Sends clearCache to service worker then reloads after 1200ms. In pwa_settings() shortcode inline JS."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add vendor map click and vendor favorite analytics tracking via OHAAnalytics",
+                        "notes":  "trackVendorMapClick() and trackVendorFavorite() added to pwa-analytics.js. Wired to locate buttons in both convention_vendors and favorite_vendors shortcodes, and to addFavorite/removeFavorite in pwa-phase3a-features.js."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add active session time tracking via Page Visibility API sending active_session_time GA4 event",
+                        "notes":  "trackSessionTime() in pwa-analytics.js. Accumulates visible time, flushes on pagehide or visibilitychange hidden. Auto-started in init()."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.23.0",
+                        "type":  "feature",
+                        "summary":  "Add Lost and Found shortcode [oha_lost_found] with admin-managed item list and optional map link",
+                        "notes":  "Items stored in oha_pwa_lost_found_items (one per line). Map URL in oha_pwa_lost_found_map_url. Both configurable in PWA Settings General tab. Dark-themed card matches PWA UI."
                     }
                 ]
 }

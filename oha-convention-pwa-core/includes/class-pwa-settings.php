@@ -152,6 +152,8 @@ class OHA_PWA_Settings {
         register_setting('oha_pwa_settings', 'oha_pwa_convention_start');
         register_setting('oha_pwa_settings', 'oha_pwa_convention_end');
         register_setting('oha_pwa_settings', 'oha_pwa_happenings');
+        register_setting('oha_pwa_settings', 'oha_pwa_lost_found_items');
+        register_setting('oha_pwa_settings', 'oha_pwa_lost_found_map_url');
         register_setting('oha_pwa_settings', 'oha_pwa_vendor_card_fields');
         register_setting('oha_pwa_settings', 'oha_pwa_passport_url');
         register_setting('oha_pwa_settings', 'oha_pwa_scanner_url');
@@ -220,6 +222,8 @@ class OHA_PWA_Settings {
         $board_notes    = get_option('oha_pwa_board_notes', '');
         $board_contacts = get_option('oha_pwa_board_contacts', '');
         $happenings     = get_option('oha_pwa_happenings', '');
+        $lost_found_items   = get_option('oha_pwa_lost_found_items', '');
+        $lost_found_map_url = get_option('oha_pwa_lost_found_map_url', '');
         $passport_url      = get_option('oha_pwa_passport_url', '/convention/2026-convention/passport/');
         $scanner_url       = get_option('oha_pwa_scanner_url',  '/convention/2026-convention/passport/');
         $convention_map_url = get_option('oha_pwa_convention_map_url', '/convention/2026-convention/map/');
@@ -800,6 +804,29 @@ class OHA_PWA_Settings {
                         </tr>
                     </table>
 
+                    <h3 style="margin-top:24px;">Lost and Found</h3>
+                    <p>Items listed here appear on the Lost and Found card in the attendee Info section. One item per line. Leave empty to show only the location link.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="oha_pwa_lost_found_map_url">Lost and Found Location URL</label>
+                            </th>
+                            <td>
+                                <input type="text" id="oha_pwa_lost_found_map_url" name="oha_pwa_lost_found_map_url" value="<?php echo esc_attr($lost_found_map_url); ?>" class="regular-text" placeholder="/convention/2026-convention/map/?oha_vendor=lost-found">
+                                <p class="description">Optional deep link to the map showing the Lost and Found table location. Leave empty to hide the link.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="oha_pwa_lost_found_items">Found Items</label>
+                            </th>
+                            <td>
+                                <textarea id="oha_pwa_lost_found_items" name="oha_pwa_lost_found_items" rows="6" class="large-text" style="font-family:monospace;"><?php echo esc_textarea($lost_found_items); ?></textarea>
+                                <p class="description">One item per line. Example: <code>Black backpack - turned in 2:00 PM Saturday</code></p>
+                            </td>
+                        </tr>
+                    </table>
+
                     <h3 style="margin-top:24px;">&#128717; Vendor Cards</h3>
                     <p>Choose which fields appear on vendor cards (logo and name always shown).</p>
                     <table class="form-table">
@@ -1022,6 +1049,8 @@ class OHA_PWA_Settings {
         update_option('oha_pwa_convention_start', sanitize_text_field(wp_unslash($_POST['oha_pwa_convention_start'] ?? '')));
         update_option('oha_pwa_convention_end', sanitize_text_field(wp_unslash($_POST['oha_pwa_convention_end'] ?? '')));
         update_option('oha_pwa_happenings', sanitize_textarea_field(wp_unslash($_POST['oha_pwa_happenings'] ?? '')));
+        update_option('oha_pwa_lost_found_items',   sanitize_textarea_field(wp_unslash($_POST['oha_pwa_lost_found_items']   ?? '')));
+        update_option('oha_pwa_lost_found_map_url', esc_url_raw($_POST['oha_pwa_lost_found_map_url'] ?? ''));
         update_option('oha_pwa_passport_url',       esc_url_raw($_POST['oha_pwa_passport_url']       ?? ''));
         update_option('oha_pwa_scanner_url',        esc_url_raw($_POST['oha_pwa_scanner_url']        ?? ''));
         update_option('oha_pwa_convention_map_url', esc_url_raw($_POST['oha_pwa_convention_map_url'] ?? ''));

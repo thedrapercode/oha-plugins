@@ -432,4 +432,32 @@ END:VCALENDAR`;
         }
     };
     
+    /**
+     * Apply stored text-size class to body.
+     * Called once on DOMContentLoaded so the preference is active on every
+     * convention page without the user needing to visit Settings each time.
+     */
+    OHAPWA.applyTextSize = function () {
+        var size = '';
+        try { size = localStorage.getItem('oha_text_size') || 'normal'; } catch (e) {}
+        document.body.classList.remove('oha-text-large', 'oha-text-largest');
+        if (size === 'large')   { document.body.classList.add('oha-text-large'); }
+        if (size === 'largest') { document.body.classList.add('oha-text-largest'); }
+    };
+
 })(jQuery);
+
+// Apply text-size preference immediately on script evaluation (before jQuery ready)
+// so there is no visible flash of unstyled text on page load.
+(function () {
+    var size = '';
+    try { size = localStorage.getItem('oha_text_size') || 'normal'; } catch (e) {}
+    if (size === 'large')   { document.documentElement.classList.add('oha-text-large'); }
+    if (size === 'largest') { document.documentElement.classList.add('oha-text-largest'); }
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.remove('oha-text-large', 'oha-text-largest');
+        document.documentElement.classList.remove('oha-text-large', 'oha-text-largest');
+        if (size === 'large')   { document.body.classList.add('oha-text-large'); }
+        if (size === 'largest') { document.body.classList.add('oha-text-largest'); }
+    });
+})();

@@ -42,6 +42,7 @@ class OHA_PWA_Shortcodes {
         add_shortcode( 'oha_convention_home',         [ $this, 'convention_home' ] );
         add_shortcode( 'oha_convention_passport',     [ $this, 'convention_passport' ] );
         add_shortcode( 'oha_pwa_settings',            [ $this, 'pwa_settings' ] );
+        add_shortcode( 'oha_lost_found',              [ $this, 'lost_found' ] );
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -214,6 +215,93 @@ class OHA_PWA_Shortcodes {
     // ─────────────────────────────────────────────────────────────────────
     public function happening_now( $atts ) {
         return '<div id="oha-happening-now"></div>';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // [oha_lost_found]
+    // Lost and Found info card — items and map URL configured in PWA Settings.
+    // ─────────────────────────────────────────────────────────────────────
+    public function lost_found( $atts ) {
+        $items_raw = get_option( 'oha_pwa_lost_found_items', '' );
+        $map_url   = get_option( 'oha_pwa_lost_found_map_url', '' );
+
+        $lines = array_filter( array_map( 'trim', explode( "\n", $items_raw ) ) );
+
+        ob_start(); ?>
+<div class="oha-pwa-container oha-lost-found-wrap">
+<style>
+.oha-lost-found-card {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-left: 4px solid #AD3119;
+    border-radius: 12px;
+    padding: 20px 18px;
+    margin: 0 0 16px;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.oha-lost-found-heading {
+    margin: 0 0 6px;
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #fff;
+}
+.oha-lost-found-sub {
+    margin: 0 0 14px;
+    font-size: 13px;
+    color: rgba(255,255,255,.5);
+    line-height: 1.5;
+}
+.oha-lost-found-list {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+}
+.oha-lost-found-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 14px;
+    color: #ddd;
+}
+.oha-lost-found-list li:last-child { border-bottom: none; }
+.oha-lost-found-empty {
+    font-size: 14px;
+    color: rgba(255,255,255,.4);
+    margin: 0 0 14px;
+    font-style: italic;
+}
+.oha-lost-found-map-link {
+    display: inline-block;
+    padding: 9px 18px;
+    background: #AD3119;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+}
+.oha-lost-found-map-link:hover { background: #8b2714; color: #fff; }
+</style>
+<div class="oha-lost-found-card">
+    <h2 class="oha-lost-found-heading">Lost and Found</h2>
+    <p class="oha-lost-found-sub">Items turned in to volunteers are listed below. Visit the Lost and Found table near the main entrance if you are missing something.</p>
+    <?php if ( ! empty( $lines ) ) : ?>
+    <ul class="oha-lost-found-list">
+        <?php foreach ( $lines as $line ) : ?>
+        <li><?php echo esc_html( $line ); ?></li>
+        <?php endforeach; ?>
+    </ul>
+    <?php else : ?>
+    <p class="oha-lost-found-empty">No items have been turned in yet.</p>
+    <?php endif; ?>
+    <?php if ( $map_url ) : ?>
+    <a class="oha-lost-found-map-link" href="<?php echo esc_url( $map_url ); ?>">View Location on Map</a>
+    <?php endif; ?>
+</div>
+</div>
+        <?php
+        return ob_get_clean();
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -566,8 +654,8 @@ function ohaVolHandbookToggle(btn) {
         .oha-msv-remove:active { background: rgba(220,50,50,.6); color: #fff; }
         </style>
         <div class="oha-msv-wrap">
-            <h2 class="oha-msv-heading">&#10084; My Must-See Vendors</h2>
-            <p class="oha-msv-subhead">Browse Vendors and tap &#129293; to save here. Tap a card with a booth to find them on the map.</p>
+            <h2 class="oha-msv-heading">My Must-See Vendors</h2>
+            <p class="oha-msv-subhead">Browse vendors and tap the skull icon to save them here. Tap any saved card to find them on the map.</p>
             <div id="oha-favorite-vendors-list"></div>
         </div>
         <script>
@@ -585,7 +673,7 @@ function ohaVolHandbookToggle(btn) {
                 var container = $('#oha-favorite-vendors-list');
 
                 if (vendors.length === 0) {
-                    container.html('<div class="oha-msv-empty">&#129293; No must-see vendors yet.<br>Browse Vendors and tap the heart to save them here.</div>');
+                    container.html('<div class="oha-msv-empty">No must-see vendors yet.<br>Browse vendors and tap the skull icon to save them here.</div>');
                     return;
                 }
 
@@ -637,9 +725,18 @@ function ohaVolHandbookToggle(btn) {
                     e.stopPropagation();
                     var id = String($(this).data('vendor-id'));
                     var f  = JSON.parse(localStorage.getItem('oha_favorite_vendors') || '{}');
+                    var removedName = f[id] ? (f[id].name || id) : id;
                     delete f[id];
                     localStorage.setItem('oha_favorite_vendors', JSON.stringify(f));
+                    if (window.OHAAnalytics) { OHAAnalytics.trackVendorFavorite('remove', id, removedName); }
                     renderFavoriteVendors();
+                });
+
+                container.on('click', '.oha-msv-locate-btn', function() {
+                    var card = $(this).closest('.oha-msv-card');
+                    var nameEl = card.find('.oha-msv-name').text();
+                    var boothEl = card.find('.oha-msv-booth').text().replace(/Booth\s*/i, '').trim();
+                    if (window.OHAAnalytics) { OHAAnalytics.trackVendorMapClick('', nameEl, boothEl); }
                 });
             }
 
@@ -1743,7 +1840,7 @@ function ohaVolHandbookToggle(btn) {
     // Atts: title="Our Convention Vendors"
     // ─────────────────────────────────────────────────────────────────────
     public function convention_vendors( $atts ) {
-        $atts  = shortcode_atts( [ 'title' => 'Our Convention Vendors' ], $atts );
+        $atts  = shortcode_atts( [ 'title' => 'Convention Vendor Hall' ], $atts );
         $title = esc_html( $atts['title'] );
 
         $card_fields    = get_option( 'oha_pwa_vendor_card_fields', [
@@ -1905,17 +2002,33 @@ function ohaVolHandbookToggle(btn) {
         }
         .oha-vendor-locate-btn:hover,
         .oha-vendor-locate-btn:active { background: rgba(173,49,25,.32); color: #ff8a70; text-decoration: none; }
+        .oha-vendors-subtext { margin: 0 0 14px; font-size: 13px; color: rgba(255,255,255,.5); text-align: center; }
+        .oha-vendors-search-wrap { margin: 0 0 16px; }
+        .oha-vendors-search-input {
+            width: 100%; box-sizing: border-box;
+            padding: 10px 14px;
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.13);
+            border-radius: 10px;
+            color: #eee;
+            font-size: 14px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .oha-vendors-search-input::placeholder { color: rgba(255,255,255,.35); }
+        .oha-vendors-search-input:focus { border-color: rgba(173,49,25,.7); background: rgba(255,255,255,.1); }
         </style>
         <div class="oha-vendors-wrap">
             <h2 class="oha-vendors-heading"><?php echo $title; ?></h2>
 
             <?php if ( empty( $vendors ) ) : ?>
-            <div class="oha-vendors-empty">&#127875; Vendor announcements coming soon!</div>
+            <div class="oha-vendors-empty">Vendor announcements coming soon.</div>
             <?php else : ?>
 
-            <p class="oha-vendors-count">
-                Currently <?php echo count( $vendors ); ?> Vendor<?php echo count( $vendors ) !== 1 ? 's' : ''; ?> Announced, more coming soon!
-            </p>
+            <p class="oha-vendors-subtext">Find them on the map. Save favorites to plan your visit.</p>
+            <div class="oha-vendors-search-wrap">
+                <input type="search" class="oha-vendors-search-input" placeholder="Search vendors...">
+            </div>
             <div class="oha-vendors-grid">
             <?php foreach ( $vendors as $vendor ) :
                 $company_name = get_post_meta( $vendor->ID, 'company_name', true );
@@ -1956,7 +2069,7 @@ function ohaVolHandbookToggle(btn) {
                     <?php else : ?>
                         <div class="oha-vendor-placeholder">&#127962;</div>
                     <?php endif; ?>
-                    <button class="oha-vendor-favorite-btn" data-vendor-id="<?php echo esc_attr( $vendor->ID ); ?>" data-booth="<?php echo esc_attr( $booth_number ); ?>" aria-label="Add to Must-See Vendors">&#129293;</button>
+                    <button class="oha-vendor-favorite-btn" data-vendor-id="<?php echo esc_attr( $vendor->ID ); ?>" data-booth="<?php echo esc_attr( $booth_number ); ?>" aria-label="Add to Must-See Vendors"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3C6.69 3 4 5.69 4 9c0 2.08 1.06 3.9 2.67 5H7v2h6v-2h.33C14.94 12.9 16 11.08 16 9c0-3.31-2.69-6-6-6z"/><circle cx="8" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="9" r="1.2" fill="currentColor" stroke="none"/></svg></button>
                     <div class="oha-vendor-img-overlay">
                         <span class="oha-vendor-name"><?php echo esc_html( $company_name ); ?></span>
                         <?php if ( $website_display ) : ?>
@@ -1986,6 +2099,37 @@ function ohaVolHandbookToggle(btn) {
 
             <?php endif; ?>
         </div>
+        <?php if ( ! empty( $vendors ) ) : ?>
+        <script>
+        (function () {
+            var wrap  = document.querySelector('.oha-vendors-wrap');
+            var input = wrap && wrap.querySelector('.oha-vendors-search-input');
+            if (!input) return;
+            input.addEventListener('input', function () {
+                var q = this.value.toLowerCase().trim();
+                wrap.querySelectorAll('.oha-vendor-card').forEach(function (card) {
+                    var name = (card.getAttribute('data-name') || '').toLowerCase();
+                    card.style.display = (!q || name.includes(q)) ? '' : 'none';
+                });
+            });
+
+            // Track locate-on-map clicks
+            if (wrap) {
+                wrap.addEventListener('click', function (e) {
+                    var btn = e.target.closest('.oha-vendor-locate-btn');
+                    if (!btn) return;
+                    var card = btn.closest('.oha-vendor-card');
+                    var name = card ? (card.getAttribute('data-name') || '') : '';
+                    var booth = card ? (card.getAttribute('data-booth') || '') : '';
+                    var vid  = card ? (card.getAttribute('data-vendor-id') || '') : '';
+                    if (window.OHAAnalytics) {
+                        OHAAnalytics.trackVendorMapClick(vid, name, booth);
+                    }
+                });
+            }
+        })();
+        </script>
+        <?php endif; ?>
         <?php
         return ob_get_clean();
     }
@@ -3159,7 +3303,30 @@ function ohaVolHandbookToggle(btn) {
         </div>
 
         <div class="oha-pwa-settings-section">
+            <h3>Text Size</h3>
+            <p class="oha-settings-desc">Increase text size across the app for easier reading.</p>
+            <div class="oha-settings-row" style="flex-wrap:wrap;gap:8px;">
+                <div class="oha-settings-label" style="flex-basis:100%;margin-bottom:2px;">
+                    Size
+                    <small id="oha-text-size-label">Normal</small>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="oha-settings-btn oha-text-size-btn" data-size="normal"  type="button" style="min-width:64px;">Normal</button>
+                    <button class="oha-settings-btn oha-text-size-btn" data-size="large"   type="button" style="min-width:64px;">Large</button>
+                    <button class="oha-settings-btn oha-text-size-btn" data-size="largest" type="button" style="min-width:64px;">Largest</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="oha-pwa-settings-section">
             <h3>App Updates</h3>
+            <div class="oha-settings-row">
+                <div class="oha-settings-label">
+                    Refresh Convention Data
+                    <small id="oha-refresh-cache-status">Re-download map booths, schedule, and app pages</small>
+                </div>
+                <button class="oha-settings-btn" id="oha-refresh-cache" type="button">Refresh</button>
+            </div>
             <div class="oha-settings-row">
                 <div class="oha-settings-label">
                     Check for Updates
@@ -3294,6 +3461,54 @@ function ohaVolHandbookToggle(btn) {
                         return k.indexOf('oha_') === 0;
                     }).forEach(function (k) { localStorage.removeItem(k); });
                     window.location.reload();
+                });
+            }
+
+            // ── Text size ─────────────────────────────────────────────────
+            var textSizeBtns  = document.querySelectorAll('.oha-text-size-btn');
+            var textSizeLabel = document.getElementById('oha-text-size-label');
+            var sizeNames     = { normal: 'Normal', large: 'Large', largest: 'Largest' };
+
+            function applyTextSize(size) {
+                document.body.classList.remove('oha-text-large', 'oha-text-largest');
+                if (size === 'large')   { document.body.classList.add('oha-text-large'); }
+                if (size === 'largest') { document.body.classList.add('oha-text-largest'); }
+                if (textSizeLabel) { textSizeLabel.textContent = sizeNames[size] || 'Normal'; }
+                textSizeBtns.forEach(function (btn) {
+                    var active = btn.getAttribute('data-size') === size;
+                    btn.style.background     = active ? 'rgba(173,49,25,.75)' : '';
+                    btn.style.borderColor    = active ? '#AD3119' : '';
+                    btn.style.color          = active ? '#fff' : '';
+                });
+            }
+
+            var currentTextSize = 'normal';
+            try { currentTextSize = localStorage.getItem('oha_text_size') || 'normal'; } catch (e) {}
+            applyTextSize(currentTextSize);
+
+            textSizeBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var size = this.getAttribute('data-size');
+                    try { localStorage.setItem('oha_text_size', size); } catch (e) {}
+                    applyTextSize(size);
+                });
+            });
+
+            // ── Refresh convention data (clear SW caches + reload) ────────
+            var btnRefreshCache  = document.getElementById('oha-refresh-cache');
+            var refreshCacheStatus = document.getElementById('oha-refresh-cache-status');
+            if (btnRefreshCache) {
+                btnRefreshCache.addEventListener('click', function () {
+                    if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+                        if (refreshCacheStatus) { refreshCacheStatus.textContent = 'App is not running as PWA - open from your home screen.'; }
+                        return;
+                    }
+                    if (!confirm('This will clear cached convention data so it can be re-downloaded fresh. You will need a connection after reload. Continue?')) { return; }
+                    btnRefreshCache.disabled    = true;
+                    btnRefreshCache.textContent = 'Clearing...';
+                    navigator.serviceWorker.controller.postMessage({ action: 'clearCache' });
+                    // Small delay lets the SW finish deleting before the reload triggers new fetches
+                    setTimeout(function () { window.location.reload(); }, 1200);
                 });
             }
 

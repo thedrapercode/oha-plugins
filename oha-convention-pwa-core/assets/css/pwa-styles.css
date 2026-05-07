@@ -420,3 +420,69 @@ body.pwa-standalone #wpadminbar {
     padding: 1px 7px; border-radius: 3px;
     margin-right: 6px; vertical-align: middle;
 }
+
+/* ── Text size accessibility ─────────────────────────────────────────────
+   Applied via body class set by pwa-utils.js from localStorage preference.
+   body.oha-text-large   = +15%
+   body.oha-text-largest = +28%
+   Nav tabs and icons are intentionally excluded — they are already
+   touch-optimised and scaling them causes layout issues.
+   ----------------------------------------------------------------------- */
+
+/* Base font-size bump — cascades to em-relative children */
+body.oha-text-large   { font-size: 115%; }
+body.oha-text-largest { font-size: 128%; }
+
+/* Vendor cards */
+body.oha-text-large   .oha-vendor-name { font-size: 17px; }
+body.oha-text-largest .oha-vendor-name { font-size: 20px; }
+body.oha-text-large   .oha-vendor-site { font-size: 13px; }
+body.oha-text-largest .oha-vendor-site { font-size: 15px; }
+
+/* My Must-See Vendors */
+body.oha-text-large   .oha-msv-heading  { font-size: 1.3rem; }
+body.oha-text-largest .oha-msv-heading  { font-size: 1.5rem; }
+body.oha-text-large   .oha-msv-subhead,
+body.oha-text-large   .oha-msv-empty    { font-size: 15px; }
+body.oha-text-largest .oha-msv-subhead,
+body.oha-text-largest .oha-msv-empty    { font-size: 17px; }
+body.oha-text-large   .oha-msv-name     { font-size: 15px; }
+body.oha-text-largest .oha-msv-name     { font-size: 17px; }
+body.oha-text-large   .oha-msv-booth,
+body.oha-text-large   .oha-msv-site     { font-size: 13px; }
+body.oha-text-largest .oha-msv-booth,
+body.oha-text-largest .oha-msv-site     { font-size: 15px; }
+
+/* Convention vendors list */
+body.oha-text-large   .oha-vendors-subtext,
+body.oha-text-large   .oha-vendors-count   { font-size: 15px; }
+body.oha-text-largest .oha-vendors-subtext,
+body.oha-text-largest .oha-vendors-count   { font-size: 17px; }
+
+/* PWA settings page */
+body.oha-text-large   .oha-settings-label       { font-size: 16px; }
+body.oha-text-largest .oha-settings-label       { font-size: 18px; }
+body.oha-text-large   .oha-settings-label small { font-size: 13px; }
+body.oha-text-largest .oha-settings-label small { font-size: 15px; }
+body.oha-text-large   .oha-settings-btn         { font-size: 15px; }
+body.oha-text-largest .oha-settings-btn         { font-size: 16px; }
+body.oha-text-large   .oha-pwa-settings-section h3 { font-size: 1.15rem; }
+body.oha-text-largest .oha-pwa-settings-section h3 { font-size: 1.3rem;  }
+
+/* General PWA page content — schedule items, FAQ, board notes, etc. */
+body.oha-text-large   .oha-pwa-container p,
+body.oha-text-large   .oha-pwa-container li,
+body.oha-text-large   .oha-pwa-container label  { font-size: 16px; }
+body.oha-text-largest .oha-pwa-container p,
+body.oha-text-largest .oha-pwa-container li,
+body.oha-text-largest .oha-pwa-container label  { font-size: 18px; }
+
+/* Convention map booth card */
+body.oha-text-large   .oha-conv-card-name  { font-size: 17px; }
+body.oha-text-largest .oha-conv-card-name  { font-size: 20px; }
+body.oha-text-large   .oha-conv-card-type,
+body.oha-text-large   .oha-conv-card-desc  { font-size: 14px; }
+body.oha-text-largest .oha-conv-card-type,
+body.oha-text-largest .oha-conv-card-desc  { font-size: 16px; }
+
+/* Nav tabs — intentionally NOT scaled; touch targets stay consistent */
