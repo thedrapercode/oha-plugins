@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.10.1",
+    "version":  "2.10.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -708,6 +708,20 @@
                         "type":  "feature",
                         "summary":  "Highlight selected booth pin with persistent white ring and one-shot pulse animation on deep link or tap",
                         "notes":  "booth-selected MapLibre layer filters by id property, cleared on card dismiss. _pulsePin() creates a DOM .oha-pin-pulse element over the MapLibre canvas container. CSS in oha-convention.css. Both flyToBooth() and hideBoothCard() updated."
+                    },
+                    {
+                        "date":  "2026-05-07",
+                        "version":  "2.10.2",
+                        "type":  "fix",
+                        "summary":  "Add bottom padding to flyToBooth so pin sits above the slide-up card instead of behind it",
+                        "notes":  "Reads .oha-conv-bottom-sheet outerHeight() at fly time; falls back to 45% of map container height. padding passed to MapLibre flyTo as { top:40, bottom:sheetH, left:20, right:20 }."
+                    },
+                    {
+                        "date":  "2026-05-07",
+                        "version":  "2.10.2",
+                        "type":  "fix",
+                        "summary":  "Fix pulse animation position by firing _pulsePin after moveend instead of before flyTo",
+                        "notes":  "map.project() now runs after the fly animation completes so screen coordinates are correct. Uses map.once(moveend) callback."
                     }
                 ]
 }

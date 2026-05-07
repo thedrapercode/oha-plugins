@@ -731,20 +731,32 @@
             if (this.isMobile && this.listViewActive) {
                 this.showMapView();
             }
+            var self = this;
             var lng = (parseFloat(booth.x) || 0) / 100;
             var lat = 1 - (parseFloat(booth.y) || 0) / 100;
             var targetZoom = this.config.deepLinkZoom || 10;
 
-            // Highlight the selected pin with a ring and a pulse animation
+            // Highlight the selected pin ring
             if (this.map.getLayer('booth-selected')) {
                 this.map.setFilter('booth-selected', ['==', ['get', 'id'], String(booth.id)]);
             }
-            this._pulsePin(lng, lat);
+
+            // Bottom padding so the pin sits above the slide-up card rather than behind it.
+            // Read the sheet's actual height; fall back to 45% of the map container height.
+            var $sheet = this.$wrapper.find('.oha-conv-bottom-sheet');
+            var sheetH = ($sheet.length ? $sheet.outerHeight() : 0) ||
+                         Math.round((this.$wrapper.outerHeight() || window.innerHeight) * 0.45);
+
+            // Fire pulse after flyTo completes so map.project() reflects the final position
+            this.map.once('moveend', function () {
+                self._pulsePin(lng, lat);
+            });
 
             this.map.flyTo({
-                center: [lng, lat],
-                zoom:   targetZoom,
+                center:  [lng, lat],
+                zoom:    targetZoom,
                 duration: 500,
+                padding: { top: 40, bottom: sheetH, left: 20, right: 20 },
             });
         },
 
