@@ -105,6 +105,9 @@ class OHA_Convention_Shortcode {
                     <span><?php _e('Loading floor plan...', 'oha-modern-map'); ?></span>
                 </div>
 
+                <!-- Status bar: shown when offline (last-updated timestamp) or on load error -->
+                <div class="oha-conv-status-bar" style="display:none" aria-live="polite"></div>
+
                 <!-- Floating top-left: List/Map toggle pill -->
                 <button class="oha-mob-list-toggle-btn" aria-label="<?php esc_attr_e('Toggle list view', 'oha-modern-map'); ?>">
                     <span class="oha-toggle-to-list">

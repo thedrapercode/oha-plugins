@@ -3,7 +3,7 @@
  * Plugin Name: OHA Modern Map
  * Plugin URI: https://ohiohaunters.com
  * Description: Premium haunt map plugin for Ohio haunted attractions. MapLibre GL JS WebGL rendering, GeoDirectory + Events integration, region fills, convention mode indoor floor plan, mobile-first design. Requires GeoDirectory.
- * Version: 2.9.1
+ * Version: 2.10.0
  * Author: Ohio Haunters Association
  * Author URI: https://ohiohaunters.com
  * Text Domain: oha-modern-map
@@ -15,7 +15,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Plugin Constants
-define('OHA_MODERN_MAP_VERSION', '2.9.1');
+define('OHA_MODERN_MAP_VERSION', '2.10.0');
 define('OHA_MODERN_MAP_FILE', __FILE__);
 define('OHA_MODERN_MAP_PATH', plugin_dir_path(__FILE__));
 define('OHA_MODERN_MAP_URL', plugin_dir_url(__FILE__));
@@ -80,18 +80,18 @@ class OHA_Modern_Map {
 
     public function enqueue_frontend_assets() {
         if (!is_admin()) {
-            // MapLibre GL JS v4 — WebGL-based, open source (BSD-2-Clause)
+            // MapLibre GL JS v4.7.1 — bundled locally; no CDN dependency at venue
             wp_enqueue_style(
                 'maplibre-gl',
-                'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css',
+                OHA_MODERN_MAP_URL . 'assets/vendor/maplibre/maplibre-gl.css',
                 [],
-                '4'
+                '4.7.1'
             );
             wp_enqueue_script(
                 'maplibre-gl',
-                'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js',
+                OHA_MODERN_MAP_URL . 'assets/vendor/maplibre/maplibre-gl.js',
                 [],
-                '4',
+                '4.7.1',
                 true
             );
 

@@ -501,15 +501,66 @@
                 success: function (response) {
                     if (response.success && response.data) {
                         self.allBooths = response.data;
+
+                        // Track when we last had a successful data fetch from the network.
+                        // When offline the SW serves cached AJAX responses, so navigator.onLine
+                        // distinguishes a live fetch from a cached one.
+                        if (navigator.onLine) {
+                            try { localStorage.setItem('oha_conv_booth_updated', new Date().toISOString()); } catch (e) {}
+                        } else {
+                            self.showStatusBar('offline');
+                        }
+
                         self.applyFilters();
                         self.renderList();
                     }
                     if (cb) cb();
                 },
                 error: function () {
+                    // Error callback fires only when the SW has no cached data either.
+                    // Show a message so the user knows what happened.
+                    if (!self.allBooths || !self.allBooths.length) {
+                        self.showStatusBar('error');
+                    }
                     if (cb) cb();
                 },
             });
+        },
+
+        showStatusBar: function (type) {
+            var self = this;
+            var $bar = self.$wrapper.find('.oha-conv-status-bar');
+            if (!$bar.length) return;
+
+            var msg = '';
+            if (type === 'offline') {
+                try {
+                    var ts = localStorage.getItem('oha_conv_booth_updated');
+                    if (ts) {
+                        var d = new Date(ts);
+                        var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        var timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                        msg = 'Offline - map data from ' + dateStr + ' at ' + timeStr;
+                    } else {
+                        msg = 'Offline - showing cached map data';
+                    }
+                } catch (e) {
+                    msg = 'Offline - showing cached map data';
+                }
+            } else if (type === 'error') {
+                try {
+                    var ts2 = localStorage.getItem('oha_conv_booth_updated');
+                    msg = ts2
+                        ? 'Could not load booth data - check your connection and refresh'
+                        : 'Could not load booth data - a connection is required on first use';
+                } catch (e) {
+                    msg = 'Could not load booth data - check your connection and refresh';
+                }
+            }
+
+            if (msg) {
+                $bar.text(msg).show();
+            }
         },
 
         boothsToGeoJSON: function (booths) {

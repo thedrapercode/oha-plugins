@@ -1182,3 +1182,22 @@ body.oha-map-page-active {
 .oha-conv-card-fav-btn.active:hover {
     background: #e55c2a;
 }
+
+/* -----------------------------------------------------------------------
+ * Status bar — offline notice / last-updated / load error
+ * --------------------------------------------------------------------- */
+.oha-conv-status-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.72);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 11px;
+    text-align: center;
+    padding: 5px 12px;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}

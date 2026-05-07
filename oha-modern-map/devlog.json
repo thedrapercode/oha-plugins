@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.9.1",
+    "version":  "2.10.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -687,6 +687,20 @@
                         "type":  "fix",
                         "summary":  "Change booth AJAX from POST to GET so PWA service worker can cache the response offline",
                         "notes":  "ajax_get_booths now reads from  and skips nonce check (read-only public data, nopriv endpoint). JS loadBooths() changed to type:GET with no nonce param, giving a stable URL (/wp-admin/admin-ajax.php?action=oha_get_convention_booths\u0026floor=0) that the SW caches on first online visit and serves offline."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "2.10.0",
+                        "type":  "fix",
+                        "summary":  "Bundle MapLibre GL JS 4.7.1 locally; remove CDN dependency for offline reliability",
+                        "notes":  "Files at assets/vendor/maplibre/maplibre-gl.js and maplibre-gl.css. Enqueue updated in oha-modern-map.php to use OHA_MODERN_MAP_URL."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "2.10.0",
+                        "type":  "feature",
+                        "summary":  "Add offline/error status bar to convention map showing cached data age or error message",
+                        "notes":  "Div .oha-conv-status-bar added after loading overlay in class-oha-convention-shortcode.php. CSS in oha-convention.css. showStatusBar() method in oha-convention-map.js. Timestamp stored in localStorage oha_conv_booth_updated."
                     }
                 ]
 }
