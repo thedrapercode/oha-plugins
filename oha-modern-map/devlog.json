@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.10.0",
+    "version":  "2.10.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -701,6 +701,13 @@
                         "type":  "feature",
                         "summary":  "Add offline/error status bar to convention map showing cached data age or error message",
                         "notes":  "Div .oha-conv-status-bar added after loading overlay in class-oha-convention-shortcode.php. CSS in oha-convention.css. showStatusBar() method in oha-convention-map.js. Timestamp stored in localStorage oha_conv_booth_updated."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "2.10.1",
+                        "type":  "feature",
+                        "summary":  "Highlight selected booth pin with persistent white ring and one-shot pulse animation on deep link or tap",
+                        "notes":  "booth-selected MapLibre layer filters by id property, cleared on card dismiss. _pulsePin() creates a DOM .oha-pin-pulse element over the MapLibre canvas container. CSS in oha-convention.css. Both flyToBooth() and hideBoothCard() updated."
                     }
                 ]
 }

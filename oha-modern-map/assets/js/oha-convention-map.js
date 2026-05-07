@@ -411,6 +411,27 @@
                 },
             });
 
+            // Selected booth ring — visible only for the active deep-linked / tapped booth
+            self.map.addLayer({
+                id:     'booth-selected',
+                type:   'circle',
+                source: 'booths',
+                filter: ['==', ['get', 'id'], ''],
+                paint:  {
+                    'circle-color':         'transparent',
+                    'circle-radius':        [
+                        'interpolate', ['linear'], ['zoom'],
+                        6,  r6  + 5,
+                        12, s   + 8,
+                        18, r18 + 12,
+                    ],
+                    'circle-stroke-color':  '#ffffff',
+                    'circle-stroke-width':  3,
+                    'circle-stroke-opacity': 1,
+                    'circle-opacity':       0,
+                },
+            });
+
             // Booth icon symbol
             self.map.addLayer({
                 id:     'booth-icon',
@@ -713,6 +734,13 @@
             var lng = (parseFloat(booth.x) || 0) / 100;
             var lat = 1 - (parseFloat(booth.y) || 0) / 100;
             var targetZoom = this.config.deepLinkZoom || 10;
+
+            // Highlight the selected pin with a ring and a pulse animation
+            if (this.map.getLayer('booth-selected')) {
+                this.map.setFilter('booth-selected', ['==', ['get', 'id'], String(booth.id)]);
+            }
+            this._pulsePin(lng, lat);
+
             this.map.flyTo({
                 center: [lng, lat],
                 zoom:   targetZoom,
@@ -802,6 +830,24 @@
             $sheet.attr('aria-hidden', 'true').removeClass('active');
             $('body').removeClass('oha-sheet-open');
             this.$wrapper.find('.oha-conv-list-item').removeClass('highlighted');
+            if (this.map.getLayer('booth-selected')) {
+                this.map.setFilter('booth-selected', ['==', ['get', 'id'], '']);
+            }
+        },
+
+        /* Briefly show an expanding ring DOM overlay at the booth's map position */
+        _pulsePin: function (lng, lat) {
+            var self = this;
+            var $container = self.$wrapper.find('.maplibregl-canvas-container');
+            if (!$container.length) return;
+
+            self.$wrapper.find('.oha-pin-pulse').remove();
+
+            var pt = self.map.project([lng, lat]);
+            var $pulse = $('<div class="oha-pin-pulse"></div>').css({ left: pt.x, top: pt.y });
+            $container.append($pulse);
+
+            setTimeout(function () { $pulse.remove(); }, 900);
         },
 
         /* -------------------------------------------------------------------
