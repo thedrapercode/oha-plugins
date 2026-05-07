@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.22.2",
+    "version":  "3.22.3",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -547,6 +547,20 @@
                         "type":  "fix",
                         "summary":  "Add data-booth to heart button in [oha_convention_vendors] so booth is stored when favoriting",
                         "notes":  "pwa-phase3a-features.js reads data-booth from closest([data-vendor-id]) which resolves to the button itself (not the parent card) because both have data-vendor-id. Adding data-booth to the button ensures booth is stored in localStorage when hearted from the vendors page. Map plugin cards work because their buttons do not have data-vendor-id so closest() correctly finds the parent."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.22.3",
+                        "type":  "fix",
+                        "summary":  "Expand SW fetch routing to cache map plugin JS/CSS, floor plan images, and AJAX from any same-origin path",
+                        "notes":  "Previously SW only intercepted URLs containing convention scope paths. Map plugin assets (/wp-content/plugins/oha-modern-map/...), floor plan images (/wp-content/uploads/...), and booth AJAX (/wp-admin/admin-ajax.php) were all silently skipped and failed offline. Fixed by routing all same-origin static assets, images, and admin-ajax.php GET requests regardless of path -- safe because SW registration scope (/convention/) ensures this handler only fires for convention page requests."
+                    },
+                    {
+                        "date":  "2026-05-06",
+                        "version":  "3.22.3",
+                        "type":  "fix",
+                        "summary":  "Add ignoreVary:true to handleApiRequest cache lookup to fix Vary:Cookie header mismatch",
+                        "notes":  "WordPress sets Vary:Cookie on AJAX responses. Without ignoreVary:true, caches.match() always misses and offline returns error JSON instead of cached data."
                     }
                 ]
 }

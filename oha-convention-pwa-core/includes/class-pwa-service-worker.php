@@ -134,33 +134,60 @@ self.addEventListener('activate', event => {
 
 /**
  * Fetch event - intercept network requests
- * ONLY intercepts convention-scoped requests
+ *
+ * The SW registration scope (/convention/) means this fetch handler only fires
+ * for requests made FROM convention pages. So intercepting assets at any path
+ * (wp-content/plugins, wp-content/uploads, wp-admin/admin-ajax.php) is safe —
+ * we will never accidentally cache assets for non-convention pages.
+ *
+ * HTML navigation is still restricted to convention-scoped paths so we never
+ * serve a cached convention page for a non-convention URL.
  */
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
-    // Intercept pre-cached external CDN resources (e.g. MapLibre from unpkg).
-    // These are outside convention scope but were cached on SW install so they
-    // must be served from cache when offline rather than hitting the network.
+    // Only handle GET requests — POST/PUT/etc pass through untouched
+    if (event.request.method !== 'GET') return;
+
+    // Pre-cached external CDN resources (e.g. MapLibre from unpkg)
     if (url.hostname !== self.location.hostname && isPreCachedExternal(url)) {
         event.respondWith(handleStaticRequest(event.request));
         return;
     }
 
-    // CRITICAL: Only handle convention paths for same-origin requests
-    if (!isConventionScope(url.pathname)) {
-        // Let browser handle normally - don't interfere
+    // Skip all other cross-origin requests
+    if (url.hostname !== self.location.hostname) return;
+
+    // Static assets (JS/CSS/fonts) from anywhere on this domain.
+    // Covers map plugin assets at /wp-content/plugins/oha-modern-map/...
+    if (isStaticAsset(url.pathname)) {
+        event.respondWith(handleStaticRequest(event.request));
         return;
     }
 
-    // Route different request types
-    if (url.pathname.startsWith(API_BASE)) {
-        event.respondWith(handleApiRequest(event.request));
-    } else if (isImage(url.pathname)) {
+    // Images from anywhere on this domain.
+    // Covers floor plan images at /wp-content/uploads/...
+    if (isImage(url.pathname)) {
         event.respondWith(handleImageRequest(event.request));
-    } else if (isStaticAsset(url.pathname)) {
-        event.respondWith(handleStaticRequest(event.request));
-    } else if (isSchedulePage(url.pathname)) {
+        return;
+    }
+
+    // AJAX requests — covers booth data at /wp-admin/admin-ajax.php
+    if (url.pathname.includes('admin-ajax.php')) {
+        event.respondWith(handleApiRequest(event.request));
+        return;
+    }
+
+    // REST API
+    if (url.pathname.startsWith(new URL(API_BASE).pathname)) {
+        event.respondWith(handleApiRequest(event.request));
+        return;
+    }
+
+    // For HTML navigation, only handle convention-scoped paths
+    if (!isConventionScope(url.pathname)) return;
+
+    if (isSchedulePage(url.pathname)) {
         event.respondWith(handleScheduleRequest(event.request));
     } else {
         event.respondWith(handleDynamicRequest(event.request));
@@ -265,8 +292,8 @@ async function handleApiRequest(request) {
         return response;
     } catch (error) {
         console.log('[SW] Network failed, trying cache for API:', request.url);
-        const cachedResponse = await caches.match(request);
-        
+        const cachedResponse = await caches.match(request, { ignoreVary: true });
+
         if (cachedResponse) {
             return cachedResponse;
         }
