@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.11.4",
+    "version":  "2.11.5",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -806,6 +806,13 @@
                         "type":  "fix",
                         "summary":  "Direct pin tap now activates the selected ring highlight same as deep links",
                         "notes":  "Previously only flyToBooth (list clicks, deep links) set the ring. Pin tap click handlers now also set booth-selected filter."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.5",
+                        "type":  "fix",
+                        "summary":  "Auto-heal duplicate floor IDs in get_settings() - writes corrected data back to DB on first load",
+                        "notes":  "Floors saved with duplicate IDs (from pre-v2.11.4 collision bug) are detected on any get_settings() call. The duplicate is renumbered to max_id+1 and persisted back via update_option. Self-heals without manual DB edits."
                     }
                 ]
 }

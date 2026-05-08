@@ -714,8 +714,32 @@ class OHA_Convention_Data {
                 ],
             ],
         ];
-        $saved = get_option('oha_convention_settings', []);
-        return wp_parse_args($saved, $defaults);
+        $saved    = get_option('oha_convention_settings', []);
+        $settings = wp_parse_args($saved, $defaults);
+
+        // Heal duplicate floor IDs — can occur when a floor was deleted then
+        // a new floor was added before the maxFloorId fix (v2.11.4).
+        $seen_ids = [];
+        $max_id   = 0;
+        foreach ($settings['floors'] as $f) {
+            $max_id = max($max_id, (int) $f['id']);
+        }
+        $changed = false;
+        foreach ($settings['floors'] as &$f) {
+            if (in_array((int) $f['id'], $seen_ids, true)) {
+                $f['id'] = ++$max_id;
+                $changed = true;
+            }
+            $seen_ids[] = (int) $f['id'];
+        }
+        unset($f);
+        if ($changed) {
+            $saved_settings = get_option('oha_convention_settings', []);
+            $saved_settings['floors'] = $settings['floors'];
+            update_option('oha_convention_settings', $saved_settings);
+        }
+
+        return $settings;
     }
 
     /**
