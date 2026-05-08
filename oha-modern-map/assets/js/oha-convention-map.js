@@ -236,11 +236,12 @@
             var self  = this;
             var floor = self.getFloor(floorId);
 
-            // Remove previous floorplan layers/sources
-            ['floorplan-raster', 'floorplan-border'].forEach(function (id) {
+            // Remove previous floorplan layers/sources (image-based and placeholder)
+            ['floorplan-raster', 'floorplan-border', 'placeholder-dots'].forEach(function (id) {
                 if (self.map.getLayer(id)) self.map.removeLayer(id);
             });
             if (self.map.getSource('floorplan')) self.map.removeSource('floorplan');
+            if (self.map.getSource('placeholder-grid')) self.map.removeSource('placeholder-grid');
 
             if (!floor || !floor.imageUrl) {
                 // No image configured — show a placeholder grid
@@ -417,7 +418,7 @@
                 id:     'booth-selected',
                 type:   'circle',
                 source: 'booths',
-                filter: ['==', ['get', 'id'], ''],
+                filter: ['==', ['get', 'id'], -1],
                 paint:  {
                     'circle-color':         'transparent',
                     'circle-radius':        [
@@ -493,11 +494,19 @@
             // Interactions
             self.map.on('click', 'booth-hitzone', function (e) {
                 if (!e.features.length) return;
-                self.showBoothCard(e.features[0].properties);
+                var props = e.features[0].properties;
+                if (self.map.getLayer('booth-selected')) {
+                    self.map.setFilter('booth-selected', ['==', ['get', 'id'], props.id]);
+                }
+                self.showBoothCard(props);
             });
             self.map.on('click', 'booth-bg', function (e) {
                 if (!e.features.length) return;
-                self.showBoothCard(e.features[0].properties);
+                var props = e.features[0].properties;
+                if (self.map.getLayer('booth-selected')) {
+                    self.map.setFilter('booth-selected', ['==', ['get', 'id'], props.id]);
+                }
+                self.showBoothCard(props);
             });
             self.map.on('mouseenter', 'booth-bg', function () {
                 self.map.getCanvas().style.cursor = 'pointer';
@@ -739,7 +748,7 @@
 
             // Highlight the selected pin ring
             if (this.map.getLayer('booth-selected')) {
-                this.map.setFilter('booth-selected', ['==', ['get', 'id'], String(booth.id)]);
+                this.map.setFilter('booth-selected', ['==', ['get', 'id'], booth.id]);
             }
 
             // Fire pulse after flyTo completes so map.project() reflects the final position
@@ -837,7 +846,7 @@
             $('body').removeClass('oha-sheet-open');
             this.$wrapper.find('.oha-conv-list-item').removeClass('highlighted');
             if (this.map.getLayer('booth-selected')) {
-                this.map.setFilter('booth-selected', ['==', ['get', 'id'], '']);
+                this.map.setFilter('booth-selected', ['==', ['get', 'id'], -1]);
             }
         },
 

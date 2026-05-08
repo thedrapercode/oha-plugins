@@ -1923,15 +1923,18 @@ class OHA_Map_Admin {
             });
 
             // Add floor row
+            // Track name-index and max ID separately so deleting floors doesn't cause ID collisions.
             var floorCount = <?php echo count($floors); ?>;
+            var maxFloorId = <?php echo !empty($floors) ? max(array_column($floors, 'id')) : 0; ?>;
             $('#oha-conv-add-floor').on('click', function() {
-                var idx = floorCount++;
+                var idx   = floorCount++;
+                var newId = ++maxFloorId;
                 var html = '<div class="oha-conv-floor-row" style="background:#f9f9f9;border:1px solid #ddd;padding:14px;margin-bottom:10px;border-radius:4px;">' +
                     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
                     '<span class="oha-floor-drag-handle" title="Drag to reorder" style="cursor:move;color:#999;font-size:18px;line-height:1;user-select:none;">&#9776;</span>' +
                     '<button type="button" class="button oha-conv-remove-floor" style="color:#a00;">Remove Floor</button>' +
                     '</div>' +
-                    '<input type="hidden" name="conv_floors[' + idx + '][id]" value="' + (idx + 1) + '">' +
+                    '<input type="hidden" name="conv_floors[' + idx + '][id]" value="' + newId + '">' +
                     '<table class="form-table" style="margin:0;">' +
                     '<tr><th style="width:200px"><label>Floor Label</label></th>' +
                     '<td><input type="text" name="conv_floors[' + idx + '][label]" value="" class="regular-text" placeholder="Upper Level"></td></tr>' +

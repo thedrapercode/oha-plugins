@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.11.3",
+    "version":  "2.11.4",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -778,6 +778,34 @@
                         "type":  "fix",
                         "summary":  "Tutorial tooltip anchored from top:160px instead of bottom so it works on all devices",
                         "notes":  "No longer depends on nav bar height. Centered welcome card still uses top:50% transform. max-height:calc(100dvh - 200px) prevents overflow on short screens."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.4",
+                        "type":  "fix",
+                        "summary":  "loadFloor() now removes placeholder-dots/placeholder-grid layer before adding a new floor image",
+                        "notes":  "Placeholder dot grid (added for imageless floors) persisted on top of other floors when switching. Added to the layer cleanup block at start of loadFloor()."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.4",
+                        "type":  "fix",
+                        "summary":  "Admin floor ID generation uses max(existing IDs)+1 to prevent ID collisions after deletions",
+                        "notes":  "Previously used count(floors)+1 which could assign a duplicate ID if a floor was deleted and re-added. Now tracks maxFloorId separately from the row index counter."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.4",
+                        "type":  "fix",
+                        "summary":  "booth-selected ring filter type mismatch fixed - was string comparison, now numeric",
+                        "notes":  "MapLibre == is type-strict. GeoJSON id property is a number but filter used String(booth.id). Changed initial filter to -1, highlight to booth.id (raw number), reset to -1."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.4",
+                        "type":  "fix",
+                        "summary":  "Direct pin tap now activates the selected ring highlight same as deep links",
+                        "notes":  "Previously only flyToBooth (list clicks, deep links) set the ring. Pin tap click handlers now also set booth-selected filter."
                     }
                 ]
 }
