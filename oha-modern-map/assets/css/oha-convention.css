@@ -1301,32 +1301,28 @@ body.oha-map-page-active {
     to   { opacity: 1; }
 }
 
-/* Tooltip card — sits above the PWA bottom nav bar */
+/* Tooltip card — floats below spotlighted elements, anchored from top so nav height is irrelevant */
 .oha-tutorial-tooltip {
     position: fixed;
     z-index: 9002;
-    left: 0;
-    right: 0;
-    bottom: 65px;
+    left: 14px;
+    right: 14px;
+    top: 160px;
+    max-height: calc(100dvh - 200px);
+    overflow-y: auto;
     background: #1e1e2e;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 18px 18px 0 0;
-    padding: 20px 20px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
     color: #e8e8f0;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
-    animation: oha-tut-slide-up 0.25s ease-out;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    animation: oha-tut-fade-in 0.25s ease-out;
 }
 
 /* Centered card for the welcome step (no spotlight) */
 .oha-tutorial-tooltip--center {
-    left: 16px;
-    right: 16px;
-    bottom: auto;
     top: 50%;
     transform: translateY(-50%);
-    border-radius: 16px;
-    border-top: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     animation: oha-tut-fade-in 0.25s ease-out;
 }
 

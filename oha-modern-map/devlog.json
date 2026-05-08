@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.11.2",
+    "version":  "2.11.3",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -771,6 +771,13 @@
                         "type":  "fix",
                         "summary":  "Tutorial tooltip bottom raised to 65px to clear PWA bottom nav bar",
                         "notes":  "Was bottom:0 which put the card behind the nav. If nav height changes, adjust bottom value in .oha-tutorial-tooltip CSS."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.3",
+                        "type":  "fix",
+                        "summary":  "Tutorial tooltip anchored from top:160px instead of bottom so it works on all devices",
+                        "notes":  "No longer depends on nav bar height. Centered welcome card still uses top:50% transform. max-height:calc(100dvh - 200px) prevents overflow on short screens."
                     }
                 ]
 }
