@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.12.0",
+    "version":  "2.12.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -827,6 +827,13 @@
                         "type":  "feature",
                         "summary":  "Type filter auto-switches floor when filtered type only exists on one floor",
                         "notes":  "New _autoFloorForType() helper scans allBooths for distinct floor IDs that have the selected type. If only 1 floor has it, switchFloor() is called automatically. If multiple floors have it but current floor has none, jumps to first floor that does. Returns true if switchFloor was called so chip handler skips redundant applyFilters call."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.12.1",
+                        "type":  "fix",
+                        "summary":  "Vendor booths were invisible due to text-allow-overlap:false hiding all labels on packed floor",
+                        "notes":  "Dropped text-background-color approach (unreliable in MapLibre v4). Restored booth-bg circle for all types including vendor. booth-vendor-box now uses text-halo-color with typeColor as the halo (fully supported), text-allow-overlap:true and text-ignore-placement:true so all vendor names always render. Dark text #1a1a1a on e0f908 halo."
                     }
                 ]
 }

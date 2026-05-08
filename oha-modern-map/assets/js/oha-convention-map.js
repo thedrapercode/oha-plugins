@@ -394,12 +394,11 @@
                 },
             });
 
-            // Booth background circle — non-vendor types only (restroom, food, stage, etc.)
+            // Booth background circle — all types including vendor (always visible baseline)
             self.map.addLayer({
                 id:     'booth-bg',
                 type:   'circle',
                 source: 'booths',
-                filter: ['!=', ['get', 'type'], 'vendor'],
                 paint:  {
                     'circle-color':        ['get', 'typeColor'],
                     'circle-radius':       [
@@ -414,7 +413,7 @@
                 },
             });
 
-            // Vendor booth box label — vendor type only; colored rectangle with name inside
+            // Vendor booth name label — vendor type only; always shown, overlaps allowed
             self.map.addLayer({
                 id:     'booth-vendor-box',
                 type:   'symbol',
@@ -434,17 +433,15 @@
                         18, 13,
                     ],
                     'text-max-width':        8,
-                    'text-padding':          4,
-                    'text-allow-overlap':    false,
-                    'text-ignore-placement': false,
-                    'symbol-sort-key':       0,
+                    'text-padding':          2,
+                    'text-allow-overlap':    true,
+                    'text-ignore-placement': true,
+                    'text-anchor':           'center',
                 },
                 paint: {
-                    'text-color':              '#1a1a1a',
-                    'text-background-color':   ['get', 'typeColor'],
-                    'text-background-opacity': 0.9,
-                    'text-halo-color':         'rgba(0,0,0,0.15)',
-                    'text-halo-width':         0,
+                    'text-color':       '#1a1a1a',
+                    'text-halo-color':  ['get', 'typeColor'],
+                    'text-halo-width':  3,
                 },
             });
 
