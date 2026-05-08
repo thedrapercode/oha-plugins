@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.23.0",
+    "version":  "3.24.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -638,6 +638,13 @@
                         "type":  "feature",
                         "summary":  "Add Lost and Found shortcode [oha_lost_found] with admin-managed item list and optional map link",
                         "notes":  "Items stored in oha_pwa_lost_found_items (one per line). Map URL in oha_pwa_lost_found_map_url. Both configurable in PWA Settings General tab. Dark-themed card matches PWA UI."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "3.24.0",
+                        "type":  "feature",
+                        "summary":  "App Settings: Restore Convention Map Tutorial button clears localStorage key oha_conv_map_tutorial_v1",
+                        "notes":  "In Restore Dismissed Content section. Shows Already completed / Not yet shown status. Uses same flashDone pattern as onboarding/happenings restore."
                     }
                 ]
 }

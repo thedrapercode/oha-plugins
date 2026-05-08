@@ -3274,6 +3274,13 @@ function ohaVolHandbookToggle(btn) {
                 </div>
                 <button class="oha-settings-btn" id="oha-restore-happenings" type="button">Restore</button>
             </div>
+            <div class="oha-settings-row">
+                <div class="oha-settings-label">
+                    Convention Map Tutorial
+                    <small id="oha-tutorial-status">Checking...</small>
+                </div>
+                <button class="oha-settings-btn" id="oha-restore-tutorial" type="button">Restore</button>
+            </div>
         </div>
 
         <div class="oha-pwa-settings-section">
@@ -3397,6 +3404,12 @@ function ohaVolHandbookToggle(btn) {
                 var btnHap    = document.getElementById('oha-restore-happenings');
                 if (hapStatus) { hapStatus.textContent = hapDismissed ? 'Currently hidden' : 'Currently showing'; }
                 if (btnHap)    { btnHap.disabled = !hapDismissed; }
+
+                var tutSeen   = !!localStorage.getItem('oha_conv_map_tutorial_v1');
+                var tutStatus = document.getElementById('oha-tutorial-status');
+                var btnTut    = document.getElementById('oha-restore-tutorial');
+                if (tutStatus) { tutStatus.textContent = tutSeen ? 'Already completed' : 'Not yet shown'; }
+                if (btnTut)    { btnTut.disabled = !tutSeen; }
             }
             updateRestoreIndicators();
 
@@ -3429,6 +3442,15 @@ function ohaVolHandbookToggle(btn) {
                 btnHappenings.addEventListener('click', function () {
                     localStorage.removeItem('oha_happenings_hidden_v1');
                     flashDone(btnHappenings, 'Restore', updateRestoreIndicators);
+                });
+            }
+
+            // ── Restore convention map tutorial ───────────────────────────
+            var btnTutorial = document.getElementById('oha-restore-tutorial');
+            if (btnTutorial) {
+                btnTutorial.addEventListener('click', function () {
+                    localStorage.removeItem('oha_conv_map_tutorial_v1');
+                    flashDone(btnTutorial, 'Restore', updateRestoreIndicators);
                 });
             }
 
