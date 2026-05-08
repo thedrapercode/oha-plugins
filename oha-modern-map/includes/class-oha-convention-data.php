@@ -778,7 +778,7 @@ class OHA_Convention_Data {
 
     public static function get_color_for_type($type) {
         $colors = [
-            'vendor'     => '#ff6b35',
+            'vendor'     => '#e0f908',
             'food'       => '#ffd700',
             'food_truck' => '#e67e22',
             'restroom'   => '#00b4d8',

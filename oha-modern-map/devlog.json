@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.11.5",
+    "version":  "2.12.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -813,6 +813,20 @@
                         "type":  "fix",
                         "summary":  "Auto-heal duplicate floor IDs in get_settings() - writes corrected data back to DB on first load",
                         "notes":  "Floors saved with duplicate IDs (from pre-v2.11.4 collision bug) are detected on any get_settings() call. The duplicate is renumbered to max_id+1 and persisted back via update_option. Self-heals without manual DB edits."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.12.0",
+                        "type":  "feature",
+                        "summary":  "Vendor booths render as named box labels instead of circle pins",
+                        "notes":  "New booth-vendor-box symbol layer uses text-background-color with typeColor. Filters booth-bg, booth-icon, booth-label to non-vendor types only. Vendor box click handler added. Vendor type color updated to #e0f908 to match floor plan image; text-color set to #1a1a1a for readability on light background."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.12.0",
+                        "type":  "feature",
+                        "summary":  "Type filter auto-switches floor when filtered type only exists on one floor",
+                        "notes":  "New _autoFloorForType() helper scans allBooths for distinct floor IDs that have the selected type. If only 1 floor has it, switchFloor() is called automatically. If multiple floors have it but current floor has none, jumps to first floor that does. Returns true if switchFloor was called so chip handler skips redundant applyFilters call."
                     }
                 ]
 }

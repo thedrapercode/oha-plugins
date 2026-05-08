@@ -394,11 +394,12 @@
                 },
             });
 
-            // Booth background circle
+            // Booth background circle — non-vendor types only (restroom, food, stage, etc.)
             self.map.addLayer({
                 id:     'booth-bg',
                 type:   'circle',
                 source: 'booths',
+                filter: ['!=', ['get', 'type'], 'vendor'],
                 paint:  {
                     'circle-color':        ['get', 'typeColor'],
                     'circle-radius':       [
@@ -410,6 +411,40 @@
                     'circle-stroke-color': 'rgba(255,255,255,0.85)',
                     'circle-stroke-width': 1.5,
                     'circle-opacity':      1,
+                },
+            });
+
+            // Vendor booth box label — vendor type only; colored rectangle with name inside
+            self.map.addLayer({
+                id:     'booth-vendor-box',
+                type:   'symbol',
+                source: 'booths',
+                filter: ['==', ['get', 'type'], 'vendor'],
+                layout: {
+                    'text-field': ['case',
+                        ['!=', ['get', 'vendorName'], ''], ['get', 'vendorName'],
+                        ['!=', ['get', 'number'], ''],    ['get', 'number'],
+                        ['get', 'title']
+                    ],
+                    'text-font':             ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size':             [
+                        'interpolate', ['linear'], ['zoom'],
+                        8,  9,
+                        12, 11,
+                        18, 13,
+                    ],
+                    'text-max-width':        8,
+                    'text-padding':          4,
+                    'text-allow-overlap':    false,
+                    'text-ignore-placement': false,
+                    'symbol-sort-key':       0,
+                },
+                paint: {
+                    'text-color':              '#1a1a1a',
+                    'text-background-color':   ['get', 'typeColor'],
+                    'text-background-opacity': 0.9,
+                    'text-halo-color':         'rgba(0,0,0,0.15)',
+                    'text-halo-width':         0,
                 },
             });
 
@@ -434,11 +469,12 @@
                 },
             });
 
-            // Booth icon symbol
+            // Booth icon symbol — non-vendor types only
             self.map.addLayer({
                 id:     'booth-icon',
                 type:   'symbol',
                 source: 'booths',
+                filter: ['!=', ['get', 'type'], 'vendor'],
                 layout: {
                     'icon-image':         ['get', 'icon'],
                     'icon-size':          [
@@ -452,26 +488,15 @@
                 },
             });
 
-            // Booth number/name label
+            // Booth number/name label — non-vendor types only (vendors show in booth-vendor-box)
             self.map.addLayer({
                 id:     'booth-label',
                 type:   'symbol',
                 source: 'booths',
+                filter: ['!=', ['get', 'type'], 'vendor'],
                 minzoom: 10,
                 layout: {
-                    'text-field': [
-                        'step', ['zoom'],
-                        // zoom 10-11: booth number only (keep map uncluttered)
-                        ['case', ['!=', ['get', 'number'], ''], ['get', 'number'], ''],
-                        // zoom 12+: number + vendor name on two lines when both present
-                        12, ['case',
-                            ['all', ['!=', ['get', 'number'], ''], ['!=', ['get', 'vendorName'], '']],
-                            ['concat', ['get', 'number'], '\n', ['get', 'vendorName']],
-                            ['!=', ['get', 'number'], ''], ['get', 'number'],
-                            ['!=', ['get', 'vendorName'], ''], ['get', 'vendorName'],
-                            ['get', 'title']
-                        ]
-                    ],
+                    'text-field':         ['case', ['!=', ['get', 'number'], ''], ['get', 'number'], ['get', 'title']],
                     'text-font':            ['Open Sans Regular', 'Arial Unicode MS Regular'],
                     'text-size':            [
                         'interpolate', ['linear'], ['zoom'],
@@ -508,10 +533,25 @@
                 }
                 self.showBoothCard(props);
             });
+            // Vendor box labels are also tappable
+            self.map.on('click', 'booth-vendor-box', function (e) {
+                if (!e.features.length) return;
+                var props = e.features[0].properties;
+                if (self.map.getLayer('booth-selected')) {
+                    self.map.setFilter('booth-selected', ['==', ['get', 'id'], props.id]);
+                }
+                self.showBoothCard(props);
+            });
             self.map.on('mouseenter', 'booth-bg', function () {
                 self.map.getCanvas().style.cursor = 'pointer';
             });
             self.map.on('mouseleave', 'booth-bg', function () {
+                self.map.getCanvas().style.cursor = '';
+            });
+            self.map.on('mouseenter', 'booth-vendor-box', function () {
+                self.map.getCanvas().style.cursor = 'pointer';
+            });
+            self.map.on('mouseleave', 'booth-vendor-box', function () {
                 self.map.getCanvas().style.cursor = '';
             });
         },
@@ -636,6 +676,40 @@
         /* -------------------------------------------------------------------
          * Filtering
          * ----------------------------------------------------------------- */
+
+        // Auto-switch to the appropriate floor when a type filter is selected.
+        // Returns true if switchFloor() was called (it handles applyFilters internally).
+        _autoFloorForType: function (type) {
+            if (type === 'all' || this.floors.length <= 1) return false;
+
+            var self          = this;
+            var floorsWithType = [];
+            self.allBooths.forEach(function (b) {
+                var fid = parseInt(b.floor);
+                if (b.type === type && floorsWithType.indexOf(fid) === -1) {
+                    floorsWithType.push(fid);
+                }
+            });
+
+            if (floorsWithType.length === 0) return false;
+
+            // Only one floor has this type — always go there
+            if (floorsWithType.length === 1) {
+                if (floorsWithType[0] !== self.activeFloor) {
+                    self.switchFloor(floorsWithType[0]);
+                    return true;
+                }
+                return false;
+            }
+
+            // Multiple floors have this type — jump only if current floor has none
+            var currentHas = floorsWithType.indexOf(self.activeFloor) !== -1;
+            if (!currentHas) {
+                self.switchFloor(floorsWithType[0]);
+                return true;
+            }
+            return false;
+        },
 
         applyFilters: function () {
             var self  = this;
@@ -1076,8 +1150,10 @@
                 self.activeType = type;
                 $w.find('.oha-conv-type-btn, .oha-conv-type-all').removeClass('active');
                 $(this).addClass('active');
-                self.applyFilters();
-                self.renderList();
+                if (!self._autoFloorForType(type)) {
+                    self.applyFilters();
+                    self.renderList();
+                }
             });
 
             // Floor pills
@@ -1121,8 +1197,10 @@
                 self.activeType = type;
                 $w.find('.oha-mob-type-chip').removeClass('active');
                 $(this).addClass('active');
-                self.applyFilters();
-                self.renderList();
+                if (!self._autoFloorForType(type)) {
+                    self.applyFilters();
+                    self.renderList();
+                }
             });
 
             // Floor pills
