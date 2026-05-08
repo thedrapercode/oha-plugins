@@ -815,6 +815,56 @@ body.oha-map-page-active {
 }
 
 /* -----------------------------------------------------------------------
+ * Inline type filter chip bar — horizontal scroll row below floor pills
+ * --------------------------------------------------------------------- */
+.oha-mob-type-bar {
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    gap: 6px;
+    padding: 0 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    pointer-events: all;
+}
+
+.oha-mob-type-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.oha-mob-type-chip {
+    flex-shrink: 0;
+    background: rgba(22, 33, 62, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 20px;
+    color: #e8e8f0;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.oha-mob-type-chip.active {
+    background: var(--type-color, #ff6b35);
+    border-color: transparent;
+    color: #fff;
+}
+
+.oha-mob-type-chip.oha-conv-type-all.active {
+    background: #ff6b35;
+}
+
+/* -----------------------------------------------------------------------
  * Top-right action button group (search icon, etc.)
  * --------------------------------------------------------------------- */
 .oha-mob-top-right {
@@ -1221,4 +1271,153 @@ body.oha-map-page-active {
 @keyframes oha-pin-pulse {
     0%   { transform: scale(0.6); opacity: 1; }
     100% { transform: scale(2.8); opacity: 0; }
+}
+
+/* -----------------------------------------------------------------------
+ * Coach marks tutorial overlay
+ * --------------------------------------------------------------------- */
+
+/* Semi-transparent backdrop — intercepts taps so the map stays idle */
+.oha-tutorial-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    background: transparent;
+    pointer-events: all;
+}
+
+/* Spotlight ring — raised above the backdrop, casts shadow over everything else */
+.oha-tutorial-spotlight {
+    position: fixed;
+    z-index: 9001;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.78);
+    border: 2px solid rgba(255, 107, 53, 0.9);
+    pointer-events: none;
+    animation: oha-tut-spotlight-in 0.22s ease-out;
+}
+
+@keyframes oha-tut-spotlight-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Tooltip card — anchored to the bottom of the viewport for spotlighted steps */
+.oha-tutorial-tooltip {
+    position: fixed;
+    z-index: 9002;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1e1e2e;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px 18px 0 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    color: #e8e8f0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6);
+    animation: oha-tut-slide-up 0.25s ease-out;
+}
+
+/* Centered card for the welcome step (no spotlight) */
+.oha-tutorial-tooltip--center {
+    left: 16px;
+    right: 16px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 16px;
+    border-top: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: oha-tut-fade-in 0.25s ease-out;
+}
+
+@keyframes oha-tut-slide-up {
+    from { transform: translateY(24px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes oha-tut-fade-in {
+    from { opacity: 0; transform: translateY(-46%) scale(0.97); }
+    to   { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
+.oha-tut-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.oha-tut-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.oha-tut-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    transition: background 0.2s;
+}
+
+.oha-tut-dot.active {
+    background: #ff6b35;
+    width: 18px;
+    border-radius: 3px;
+}
+
+.oha-tut-btn-skip {
+    background: none;
+    border: none;
+    color: rgba(232, 232, 240, 0.45);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 4px 0;
+    line-height: 1;
+    font-family: inherit;
+}
+
+.oha-tut-btn-skip:hover {
+    color: rgba(232, 232, 240, 0.7);
+}
+
+.oha-tut-title {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.25;
+}
+
+.oha-tut-body {
+    margin: 0 0 18px;
+    font-size: 14px;
+    color: rgba(232, 232, 240, 0.75);
+    line-height: 1.55;
+}
+
+.oha-tut-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.oha-tut-btn-next,
+.oha-tut-btn-done {
+    background: #ff6b35;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.oha-tut-btn-next:hover,
+.oha-tut-btn-done:hover {
+    background: #e85d2a;
 }

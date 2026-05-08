@@ -208,6 +208,7 @@
                             self.checkDeepLink();
                             self.initControls();
                             self.initBottomSheet();
+                            self.initTutorial();
                         });
                     });
                 });
@@ -637,7 +638,7 @@
                 if (type !== 'all' && b.type !== type) return false;
                 if (parseInt(b.floor) !== parseInt(floor)) return false;
                 if (q) {
-                    var haystack = ((b.title || '') + ' ' + (b.number || '') + ' ' + (b.vendor_name || '')).toLowerCase();
+                    var haystack = ((b.title || '') + ' ' + (b.number || '') + ' ' + (b.vendor_name || '') + ' ' + (b.type_label || '')).toLowerCase();
                     if (haystack.indexOf(q) === -1) return false;
                 }
                 return true;
@@ -847,6 +848,146 @@
             }
         },
 
+        /* -------------------------------------------------------------------
+         * First-visit coach marks tutorial
+         * ----------------------------------------------------------------- */
+
+        initTutorial: function () {
+            var self = this;
+
+            // Never show when arriving via deep link — user has a specific destination
+            try {
+                var params = new URLSearchParams(window.location.search);
+                if (params.get('oha_booth') || params.get('oha_vendor') || params.get('oha_floor')) return;
+            } catch (e) {}
+
+            // Only show once per device
+            try {
+                if (localStorage.getItem('oha_conv_map_tutorial_v1')) return;
+            } catch (e) { return; }
+
+            var steps = [];
+
+            // Step 1 — Welcome (no spotlight)
+            steps.push({
+                selector: null,
+                title: 'Welcome to the Convention Map',
+                body: 'Tap any pin on the map to view booth details. Use the controls around the map to find what you are looking for.',
+            });
+
+            // Step 2 — Floor switcher (only when multiple floors configured)
+            if (self.floors.length > 1) {
+                steps.push({
+                    selector: self.isMobile ? '.oha-mob-floor-bar' : '.oha-conv-floor-group',
+                    title: 'Switch Floors',
+                    body: 'The venue has multiple floors. Use these buttons to switch between them and see all booth locations.',
+                });
+            }
+
+            // Step 3 — Type filter chips (mobile) or controls bar (desktop)
+            steps.push({
+                selector: self.isMobile ? '.oha-mob-type-bar' : '.oha-conv-controls',
+                title: 'Filter by Type',
+                body: self.isMobile
+                    ? 'Tap a chip to show only that type of booth - vendors, restrooms, food, and more. Tap All to reset.'
+                    : 'Use the controls bar to filter booths by type, switch floors, or search by name.',
+            });
+
+            // Step 4 — List view (mobile only)
+            if (self.isMobile) {
+                steps.push({
+                    selector: '.oha-mob-list-toggle-btn',
+                    title: 'List View',
+                    body: 'Switch to a scrollable list of all booths. Tap any entry to locate it on the map.',
+                });
+            }
+
+            self._tutorialStep  = 0;
+            self._tutorialSteps = steps;
+
+            // Slight delay so the map finishes its fitBounds animation first
+            setTimeout(function () { self._showTutorialStep(); }, 300);
+        },
+
+        _showTutorialStep: function () {
+            var self   = this;
+            var steps  = self._tutorialSteps;
+            var idx    = self._tutorialStep;
+            var step   = steps[idx];
+            var isLast = idx === steps.length - 1;
+
+            // Remove any existing tutorial elements
+            $('.oha-tutorial-overlay, .oha-tutorial-spotlight, .oha-tutorial-tooltip').remove();
+
+            // Dark overlay — blocks accidental taps on the map
+            $('<div class="oha-tutorial-overlay"></div>').appendTo('body');
+
+            // Spotlight the target element if specified
+            if (step.selector) {
+                var $target = self.$wrapper.find(step.selector);
+                if (!$target.length) $target = $(step.selector);
+
+                if ($target.length) {
+                    var rect = $target[0].getBoundingClientRect();
+                    var pad  = 10;
+                    $('<div class="oha-tutorial-spotlight"></div>').css({
+                        left:         rect.left   - pad,
+                        top:          rect.top    - pad,
+                        width:        rect.width  + pad * 2,
+                        height:       rect.height + pad * 2,
+                        borderRadius: Math.min(16, rect.height / 2 + pad),
+                    }).appendTo('body');
+                }
+            }
+
+            // Build and attach the tooltip card
+            var centered = !step.selector;
+            var $tip = self._buildTutorialTooltip(step, idx, steps.length, isLast, centered);
+            $tip.appendTo('body');
+
+            // Buttons
+            $tip.find('.oha-tut-btn-next, .oha-tut-btn-done').on('click', function () {
+                if (isLast) {
+                    self._endTutorial();
+                } else {
+                    self._tutorialStep++;
+                    self._showTutorialStep();
+                }
+            });
+            $tip.find('.oha-tut-btn-skip').on('click', function () {
+                self._endTutorial();
+            });
+        },
+
+        _buildTutorialTooltip: function (step, idx, total, isLast, centered) {
+            var cls = 'oha-tutorial-tooltip' + (centered ? ' oha-tutorial-tooltip--center' : '');
+            var $t  = $('<div></div>').addClass(cls);
+            var dots = '';
+            for (var i = 0; i < total; i++) {
+                dots += '<span class="oha-tut-dot' + (i === idx ? ' active' : '') + '"></span>';
+            }
+            $t.html(
+                '<div class="oha-tut-header">' +
+                    '<div class="oha-tut-dots">' + dots + '</div>' +
+                    '<button class="oha-tut-btn-skip" aria-label="Skip tutorial">Skip</button>' +
+                '</div>' +
+                '<h4 class="oha-tut-title">' + escHtml(step.title) + '</h4>' +
+                '<p class="oha-tut-body">' + escHtml(step.body) + '</p>' +
+                '<div class="oha-tut-actions">' +
+                    (isLast
+                        ? '<button class="oha-tut-btn-done">Got It</button>'
+                        : '<button class="oha-tut-btn-next">Next</button>'
+                    ) +
+                '</div>'
+            );
+            return $t;
+        },
+
+        _endTutorial: function () {
+            $('.oha-tutorial-overlay, .oha-tutorial-spotlight, .oha-tutorial-tooltip').remove();
+            try { localStorage.setItem('oha_conv_map_tutorial_v1', '1'); } catch (e) {}
+        },
+
         /* Briefly show an expanding ring DOM overlay at the booth's map position */
         _pulsePin: function (lng, lat) {
             var self = this;
@@ -869,6 +1010,16 @@
         checkDeepLink: function () {
             var self   = this;
             var params = new URLSearchParams(window.location.search);
+
+            // Floor-only deep link — switch to the specified floor with no booth selected
+            var floorParam = params.get('oha_floor');
+            if (floorParam && !params.get('oha_booth') && !params.get('oha_vendor')) {
+                var floorId = parseInt(floorParam, 10);
+                if (floorId && floorId !== self.activeFloor) {
+                    self.switchFloor(floorId);
+                }
+                return;
+            }
 
             var boothNum = params.get('oha_booth');
             if (boothNum) {
@@ -962,36 +1113,19 @@
             var self = this;
             var $w   = self.$wrapper;
 
-            // Filters pill (map view) + filter button (list view)  → open sheet
-            $w.on('click', '[data-mob-action="open-filters"]', function () {
-                self.openFilterSheet();
-            });
-
-            // Overlay click → close sheet
-            $w.on('click', '.oha-mob-overlay', function () {
-                self.closeFilterSheet();
-            });
-
-            // Done button → close sheet
-            $w.on('click', '.oha-mob-sheet-done', function () {
-                self.closeFilterSheet();
-            });
-
-            // Type filter pills (inside filter sheet)
-            $w.on('click', '.oha-conv-type-btn, .oha-conv-type-all', function () {
+            // Type filter chips (inline on map)
+            $w.on('click', '.oha-mob-type-chip', function () {
                 var type = $(this).data('type') || 'all';
                 self.activeType = type;
-                $w.find('.oha-conv-type-btn, .oha-conv-type-all').removeClass('active');
+                $w.find('.oha-mob-type-chip').removeClass('active');
                 $(this).addClass('active');
                 self.applyFilters();
                 self.renderList();
-                self.updateFilterBadge();
             });
 
-            // Floor pills (inside filter sheet) → switch floor + close sheet
+            // Floor pills
             $w.on('click', '.oha-floor-btn', function () {
                 self.switchFloor($(this).data('floor'));
-                self.closeFilterSheet();
             });
 
             // Search toggle button (top-right icon)
@@ -1045,27 +1179,6 @@
                 }
             });
 
-            // Swipe-down filter sheet to dismiss
-            var $sheetPanel = $w.find('.oha-mob-sheet-panel');
-            if ($sheetPanel.length) {
-                var sheetStartY = 0;
-                $sheetPanel[0].addEventListener('touchstart', function (e) {
-                    sheetStartY = e.touches[0].clientY;
-                }, { passive: true });
-                $sheetPanel[0].addEventListener('touchend', function (e) {
-                    if (e.changedTouches[0].clientY - sheetStartY > 60) self.closeFilterSheet();
-                }, { passive: true });
-            }
-        },
-
-        openFilterSheet: function () {
-            this.$wrapper.find('.oha-mob-filter-sheet')
-                .addClass('active').attr('aria-hidden', 'false');
-        },
-
-        closeFilterSheet: function () {
-            this.$wrapper.find('.oha-mob-filter-sheet')
-                .removeClass('active').attr('aria-hidden', 'true');
         },
 
         showListView: function () {
@@ -1081,16 +1194,6 @@
                 .hide().attr('aria-hidden', 'true');
             this.listViewActive = false;
             this.$wrapper.find('.oha-mob-list-toggle-btn').removeClass('is-list-active');
-        },
-
-        updateFilterBadge: function () {
-            var count  = this.activeType !== 'all' ? 1 : 0;
-            var $badge = this.$wrapper.find('.oha-mob-pill-badge');
-            if (count > 0) {
-                $badge.text(count).show();
-            } else {
-                $badge.hide();
-            }
         },
 
         initBottomSheet: function () {

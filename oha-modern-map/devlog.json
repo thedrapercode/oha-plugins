@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.10.2",
+    "version":  "2.11.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -722,6 +722,41 @@
                         "type":  "fix",
                         "summary":  "Fix pulse animation position by firing _pulsePin after moveend instead of before flyTo",
                         "notes":  "map.project() now runs after the fly animation completes so screen coordinates are correct. Uses map.once(moveend) callback."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.0",
+                        "type":  "feature",
+                        "summary":  "Coach marks tutorial overlay on first visit: 3-4 steps, spotlight ring, localStorage persistence",
+                        "notes":  "Key: oha_conv_map_tutorial_v1. Suppressed on deep links. initTutorial() called after initBottomSheet()."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.0",
+                        "type":  "feature",
+                        "summary":  "Floor deep link support: ?oha_floor=ID switches floor with no booth selected",
+                        "notes":  "Handled in checkDeepLink() before booth/vendor params. Tutorial suppressed when floor param present."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.0",
+                        "type":  "feature",
+                        "summary":  "Inline type filter chips replace slide-up filter sheet on mobile map",
+                        "notes":  "Horizontal scroll row at top:100px (54px if single floor). Classes: oha-mob-type-chip, uses oha-conv-type-all/oha-conv-type-btn for JS binding."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.0",
+                        "type":  "fix",
+                        "summary":  "Search haystack now includes type_label so typing restroom finds restroom booths",
+                        "notes":  "applyFilters() haystack: title + number + vendor_name + type_label."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.0",
+                        "type":  "fix",
+                        "summary":  "Removed filter sheet from mobile shortcode - was causing layout bleed and visible handle bug",
+                        "notes":  "oha-mob-filter-sheet HTML removed. openFilterSheet/closeFilterSheet methods removed. swipe handler removed."
                     }
                 ]
 }

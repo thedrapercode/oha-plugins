@@ -137,6 +137,18 @@ class OHA_Convention_Shortcode {
                 </div>
                 <?php endif; ?>
 
+                <!-- Type filter chips — horizontal scroll row; top shifts up when no floor bar -->
+                <div class="oha-mob-type-bar"<?php echo (count($floors) <= 1) ? ' style="top:54px"' : ''; ?>>
+                    <button class="oha-mob-type-chip oha-conv-type-all active" data-type="all">All</button>
+                    <?php foreach ($types as $key => $label) : ?>
+                    <button class="oha-mob-type-chip oha-conv-type-btn"
+                            data-type="<?php echo esc_attr($key); ?>"
+                            style="--type-color:<?php echo esc_attr(OHA_Convention_Data::get_color_for_type($key)); ?>">
+                        <?php echo esc_html($label); ?>
+                    </button>
+                    <?php endforeach; ?>
+                </div>
+
                 <!-- Floating top-right: Search -->
                 <div class="oha-mob-top-right">
                     <button class="oha-mob-action-btn oha-mob-search-toggle"
@@ -187,44 +199,6 @@ class OHA_Convention_Shortcode {
 
 
             </div><!-- .oha-conv-map-area -->
-
-            <!-- ---------------------------------------------------------------
-                 Filter sheet (slides up from bottom over the map)
-            --------------------------------------------------------------- -->
-            <div class="oha-mob-filter-sheet" aria-hidden="true">
-                <div class="oha-mob-overlay"></div>
-                <div class="oha-mob-sheet-panel">
-                    <div class="oha-mob-sheet-handle"></div>
-                    <div class="oha-mob-sheet-body">
-
-                        <div class="oha-mob-filter-section">
-                            <span class="oha-mob-section-label"><?php _e('Type', 'oha-modern-map'); ?></span>
-                            <div class="oha-conv-type-filters">
-                                <button class="oha-pill oha-conv-type-all active" data-type="all">
-                                    <?php _e('All', 'oha-modern-map'); ?>
-                                </button>
-                                <?php foreach ($types as $key => $label) : ?>
-                                <button class="oha-pill oha-conv-type-btn" data-type="<?php echo esc_attr($key); ?>"
-                                        style="--type-color:<?php echo esc_attr(OHA_Convention_Data::get_color_for_type($key)); ?>">
-                                    <span class="oha-conv-type-dot"></span>
-                                    <?php echo esc_html($label); ?>
-                                </button>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                        <div class="oha-mob-filter-footer">
-                            <span class="oha-mob-filter-count">
-                                <span class="oha-conv-count">0</span> <?php _e('booths', 'oha-modern-map'); ?>
-                            </span>
-                            <button class="oha-mob-sheet-done">
-                                <?php _e('Done', 'oha-modern-map'); ?>
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            </div><!-- .oha-mob-filter-sheet -->
 
             <!-- ---------------------------------------------------------------
                  List view (full overlay — toggled by pill, replaces map view)
