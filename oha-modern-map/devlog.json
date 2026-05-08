@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.11.0",
+    "version":  "2.11.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -757,6 +757,13 @@
                         "type":  "fix",
                         "summary":  "Removed filter sheet from mobile shortcode - was causing layout bleed and visible handle bug",
                         "notes":  "oha-mob-filter-sheet HTML removed. openFilterSheet/closeFilterSheet methods removed. swipe handler removed."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.1",
+                        "type":  "fix",
+                        "summary":  "Removed flyTo padding that shifted map center and broke deep link zoom positioning",
+                        "notes":  "Reverts the bottom-padding change from v2.10.2. flyTo now centers pin directly without sheet offset."
                     }
                 ]
 }

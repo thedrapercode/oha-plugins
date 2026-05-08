@@ -742,22 +742,15 @@
                 this.map.setFilter('booth-selected', ['==', ['get', 'id'], String(booth.id)]);
             }
 
-            // Bottom padding so the pin sits above the slide-up card rather than behind it.
-            // Read the sheet's actual height; fall back to 45% of the map container height.
-            var $sheet = this.$wrapper.find('.oha-conv-bottom-sheet');
-            var sheetH = ($sheet.length ? $sheet.outerHeight() : 0) ||
-                         Math.round((this.$wrapper.outerHeight() || window.innerHeight) * 0.45);
-
             // Fire pulse after flyTo completes so map.project() reflects the final position
             this.map.once('moveend', function () {
                 self._pulsePin(lng, lat);
             });
 
             this.map.flyTo({
-                center:  [lng, lat],
-                zoom:    targetZoom,
+                center:   [lng, lat],
+                zoom:     targetZoom,
                 duration: 500,
-                padding: { top: 40, bottom: sheetH, left: 20, right: 20 },
             });
         },
 
