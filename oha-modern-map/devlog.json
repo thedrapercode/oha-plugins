@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.11.1",
+    "version":  "2.11.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -764,6 +764,13 @@
                         "type":  "fix",
                         "summary":  "Removed flyTo padding that shifted map center and broke deep link zoom positioning",
                         "notes":  "Reverts the bottom-padding change from v2.10.2. flyTo now centers pin directly without sheet offset."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.11.2",
+                        "type":  "fix",
+                        "summary":  "Tutorial tooltip bottom raised to 65px to clear PWA bottom nav bar",
+                        "notes":  "Was bottom:0 which put the card behind the nav. If nav height changes, adjust bottom value in .oha-tutorial-tooltip CSS."
                     }
                 ]
 }
