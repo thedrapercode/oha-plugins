@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.12.1",
+    "version":  "2.12.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -834,6 +834,13 @@
                         "type":  "fix",
                         "summary":  "Vendor booths were invisible due to text-allow-overlap:false hiding all labels on packed floor",
                         "notes":  "Dropped text-background-color approach (unreliable in MapLibre v4). Restored booth-bg circle for all types including vendor. booth-vendor-box now uses text-halo-color with typeColor as the halo (fully supported), text-allow-overlap:true and text-ignore-placement:true so all vendor names always render. Dark text #1a1a1a on e0f908 halo."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.12.2",
+                        "type":  "fix",
+                        "summary":  "Fix all pins invisible caused by text-ignore-placement breaking MapLibre symbol renderer",
+                        "notes":  "Removed text-ignore-placement:true from booth-vendor-box (was crashing symbol renderer for all layers). Added minzoom:deepLinkZoom so vendor name labels only appear when zoomed in past the configured deep link zoom level. Below that threshold the colored circle pin is the sole indicator. text-allow-overlap:true kept so all names show when zoomed in."
                     }
                 ]
 }

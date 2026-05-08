@@ -413,35 +413,36 @@
                 },
             });
 
-            // Vendor booth name label — vendor type only; always shown, overlaps allowed
+            // Vendor name label — appears only when zoomed in past deepLinkZoom.
+            // Below that threshold the circle pin is the sole visual indicator.
+            var vendorLabelMinZoom = self.config.deepLinkZoom || 10;
             self.map.addLayer({
-                id:     'booth-vendor-box',
-                type:   'symbol',
-                source: 'booths',
-                filter: ['==', ['get', 'type'], 'vendor'],
+                id:      'booth-vendor-box',
+                type:    'symbol',
+                source:  'booths',
+                minzoom: vendorLabelMinZoom,
+                filter:  ['==', ['get', 'type'], 'vendor'],
                 layout: {
                     'text-field': ['case',
                         ['!=', ['get', 'vendorName'], ''], ['get', 'vendorName'],
                         ['!=', ['get', 'number'], ''],    ['get', 'number'],
                         ['get', 'title']
                     ],
-                    'text-font':             ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size':             [
+                    'text-font':          ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size':          [
                         'interpolate', ['linear'], ['zoom'],
-                        8,  9,
-                        12, 11,
-                        18, 13,
+                        vendorLabelMinZoom,     10,
+                        vendorLabelMinZoom + 2, 12,
+                        18,                     14,
                     ],
-                    'text-max-width':        8,
-                    'text-padding':          2,
-                    'text-allow-overlap':    true,
-                    'text-ignore-placement': true,
-                    'text-anchor':           'center',
+                    'text-max-width':     8,
+                    'text-anchor':        'center',
+                    'text-allow-overlap': true,
                 },
                 paint: {
-                    'text-color':       '#1a1a1a',
-                    'text-halo-color':  ['get', 'typeColor'],
-                    'text-halo-width':  3,
+                    'text-color':      '#1a1a1a',
+                    'text-halo-color': ['get', 'typeColor'],
+                    'text-halo-width': 4,
                 },
             });
 
