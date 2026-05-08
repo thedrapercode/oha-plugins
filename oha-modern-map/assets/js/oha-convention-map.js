@@ -394,7 +394,7 @@
                 },
             });
 
-            // Booth background circle — all types including vendor (always visible baseline)
+            // Booth background circle
             self.map.addLayer({
                 id:     'booth-bg',
                 type:   'circle',
@@ -410,39 +410,6 @@
                     'circle-stroke-color': 'rgba(255,255,255,0.85)',
                     'circle-stroke-width': 1.5,
                     'circle-opacity':      1,
-                },
-            });
-
-            // Vendor name label — appears only when zoomed in past deepLinkZoom.
-            // Below that threshold the circle pin is the sole visual indicator.
-            var vendorLabelMinZoom = self.config.deepLinkZoom || 10;
-            self.map.addLayer({
-                id:      'booth-vendor-box',
-                type:    'symbol',
-                source:  'booths',
-                minzoom: vendorLabelMinZoom,
-                filter:  ['==', ['get', 'type'], 'vendor'],
-                layout: {
-                    'text-field': ['case',
-                        ['!=', ['get', 'vendorName'], ''], ['get', 'vendorName'],
-                        ['!=', ['get', 'number'], ''],    ['get', 'number'],
-                        ['get', 'title']
-                    ],
-                    'text-font':          ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size':          [
-                        'interpolate', ['linear'], ['zoom'],
-                        vendorLabelMinZoom,     10,
-                        vendorLabelMinZoom + 2, 12,
-                        18,                     14,
-                    ],
-                    'text-max-width':     8,
-                    'text-anchor':        'center',
-                    'text-allow-overlap': true,
-                },
-                paint: {
-                    'text-color':      '#1a1a1a',
-                    'text-halo-color': ['get', 'typeColor'],
-                    'text-halo-width': 4,
                 },
             });
 
@@ -467,12 +434,11 @@
                 },
             });
 
-            // Booth icon symbol — non-vendor types only
+            // Booth icon symbol
             self.map.addLayer({
                 id:     'booth-icon',
                 type:   'symbol',
                 source: 'booths',
-                filter: ['!=', ['get', 'type'], 'vendor'],
                 layout: {
                     'icon-image':         ['get', 'icon'],
                     'icon-size':          [
@@ -486,31 +452,40 @@
                 },
             });
 
-            // Booth number/name label — non-vendor types only (vendors show in booth-vendor-box)
+            // Booth number/name label
             self.map.addLayer({
-                id:     'booth-label',
-                type:   'symbol',
-                source: 'booths',
-                filter: ['!=', ['get', 'type'], 'vendor'],
+                id:      'booth-label',
+                type:    'symbol',
+                source:  'booths',
                 minzoom: 10,
                 layout: {
-                    'text-field':         ['case', ['!=', ['get', 'number'], ''], ['get', 'number'], ['get', 'title']],
-                    'text-font':            ['Open Sans Regular', 'Arial Unicode MS Regular'],
-                    'text-size':            [
+                    'text-field': [
+                        'step', ['zoom'],
+                        ['case', ['!=', ['get', 'number'], ''], ['get', 'number'], ''],
+                        12, ['case',
+                            ['all', ['!=', ['get', 'number'], ''], ['!=', ['get', 'vendorName'], '']],
+                            ['concat', ['get', 'number'], '\n', ['get', 'vendorName']],
+                            ['!=', ['get', 'number'], ''], ['get', 'number'],
+                            ['!=', ['get', 'vendorName'], ''], ['get', 'vendorName'],
+                            ['get', 'title']
+                        ]
+                    ],
+                    'text-font':          ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                    'text-size':          [
                         'interpolate', ['linear'], ['zoom'],
                         10, 9,
                         14, 11,
                         18, 13,
                     ],
-                    'text-offset':          [0, 1.6],
-                    'text-anchor':          'top',
-                    'text-allow-overlap':   false,
-                    'text-max-width':       12,
+                    'text-offset':        [0, 1.6],
+                    'text-anchor':        'top',
+                    'text-allow-overlap': false,
+                    'text-max-width':     12,
                 },
                 paint: {
-                    'text-color':       '#ffffff',
-                    'text-halo-color':  'rgba(0,0,0,0.8)',
-                    'text-halo-width':  1.5,
+                    'text-color':      '#ffffff',
+                    'text-halo-color': 'rgba(0,0,0,0.8)',
+                    'text-halo-width': 1.5,
                 },
             });
 
@@ -531,25 +506,10 @@
                 }
                 self.showBoothCard(props);
             });
-            // Vendor box labels are also tappable
-            self.map.on('click', 'booth-vendor-box', function (e) {
-                if (!e.features.length) return;
-                var props = e.features[0].properties;
-                if (self.map.getLayer('booth-selected')) {
-                    self.map.setFilter('booth-selected', ['==', ['get', 'id'], props.id]);
-                }
-                self.showBoothCard(props);
-            });
             self.map.on('mouseenter', 'booth-bg', function () {
                 self.map.getCanvas().style.cursor = 'pointer';
             });
             self.map.on('mouseleave', 'booth-bg', function () {
-                self.map.getCanvas().style.cursor = '';
-            });
-            self.map.on('mouseenter', 'booth-vendor-box', function () {
-                self.map.getCanvas().style.cursor = 'pointer';
-            });
-            self.map.on('mouseleave', 'booth-vendor-box', function () {
                 self.map.getCanvas().style.cursor = '';
             });
         },

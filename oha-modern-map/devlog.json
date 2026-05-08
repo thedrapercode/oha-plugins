@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.12.2",
+    "version":  "2.12.3",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -841,6 +841,13 @@
                         "type":  "fix",
                         "summary":  "Fix all pins invisible caused by text-ignore-placement breaking MapLibre symbol renderer",
                         "notes":  "Removed text-ignore-placement:true from booth-vendor-box (was crashing symbol renderer for all layers). Added minzoom:deepLinkZoom so vendor name labels only appear when zoomed in past the configured deep link zoom level. Below that threshold the colored circle pin is the sole indicator. text-allow-overlap:true kept so all names show when zoomed in."
+                    },
+                    {
+                        "date":  "2026-05-08",
+                        "version":  "2.12.3",
+                        "type":  "change",
+                        "summary":  "Revert booth layers to original circle pins; remove booth-vendor-box label layer",
+                        "notes":  "Removed booth-vendor-box symbol layer and all vendor-specific layer filters. Restored booth-bg, booth-icon, booth-label, and click handlers to original state (no vendor filtering). Vendor type color stays at #e0f908 and auto-floor-for-type feature stays. Vendor name label on pin (zoom 12+) restored via original booth-label step expression."
                     }
                 ]
 }
