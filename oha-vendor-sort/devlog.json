@@ -1,0 +1,13 @@
+{
+    "plugin":  "oha-vendor-sort",
+    "version":  "1.0.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-09",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Initial release: admin setting to sort [oha_convention_vendors] cards by name or booth number",
+                        "notes":  "Sorts client-side via JS using data-name and data-booth attributes already present on .oha-vendor-card elements. Settings \u003e Vendor Sort in WP admin."
+                    }
+                ]
+}
