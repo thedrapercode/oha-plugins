@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.24.0",
+    "version":  "3.25.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -645,6 +645,13 @@
                         "type":  "feature",
                         "summary":  "App Settings: Restore Convention Map Tutorial button clears localStorage key oha_conv_map_tutorial_v1",
                         "notes":  "In Restore Dismissed Content section. Shows Already completed / Not yet shown status. Uses same flashDone pattern as onboarding/happenings restore."
+                    },
+                    {
+                        "date":  "2026-05-09",
+                        "version":  "3.25.0",
+                        "type":  "feature",
+                        "summary":  "[oha_happening_now] now works on pages without [oha_convention_schedule] via REST fallback",
+                        "notes":  "HappeningNow.fetchEvents() calls GET oha/v1/schedule/events?year=2026 on init and re-fetches every 5 min. getCurrentEvents() checks DOM [data-event-time] elements first; falls back to REST cache if none found. ohaHappeningConfig localized with eventsEndpoint, conventionYear, and dayDates map derived from oha_pwa_convention_start/end options. Pages with [oha_convention_schedule] are completely unchanged - DOM path takes priority."
                     }
                 ]
 }

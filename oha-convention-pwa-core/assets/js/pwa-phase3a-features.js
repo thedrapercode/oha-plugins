@@ -175,24 +175,40 @@
      */
     
     OHAPhase3A.HappeningNow = {
+        _events: null,
+
         init: function() {
             console.log('[Happening Now] Initializing...');
             this.render();
-            
-            // Update every minute
+            this.fetchEvents();
             setInterval(() => this.render(), 60000);
         },
-        
+
+        fetchEvents: function() {
+            if (typeof ohaHappeningConfig === 'undefined' || !ohaHappeningConfig.eventsEndpoint) return;
+            const url = ohaHappeningConfig.eventsEndpoint +
+                (ohaHappeningConfig.conventionYear ? '?year=' + ohaHappeningConfig.conventionYear : '');
+            const self = this;
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    self._events = Array.isArray(data) ? data : [];
+                    self.render();
+                })
+                .catch(() => {});
+            setTimeout(() => self.fetchEvents(), 5 * 60 * 1000);
+        },
+
         render: function() {
             const container = document.getElementById('oha-happening-now');
             if (!container) return;
-            
+
             const now = new Date();
             const events = this.getCurrentEvents(now);
-            
+
             let html = '<div class="oha-happening-now">';
             html += '<h3>🕐 What\'s Happening Now</h3>';
-            
+
             const esc = OHAPhase3A.escHtml;
             if (events.current.length > 0) {
                 html += '<div class="oha-happening-section">';
@@ -226,63 +242,107 @@
                 });
                 html += '</div>';
             }
-            
+
             if (events.current.length === 0 && events.next.length === 0) {
                 html += '<div class="oha-happening-no-events">No events scheduled right now. Check the Schedule tab for upcoming sessions!</div>';
             }
-            
+
             html += '</div>';
-            
+
             container.innerHTML = html;
         },
-        
+
         getCurrentEvents: function(now) {
             const current = [];
             const next = [];
-            
-            // Get all events from schedule
+
             const eventItems = document.querySelectorAll('[data-event-time]');
-            
+
+            if (eventItems.length === 0) {
+                return this.getCurrentEventsFromCache(now);
+            }
+
             eventItems.forEach(item => {
                 const title = item.getAttribute('data-event-title');
                 const timeStr = item.getAttribute('data-event-time');
                 const room = item.getAttribute('data-event-room');
-                
+
                 if (!timeStr) return;
-                
+
                 const times = this.parseEventTime(timeStr);
                 if (!times) return;
-                
+
                 const minutesUntilStart = (times.start - now) / 1000 / 60;
                 const minutesSinceEnd = (now - times.end) / 1000 / 60;
-                
-                // Currently happening
+
+                if (minutesUntilStart <= 0 && minutesSinceEnd <= 0) {
+                    current.push({ title, room, time: timeStr });
+                } else if (minutesUntilStart > 0 && minutesUntilStart <= 30) {
+                    next.push({ title, room, startsIn: this.formatTimeUntil(minutesUntilStart) });
+                }
+            });
+
+            return { current, next };
+        },
+
+        getCurrentEventsFromCache: function(now) {
+            const current = [];
+            const next = [];
+            if (!this._events || !this._events.length) return { current, next };
+            if (typeof ohaHappeningConfig === 'undefined' || !ohaHappeningConfig.dayDates) return { current, next };
+
+            this._events.forEach(event => {
+                if (!event.start_time || !event.day) return;
+                const start = this.buildEventDateTime(event.day, event.start_time);
+                if (!start) return;
+                const end = event.end_time
+                    ? this.buildEventDateTime(event.day, event.end_time)
+                    : new Date(start.getTime() + 75 * 60000);
+
+                const minutesUntilStart = (start - now) / 1000 / 60;
+                const minutesSinceEnd   = (now - end)   / 1000 / 60;
+
                 if (minutesUntilStart <= 0 && minutesSinceEnd <= 0) {
                     current.push({
-                        title,
-                        room,
-                        time: timeStr
+                        title: event.title,
+                        room:  event.room,
+                        time:  this.formatTimeRange(event.start_time, event.end_time),
                     });
-                }
-                
-                // Starting within next 30 minutes
-                else if (minutesUntilStart > 0 && minutesUntilStart <= 30) {
+                } else if (minutesUntilStart > 0 && minutesUntilStart <= 30) {
                     next.push({
-                        title,
-                        room,
-                        startsIn: this.formatTimeUntil(minutesUntilStart)
+                        title:    event.title,
+                        room:     event.room,
+                        startsIn: this.formatTimeUntil(minutesUntilStart),
                     });
                 }
             });
-            
+
             return { current, next };
         },
-        
+
+        buildEventDateTime: function(day, timeStr) {
+            const dateStr = ohaHappeningConfig.dayDates[day];
+            if (!dateStr) return null;
+            const [yr, mo, dt] = dateStr.split('-').map(Number);
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return new Date(yr, mo - 1, dt, hours, minutes);
+        },
+
+        formatTimeRange: function(startTime, endTime) {
+            const fmt = t => {
+                const [h, m] = t.split(':').map(Number);
+                const period = h >= 12 ? 'PM' : 'AM';
+                const hour   = h % 12 || 12;
+                return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+            };
+            return endTime ? `${fmt(startTime)} - ${fmt(endTime)}` : fmt(startTime);
+        },
+
         parseEventTime: function(timeStr) {
             // Example: "Friday 10:00 AM - 11:15 AM" or "Saturday 2:00 PM - 3:00 PM"
             const match = timeStr.match(/(\w+)\s+(\d+):(\d+)\s+(AM|PM)\s+-\s+(\d+):(\d+)\s+(AM|PM)/);
             if (!match) return null;
-            
+
             const day = match[1].toLowerCase();
             const startHour = parseInt(match[2]);
             const startMin = parseInt(match[3]);
@@ -290,32 +350,32 @@
             const endHour = parseInt(match[5]);
             const endMin = parseInt(match[6]);
             const endPeriod = match[7];
-            
+
             // Convention dates
             const year = 2026;
             const month = 4; // May (0-indexed)
             const date = day === 'saturday' ? 10 : 9;
-            
+
             const start = new Date(year, month, date,
                 startPeriod === 'PM' && startHour !== 12 ? startHour + 12 : startHour,
                 startMin
             );
-            
+
             const end = new Date(year, month, date,
                 endPeriod === 'PM' && endHour !== 12 ? endHour + 12 : endHour,
                 endMin
             );
-            
+
             return { start, end };
         },
-        
+
         formatTimeUntil: function(minutes) {
             if (minutes < 1) return 'now';
             if (minutes < 60) return `in ${Math.round(minutes)} min`;
-            
+
             const hours = Math.floor(minutes / 60);
             const mins = Math.round(minutes % 60);
-            
+
             if (mins === 0) return `in ${hours} hour${hours > 1 ? 's' : ''}`;
             return `in ${hours}h ${mins}m`;
         }

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Convention PWA Core
  * Description: PWA for OHA Convention 2026 — Schedule, Push Notifications, Offline Support. Actor Passport and Badge Trading require the OHA Passport Hub plugin.
- * Version: 3.24.0
+ * Version: 3.25.0
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-convention-pwa
@@ -202,7 +202,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants — all names used by every included class must be defined here
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PWA_VERSION',    '3.24.0' );
+define( 'OHA_PWA_VERSION',    '3.25.0' );
 define( 'OHA_PWA_DIR',        plugin_dir_path( __FILE__ ) );   // used by stable includes
 define( 'OHA_PWA_URL',        plugin_dir_url( __FILE__ ) );    // used by stable includes
 define( 'OHA_PWA_SCOPE',      '/convention/' );                // used by service worker & manifest
@@ -390,6 +390,17 @@ class OHA_Convention_PWA_Core {
 			'nonce'           => wp_create_nonce( 'oha_schedule_nonce' ),
 			'conventionStart' => $schedule_start,
 			'conventionEnd'   => $schedule_end,
+		] );
+
+		$_start_dt = new DateTime( $schedule_start );
+		$_end_dt   = new DateTime( $schedule_end );
+		wp_localize_script( 'oha-pwa-phase3a-features', 'ohaHappeningConfig', [
+			'eventsEndpoint' => rest_url( 'oha/v1/schedule/events' ),
+			'conventionYear' => $_start_dt->format( 'Y' ),
+			'dayDates'       => [
+				$_start_dt->format( 'l' ) => $schedule_start,
+				$_end_dt->format( 'l' )   => $schedule_end,
+			],
 		] );
 
 		wp_enqueue_style( 'oha-pwa-schedule', OHA_PWA_URL . 'assets/css/pwa-schedule.css', [], OHA_PWA_VERSION );
