@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention Schedule Hub",
-    "version":  "1.5.2",
+    "version":  "1.6.0",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -71,6 +71,13 @@
                         "type":  "fix",
                         "summary":  "Replaced full-width offline banner with small corner icon (top-right, pointer-events:none) to stop it covering content",
                         "notes":  "Element ID changed from oha-offline-message to oha-offline-icon. Uses inline SVG wifi-off icon. Does not obstruct taps."
+                    },
+                    {
+                        "date":  "2026-05-09",
+                        "version":  "1.6.0",
+                        "type":  "feature",
+                        "summary":  "Add REST endpoint oha/v1/schedule/events for [oha_happening_now] cross-page data",
+                        "notes":  "GET oha/v1/schedule/events?year=2026 returns published oha_class posts (title, start_time, end_time, room, day). Used by PWA happening-now widget when schedule shortcode is not on the same page."
                     }
                 ]
 }

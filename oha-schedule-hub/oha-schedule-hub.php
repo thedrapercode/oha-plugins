@@ -3,7 +3,7 @@
  * Plugin Name: OHA Convention Schedule Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive class schedule management for OHA Convention with multiple views, filtering, and PWA support
- * Version: 1.5.2
+ * Version: 1.6.0
  * Author: Justin @ OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('OHA_SCHEDULE_VERSION', '1.5.2');
+define('OHA_SCHEDULE_VERSION', '1.6.0');
 define('OHA_SCHEDULE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SCHEDULE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -888,6 +888,53 @@ jQuery(document).ready(function(\$) {
             'callback'            => array($this, 'rest_promoted_starting_soon'),
             'permission_callback' => '__return_true',
         ));
+        register_rest_route('oha/v1', '/schedule/events', array(
+            'methods'             => 'GET',
+            'callback'            => array($this, 'rest_get_events'),
+            'permission_callback' => '__return_true',
+        ));
+    }
+
+    /**
+     * REST: Return all published classes for a given convention year.
+     * Used by [oha_happening_now] when [oha_convention_schedule] is not on the same page.
+     * Query param: year (e.g. "2026") — filters by convention_year taxonomy.
+     */
+    public function rest_get_events( $request ) {
+        $year = $request->get_param( 'year' );
+
+        $args = array(
+            'post_type'      => 'oha_class',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'orderby'        => 'meta_value',
+            'meta_key'       => '_oha_start_time',
+            'order'          => 'ASC',
+        );
+
+        if ( $year ) {
+            $args['tax_query'] = array( array(
+                'taxonomy' => 'convention_year',
+                'field'    => 'name',
+                'terms'    => sanitize_text_field( $year ),
+            ) );
+        }
+
+        $classes = get_posts( $args );
+        $events  = array();
+
+        foreach ( $classes as $class ) {
+            $days    = wp_get_post_terms( $class->ID, 'class_day', array( 'fields' => 'names' ) );
+            $events[] = array(
+                'title'      => $class->post_title,
+                'start_time' => get_post_meta( $class->ID, '_oha_start_time', true ),
+                'end_time'   => get_post_meta( $class->ID, '_oha_end_time',   true ),
+                'room'       => get_post_meta( $class->ID, '_oha_room',       true ),
+                'day'        => ! empty( $days ) ? $days[0] : '',
+            );
+        }
+
+        return rest_ensure_response( $events );
     }
 
     /**
