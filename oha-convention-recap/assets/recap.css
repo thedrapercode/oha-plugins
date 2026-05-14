@@ -1,0 +1,223 @@
+/* OHA Convention Recap v1.0.0
+   Backgrounds: #000000, #0d0000, #1a0100
+   Accents: #AD3119 (dark), #E76653 (light)
+   High-specificity selectors to override dark theme bleed.
+*/
+
+.oha-recap-wrap {
+    font-family: inherit;
+    color: #ffffff;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ---- Hero ---- */
+
+.oha-recap-wrap .oha-recap-hero {
+    background: #0d0000 !important;
+    border: 2px solid #AD3119 !important;
+    border-radius: 12px;
+    padding: 52px 40px;
+    text-align: center;
+    margin-bottom: 48px;
+    box-shadow: 0 4px 28px rgba(0, 0, 0, 0.65);
+}
+
+.oha-recap-wrap .oha-recap-hero-title {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    margin: 0 0 14px 0 !important;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.oha-recap-wrap .oha-recap-hero-meta {
+    font-size: 1.05rem !important;
+    color: #E76653 !important;
+    font-weight: 500;
+    margin-bottom: 18px !important;
+    letter-spacing: 0.01em;
+}
+
+.oha-recap-wrap .oha-recap-hero-text {
+    font-size: 1.05rem !important;
+    color: #cccccc !important;
+    max-width: 620px;
+    margin: 0 auto !important;
+    line-height: 1.65;
+}
+
+/* ---- Sections ---- */
+
+.oha-recap-wrap .oha-recap-section {
+    margin-bottom: 52px;
+}
+
+.oha-recap-wrap .oha-recap-section-heading {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #E76653 !important;
+    margin: 0 0 24px 0 !important;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #AD3119 !important;
+}
+
+/* ---- Stat cards ---- */
+
+.oha-recap-wrap .oha-recap-stats {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 16px;
+}
+
+.oha-recap-wrap .oha-recap-stat-card {
+    background: #0d0000 !important;
+    border: 2px solid #AD3119 !important;
+    border-radius: 10px;
+    padding: 30px 16px 24px;
+    text-align: center;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.oha-recap-wrap .oha-recap-stat-card:hover {
+    border-color: #E76653 !important;
+    box-shadow: 0 4px 20px rgba(173, 49, 25, 0.35) !important;
+}
+
+.oha-recap-wrap .oha-recap-stat-value {
+    font-size: 2.6rem !important;
+    font-weight: 800 !important;
+    color: #E76653 !important;
+    line-height: 1.1;
+    margin-bottom: 10px !important;
+    letter-spacing: -0.02em;
+}
+
+.oha-recap-wrap .oha-recap-stat-label {
+    font-size: 0.8rem !important;
+    color: #cccccc !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.4;
+}
+
+/* ---- Highlights ---- */
+
+.oha-recap-wrap .oha-recap-highlights {
+    background: #0d0000 !important;
+    border: 2px solid #AD3119 !important;
+    border-radius: 10px;
+    padding: 30px 36px;
+    font-size: 1rem !important;
+    color: #e0e0e0 !important;
+    line-height: 1.75;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
+
+.oha-recap-wrap .oha-recap-highlights p {
+    color: #e0e0e0 !important;
+    margin: 0 0 18px 0 !important;
+}
+
+.oha-recap-wrap .oha-recap-highlights p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.oha-recap-wrap .oha-recap-highlights ul,
+.oha-recap-wrap .oha-recap-highlights ol {
+    color: #e0e0e0 !important;
+    margin: 0 0 18px 0 !important;
+    padding-left: 24px !important;
+}
+
+.oha-recap-wrap .oha-recap-highlights li {
+    color: #e0e0e0 !important;
+    margin-bottom: 6px !important;
+}
+
+.oha-recap-wrap .oha-recap-highlights strong,
+.oha-recap-wrap .oha-recap-highlights b {
+    color: #E76653 !important;
+}
+
+/* ---- Video gallery ---- */
+
+.oha-recap-wrap .oha-recap-videos {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+}
+
+.oha-recap-wrap .oha-recap-vid-item {
+    background: #0d0000 !important;
+    border: 2px solid #AD3119 !important;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.oha-recap-wrap .oha-recap-vid-item:hover {
+    border-color: #E76653 !important;
+    box-shadow: 0 4px 20px rgba(173, 49, 25, 0.35) !important;
+}
+
+.oha-recap-wrap .oha-recap-vid-title {
+    padding: 14px 18px 12px;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: #E76653 !important;
+    border-bottom: 1px solid #AD3119 !important;
+    line-height: 1.4;
+}
+
+.oha-recap-wrap .oha-recap-vid-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+}
+
+.oha-recap-wrap .oha-recap-vid-wrap video,
+.oha-recap-wrap .oha-recap-vid-wrap iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    border: none !important;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 680px) {
+    .oha-recap-wrap .oha-recap-hero {
+        padding: 36px 20px !important;
+    }
+
+    .oha-recap-wrap .oha-recap-hero-title {
+        font-size: 1.85rem !important;
+    }
+
+    .oha-recap-wrap .oha-recap-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .oha-recap-wrap .oha-recap-videos {
+        grid-template-columns: 1fr;
+    }
+
+    .oha-recap-wrap .oha-recap-highlights {
+        padding: 22px 18px !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .oha-recap-wrap .oha-recap-stats {
+        grid-template-columns: 1fr;
+    }
+}

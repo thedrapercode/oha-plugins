@@ -1,0 +1,14 @@
+{
+    "version":  "1.0.0",
+    "date":  "2026-05-13",
+    "changes":  [
+                    "Initial release",
+                    "Hero section: convention name, dates, location, tagline",
+                    "Stats section: dynamic admin-editable stat cards (large value + label)",
+                    "Highlights section: optional free-form text block with basic HTML support",
+                    "Video gallery: auto-detects uploaded MP4 files (HTML5 video) vs Facebook URLs (iframe embed)",
+                    "Admin settings page at Settings \u003e OHA Convention Recap",
+                    "Shortcode: [oha_convention_recap]",
+                    "OHA dark theme matching existing plugins (#AD3119 / #E76653 accents)"
+                ]
+}
