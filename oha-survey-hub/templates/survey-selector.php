@@ -30,8 +30,10 @@ if ($requested_survey && isset($survey_shortcodes[$requested_survey])) {
 $page_url = get_permalink();
 
 // Helper to build and escape a direct link for a given survey type
-function oha_survey_direct_link($page_url, $type) {
-    return esc_url(add_query_arg('survey', $type, $page_url));
+if (!function_exists('oha_survey_direct_link')) {
+    function oha_survey_direct_link($page_url, $type) {
+        return esc_url(add_query_arg('survey', $type, $page_url));
+    }
 }
 ?>
 

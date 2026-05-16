@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.2.0",
+    "version":  "1.2.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -113,6 +113,13 @@
                         "type":  "feature",
                         "summary":  "Add scale question score distribution mini-bars alongside SVG arc gauge",
                         "notes":  "Shows count per score value (1-5) as color-coded horizontal bars. Green for high scores, orange/red for low. Rendered with no JS dependency."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.2.1",
+                        "type":  "fix",
+                        "summary":  "Fix Cannot redeclare oha_survey_direct_link fatal error on pages with multiple shortcode renders",
+                        "notes":  "Function declared at file scope in survey-selector.php; wrapped with function_exists guard to prevent fatal on second include"
                     }
                 ]
 }
