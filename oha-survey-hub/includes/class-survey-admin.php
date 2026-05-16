@@ -191,6 +191,15 @@ class OHA_Survey_Admin {
                             $selected = $survey_type === $type ? 'selected' : '';
                             echo '<option value="' . esc_attr($type) . '" ' . $selected . '>' . esc_html($survey_data['title']) . '</option>';
                         }
+                        $convention_options = [
+                            OHA_Convention_Survey::SURVEY_TYPE_ATTENDEE  => 'OHA Convention 2026 - Attendee Feedback',
+                            OHA_Convention_Survey::SURVEY_TYPE_VENDOR    => 'OHA Convention 2026 - Vendor Feedback',
+                            OHA_Convention_Survey::SURVEY_TYPE_VOLUNTEER => 'OHA Convention 2026 - Volunteer Feedback',
+                        ];
+                        foreach ($convention_options as $type => $title) {
+                            $selected = $survey_type === $type ? 'selected' : '';
+                            echo '<option value="' . esc_attr($type) . '" ' . $selected . '>' . esc_html($title) . '</option>';
+                        }
                         ?>
                     </select>
                     <button type="button" class="button" onclick="ohaExportSurveyData('<?php echo esc_js($survey_type); ?>', 'csv')">
@@ -221,7 +230,17 @@ class OHA_Survey_Admin {
         $total_pages = ceil($total_count / $per_page);
         
         $survey = OHA_Survey_Definitions::get_survey($survey_type);
-        
+        if (!$survey) {
+            $convention_types = [
+                OHA_Convention_Survey::SURVEY_TYPE_ATTENDEE,
+                OHA_Convention_Survey::SURVEY_TYPE_VENDOR,
+                OHA_Convention_Survey::SURVEY_TYPE_VOLUNTEER,
+            ];
+            if (in_array($survey_type, $convention_types, true)) {
+                $survey = OHA_Convention_Survey::get_as_definition($survey_type);
+            }
+        }
+
         ?>
         <div class="oha-survey-responses">
             <h2><?php echo $survey ? esc_html($survey['title']) : esc_html(ucfirst(str_replace('_', ' ', $survey_type))); ?></h2>

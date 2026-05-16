@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.1.0",
+    "version":  "1.1.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -71,6 +71,20 @@
                         "type":  "fix",
                         "summary":  "Corrected stale plugin header version from 1.0.8 to 1.0.14 and created missing version.txt",
                         "notes":  "Plugin was previously delivered without version.txt. Created this session as source of truth."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.1",
+                        "type":  "fix",
+                        "summary":  "Add convention survey types to admin Results page dropdown",
+                        "notes":  "Results page only listed hardcoded surveys from OHA_Survey_Definitions; convention types now appear in the filter dropdown"
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.1",
+                        "type":  "fix",
+                        "summary":  "Fix View Details showing empty for convention_2026 survey responses",
+                        "notes":  "render_survey_responses called OHA_Survey_Definitions::get_survey which returns null for convention types; added fallback to OHA_Convention_Survey::get_as_definition so question labels resolve correctly"
                     }
                 ]
 }
