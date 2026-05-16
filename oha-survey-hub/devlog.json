@@ -1,0 +1,76 @@
+{
+    "plugin":  "OHA Survey Hub",
+    "version":  "1.1.0",
+    "entries":  [
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.0.14",
+                        "type":  "bugfix",
+                        "summary":  "Fixed Industry Deep Dive and Behind the Scenes surveys blocking submission with \u0027Missing: What were your top three expense categories\u0027 error.",
+                        "notes":  "Root cause was a double-bracket serialization bug. JS stored checkbox group values under the literal HTML name attribute (e.g. \u0027top_expense_categories[]\u0027), so jQuery serialized the AJAX payload as \u0027responses[top_expense_categories[]][0]=labor\u0027 — double brackets that PHP\u0027s POST parser cannot cleanly resolve. PHP received the data in a form the normalization regex did not handle, so the key was absent from normalized_responses, and validate_required_questions threw the error even when the user had checked boxes. Fix: (1) collectDataFromElement now strips the trailing [] from checkbox key names before storing in surveyData, so jQuery sends \u0027responses[top_expense_categories][0]=labor\u0027 — single brackets PHP parses correctly. (2) populateFields now tries both \u0027name\u0027 and \u0027name[]\u0027 selectors so resumed/saved sessions still populate checkbox state. (3) PHP normalization in submit_survey extended to handle the case where $value is already a PHP array (occurs when PHP auto-parses indexed keys like [0],[1] into an array). (4) top_expense_categories and behind_scenes_roles changed from required:true to required:false in survey-definitions.php as defense-in-depth — the server-side required check is now removed for checkbox questions since client-side guidance (required attribute on first checkbox) is sufficient."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.0.14",
+                        "type":  "bugfix",
+                        "summary":  "Fixed Save Progress feature not restoring data when user checks the save checkbox after typing their email.",
+                        "notes":  "loadExistingProgress() was only triggered on email field blur. If the user typed their email then checked the \u0027Save my progress\u0027 checkbox afterward, the blur had already fired with the checkbox unchecked, so progress was never loaded. Fix: added a change handler on #oha-save-progress that calls loadExistingProgress() immediately if the checkbox is checked and the email field already contains a valid address."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.0.14",
+                        "type":  "bugfix",
+                        "summary":  "Fixed View Details button in admin Results tab doing nothing when clicked.",
+                        "notes":  "Two bugs combined to break the button. (1) The button had both an onclick attribute calling ohaToggleResponse() AND a delegated .oha-toggle-response class event listener — both fired on click, triggering two concurrent AJAX calls. (2) The AJAX call loaded response data and tried to inject it into a dynamically-created modal overlay, but the PHP already pre-renders the full response HTML in a hidden div (#oha-response-{id}) inline on the page — the modal was never needed. Fix: (1) Removed the onclick attribute from the PHP button and replaced it with a data-response-id attribute. (2) Replaced the toggleResponse() AJAX call in admin-script.js with a simple slideUp/slideDown toggle of the pre-rendered #oha-response-{id} div. Button text toggles between \u0027View Details\u0027 and \u0027Hide Details\u0027. No AJAX required."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.0.14",
+                        "type":  "bugfix",
+                        "summary":  "Fixed Export CSV and Export JSON buttons doing nothing in admin Results tab.",
+                        "notes":  "The JS exportSurveyData() function called admin-ajax.php?action=oha_survey_export, but no wp_ajax_oha_survey_export hook was registered in oha-survey-hub.php. WordPress\u0027s admin-ajax.php returned -1 (no handler found) instead of streaming the file. The export logic existed in the private export_csv() and export_json() methods, and a handle_export_request() hook on \u0027init\u0027 existed as a workaround, but this was unreliable in the admin-ajax.php context. Fix: registered add_action(\u0027wp_ajax_oha_survey_export\u0027, ...) and added ajax_export_survey() method that verifies the export nonce and calls the existing export_survey_data() method. The existing handle_export_request() init hook is left in place as a secondary path."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added Convention 2026 attendee survey with DB-backed questions and admin question manager",
+                        "notes":  "New table wp_oha_survey_convention_questions. Questions seeded on activation. Shortcode: [oha_convention_survey]. Admin page: Survey Hub \u003e Convention Survey with tabs for attendee/vendor/volunteer contexts."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added conditional page routing - gate questions show or skip entire survey sections",
+                        "notes":  "Gate questions have gate_for_group and gate_show_value columns. JS skips gated page groups automatically. Progress bar updates dynamically. Covers VIP, Education, Costume Ball, Blood Prison sections."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added email confirmation to submitter and board notification on convention survey submit",
+                        "notes":  "Uses existing oha_survey_hub_email_notifications and oha_survey_hub_admin_notifications toggles. New setting oha_convention_board_email for board address. Falls back to WP admin_email."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added multi-context support for vendor and volunteer convention surveys",
+                        "notes":  "survey_context column on questions table. context=vendor and context=volunteer shortcode attrs. Types: convention_2026_vendor and convention_2026_volunteer. No seed questions for those yet."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.0",
+                        "type":  "change",
+                        "summary":  "Updated survey selector cards to use real href links and added copy link button to each card",
+                        "notes":  "Removed JS onclick approach. Direct links now use add_query_arg on get_permalink(). Footer direct links also fixed to be dynamic. Copy link button uses clipboard API with execCommand fallback."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.1.0",
+                        "type":  "fix",
+                        "summary":  "Corrected stale plugin header version from 1.0.8 to 1.0.14 and created missing version.txt",
+                        "notes":  "Plugin was previously delivered without version.txt. Created this session as source of truth."
+                    }
+                ]
+}

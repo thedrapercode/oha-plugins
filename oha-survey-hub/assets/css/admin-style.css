@@ -1,0 +1,830 @@
+/**
+ * OHA Survey Hub - Admin Styles
+ * Backend administration interface styling
+ */
+
+/* ============================================================================
+   Admin Variables & Base
+   ============================================================================ */
+:root {
+    --oha-admin-primary: #f39200;
+    --oha-admin-secondary: #1e1e1e;
+    --oha-admin-success: #46b450;
+    --oha-admin-warning: #ffb900;
+    --oha-admin-error: #dc3232;
+    --oha-admin-info: #00a0d2;
+    
+    --oha-admin-bg: #f1f1f1;
+    --oha-admin-bg-white: #ffffff;
+    --oha-admin-bg-light: #fafafa;
+    
+    --oha-admin-text: #1e1e1e;
+    --oha-admin-text-secondary: #646970;
+    --oha-admin-text-muted: #8c8f94;
+    
+    --oha-admin-border: #c3c4c7;
+    --oha-admin-border-light: #dcdcde;
+    
+    --oha-admin-radius: 4px;
+    --oha-admin-shadow: 0 1px 3px rgba(0,0,0,0.13);
+    --oha-admin-shadow-lg: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* ============================================================================
+   Main Admin Container
+   ============================================================================ */
+.oha-survey-admin {
+    margin-top: 20px;
+}
+
+.oha-survey-admin h1 {
+    color: var(--oha-admin-text);
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================================================
+   Grid Layout
+   ============================================================================ */
+.oha-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.oha-admin-grid.oha-two-column {
+    grid-template-columns: 2fr 1fr;
+}
+
+/* ============================================================================
+   Admin Cards
+   ============================================================================ */
+.oha-admin-card {
+    background: var(--oha-admin-bg-white);
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    padding: 20px;
+    box-shadow: var(--oha-admin-shadow);
+}
+
+.oha-admin-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--oha-admin-text);
+    font-size: 1.3em;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+    padding-bottom: 10px;
+}
+
+.oha-admin-card h3 {
+    color: var(--oha-admin-text);
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.oha-admin-card p {
+    color: var(--oha-admin-text-secondary);
+    line-height: 1.6;
+}
+
+/* ============================================================================
+   Stats Overview
+   ============================================================================ */
+.oha-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.oha-stat-item {
+    text-align: center;
+    padding: 15px;
+    background: var(--oha-admin-bg-light);
+    border-radius: var(--oha-admin-radius);
+    border: 1px solid var(--oha-admin-border-light);
+}
+
+.oha-stat-number {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: var(--oha-admin-primary);
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.oha-stat-label {
+    font-size: 0.9em;
+    color: var(--oha-admin-text-secondary);
+    font-weight: 500;
+}
+
+/* ============================================================================
+   Survey Lists
+   ============================================================================ */
+.oha-survey-list {
+    margin: 0;
+}
+
+.oha-survey-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+}
+
+.oha-survey-item:last-child {
+    border-bottom: none;
+}
+
+.oha-survey-name {
+    font-weight: 600;
+    color: var(--oha-admin-text);
+    flex: 1;
+}
+
+.oha-survey-counts {
+    display: flex;
+    gap: 15px;
+    margin: 0 20px;
+}
+
+.oha-completed {
+    color: var(--oha-admin-success);
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.oha-in-progress {
+    color: var(--oha-admin-warning);
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.oha-survey-actions .button {
+    margin-left: 5px;
+}
+
+/* ============================================================================
+   Quick Actions
+   ============================================================================ */
+.oha-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.oha-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--oha-admin-bg-white);
+    border: 1px solid var(--oha-admin-border);
+    border-radius: var(--oha-admin-radius);
+    color: var(--oha-admin-text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.oha-action-btn:hover {
+    background: var(--oha-admin-bg-light);
+    border-color: var(--oha-admin-primary);
+    color: var(--oha-admin-text);
+    text-decoration: none;
+}
+
+.oha-action-btn .dashicons {
+    color: var(--oha-admin-primary);
+}
+
+/* ============================================================================
+   Shortcode Reference
+   ============================================================================ */
+.oha-shortcode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.oha-shortcode-item {
+    background: var(--oha-admin-bg-light);
+    padding: 15px;
+    border-radius: var(--oha-admin-radius);
+    border: 1px solid var(--oha-admin-border-light);
+}
+
+.oha-shortcode-item code {
+    display: block;
+    background: var(--oha-admin-secondary);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: var(--oha-admin-radius);
+    margin-bottom: 10px;
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.oha-shortcode-item p {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* ============================================================================
+   Survey Filter
+   ============================================================================ */
+.oha-survey-filter {
+    background: var(--oha-admin-bg-white);
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.oha-survey-filter select {
+    min-width: 200px;
+}
+
+/* ============================================================================
+   Survey Responses
+   ============================================================================ */
+.oha-survey-responses h2 {
+    color: var(--oha-admin-text);
+    margin-bottom: 10px;
+}
+
+.oha-survey-responses > p {
+    color: var(--oha-admin-text-secondary);
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.oha-responses-table {
+    margin-bottom: 30px;
+}
+
+.oha-response-card {
+    background: var(--oha-admin-bg-white);
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    margin-bottom: 15px;
+    box-shadow: var(--oha-admin-shadow);
+}
+
+.oha-response-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+    background: var(--oha-admin-bg-light);
+}
+
+.oha-response-meta {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.oha-response-id {
+    font-weight: bold;
+    color: var(--oha-admin-primary);
+}
+
+.oha-response-date,
+.oha-response-email {
+    color: var(--oha-admin-text-secondary);
+    font-size: 0.9em;
+}
+
+.oha-toggle-response {
+    background: var(--oha-admin-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--oha-admin-radius);
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.2s ease;
+}
+
+.oha-toggle-response:hover {
+    background: #d67e00;
+}
+
+.oha-response-content {
+    padding: 20px;
+}
+
+.oha-response-answers {
+    margin: 0;
+}
+
+.oha-answer-item {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+}
+
+.oha-answer-item:last-child {
+    border-bottom: none;
+}
+
+.oha-answer-question {
+    font-weight: 600;
+    color: var(--oha-admin-text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-priority-badge {
+    background: var(--oha-admin-primary);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.oha-answer-value {
+    color: var(--oha-admin-text-secondary);
+    line-height: 1.5;
+    padding-left: 15px;
+    word-wrap: break-word;
+}
+
+/* ============================================================================
+   Pagination
+   ============================================================================ */
+.oha-pagination {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.oha-pagination a {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 3px;
+    border: 1px solid var(--oha-admin-border);
+    border-radius: var(--oha-admin-radius);
+    text-decoration: none;
+    color: var(--oha-admin-text);
+    background: var(--oha-admin-bg-white);
+}
+
+.oha-pagination a:hover {
+    background: var(--oha-admin-bg-light);
+    border-color: var(--oha-admin-primary);
+}
+
+.oha-pagination a.current {
+    background: var(--oha-admin-primary);
+    color: white;
+    border-color: var(--oha-admin-primary);
+}
+
+/* ============================================================================
+   All Surveys Summary
+   ============================================================================ */
+.oha-all-surveys-summary h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--oha-admin-text);
+}
+
+.oha-survey-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.oha-survey-summary-card {
+    background: var(--oha-admin-bg-white);
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    padding: 20px;
+    box-shadow: var(--oha-admin-shadow);
+    text-align: center;
+}
+
+.oha-survey-summary-card h3 {
+    margin: 0 0 20px 0;
+    color: var(--oha-admin-text);
+    font-size: 1.2em;
+}
+
+.oha-summary-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.oha-summary-stats .oha-stat .number {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.oha-summary-stats .oha-stat .label {
+    font-size: 0.9em;
+    color: var(--oha-admin-text-secondary);
+}
+
+.oha-summary-stats .oha-stat:first-child .number {
+    color: var(--oha-admin-success);
+}
+
+.oha-summary-stats .oha-stat:last-child .number {
+    color: var(--oha-admin-warning);
+}
+
+.oha-summary-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* ============================================================================
+   Analytics
+   ============================================================================ */
+.oha-analytics-content h2 {
+    color: var(--oha-admin-text);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.oha-analytics-question {
+    background: var(--oha-admin-bg-white);
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    margin-bottom: 30px;
+    box-shadow: var(--oha-admin-shadow);
+    overflow: hidden;
+}
+
+.oha-analytics-question h3 {
+    background: var(--oha-admin-bg-light);
+    margin: 0;
+    padding: 20px;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+    color: var(--oha-admin-text);
+}
+
+.oha-analytics-chart {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+}
+
+.oha-analytics-table {
+    padding: 0;
+}
+
+.oha-analytics-table .wp-list-table {
+    margin: 0;
+    border: none;
+}
+
+.oha-analytics-table .wp-list-table th,
+.oha-analytics-table .wp-list-table td {
+    padding: 12px 20px;
+}
+
+/* ============================================================================
+   Settings Form
+   ============================================================================ */
+.oha-survey-admin .form-table th {
+    color: var(--oha-admin-text);
+    padding-left: 0;
+}
+
+.oha-survey-admin .form-table td {
+    padding-left: 0;
+}
+
+.oha-survey-admin .form-table input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.oha-survey-admin .form-table label {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 10px;
+    color: var(--oha-admin-text);
+}
+
+.oha-survey-admin .form-table .description {
+    color: var(--oha-admin-text-muted);
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin-top: 5px;
+}
+
+/* ============================================================================
+   Data Management Section
+   ============================================================================ */
+.oha-admin-card h2 + p {
+    margin-bottom: 20px;
+}
+
+/* ============================================================================
+   Response Modal
+   ============================================================================ */
+.oha-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 100000;
+    display: none;
+}
+
+.oha-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--oha-admin-bg-white);
+    border-radius: var(--oha-admin-radius);
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--oha-admin-shadow-lg);
+}
+
+.oha-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+    background: var(--oha-admin-bg-light);
+}
+
+.oha-modal-header h3 {
+    margin: 0;
+    color: var(--oha-admin-text);
+}
+
+.oha-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--oha-admin-text-secondary);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.oha-modal-close:hover {
+    background: var(--oha-admin-error);
+    color: white;
+}
+
+.oha-modal-body {
+    padding: 20px;
+}
+
+.oha-response-meta {
+    background: var(--oha-admin-bg-light);
+    padding: 15px;
+    border-radius: var(--oha-admin-radius);
+    margin-bottom: 20px;
+}
+
+.oha-response-meta p {
+    margin: 5px 0;
+    color: var(--oha-admin-text-secondary);
+}
+
+.oha-response-answers {
+    margin: 0;
+}
+
+.oha-answer-item {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--oha-admin-border-light);
+}
+
+.oha-answer-item:last-child {
+    border-bottom: none;
+}
+
+.oha-answer-item.priority {
+    background: rgba(243, 146, 0, 0.05);
+    margin: 0 -20px;
+    padding: 15px 20px;
+    border-left: 4px solid var(--oha-admin-primary);
+}
+
+.oha-answer-question {
+    font-weight: 600;
+    color: var(--oha-admin-text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-answer-value {
+    color: var(--oha-admin-text-secondary);
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.oha-priority-badge {
+    background: var(--oha-admin-primary);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+/* Export Loading Indicator */
+.oha-export-loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--oha-admin-bg-white);
+    padding: 20px 40px;
+    border-radius: var(--oha-admin-radius);
+    box-shadow: var(--oha-admin-shadow-lg);
+    z-index: 100001;
+    font-weight: 600;
+    color: var(--oha-admin-primary);
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+@media screen and (max-width: 1200px) {
+    .oha-admin-grid.oha-two-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .oha-admin-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .oha-survey-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .oha-survey-filter select {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .oha-response-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .oha-response-meta {
+        justify-content: space-between;
+    }
+    
+    .oha-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    
+    .oha-shortcode-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .oha-survey-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .oha-summary-actions {
+        flex-direction: column;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .oha-admin-card {
+        padding: 15px;
+    }
+    
+    .oha-stat-number {
+        font-size: 2em;
+    }
+    
+    .oha-response-card {
+        margin-bottom: 10px;
+    }
+    
+    .oha-response-header {
+        padding: 10px 15px;
+    }
+    
+    .oha-response-content {
+        padding: 15px;
+    }
+    
+    .oha-answer-item {
+        padding: 10px 0;
+    }
+}
+
+/* ============================================================================
+   Dark Mode Support (WordPress 5.7+)
+   ============================================================================ */
+@media (prefers-color-scheme: dark) {
+    .auto-fold #wpcontent {
+        /* Inherit WordPress admin dark mode variables when available */
+    }
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+@media print {
+    .oha-admin-card {
+        box-shadow: none;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+    
+    .oha-toggle-response,
+    .button {
+        display: none !important;
+    }
+    
+    .oha-response-content {
+        display: block !important;
+    }
+    
+    .oha-analytics-chart canvas {
+        max-height: 300px;
+    }
+}
+
+/* ============================================================================
+   Accessibility Enhancements
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .oha-admin-card {
+        border-color: #000;
+    }
+    
+    .oha-response-card {
+        border-color: #000;
+    }
+    
+    .oha-toggle-response,
+    .oha-action-btn {
+        border-color: #000;
+    }
+}
+
+/* Focus indicators */
+.oha-toggle-response:focus,
+.oha-action-btn:focus {
+    outline: 2px solid var(--oha-admin-primary);
+    outline-offset: 2px;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

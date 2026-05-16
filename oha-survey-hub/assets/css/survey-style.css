@@ -1,0 +1,1163 @@
+/**
+ * OHA Survey Hub - Main Styles
+ * Modern, accessible survey interface styling
+ */
+
+/* ============================================================================
+   CSS Variables & Base Colors
+   ============================================================================ */
+:root {
+    --oha-primary: #f39200;
+    --oha-primary-dark: #d67e00;
+    --oha-primary-light: #ffa726;
+    --oha-secondary: #1e1e1e;
+    --oha-accent: #ff6b35;
+    --oha-success: #4caf50;
+    --oha-warning: #ff9800;
+    --oha-error: #f44336;
+    --oha-info: #2196f3;
+    
+    --oha-text-primary: #1e1e1e;
+    --oha-text-secondary: #666666;
+    --oha-text-muted: #999999;
+    --oha-text-light: #ffffff;
+    
+    --oha-bg-white: #ffffff;
+    --oha-bg-light: #f8f9fa;
+    --oha-bg-muted: #f5f5f5;
+    --oha-bg-dark: #1e1e1e;
+    
+    --oha-border: #e0e0e0;
+    --oha-border-light: #f0f0f0;
+    --oha-border-dark: #cccccc;
+    
+    --oha-shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --oha-shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+    --oha-shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+    
+    --oha-radius-sm: 4px;
+    --oha-radius-md: 8px;
+    --oha-radius-lg: 12px;
+    
+    --oha-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --oha-font-size-xs: 0.75rem;
+    --oha-font-size-sm: 0.875rem;
+    --oha-font-size-base: 1rem;
+    --oha-font-size-lg: 1.125rem;
+    --oha-font-size-xl: 1.25rem;
+    --oha-font-size-2xl: 1.5rem;
+    --oha-font-size-3xl: 1.875rem;
+}
+
+/* ============================================================================
+   Survey Container & Layout
+   ============================================================================ */
+.oha-survey-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: var(--oha-font-family);
+    color: var(--oha-text-primary);
+}
+
+.oha-survey-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--oha-primary) 0%, var(--oha-primary-dark) 100%);
+    border-radius: var(--oha-radius-lg);
+    color: var(--oha-text-light);
+    box-shadow: var(--oha-shadow-md);
+}
+
+.oha-survey-title {
+    margin: 0 0 1rem 0;
+    font-size: var(--oha-font-size-3xl);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.oha-survey-description {
+    margin: 0;
+    font-size: var(--oha-font-size-lg);
+    opacity: 0.95;
+    line-height: 1.6;
+}
+
+/* ============================================================================
+   Progress Bar
+   ============================================================================ */
+.oha-progress-container {
+    margin-top: 2rem;
+}
+
+.oha-progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.oha-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--oha-text-light), rgba(255,255,255,0.8));
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 4px;
+}
+
+.oha-progress-text {
+    font-size: var(--oha-font-size-sm);
+    color: rgba(255,255,255,0.9);
+    text-align: center;
+    font-weight: 500;
+}
+
+/* ============================================================================
+   Survey Content & Pages
+   ============================================================================ */
+.oha-survey-content {
+    background: var(--oha-bg-white);
+    border-radius: var(--oha-radius-lg);
+    box-shadow: var(--oha-shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.oha-survey-page {
+    padding: 2.5rem;
+    min-height: 400px;
+    animation: slideIn 0.5s ease-out;
+}
+
+.oha-page-title {
+    margin: 0 0 0.75rem 0;
+    font-size: var(--oha-font-size-2xl);
+    font-weight: 600;
+    color: #000000 !important;
+    text-shadow: none;
+}
+
+.oha-page-description {
+    margin: 0 0 2rem 0;
+    font-size: var(--oha-font-size-base);
+    color: #333333 !important;
+    line-height: 1.6;
+    text-shadow: none;
+}
+
+/* Force text visibility on dark backgrounds */
+.oha-survey-container h1,
+.oha-survey-container h2, 
+.oha-survey-container h3,
+.oha-survey-container h4,
+.oha-survey-container h5,
+.oha-survey-container h6 {
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+    font-weight: bold !important;
+}
+
+.oha-survey-container p {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+}
+
+/* Specific styling for survey content area (white background) */
+.oha-survey-content h1,
+.oha-survey-content h2,
+.oha-survey-content h3,
+.oha-survey-content h4,
+.oha-survey-content h5,
+.oha-survey-content h6 {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.oha-survey-content p {
+    color: #333333 !important;
+    text-shadow: none !important;
+}
+
+/* ============================================================================
+   Form Fields & Inputs
+   ============================================================================ */
+.oha-field-group {
+    margin-bottom: 2rem;
+}
+
+.oha-field-group.oha-field-priority {
+    position: relative;
+}
+
+.oha-field-group.oha-field-priority::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--oha-primary);
+    border-radius: 2px;
+}
+
+.oha-field-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: var(--oha-font-size-base);
+    color: var(--oha-text-primary);
+    line-height: 1.5;
+    /* Force white text for dark backgrounds */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.oha-required-indicator {
+    color: #ffff00;
+    margin-left: 0.25rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.oha-priority-indicator {
+    color: #ffff00;
+    margin-left: 0.5rem;
+    font-size: var(--oha-font-size-sm);
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.oha-field-input,
+.oha-field-textarea,
+.oha-field-select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #333333;
+    border-radius: var(--oha-radius-md);
+    font-size: var(--oha-font-size-base);
+    font-family: inherit;
+    background: #ffffff !important;
+    color: #000000 !important;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.oha-field-input:focus,
+.oha-field-textarea:focus,
+.oha-field-select:focus {
+    outline: none;
+    border-color: #FF0000 !important;
+    box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.2) !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* Force dropdown styling */
+.oha-field-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23000000' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.oha-field-select option {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    padding: 8px 12px;
+}
+
+.oha-field-select option:checked,
+.oha-field-select option:hover,
+.oha-field-select option:focus {
+    background-color: #FF0000 !important;
+    color: #ffffff !important;
+}
+
+/* Alternative dropdown highlighting */
+.oha-field-select option[selected] {
+    background-color: #AD3119 !important;
+    color: #ffffff !important;
+}
+
+.oha-field-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.oha-field-help {
+    margin-top: 0.5rem;
+    font-size: var(--oha-font-size-sm);
+    color: #333333 !important;
+    line-height: 1.4;
+    background: rgba(255,255,255,0.9);
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-shadow: none !important;
+}
+
+/* Additional select styling for better browser compatibility */
+.oha-field-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Firefox specific fixes */
+.oha-field-select::-moz-focus-inner {
+    border: 0;
+}
+
+/* Chrome/Safari specific fixes */
+.oha-field-select::-webkit-outer-spin-button,
+.oha-field-select::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Internet Explorer fixes */
+.oha-field-select::-ms-expand {
+    display: none;
+}
+
+/* Additional dropdown option styling for better browser support */
+select.oha-field-select {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+select.oha-field-select:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* Force option styling across all browsers */
+select.oha-field-select option {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-weight: normal !important;
+    padding: 8px !important;
+}
+
+select.oha-field-select option:hover,
+select.oha-field-select option:focus,
+select.oha-field-select option:active {
+    background-color: #FF0000 !important;
+    color: #ffffff !important;
+}
+
+select.oha-field-select option:checked {
+    background-color: #AD3119 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* ============================================================================
+   Radio Buttons & Checkboxes
+   ============================================================================ */
+.oha-radio-group,
+.oha-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.oha-radio-label,
+.oha-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    font-size: var(--oha-font-size-base);
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    padding: 0.5rem;
+    border-radius: var(--oha-radius-sm);
+    color: #000000 !important;
+    background: rgba(255,255,255,0.95);
+    margin-bottom: 2px;
+}
+
+.oha-radio-label:hover,
+.oha-checkbox-label:hover {
+    background: rgba(255,255,255,1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.oha-radio-input,
+.oha-checkbox-input {
+    opacity: 0;
+    position: absolute;
+}
+
+.oha-radio-custom,
+.oha-checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #333333;
+    background: #ffffff;
+    margin-right: 0.75rem;
+    margin-top: 0.125rem;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.oha-radio-custom {
+    border-radius: 50%;
+}
+
+.oha-checkbox-custom {
+    border-radius: var(--oha-radius-sm);
+}
+
+.oha-radio-input:checked + .oha-radio-custom {
+    border-color: #FF0000;
+    background: #FF0000;
+}
+
+.oha-radio-input:checked + .oha-radio-custom::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+}
+
+.oha-checkbox-input:checked + .oha-checkbox-custom {
+    border-color: #FF0000;
+    background: #FF0000;
+}
+
+.oha-checkbox-input:checked + .oha-checkbox-custom::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.oha-radio-text,
+.oha-checkbox-text {
+    flex: 1;
+    color: #000000 !important;
+    font-weight: 500;
+}
+
+/* ============================================================================
+   Scale Inputs
+   ============================================================================ */
+.oha-scale-group {
+    text-align: center;
+    background: rgba(255,255,255,0.95);
+    padding: 1.5rem;
+    border-radius: var(--oha-radius-md);
+    margin: 1rem 0;
+}
+
+.oha-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: var(--oha-font-size-sm);
+    color: #333333 !important;
+    font-weight: 600;
+}
+
+.oha-scale-options {
+    display: flex;
+    justify-content: space-between;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.oha-scale-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.oha-scale-option:hover {
+    transform: translateY(-2px);
+}
+
+.oha-scale-input {
+    opacity: 0;
+    position: absolute;
+}
+
+.oha-scale-number {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #333333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    font-size: var(--oha-font-size-base);
+    color: #000000;
+}
+
+.oha-scale-input:checked + .oha-scale-number {
+    border-color: #FF0000;
+    background: #FF0000;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* ============================================================================
+   Navigation Buttons
+   ============================================================================ */
+.oha-survey-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.oha-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: var(--oha-radius-md);
+    font-size: var(--oha-font-size-base);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.oha-btn-primary {
+    background: #FF0000;
+    color: white;
+}
+
+.oha-btn-primary:hover {
+    background: #AD3119;
+    transform: translateY(-1px);
+    box-shadow: var(--oha-shadow-md);
+}
+
+.oha-btn-secondary {
+    background: var(--oha-bg-white);
+    color: #000000;
+    border: 2px solid #333333;
+}
+
+.oha-btn-secondary:hover {
+    background: var(--oha-bg-light);
+    border-color: #FF0000;
+}
+
+.oha-btn-accent {
+    background: #AD3119;
+    color: white;
+}
+
+.oha-btn-accent:hover {
+    background: #FF0000;
+    transform: translateY(-1px);
+    box-shadow: var(--oha-shadow-md);
+}
+
+.oha-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.oha-btn-icon {
+    font-size: 1.1em;
+}
+
+/* ============================================================================
+   Email Section
+   ============================================================================ */
+.oha-email-section {
+    background: rgba(255,255,255,0.95);
+    padding: 2rem;
+    border-radius: var(--oha-radius-md);
+    margin-bottom: 2rem;
+    border: 1px solid #cccccc;
+}
+
+.oha-email-section h3,
+.oha-email-section h4 {
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.oha-email-section p,
+.oha-email-section label {
+    color: #333333 !important;
+    text-shadow: none !important;
+}
+
+.oha-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.oha-btn-icon {
+    font-size: 1.1em;
+}
+
+/* ============================================================================
+   Survey Selector
+   ============================================================================ */
+.oha-survey-selector {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: var(--oha-font-family);
+}
+
+.oha-selector-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.oha-selector-title {
+    font-size: var(--oha-font-size-3xl);
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+.oha-selector-description {
+    font-size: var(--oha-font-size-lg);
+    color: #ffffff !important;
+    margin: 0;
+    line-height: 1.6;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+}
+
+/* Trust Building Section */
+.oha-trust-building {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.oha-trust-building h3 {
+    font-size: var(--oha-font-size-2xl);
+    margin: 0 0 2rem 0;
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+.oha-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.oha-trust-item {
+    background: rgba(255,255,255,0.95);
+    padding: 1.5rem;
+    border-radius: var(--oha-radius-lg);
+    box-shadow: var(--oha-shadow-sm);
+    border: 1px solid var(--oha-border-light);
+}
+
+.oha-trust-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.oha-trust-item h4 {
+    font-size: var(--oha-font-size-lg);
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.oha-trust-item p {
+    font-size: var(--oha-font-size-sm);
+    color: #333333 !important;
+    margin: 0;
+    line-height: 1.5;
+    text-shadow: none !important;
+}
+
+/* Survey Options Grid */
+.oha-survey-options h3 {
+    font-size: var(--oha-font-size-2xl);
+    text-align: center;
+    margin: 0 0 2rem 0;
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+.oha-survey-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.oha-survey-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: var(--oha-radius-lg);
+    padding: 2rem;
+    box-shadow: var(--oha-shadow-md);
+    border: 1px solid var(--oha-border-light);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.oha-survey-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--oha-shadow-lg);
+    border-color: #FF0000;
+    background: rgba(255,255,255,1);
+}
+
+.oha-survey-card-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.oha-survey-card h4 {
+    font-size: var(--oha-font-size-xl);
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: #000000 !important;
+    text-shadow: none !important;
+}
+
+.oha-survey-card p {
+    font-size: var(--oha-font-size-base);
+    color: #333333 !important;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+    text-shadow: none !important;
+}
+
+.oha-survey-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: var(--oha-font-size-xs);
+    color: #666666 !important;
+    text-shadow: none !important;
+}
+
+.oha-survey-btn {
+    display: block;
+    width: 100%;
+    background: #FF0000;
+    color: white !important;
+    padding: 0.875rem 1rem;
+    border-radius: var(--oha-radius-md);
+    text-decoration: none;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    font-size: var(--oha-font-size-base);
+    text-shadow: none !important;
+}
+
+.oha-survey-btn:hover {
+    background: #AD3119;
+    color: white !important;
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.oha-card-direct-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.oha-direct-link-label {
+    white-space: nowrap;
+}
+
+.oha-copy-link-btn {
+    background: none;
+    border: 1px solid #bbb;
+    border-radius: 3px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    color: #444;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.oha-copy-link-btn:hover {
+    background: #f0f0f0;
+    color: #111;
+}
+
+/* Footer */
+.oha-survey-footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.oha-footer-info h4,
+.oha-footer-links h4 {
+    font-size: var(--oha-font-size-lg);
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+}
+
+.oha-footer-info p,
+.oha-footer-links p {
+    font-size: var(--oha-font-size-sm);
+    color: #ffffff !important;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.5;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+}
+
+.oha-direct-links {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+}
+
+.oha-direct-links li {
+    margin-bottom: 0.5rem;
+}
+
+.oha-direct-links a {
+    color: #ffff00 !important;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: var(--oha-font-size-sm);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+}
+
+.oha-direct-links a:hover {
+    color: #ffffff !important;
+    text-decoration: underline;
+}
+
+/* ============================================================================
+   Trust Info Section
+   ============================================================================ */
+.oha-survey-trust-info {
+    background: linear-gradient(135deg, var(--oha-bg-light) 0%, #f0f8ff 100%);
+    padding: 2rem;
+    border-radius: var(--oha-radius-lg);
+    border: 1px solid var(--oha-border-light);
+    margin-top: 2rem;
+}
+
+.oha-survey-trust-info h4 {
+    font-size: var(--oha-font-size-lg);
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--oha-text-primary);
+}
+
+.oha-survey-trust-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.oha-survey-trust-info li {
+    padding: 0.5rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: var(--oha-text-secondary);
+    line-height: 1.5;
+}
+
+.oha-survey-trust-info li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--oha-success);
+    font-weight: bold;
+}
+
+/* ============================================================================
+   Messages & Feedback
+   ============================================================================ */
+.oha-survey-messages {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    max-width: 400px;
+}
+
+.oha-message {
+    background: var(--oha-bg-white);
+    border-radius: var(--oha-radius-md);
+    padding: 1rem 1.5rem;
+    box-shadow: var(--oha-shadow-lg);
+    border-left: 4px solid;
+    margin-bottom: 1rem;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.oha-message.oha-success {
+    border-color: var(--oha-success);
+    background: #f8fff8;
+}
+
+.oha-message.oha-error {
+    border-color: var(--oha-error);
+    background: #fff8f8;
+}
+
+.oha-message.oha-info {
+    border-color: var(--oha-info);
+    background: #f8f9ff;
+}
+
+/* ============================================================================
+   Conditional Fields
+   ============================================================================ */
+.oha-field-conditional {
+    transition: all 0.3s ease;
+}
+
+.oha-field-conditional.oha-hidden {
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ============================================================================
+   Loading States
+   ============================================================================ */
+.oha-loading {
+    opacity: 0.7;
+    pointer-events: none;
+    position: relative;
+}
+
+.oha-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--oha-border-light);
+    border-top: 2px solid var(--oha-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ============================================================================
+   Animations
+   ============================================================================ */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* ============================================================================
+   Responsive Design
+   ============================================================================ */
+@media (max-width: 768px) {
+    .oha-survey-container,
+    .oha-survey-selector {
+        margin: 1rem;
+        padding: 0;
+    }
+    
+    .oha-survey-header {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .oha-survey-title,
+    .oha-selector-title {
+        font-size: var(--oha-font-size-2xl);
+    }
+    
+    .oha-survey-page {
+        padding: 1.5rem;
+    }
+    
+    .oha-survey-navigation {
+        flex-direction: column;
+    }
+    
+    .oha-btn {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .oha-trust-grid,
+    .oha-survey-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .oha-scale-options {
+        max-width: 300px;
+    }
+    
+    .oha-scale-number {
+        width: 35px;
+        height: 35px;
+        font-size: var(--oha-font-size-sm);
+    }
+    
+    .oha-survey-messages {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+    }
+    
+    .oha-survey-footer {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .oha-survey-card {
+        padding: 1.5rem;
+    }
+    
+    .oha-trust-item {
+        padding: 1rem;
+    }
+    
+    .oha-survey-trust-info {
+        padding: 1.5rem;
+    }
+    
+    .oha-field-input,
+    .oha-field-textarea,
+    .oha-field-select {
+        padding: 0.75rem;
+    }
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+@media print {
+    .oha-survey-navigation,
+    .oha-survey-messages,
+    .oha-btn {
+        display: none !important;
+    }
+    
+    .oha-survey-container {
+        box-shadow: none;
+        margin: 0;
+        max-width: none;
+    }
+    
+    .oha-survey-page {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}
+
+/* ============================================================================
+   High Contrast Mode
+   ============================================================================ */
+@media (prefers-contrast: high) {
+    :root {
+        --oha-border: #000000;
+        --oha-border-dark: #000000;
+        --oha-text-secondary: #000000;
+        --oha-text-muted: #333333;
+    }
+    
+    .oha-field-input:focus,
+    .oha-field-textarea:focus,
+    .oha-field-select:focus {
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.5);
+    }
+}
+
+/* ============================================================================
+   Reduced Motion
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
