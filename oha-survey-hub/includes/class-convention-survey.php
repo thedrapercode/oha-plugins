@@ -658,7 +658,7 @@ class OHA_Convention_Survey {
             'user_agent'          => sanitize_text_field($_SERVER['HTTP_USER_AGENT'] ?? ''),
         ]);
 
-        $this->send_emails($email, $survey_type);
+        wp_schedule_single_event(time(), 'oha_survey_convention_send_emails', [$email, $survey_type]);
 
         wp_send_json_success(['message' => 'Survey submitted. Thank you for your feedback.']);
     }
@@ -667,7 +667,7 @@ class OHA_Convention_Survey {
     // Emails
     // -------------------------------------------------------------------------
 
-    private function send_emails($submitter_email, $survey_type) {
+    public function send_emails($submitter_email, $survey_type) {
         $from_name   = get_bloginfo('name') ?: 'Ohio Haunters Association';
         $from_email  = get_option('oha_survey_hub_support_email', get_option('admin_email'));
         $headers     = [
@@ -1187,20 +1187,13 @@ class OHA_Convention_Survey {
             var wrap        = document.getElementById('oha-sr-wrap');
             if (!wrap) return;
 
-            function loadChartJs(cb) {
-                if (window.Chart) { cb(); return; }
-                var s   = document.createElement('script');
-                s.src   = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
-                s.onload = cb;
-                document.head.appendChild(s);
-            }
-
             function initVisibleCharts(type) {
+                if (!window.Chart) return;
                 var cfgs = CHART_CFGS[type] || [];
                 cfgs.forEach(function(cfg) {
                     if (initialized[cfg.id]) return;
                     var canvas = document.getElementById(cfg.id);
-                    if (!canvas || canvas.offsetParent === null) return;
+                    if (!canvas || canvas.offsetWidth === 0) return;
                     initialized[cfg.id] = true;
                     new Chart(canvas, { type: cfg.chartType, data: cfg.data, options: cfg.options });
                 });
@@ -1214,7 +1207,7 @@ class OHA_Convention_Survey {
                     tab.classList.add('active');
                     var panel = document.getElementById(tab.dataset.target);
                     if (panel) panel.classList.remove('oha-sr-hidden');
-                    loadChartJs(function() { initVisibleCharts(tab.dataset.type); });
+                    initVisibleCharts(tab.dataset.type);
                     return;
                 }
 
@@ -1228,9 +1221,7 @@ class OHA_Convention_Survey {
                     body.style.display = isOpen ? 'none' : 'block';
                     arrow.innerHTML    = isOpen ? '&#9654;' : '&#9660;';
                     if (!isOpen) {
-                        loadChartJs(function() {
-                            initVisibleCharts(section.closest('.oha-sr-panel').dataset.type);
-                        });
+                        initVisibleCharts(section.closest('.oha-sr-panel').dataset.type);
                     }
                     return;
                 }
@@ -1246,9 +1237,7 @@ class OHA_Convention_Survey {
             });
 
             function tryInit() {
-                loadChartJs(function() {
-                    initVisibleCharts('<?php echo esc_js(self::SURVEY_TYPE_ATTENDEE); ?>');
-                });
+                initVisibleCharts('<?php echo esc_js(self::SURVEY_TYPE_ATTENDEE); ?>');
             }
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', tryInit);

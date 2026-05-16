@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.2.3",
+    "version":  "1.2.4",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -134,6 +134,20 @@
                         "type":  "fix",
                         "summary":  "Auto-create convention questions table on init if activation hook never fired",
                         "notes":  "Checks oha_convention_schema_version option on every init; if behind 1.1.0 runs create_table and seed_questions. Handles update-over-active-plugin scenario where deactivate/reactivate is skipped."
+                    },
+                    {
+                        "date":  "2026-05-16",
+                        "version":  "1.2.4",
+                        "type":  "fix",
+                        "summary":  "Convention survey submit no longer hangs on GoDaddy -- emails now sent async via wp_schedule_single_event",
+                        "notes":  "send_emails() made public; oha_survey_convention_send_emails WP cron action registered in constructor; submit responds immediately"
+                    },
+                    {
+                        "date":  "2026-05-16",
+                        "version":  "1.2.4",
+                        "type":  "fix",
+                        "summary":  "Survey results charts now render -- Chart.js enqueued via wp_enqueue_script instead of dynamic DOM injection",
+                        "notes":  "Dynamic createElement injection fails on GoDaddy (CSP/CDN issues); wp_enqueue_script with in_footer=true ensures Chart.js loads before DOMContentLoaded; offsetWidth===0 replaces offsetParent===null for hidden canvas detection"
                     }
                 ]
 }

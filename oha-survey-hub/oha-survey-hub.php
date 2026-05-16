@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.2.3
+ * Version: 1.2.4
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.2.3');
+define('OHA_SURVEY_HUB_VERSION', '1.2.4');
 define('OHA_SURVEY_HUB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_FILE', __FILE__);
@@ -74,6 +74,9 @@ class OHA_Survey_Hub {
         add_action('wp_ajax_oha_convention_save_question',        array($convention, 'ajax_save_question'));
         add_action('wp_ajax_oha_convention_toggle_question',      array($convention, 'ajax_toggle_question'));
         add_action('wp_ajax_oha_convention_delete_question',      array($convention, 'ajax_delete_question'));
+
+        // Async email delivery for convention survey submissions
+        add_action('oha_survey_convention_send_emails', array($convention, 'send_emails'), 10, 2);
         
         // Handle export requests
         add_action('init', array($this, 'handle_export_request'));
@@ -107,7 +110,7 @@ class OHA_Survey_Hub {
         global $post;
         if (!is_a($post, 'WP_Post')) return;
         
-        $survey_shortcodes = ['oha_survey_selector', 'oha_survey_member', 'oha_survey_haunt_owner', 'oha_survey_scare_actor', 'oha_survey_behind_scenes', 'oha_survey_home_haunt', 'oha_survey_industry_deep_dive', 'oha_convention_survey'];
+        $survey_shortcodes = ['oha_survey_selector', 'oha_survey_member', 'oha_survey_haunt_owner', 'oha_survey_scare_actor', 'oha_survey_behind_scenes', 'oha_survey_home_haunt', 'oha_survey_industry_deep_dive', 'oha_convention_survey', 'oha_survey_results'];
         $has_survey_shortcode = false;
 
         foreach ($survey_shortcodes as $shortcode) {
@@ -133,7 +136,17 @@ class OHA_Survey_Hub {
                 true
             );
             
-            // Localize script for AJAX
+            // Chart.js for survey results dashboard
+            if (has_shortcode($post->post_content, 'oha_survey_results')) {
+                wp_enqueue_script(
+                    'chartjs',
+                    'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js',
+                    array(),
+                    '4',
+                    true
+                );
+            }
+
             // Convention survey JS (only loaded on pages with that shortcode)
             if (has_shortcode($post->post_content, 'oha_convention_survey')) {
                 wp_enqueue_script(
