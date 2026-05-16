@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.2.1",
+    "version":  "1.2.2",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -120,6 +120,13 @@
                         "type":  "fix",
                         "summary":  "Fix Cannot redeclare oha_survey_direct_link fatal error on pages with multiple shortcode renders",
                         "notes":  "Function declared at file scope in survey-selector.php; wrapped with function_exists guard to prevent fatal on second include"
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.2.2",
+                        "type":  "feature",
+                        "summary":  "Add Convention 2026 Attendee, Vendor, Volunteer surveys to [oha_survey_selector]",
+                        "notes":  "New section below existing cards with orange top-border styling. Routes via ?survey=convention_attendee/vendor/volunteer to [oha_convention_survey context=...]. Copy-link buttons and footer direct links included."
                     }
                 ]
 }

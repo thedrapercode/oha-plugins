@@ -705,6 +705,24 @@ select.oha-field-select option:checked {
     text-shadow: none !important;
 }
 
+/* Convention survey section */
+.oha-survey-options-convention {
+    border-top: 2px solid var(--oha-border);
+    margin-top: 32px;
+    padding-top: 8px;
+}
+
+.oha-convention-surveys-intro {
+    text-align: center;
+    color: var(--oha-text-secondary);
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+.oha-survey-card-convention {
+    border-top: 3px solid var(--oha-primary);
+}
+
 /* Survey Options Grid */
 .oha-survey-options h3 {
     font-size: var(--oha-font-size-2xl);
