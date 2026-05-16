@@ -1123,4 +1123,507 @@ class OHA_Convention_Survey {
         $result = $wpdb->delete($table, ['id' => $id]);
         $result !== false ? wp_send_json_success() : wp_send_json_error(['message' => 'Delete failed.']);
     }
+
+    // -------------------------------------------------------------------------
+    // Board results shortcode [oha_survey_results]
+    // -------------------------------------------------------------------------
+
+    public static function shortcode_survey_results($atts) {
+        $types = [
+            self::SURVEY_TYPE_ATTENDEE  => 'Attendee',
+            self::SURVEY_TYPE_VENDOR    => 'Vendor',
+            self::SURVEY_TYPE_VOLUNTEER => 'Volunteer',
+        ];
+
+        $all_data       = [];
+        $all_chart_cfgs = [];
+        foreach ($types as $type => $label) {
+            $data                  = self::aggregate_responses($type);
+            $all_data[$type]       = $data;
+            $all_chart_cfgs[$type] = self::build_chart_configs($data['questions']);
+        }
+
+        ob_start();
+        ?>
+        <div class="oha-sr-wrap" id="oha-sr-wrap">
+
+            <div class="oha-sr-tabs" role="tablist">
+                <?php $first = true; foreach ($types as $type => $label): ?>
+                    <?php $cnt = $all_data[$type]['count']; ?>
+                    <button class="oha-sr-tab<?php echo $first ? ' active' : ''; ?><?php echo $cnt === 0 ? ' oha-sr-tab-empty' : ''; ?>"
+                            role="tab"
+                            data-type="<?php echo esc_attr($type); ?>"
+                            data-target="oha-sr-panel-<?php echo esc_attr($type); ?>">
+                        <?php echo esc_html($label); ?>
+                        <span class="oha-sr-tab-count"><?php echo $cnt; ?></span>
+                    </button>
+                    <?php $first = false; ?>
+                <?php endforeach; ?>
+            </div>
+
+            <?php $first = true; foreach ($types as $type => $label): ?>
+                <?php $data = $all_data[$type]; ?>
+                <div class="oha-sr-panel<?php echo $first ? '' : ' oha-sr-hidden'; ?>"
+                     id="oha-sr-panel-<?php echo esc_attr($type); ?>"
+                     data-type="<?php echo esc_attr($type); ?>"
+                     role="tabpanel">
+
+                    <?php if ($data['count'] === 0): ?>
+                        <div class="oha-sr-empty-panel">
+                            <p>No responses recorded for this survey yet.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php self::render_results_panel($data); ?>
+                    <?php endif; ?>
+                </div>
+                <?php $first = false; ?>
+            <?php endforeach; ?>
+        </div>
+
+        <script>
+        (function() {
+            var CHART_CFGS  = <?php echo wp_json_encode($all_chart_cfgs); ?>;
+            var initialized = {};
+            var wrap        = document.getElementById('oha-sr-wrap');
+            if (!wrap) return;
+
+            function loadChartJs(cb) {
+                if (window.Chart) { cb(); return; }
+                var s   = document.createElement('script');
+                s.src   = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+                s.onload = cb;
+                document.head.appendChild(s);
+            }
+
+            function initVisibleCharts(type) {
+                var cfgs = CHART_CFGS[type] || [];
+                cfgs.forEach(function(cfg) {
+                    if (initialized[cfg.id]) return;
+                    var canvas = document.getElementById(cfg.id);
+                    if (!canvas || canvas.offsetParent === null) return;
+                    initialized[cfg.id] = true;
+                    new Chart(canvas, { type: cfg.chartType, data: cfg.data, options: cfg.options });
+                });
+            }
+
+            wrap.addEventListener('click', function(e) {
+                var tab = e.target.closest('.oha-sr-tab');
+                if (tab) {
+                    wrap.querySelectorAll('.oha-sr-tab').forEach(function(t) { t.classList.remove('active'); });
+                    wrap.querySelectorAll('.oha-sr-panel').forEach(function(p) { p.classList.add('oha-sr-hidden'); });
+                    tab.classList.add('active');
+                    var panel = document.getElementById(tab.dataset.target);
+                    if (panel) panel.classList.remove('oha-sr-hidden');
+                    loadChartJs(function() { initVisibleCharts(tab.dataset.type); });
+                    return;
+                }
+
+                var hdr = e.target.closest('.oha-sr-section-header');
+                if (hdr) {
+                    var section = hdr.closest('.oha-sr-section');
+                    var body    = section.querySelector('.oha-sr-section-body');
+                    var arrow   = section.querySelector('.oha-sr-arrow');
+                    var isOpen  = section.classList.contains('open');
+                    section.classList.toggle('open', !isOpen);
+                    body.style.display = isOpen ? 'none' : 'block';
+                    arrow.innerHTML    = isOpen ? '&#9654;' : '&#9660;';
+                    if (!isOpen) {
+                        loadChartJs(function() {
+                            initVisibleCharts(section.closest('.oha-sr-panel').dataset.type);
+                        });
+                    }
+                    return;
+                }
+
+                var expBtn = e.target.closest('.oha-sr-expand-btn');
+                if (expBtn) {
+                    var list = document.getElementById(expBtn.dataset.target);
+                    if (!list) return;
+                    var open = list.style.display !== 'none';
+                    list.style.display = open ? 'none' : 'block';
+                    expBtn.textContent = open ? 'Show responses' : 'Hide responses';
+                }
+            });
+
+            function tryInit() {
+                loadChartJs(function() {
+                    initVisibleCharts('<?php echo esc_js(self::SURVEY_TYPE_ATTENDEE); ?>');
+                });
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', tryInit);
+            } else {
+                tryInit();
+            }
+        })();
+        </script>
+        <?php
+        return ob_get_clean();
+    }
+
+    private static function render_results_panel($data) {
+        $sections = [];
+        foreach ($data['questions'] as $qd) {
+            $pg = (int) $qd['q']->page_group;
+            if (!isset($sections[$pg])) $sections[$pg] = [];
+            $sections[$pg][] = $qd;
+        }
+        ksort($sections);
+
+        $section_scores = [];
+        foreach ($sections as $pg => $qds) {
+            $section_scores[$pg] = self::compute_section_score($qds);
+        }
+        ?>
+        <div class="oha-sr-meta-bar">
+            <strong><?php echo $data['count']; ?></strong> response<?php echo $data['count'] !== 1 ? 's' : ''; ?>
+            <?php if ($data['latest']): ?>
+                &middot; most recent <?php echo esc_html(date('M j, Y', strtotime($data['latest']))); ?>
+            <?php endif; ?>
+        </div>
+
+        <div class="oha-sr-scorecards">
+            <?php foreach ($sections as $pg => $qds): ?>
+                <?php
+                $title  = isset(self::$page_titles[$pg]) ? self::$page_titles[$pg] : 'Section ' . $pg;
+                $score  = $section_scores[$pg];
+                $cls    = $score !== null ? self::score_color_class($score) : 'oha-sr-neutral';
+                $max_n  = max(array_column($qds, 'n'));
+                ?>
+                <div class="oha-sr-scorecard <?php echo esc_attr($cls); ?>">
+                    <div class="oha-sr-scorecard-title"><?php echo esc_html($title); ?></div>
+                    <div class="oha-sr-scorecard-score">
+                        <?php if ($score !== null): ?>
+                            <?php echo number_format($score, 1); ?><span class="oha-sr-scorecard-max">/5</span>
+                        <?php else: ?>
+                            <span class="oha-sr-scorecard-dash">&#8212;</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="oha-sr-scorecard-resp"><?php echo $max_n; ?> resp.</div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <?php $first = true; foreach ($sections as $pg => $qds): ?>
+            <?php
+            $title = isset(self::$page_titles[$pg]) ? self::$page_titles[$pg] : 'Section ' . $pg;
+            $score = $section_scores[$pg];
+            $cls   = $score !== null ? self::score_color_class($score) : '';
+            ?>
+            <div class="oha-sr-section<?php echo $first ? ' open' : ''; ?>">
+                <div class="oha-sr-section-header">
+                    <div class="oha-sr-section-left">
+                        <span class="oha-sr-arrow"><?php echo $first ? '&#9660;' : '&#9654;'; ?></span>
+                        <span class="oha-sr-section-title"><?php echo esc_html($title); ?></span>
+                    </div>
+                    <?php if ($score !== null): ?>
+                        <span class="oha-sr-section-badge <?php echo esc_attr($cls); ?>">
+                            <?php echo number_format($score, 1); ?>/5
+                        </span>
+                    <?php endif; ?>
+                </div>
+                <div class="oha-sr-section-body" style="<?php echo $first ? '' : 'display:none;'; ?>">
+                    <div class="oha-sr-question-grid">
+                        <?php foreach ($qds as $qd): ?>
+                            <?php self::render_result_question($qd); ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php $first = false; ?>
+        <?php endforeach; ?>
+        <?php
+    }
+
+    private static function build_chart_configs($questions_data) {
+        $configs  = [];
+        $palette  = ['#f39200', '#1e88e5', '#43a047', '#e53935', '#8e24aa', '#fb8c00', '#00897b', '#546e7a'];
+
+        foreach ($questions_data as $qd) {
+            $q       = $qd['q'];
+            $n       = $qd['n'];
+            $answers = $qd['answers'];
+            if ($n === 0) continue;
+
+            switch ($q->question_type) {
+
+                case 'radio':
+                    $counts  = array_count_values($answers);
+                    $options = json_decode($q->options, true) ?: [];
+                    $ordered = [];
+                    foreach ($options as $opt) {
+                        $ordered[$opt] = isset($counts[$opt]) ? $counts[$opt] : 0;
+                    }
+                    foreach ($counts as $opt => $cnt) {
+                        if (!array_key_exists($opt, $ordered)) $ordered[$opt] = $cnt;
+                    }
+                    $ordered = array_filter($ordered, function($v) { return $v > 0; });
+                    arsort($ordered);
+                    $labels = array_keys($ordered);
+                    $values = array_values($ordered);
+                    $colors = [];
+                    for ($i = 0; $i < count($labels); $i++) {
+                        $colors[] = $palette[$i % count($palette)];
+                    }
+                    $configs[] = [
+                        'id'        => 'oha-chart-' . $q->id,
+                        'chartType' => 'doughnut',
+                        'data'      => [
+                            'labels'   => $labels,
+                            'datasets' => [[
+                                'data'            => $values,
+                                'backgroundColor' => $colors,
+                                'borderWidth'     => 3,
+                                'borderColor'     => '#fff',
+                                'hoverOffset'     => 8,
+                            ]],
+                        ],
+                        'options' => [
+                            'cutout'              => '60%',
+                            'responsive'          => true,
+                            'maintainAspectRatio' => true,
+                            'plugins' => [
+                                'legend' => [
+                                    'position' => 'right',
+                                    'labels'   => ['boxWidth' => 14, 'padding' => 14, 'font' => ['size' => 12]],
+                                ],
+                            ],
+                        ],
+                    ];
+                    break;
+
+                case 'checkbox':
+                    $flat = [];
+                    foreach ($answers as $a) {
+                        if (is_array($a)) { foreach ($a as $v) $flat[] = $v; }
+                        else { $flat[] = $a; }
+                    }
+                    $counts = array_count_values($flat);
+                    arsort($counts);
+                    $labels = array_keys($counts);
+                    $pcts   = array_map(function($c) use ($n) { return round(($c / $n) * 100); }, array_values($counts));
+                    $configs[] = [
+                        'id'        => 'oha-chart-' . $q->id,
+                        'chartType' => 'bar',
+                        'data'      => [
+                            'labels'   => $labels,
+                            'datasets' => [[
+                                'label'           => '% of respondents',
+                                'data'            => $pcts,
+                                'backgroundColor' => '#f39200',
+                                'borderRadius'    => 5,
+                                'borderSkipped'   => false,
+                            ]],
+                        ],
+                        'options' => [
+                            'indexAxis'           => 'y',
+                            'responsive'          => true,
+                            'maintainAspectRatio' => false,
+                            'plugins' => [
+                                'legend' => ['display' => false],
+                            ],
+                            'scales' => [
+                                'x' => [
+                                    'max'   => 100,
+                                    'grid'  => ['color' => '#f0f0f0'],
+                                    'ticks' => ['color' => '#888'],
+                                ],
+                                'y' => [
+                                    'grid'  => ['display' => false],
+                                    'ticks' => ['color' => '#333', 'font' => ['size' => 12]],
+                                ],
+                            ],
+                        ],
+                    ];
+                    break;
+            }
+        }
+        return $configs;
+    }
+
+    private static function aggregate_responses($survey_type) {
+        global $wpdb;
+        $context         = self::type_to_context($survey_type);
+        $questions_table = $wpdb->prefix . 'oha_survey_convention_questions';
+        $responses_table = $wpdb->prefix . 'oha_survey_responses';
+
+        $questions = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM $questions_table WHERE survey_context = %s AND hidden = 0 ORDER BY sort_order ASC",
+            $context
+        ));
+
+        $raw = $wpdb->get_results($wpdb->prepare(
+            "SELECT response_data, completed_at FROM $responses_table WHERE survey_type = %s AND is_completed = 1 ORDER BY completed_at DESC",
+            $survey_type
+        ));
+
+        $count  = count($raw);
+        $latest = $count > 0 ? $raw[0]->completed_at : null;
+
+        $decoded = [];
+        foreach ($raw as $r) {
+            $decoded[] = json_decode($r->response_data, true) ?: [];
+        }
+
+        $result_questions = [];
+        foreach ($questions as $q) {
+            $key     = 'q_' . $q->id;
+            $answers = [];
+            foreach ($decoded as $rd) {
+                if (isset($rd[$key]) && $rd[$key] !== '' && $rd[$key] !== null) {
+                    $answers[] = $rd[$key];
+                }
+            }
+            $result_questions[] = [
+                'q'       => $q,
+                'key'     => $key,
+                'answers' => $answers,
+                'n'       => count($answers),
+            ];
+        }
+
+        return [
+            'count'     => $count,
+            'latest'    => $latest,
+            'questions' => $result_questions,
+        ];
+    }
+
+    private static function render_result_question($qd) {
+        $q       = $qd['q'];
+        $answers = $qd['answers'];
+        $n       = $qd['n'];
+        $is_wide = in_array($q->question_type, ['radio', 'checkbox'], true);
+
+        echo '<div class="oha-sr-question' . ($is_wide ? ' oha-sr-question-wide' : '') . '">';
+        echo '<div class="oha-sr-q-text">' . esc_html($q->question_text) . '</div>';
+
+        if ($n === 0) {
+            echo '<p class="oha-sr-no-answers">No answers recorded.</p>';
+            echo '</div>';
+            return;
+        }
+
+        switch ($q->question_type) {
+
+            case 'scale':
+                $max     = ((int) $q->scale_max) ?: 5;
+                $min_val = ((int) $q->scale_min) ?: 1;
+                $avg     = array_sum($answers) / $n;
+                echo '<div class="oha-sr-scale-layout">';
+                echo self::render_scale_gauge($avg, $max, $n);
+                if ($q->scale_label_min || $q->scale_label_max) {
+                    echo '<div class="oha-sr-scale-endpoints">';
+                    echo '<span class="oha-sr-scale-lo">' . esc_html($q->scale_label_min) . '</span>';
+                    echo '<span class="oha-sr-scale-hi">' . esc_html($q->scale_label_max) . '</span>';
+                    echo '</div>';
+                }
+                // Score distribution mini-bars
+                $dist = [];
+                for ($i = $min_val; $i <= $max; $i++) $dist[$i] = 0;
+                foreach ($answers as $a) { $v = (int) $a; if (isset($dist[$v])) $dist[$v]++; }
+                $dist_max = max($dist) ?: 1;
+                echo '<div class="oha-sr-dist">';
+                foreach ($dist as $score => $cnt) {
+                    $bar_pct = round(($cnt / $dist_max) * 100);
+                    $bar_cls = self::score_color_class((float) $score, $max);
+                    echo '<div class="oha-sr-dist-row">';
+                    echo '<span class="oha-sr-dist-label">' . $score . '</span>';
+                    echo '<div class="oha-sr-dist-track"><div class="oha-sr-dist-fill ' . $bar_cls . '" style="width:' . $bar_pct . '%"></div></div>';
+                    echo '<span class="oha-sr-dist-cnt">' . $cnt . '</span>';
+                    echo '</div>';
+                }
+                echo '</div>';
+                echo '</div>';
+                break;
+
+            case 'radio':
+                echo '<div class="oha-sr-chart-wrap">';
+                echo '<canvas id="oha-chart-' . esc_attr($q->id) . '"></canvas>';
+                echo '</div>';
+                break;
+
+            case 'checkbox':
+                $flat      = [];
+                foreach ($answers as $a) {
+                    if (is_array($a)) { foreach ($a as $v) $flat[] = $v; }
+                    else { $flat[] = $a; }
+                }
+                $opt_count = count(array_count_values($flat));
+                $h         = max(180, min(420, $opt_count * 44 + 60));
+                echo '<div class="oha-sr-chart-wrap oha-sr-chart-bar" style="height:' . $h . 'px">';
+                echo '<canvas id="oha-chart-' . esc_attr($q->id) . '"></canvas>';
+                echo '</div>';
+                echo '<p class="oha-sr-checkbox-note">% of ' . $n . ' respondents (multiple selections allowed).</p>';
+                break;
+
+            case 'textarea':
+            case 'text':
+                $non_empty = array_values(array_filter($answers, function($a) { return trim((string) $a) !== ''; }));
+                $cnt       = count($non_empty);
+                if ($cnt === 0) {
+                    echo '<p class="oha-sr-no-answers">No answers recorded.</p>';
+                } else {
+                    $uid = 'oha-sr-ta-' . $q->id;
+                    echo '<div class="oha-sr-textarea-meta">';
+                    echo '<span>' . $cnt . ' response' . ($cnt !== 1 ? 's' : '') . '</span>';
+                    echo '<button type="button" class="oha-sr-expand-btn" data-target="' . esc_attr($uid) . '">Show responses</button>';
+                    echo '</div>';
+                    echo '<div class="oha-sr-textarea-list" id="' . esc_attr($uid) . '" style="display:none">';
+                    foreach ($non_empty as $a) {
+                        echo '<div class="oha-sr-textarea-item">' . esc_html($a) . '</div>';
+                    }
+                    echo '</div>';
+                }
+                break;
+        }
+
+        echo '</div>';
+    }
+
+    private static function render_scale_gauge($avg, $max, $n) {
+        $pct        = $avg / $max;
+        $arc_len    = M_PI * 50;
+        $fill_len   = $arc_len * $pct;
+        $dash_off   = round($arc_len - $fill_len, 2);
+        $arc_r      = round($arc_len, 2);
+        $color      = self::gauge_color($avg, $max);
+        $score_text = number_format($avg, 1);
+
+        return '<div class="oha-sr-gauge-wrap">'
+             . '<svg viewBox="0 0 120 75" class="oha-sr-gauge" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+             . '<path d="M 10,65 A 50,50 0 0,1 110,65" stroke="#e8e8e8" stroke-width="13" fill="none" stroke-linecap="round"/>'
+             . '<path d="M 10,65 A 50,50 0 0,1 110,65" stroke="' . $color . '" stroke-width="13" fill="none" stroke-linecap="round"'
+             . ' stroke-dasharray="' . $arc_r . '" stroke-dashoffset="' . $dash_off . '"/>'
+             . '<text x="60" y="56" text-anchor="middle" font-size="21" font-weight="700" fill="' . $color . '">' . $score_text . '</text>'
+             . '<text x="60" y="70" text-anchor="middle" font-size="9" fill="#aaa">out of ' . $max . ' (n=' . $n . ')</text>'
+             . '</svg>'
+             . '</div>';
+    }
+
+    private static function gauge_color($avg, $max) {
+        $ratio = $avg / $max;
+        if ($ratio >= 0.8) return '#4caf50';
+        if ($ratio >= 0.6) return '#f39200';
+        if ($ratio >= 0.4) return '#ff9800';
+        return '#f44336';
+    }
+
+    private static function score_color_class($score, $max = 5) {
+        $ratio = $score / $max;
+        if ($ratio >= 0.8) return 'oha-sr-green';
+        if ($ratio >= 0.6) return 'oha-sr-yellow';
+        return 'oha-sr-red';
+    }
+
+    private static function compute_section_score($qds) {
+        $scores = [];
+        foreach ($qds as $qd) {
+            if ($qd['q']->question_type === 'scale' && $qd['n'] > 0) {
+                $scores[] = array_sum($qd['answers']) / $qd['n'];
+            }
+        }
+        if (empty($scores)) return null;
+        return array_sum($scores) / count($scores);
+    }
 }

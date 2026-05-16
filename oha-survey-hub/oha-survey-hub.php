@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.1.1');
+define('OHA_SURVEY_HUB_VERSION', '1.2.0');
 define('OHA_SURVEY_HUB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_FILE', __FILE__);
@@ -194,6 +194,7 @@ class OHA_Survey_Hub {
         add_shortcode('oha_survey_industry_deep_dive', array($this, 'survey_industry_deep_dive_shortcode'));
         $convention = new OHA_Convention_Survey();
         add_shortcode('oha_convention_survey', array($convention, 'shortcode'));
+        add_shortcode('oha_survey_results', array('OHA_Convention_Survey', 'shortcode_survey_results'));
     }
     
     public function admin_menu() {

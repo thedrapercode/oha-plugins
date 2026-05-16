@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.1.1",
+    "version":  "1.2.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -85,6 +85,34 @@
                         "type":  "fix",
                         "summary":  "Fix View Details showing empty for convention_2026 survey responses",
                         "notes":  "render_survey_responses called OHA_Survey_Definitions::get_survey which returns null for convention types; added fallback to OHA_Convention_Survey::get_as_definition so question labels resolve correctly"
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Add [oha_survey_results] graphical board results dashboard shortcode",
+                        "notes":  "Chart.js doughnut charts for radio questions, horizontal bar charts for checkbox, SVG arc gauge for scale. Lazy-loads Chart.js from CDN only when shortcode is used. Charts initialize on tab/accordion open to avoid hidden canvas issues."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Add section scorecards row showing color-coded aggregate scores per survey section",
+                        "notes":  "Green \u003e= 4.0, yellow \u003e= 3.0, red \u003c 3.0. Score derived from average of scale questions in each page_group. Sections with no scale questions show a dash."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Add accordion section layout grouping questions by page_group with open/close toggle",
+                        "notes":  "First section is open by default. Score badge shown in header. Toggle arrow updates on click."
+                    },
+                    {
+                        "date":  "2026-05-15",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Add scale question score distribution mini-bars alongside SVG arc gauge",
+                        "notes":  "Shows count per score value (1-5) as color-coded horizontal bars. Green for high scores, orange/red for low. Rendered with no JS dependency."
                     }
                 ]
 }
