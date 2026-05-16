@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.2.2
+ * Version: 1.2.3
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.2.2');
+define('OHA_SURVEY_HUB_VERSION', '1.2.3');
 define('OHA_SURVEY_HUB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_FILE', __FILE__);
@@ -82,6 +82,16 @@ class OHA_Survey_Hub {
     public function init() {
         // Load text domain for translations
         load_plugin_textdomain('oha-survey-hub', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
+        // Ensure convention questions table exists and is seeded.
+        // Runs whenever the stored schema version is behind the current one,
+        // which catches update-over-existing-plugin cases where activate() never fires.
+        if (get_option('oha_convention_schema_version', '0') !== '1.1.0') {
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            OHA_Convention_Survey::create_table();
+            OHA_Convention_Survey::seed_questions();
+            update_option('oha_convention_schema_version', '1.1.0');
+        }
     }
     
     private function include_files() {
