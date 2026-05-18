@@ -1,0 +1,34 @@
+{
+    "plugin":  "oha-job-board-lite",
+    "version":  "0.5.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added casting video URL field on job applications with YouTube thumbnail preview",
+                        "notes":  "video_info() helper detects YouTube/Vimeo/other. YouTube shows clickable thumbnail. Stored as _oha_app_video_url meta."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added richer applicant profile fields: age range, experience, availability, phone, video",
+                        "notes":  "app_fields_def() method. All optional. Saved as _oha_app_* meta on oha_job_app posts."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added inline applicant manager in oha_my_jobs shortcode with Shortlist/Decline AJAX actions",
+                        "notes":  "App count becomes toggle button. Panel expands below job item. Status stored as _oha_app_status. New oha_job_applicants shortcode also available standalone."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "0.5.0",
+                        "type":  "change",
+                        "summary":  "Rewrote frontend CSS to match OHA Kadence theme using global palette CSS variables",
+                        "notes":  "All colors now reference --global-palette1/2/4/6/7/8/9. Dark card bg on maroon page bg pattern matches contact-router and site design language."
+                    }
+                ]
+}

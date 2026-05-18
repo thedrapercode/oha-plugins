@@ -1,0 +1,920 @@
+/*
+ * OHA Job Board Lite — Frontend Styles
+ * Version: 0.5.0
+ * Uses Kadence theme global palette vars so colors automatically match the site.
+ *   palette1 = #ad3119  primary red
+ *   palette2 = #ff0000  hover red
+ *   palette3 = #ffffff  white
+ *   palette4 = #f7fafc  body text
+ *   palette6 = #cbd2d9  muted text
+ *   palette7 = #e76653  lighter red
+ *   palette8 = #680400  dark maroon (page/content bg)
+ *   palette9 = #000000  black (card bg / deepest dark)
+ */
+
+/* =========================================================
+ * Plugin-scoped tokens — map global palette → local names
+ * ======================================================= */
+.ojb-wrap, .ojb-form-wrap, .ojb-my-jobs, .ojb-admin-wrap, .ojb-haunt-jobs {
+  --ojb-primary:       var(--global-palette1, #ad3119);
+  --ojb-primary-hover: var(--global-palette2, #ff0000);
+  --ojb-accent:        var(--global-palette7, #e76653);
+  --ojb-text:          var(--global-palette4, #f7fafc);
+  --ojb-text-muted:    var(--global-palette6, #cbd2d9);
+  --ojb-white:         var(--global-palette3, #ffffff);
+  --ojb-bg:            var(--global-palette8, #680400);
+  --ojb-card-bg:       var(--global-palette9, #000000);
+  --ojb-border:        rgba(173, 49, 25, 0.45);
+  --ojb-border-strong: var(--global-palette1, #ad3119);
+  --ojb-success:       #27ae60;
+  --ojb-error:         var(--global-palette2, #ff0000);
+  --ojb-radius:        10px;
+  --ojb-shadow:        0 2px 14px rgba(0,0,0,0.55);
+  --ojb-shadow-hover:  0 6px 26px rgba(173,49,25,0.35);
+}
+
+/* =========================================================
+ * Base wrapper
+ * ======================================================= */
+.ojb-wrap,
+.ojb-form-wrap,
+.ojb-my-jobs,
+.ojb-haunt-jobs {
+  margin: 24px 0;
+  font-family: inherit;
+  color: var(--ojb-text);
+  box-sizing: border-box;
+}
+.ojb-wrap *,
+.ojb-form-wrap *,
+.ojb-my-jobs *,
+.ojb-haunt-jobs * {
+  box-sizing: border-box;
+}
+
+/* =========================================================
+ * Filter Bar
+ * ======================================================= */
+.ojb-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  background: var(--ojb-card-bg);
+  border: 1px solid var(--ojb-border);
+  border-radius: var(--ojb-radius);
+  box-shadow: var(--ojb-shadow);
+}
+.ojb-filters__search {
+  flex: 1;
+  min-width: 200px;
+}
+.ojb-filters__selects {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+ * Grid
+ * ======================================================= */
+.ojb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+.ojb-grid--list {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+/* =========================================================
+ * Job Card
+ * ======================================================= */
+.ojb-card {
+  background: var(--ojb-card-bg);
+  border: 1px solid var(--ojb-border);
+  border-radius: var(--ojb-radius);
+  box-shadow: var(--ojb-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.ojb-card:hover {
+  box-shadow: var(--ojb-shadow-hover);
+  border-color: var(--ojb-primary);
+  transform: translateY(-2px);
+}
+
+/* Card Head */
+.ojb-card__head {
+  padding: 16px 18px 14px;
+  background: #000;
+  color: var(--ojb-white);
+  border-bottom: 1px solid var(--ojb-border);
+}
+.ojb-card__head a {
+  color: var(--ojb-white);
+  text-decoration: none;
+}
+.ojb-card__head a:hover {
+  color: var(--ojb-accent);
+}
+.ojb-card__meta-top {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ojb-card__title {
+  margin: 0 0 6px;
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.ojb-card__subtitle {
+  margin: 0;
+  font-size: 0.85em;
+  opacity: 0.75;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ojb-haunt-link {
+  color: #f5c542 !important;
+  text-decoration: none !important;
+}
+.ojb-haunt-link:hover {
+  color: #ffd970 !important;
+  text-decoration: underline !important;
+}
+
+/* Card Body */
+.ojb-card__body {
+  padding: 14px 18px;
+  flex: 1;
+  background: var(--ojb-card-bg);
+}
+.ojb-card__excerpt {
+  color: var(--ojb-text-muted);
+  font-size: 0.9em;
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+.ojb-card__details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 0.87em;
+}
+.ojb-card__details li {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--ojb-text);
+}
+.ojb-detail-label {
+  color: var(--ojb-text-muted);
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+/* Card Footer */
+.ojb-card__foot {
+  padding: 12px 18px;
+  border-top: 1px solid var(--ojb-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(0,0,0,0.3);
+}
+.ojb-posted-date {
+  color: var(--ojb-text-muted);
+  font-size: 0.8em;
+}
+.ojb-card__cta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+ * Badges
+ * ======================================================= */
+.ojb-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.ojb-badge--role {
+  background: rgba(173,49,25,0.28);
+  color: var(--ojb-accent);
+  border: 1px solid rgba(173,49,25,0.55);
+}
+.ojb-badge--employment {
+  background: rgba(245,165,36,0.18);
+  color: #f5c542;
+  border: 1px solid rgba(245,165,36,0.4);
+}
+.ojb-badge--new {
+  background: var(--ojb-success);
+  color: #fff;
+}
+.ojb-badge--active   { background: rgba(39,174,96,0.2);  color: #6fcf97; border: 1px solid rgba(39,174,96,0.4); }
+.ojb-badge--pending  { background: rgba(245,165,36,0.18); color: #f5c542; border: 1px solid rgba(245,165,36,0.4); }
+.ojb-badge--draft    { background: rgba(255,255,255,0.08); color: var(--ojb-text-muted); border: 1px solid rgba(255,255,255,0.14); }
+.ojb-badge--info     { background: rgba(173,49,25,0.2); color: var(--ojb-accent); border: 1px solid rgba(173,49,25,0.4); }
+.ojb-badge--denied   { background: rgba(255,0,0,0.15); color: #ff6b6b; border: 1px solid rgba(255,0,0,0.3); }
+.ojb-badge--archived { background: rgba(255,255,255,0.06); color: var(--ojb-text-muted); border: 1px solid rgba(255,255,255,0.1); }
+
+/* =========================================================
+ * Buttons
+ * ======================================================= */
+.ojb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none !important;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.ojb-btn:active {
+  transform: scale(0.98);
+}
+.ojb-btn--primary {
+  background: linear-gradient(135deg, var(--global-palette1, #ad3119) 0%, #6b0000 100%);
+  color: var(--global-palette-btn, #000) !important;
+  box-shadow: 0 2px 10px rgba(173,49,25,0.4);
+}
+.ojb-btn--primary:hover {
+  background: linear-gradient(135deg, var(--global-palette2, #ff0000) 0%, var(--global-palette1, #ad3119) 100%);
+  box-shadow: 0 4px 18px rgba(173,49,25,0.55);
+  color: var(--global-palette-btn-hover, #000) !important;
+}
+.ojb-btn--outline {
+  background: transparent;
+  color: var(--ojb-accent) !important;
+  border: 1px solid rgba(173,49,25,0.6);
+}
+.ojb-btn--outline:hover {
+  background: rgba(173,49,25,0.18);
+  border-color: var(--ojb-primary);
+}
+.ojb-btn--secondary {
+  background: rgba(255,255,255,0.1);
+  color: var(--ojb-text) !important;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.ojb-btn--secondary:hover {
+  background: rgba(255,255,255,0.16);
+}
+.ojb-btn--sm {
+  padding: 6px 14px;
+  font-size: 0.82em;
+}
+.ojb-btn--lg {
+  padding: 13px 30px;
+  font-size: 1em;
+}
+
+/* =========================================================
+ * Inline action links
+ * ======================================================= */
+.ojb-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ojb-action {
+  font-size: 0.78em;
+  padding: 4px 10px;
+  border-radius: 5px;
+  text-decoration: none !important;
+  font-weight: 700;
+  transition: background 0.15s;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.ojb-action--approve { background: rgba(39,174,96,0.2);   color: #6fcf97 !important; border-color: rgba(39,174,96,0.4); }
+.ojb-action--approve:hover { background: rgba(39,174,96,0.32); }
+.ojb-action--deny    { background: rgba(255,0,0,0.15);    color: #ff6b6b !important; border-color: rgba(255,0,0,0.3); }
+.ojb-action--deny:hover { background: rgba(255,0,0,0.25); }
+.ojb-action--info    { background: rgba(245,165,36,0.18); color: #f5c542 !important; border-color: rgba(245,165,36,0.4); }
+.ojb-action--info:hover { background: rgba(245,165,36,0.3); }
+.ojb-action--archive { background: rgba(255,255,255,0.07); color: var(--ojb-text-muted) !important; border-color: rgba(255,255,255,0.14); }
+.ojb-action--archive:hover { background: rgba(255,255,255,0.13); }
+.ojb-action--edit    { background: rgba(255,255,255,0.07); color: var(--ojb-text-muted) !important; border-color: rgba(255,255,255,0.14); }
+.ojb-action--edit:hover { background: rgba(255,255,255,0.13); }
+
+/* =========================================================
+ * Forms
+ * ======================================================= */
+.ojb-form-wrap {
+  max-width: 720px;
+}
+.ojb-form__section {
+  background: var(--ojb-card-bg);
+  border: 1px solid var(--ojb-border);
+  border-radius: var(--ojb-radius);
+  padding: 20px 24px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--ojb-shadow);
+}
+.ojb-form__section-title {
+  margin: 0 0 16px;
+  font-size: 0.95em;
+  font-weight: 700;
+  color: var(--ojb-white);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ojb-border);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ojb-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+.ojb-field {
+  margin-bottom: 14px;
+}
+.ojb-field:last-child {
+  margin-bottom: 0;
+}
+.ojb-field label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: 0.88em;
+  color: var(--ojb-text);
+}
+.ojb-field--required label::after {
+  content: ' *';
+  color: var(--ojb-accent);
+}
+.ojb-optional {
+  font-weight: 400;
+  color: var(--ojb-text-muted);
+  font-size: 0.85em;
+}
+.ojb-form__actions {
+  margin-top: 8px;
+  padding-top: 16px;
+}
+
+/* Inputs */
+.ojb-input,
+.ojb-select,
+.ojb-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ojb-border);
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-family: inherit;
+  color: var(--ojb-text);
+  background: rgba(0,0,0,0.5);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: auto;
+}
+.ojb-input::placeholder,
+.ojb-textarea::placeholder {
+  color: var(--ojb-text-muted);
+  opacity: 0.7;
+}
+.ojb-input:focus,
+.ojb-select:focus,
+.ojb-textarea:focus {
+  outline: none;
+  border-color: var(--ojb-primary);
+  box-shadow: 0 0 0 2px rgba(173,49,25,0.25);
+}
+.ojb-select option {
+  background: #1a0000;
+  color: var(--global-palette4, #f7fafc);
+}
+.ojb-textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.5;
+}
+.ojb-hint {
+  display: block;
+  font-size: 0.78em;
+  color: var(--ojb-text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.ojb-link-small {
+  font-size: 0.82em;
+  color: var(--ojb-accent);
+  text-decoration: none;
+  margin-top: 6px;
+  display: inline-block;
+}
+.ojb-link-small:hover {
+  text-decoration: underline;
+  color: var(--ojb-primary);
+}
+
+/* =========================================================
+ * Inline apply form
+ * ======================================================= */
+.ojb-apply-form-wrap {
+  padding: 16px 18px 18px;
+  border-top: 1px solid var(--ojb-border);
+  background: rgba(0,0,0,0.3);
+}
+.ojb-apply-form .ojb-form__actions {
+  padding-top: 4px;
+}
+
+/* =========================================================
+ * Gate / locked
+ * ======================================================= */
+.ojb-gate {
+  padding: 22px 28px;
+  background: rgba(173,49,25,0.15);
+  border: 1px solid rgba(173,49,25,0.4);
+  border-radius: var(--ojb-radius);
+  text-align: center;
+  color: var(--ojb-text);
+}
+.ojb-gate p { margin: 0; }
+.ojb-gate a {
+  color: var(--ojb-accent);
+  font-weight: 700;
+}
+
+/* =========================================================
+ * Alert messages
+ * ======================================================= */
+.ojb-msg {
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  font-size: 0.92em;
+  border-left: 4px solid;
+  line-height: 1.5;
+}
+.ojb-msg--success { background: rgba(39,174,96,0.15); border-color: var(--ojb-success); color: #a8e6c2; }
+.ojb-msg--error   { background: rgba(255,0,0,0.12);   border-color: var(--ojb-primary); color: var(--ojb-accent); }
+.ojb-msg--info    { background: rgba(173,49,25,0.12); border-color: rgba(173,49,25,0.5); color: var(--ojb-text); }
+
+/* =========================================================
+ * Empty state
+ * ======================================================= */
+.ojb-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 52px 24px;
+  color: var(--ojb-text-muted);
+}
+.ojb-empty p { margin: 6px 0; font-size: 0.95em; }
+.ojb-empty p:first-child {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--ojb-text);
+}
+
+/* =========================================================
+ * My Jobs
+ * ======================================================= */
+.ojb-my-jobs__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.ojb-my-jobs__header h3 {
+  margin: 0;
+  font-size: 1.15em;
+  color: var(--ojb-white);
+}
+.ojb-my-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0 !important;
+}
+.ojb-my-job-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--ojb-card-bg);
+  border: 1px solid var(--ojb-border);
+  border-radius: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  margin-bottom: 10px;
+}
+.ojb-my-job-item:hover {
+  box-shadow: var(--ojb-shadow);
+  border-color: var(--ojb-primary);
+}
+.ojb-my-job-item__main { flex: 1; min-width: 0; }
+.ojb-my-job-item__main h4 {
+  margin: 0 0 7px;
+  font-size: 0.95em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ojb-white);
+}
+.ojb-my-job-item__main h4 a {
+  color: var(--ojb-white);
+  text-decoration: none;
+}
+.ojb-my-job-item__main h4 a:hover {
+  color: var(--ojb-accent);
+}
+.ojb-my-job-item__meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ojb-meta-item {
+  font-size: 0.8em;
+  color: var(--ojb-text-muted);
+}
+.ojb-meta-apps { color: var(--ojb-accent); font-weight: 700; }
+.ojb-my-job-item__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* Apps toggle button */
+button.ojb-apps-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ojb-accent);
+  font-weight: 700;
+  font-size: 0.8em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+button.ojb-apps-toggle:hover {
+  color: var(--ojb-primary-hover);
+}
+
+/* =========================================================
+ * Applicant panel
+ * ======================================================= */
+.ojb-applicant-panel {
+  border: 1px solid var(--ojb-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: rgba(0,0,0,0.35);
+  padding: 14px 16px 16px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+/* Applicant list grid */
+.ojb-applicant-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+/* Applicant card */
+.ojb-applicant-card {
+  background: var(--ojb-card-bg);
+  border: 1px solid var(--ojb-border);
+  border-radius: var(--ojb-radius);
+  box-shadow: var(--ojb-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.ojb-applicant-card:hover {
+  box-shadow: var(--ojb-shadow-hover);
+}
+.ojb-applicant-card[data-status="shortlisted"] {
+  border-color: rgba(39,174,96,0.6);
+}
+.ojb-applicant-card[data-status="declined"] {
+  opacity: 0.5;
+}
+.ojb-applicant-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  background: #000;
+  border-bottom: 1px solid var(--ojb-border);
+}
+.ojb-applicant-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ojb-applicant-name {
+  font-size: 0.95em;
+  font-weight: 700;
+  color: var(--ojb-white);
+}
+.ojb-applicant-date {
+  font-size: 0.75em;
+  color: var(--ojb-text-muted);
+  opacity: 0.7;
+}
+.ojb-applicant-card__body {
+  padding: 12px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--ojb-card-bg);
+}
+.ojb-applicant-card__contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ojb-applicant-contact {
+  font-size: 0.82em;
+  color: var(--ojb-accent);
+  text-decoration: none;
+  word-break: break-all;
+}
+.ojb-applicant-contact:hover {
+  text-decoration: underline;
+  color: var(--ojb-primary-hover);
+}
+.ojb-applicant-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.ojb-applicant-card__message {
+  font-size: 0.85em;
+  color: var(--ojb-text-muted);
+  line-height: 1.5;
+  margin: 0;
+  border-left: 2px solid rgba(173,49,25,0.5);
+  padding-left: 10px;
+}
+
+/* Video thumbnail */
+.ojb-applicant-card__video { margin-top: 4px; }
+.ojb-video-thumb {
+  position: relative;
+  display: inline-block;
+  border-radius: 6px;
+  overflow: hidden;
+  line-height: 0;
+  border: 2px solid var(--ojb-border);
+  transition: border-color 0.15s;
+}
+.ojb-video-thumb:hover { border-color: var(--ojb-primary); }
+.ojb-video-thumb img { width: 100%; max-width: 240px; height: auto; display: block; }
+.ojb-video-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  color: #fff;
+  background: rgba(0,0,0,0.5);
+  transition: background 0.15s;
+}
+.ojb-video-thumb:hover .ojb-video-play {
+  background: rgba(173,49,25,0.6);
+}
+
+/* Applicant card footer + status buttons */
+.ojb-applicant-card__foot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--ojb-border);
+  background: rgba(0,0,0,0.3);
+}
+.ojb-app-status-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ojb-app-status-btn {
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.78em;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.ojb-app-status-btn--shortlist {
+  background: rgba(39,174,96,0.18);
+  color: #6fcf97;
+  border-color: rgba(39,174,96,0.4);
+}
+.ojb-app-status-btn--shortlist:hover,
+.ojb-app-status-btn--shortlist.ojb-app-status-btn--active {
+  background: rgba(39,174,96,0.3);
+}
+.ojb-app-status-btn--decline {
+  background: rgba(255,0,0,0.12);
+  color: #ff8080;
+  border-color: rgba(255,0,0,0.3);
+}
+.ojb-app-status-btn--decline:hover,
+.ojb-app-status-btn--decline.ojb-app-status-btn--active {
+  background: rgba(255,0,0,0.22);
+}
+.ojb-app-status-btn--active { font-style: italic; }
+
+/* Apply form — About You section */
+.ojb-apply-about {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(173,49,25,0.4);
+}
+.ojb-apply-about__label {
+  font-size: 0.82em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ojb-text-muted);
+  margin: 0 0 12px;
+}
+.ojb-apply-about__row {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+/* =========================================================
+ * Admin / Board Hub moderation
+ * ======================================================= */
+.ojb-admin-wrap { margin-top: 20px; }
+.ojb-admin-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.ojb-admin-stat {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: 14px 12px;
+  background: var(--ojb-card-bg);
+  border: 1px solid var(--ojb-border);
+  border-radius: 8px;
+  box-shadow: var(--ojb-shadow);
+}
+.ojb-admin-stat__num {
+  display: block;
+  font-size: 1.9em;
+  font-weight: 800;
+  color: var(--ojb-white);
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.ojb-admin-stat__lbl { font-size: 0.72em; }
+.ojb-admin-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--ojb-radius);
+  border: 1px solid var(--ojb-border);
+  box-shadow: var(--ojb-shadow);
+}
+.ojb-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88em;
+  background: var(--ojb-card-bg);
+}
+.ojb-admin-table th {
+  text-align: left;
+  padding: 10px 14px;
+  background: #000;
+  border-bottom: 1px solid var(--ojb-border);
+  font-weight: 700;
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ojb-text-muted);
+  white-space: nowrap;
+}
+.ojb-admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ojb-border);
+  vertical-align: middle;
+  color: var(--ojb-text);
+}
+.ojb-admin-table tr:last-child td { border-bottom: none; }
+.ojb-admin-table tr:hover td { background: rgba(173,49,25,0.08); }
+.ojb-admin-table a { color: var(--ojb-accent); text-decoration: none; }
+.ojb-admin-table a:hover { text-decoration: underline; color: var(--ojb-primary-hover); }
+
+/* =========================================================
+ * Autocomplete dropdown
+ * ======================================================= */
+.ojb-autocomplete {
+  position: absolute;
+  z-index: 10000;
+  background: var(--global-palette9, #000);
+  border: 1px solid var(--ojb-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.7);
+  max-height: 240px;
+  overflow-y: auto;
+  display: none;
+  min-width: 200px;
+  top: 100%;
+  left: 0;
+}
+.ojb-autocomplete a {
+  display: block;
+  padding: 9px 14px;
+  color: var(--ojb-text) !important;
+  text-decoration: none !important;
+  font-size: 0.88em;
+  border-bottom: 1px solid var(--ojb-border);
+  transition: background 0.12s;
+}
+.ojb-autocomplete a:last-child { border-bottom: none; }
+.ojb-autocomplete a:hover {
+  background: rgba(173,49,25,0.2);
+  color: var(--ojb-accent) !important;
+}
+
+/* =========================================================
+ * Pagination
+ * ======================================================= */
+.ojb-pagination { margin-top: 28px; text-align: center; }
+.ojb-pagination .page-numbers {
+  display: inline-block;
+  padding: 7px 13px;
+  border: 1px solid var(--ojb-border);
+  border-radius: 5px;
+  margin: 0 2px;
+  color: var(--ojb-accent);
+  text-decoration: none;
+  font-size: 0.88em;
+  font-weight: 600;
+  transition: background 0.15s;
+  background: var(--ojb-card-bg);
+}
+.ojb-pagination .page-numbers.current {
+  background: linear-gradient(135deg, var(--global-palette1, #ad3119) 0%, #6b0000 100%);
+  color: var(--ojb-white);
+  border-color: var(--global-palette1, #ad3119);
+}
+.ojb-pagination .page-numbers:hover:not(.current) {
+  background: rgba(173,49,25,0.2);
+}
+
+/* =========================================================
+ * Haunt jobs widget title
+ * ======================================================= */
+.ojb-haunt-jobs__title {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--ojb-white);
+}
+
+/* =========================================================
+ * Responsive
+ * ======================================================= */
+@media (max-width: 640px) {
+  .ojb-grid { grid-template-columns: 1fr; }
+  .ojb-filters { flex-direction: column; align-items: stretch; }
+  .ojb-filters__selects { flex-direction: column; }
+  .ojb-form__row { grid-template-columns: 1fr; }
+  .ojb-admin-stats { gap: 8px; }
+  .ojb-admin-stat { min-width: 70px; }
+  .ojb-my-job-item { flex-direction: column; align-items: flex-start; }
+  .ojb-my-job-item__actions { width: 100%; }
+  .ojb-card__foot { flex-direction: column; align-items: flex-start; }
+  .ojb-applicant-list { grid-template-columns: 1fr; }
+}
