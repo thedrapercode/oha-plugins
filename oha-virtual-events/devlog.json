@@ -1,0 +1,265 @@
+{
+    "plugin":  "OHA Virtual Events",
+    "version":  "1.4.0",
+    "entries":  [
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "1.3.3",
+                        "type":  "fix",
+                        "summary":  "Security: validated zoom.us domain + HTTPS scheme before Zoom join redirect",
+                        "notes":  "zoom_join_redirect() REST endpoint now validates that the stored Zoom join URL uses the https:// scheme and a zoom.us hostname before calling wp_redirect(). Prevents potential open redirect if the stored URL were ever malformed or tampered with at DB level. Returns 400 with wp_die message for invalid URLs."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "1.3.3",
+                        "type":  "fix",
+                        "summary":  "Security: enforce numeric-only Zoom meeting IDs by stripping all non-digit characters",
+                        "notes":  "Replaced preg_replace(\u0027/\\s+/\u0027, ...) with preg_replace(\u0027/\\D/\u0027, ...) in three locations: class-oha-ve-frontend.php (zoom_start URL builder), class-oha-ve-shortcodes.php (render_event_card zoom_start URL builder), class-oha-ve-zoom-webhooks.php (find_event_by_zoom_id). Zoom Meeting IDs are always purely numeric; this is more correct and secure than stripping only whitespace."
+                    },
+                    {
+                        "date":  "2026-03-31",
+                        "version":  "1.3.3",
+                        "type":  "fix",
+                        "summary":  "Security: apply esc_url_raw() to Zoom share_url from recording.completed webhook payload",
+                        "notes":  "In handle_recording_completed(), the share_url value from Zoom\u0027s webhook payload now passes through esc_url_raw() before being concatenated into Admin Notes. Adds URL sanitization defense-in-depth even though the webhook is already HMAC-SHA256 verified."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.3",
+                        "type":  "fix",
+                        "summary":  "Fixed white-on-white paragraph text inside Zoom/YouTube/replay cards",
+                        "notes":  "Added .oha-ve-card p { color: #333 !important; } rule. Affects the instructional paragraph text in the Zoom card (\u0027You are the host...\u0027 and \u0027Click below to join...\u0027). The !important override defeats theme CSS that was setting p color to white inside card elements."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.3",
+                        "type":  "feature",
+                        "summary":  "Zoom join URL is now hidden from page source via a protected REST API redirect",
+                        "notes":  "New REST endpoint: GET /wp-json/oha-ve/v1/zoom-join/{event_id}?_wpnonce=... - verifies WordPress nonce, login state, and event access level, then wp_redirect() to the Zoom URL. The raw Zoom join URL no longer appears in any HTML rendered to the browser. Static helper OHA_VE_Frontend::get_protected_join_url($event_id) builds the protected URL. Applied in: event detail page join button, host view attendee link, My Account hub card join button, live banner join button. Invalid nonce, not-logged-in, or unauthorized users get a descriptive wp_die message."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.1",
+                        "type":  "feature",
+                        "summary":  "Redesigned [oha_live_banner] as compact Spotify-style header bar",
+                        "notes":  "Banner now designed for full-width header placement. Includes album art panel (featured image or dark placeholder with equalizer), animated equalizer bars in the meta row, event title, start-end time string from wp_geodir_event_schedule table. get_event_schedule() updated to SELECT end_date and end_time in addition to start fields."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.1",
+                        "type":  "feature",
+                        "summary":  "Added cancelled event state to [oha_live_banner]",
+                        "notes":  "Banner now queries both live and cancelled events (live takes priority). Cancelled events display within their scheduled time window with grey dot, frozen equalizer bars, and \u0027This event has been cancelled\u0027 message. Server-side check: if past end time, status auto-updates to closed and banner returns empty. Inline JS also hides the cancelled banner client-side after end time. Cancelled events before start time are not shown yet."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.1",
+                        "type":  "feature",
+                        "summary":  "Added event-type-based default button labels for banner and hub cards",
+                        "notes":  "Button label priority: (1) oha_ve_zoom_btn_label if set, (2) event-type default, (3) \u0027Join Meeting\u0027. Defaults: member_education=Join Session, pre_recorded=Watch Recording, actor_meetup=Join Meetup, member_townhall=Join Town Hall, other_virtual=Join Event. Applied in both sc_live_banner() and render_event_card()."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.0",
+                        "type":  "fix",
+                        "summary":  "Fixed white-on-white card title text caused by theme color inheritance",
+                        "notes":  "Added !important to all color declarations on .oha-ve-card-title, .oha-edu-card-title a, .oha-ve-meta, and related text elements. Theme was overriding the dark color with white on certain page templates."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.0",
+                        "type":  "change",
+                        "summary":  "Modernized event card and hub card styles to match OHA dark/gold/red theme",
+                        "notes":  "Cards now use white backgrounds with box-shadow instead of flat tinted backgrounds. Hover state lifts shadow. Border-left accents retained for live/teach/zoom/youtube card types. All text colors explicitly set with !important to prevent theme overrides. Type badges, live badges, and section titles updated for consistency."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Added per-event custom join button label field (oha_ve_zoom_btn_label)",
+                        "notes":  "New meta key: oha_ve_zoom_btn_label. Text input in admin meta box Zoom section. Defaults to Join Meeting when blank. Applies to the attendee join button on both the gd_event detail page (class-oha-ve-frontend.php) and the My Account hub card (class-oha-ve-shortcodes.php). Saved via existing text_fields array in save_meta."
+                    },
+                    {
+                        "date":  "2026-03-18",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Added [oha_live_banner] shortcode for homepage live event indicator",
+                        "notes":  "New shortcode for homepage or any page. When any gd_event has oha_ve_event_status=live and oha_ve_show_in_hub=1, shows a dark OHA-themed banner with pulsing dot and event title. Users with access see a flashing red LIVE join button linking to the Zoom join URL if set, otherwise the event page. Users without access see a locked amber variant with Become a Member and Register buttons. Returns empty string when no live event exists. Attributes: membership_url (default /membership/), register_url (default /register/)."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Phase 2 - Zoom Server-to-Server OAuth API integration",
+                        "notes":  "Added class-oha-ve-zoom-api.php: singleton, token cache (55 min WP transient), create_meeting() that auto-fills oha_ve_zoom_id, oha_ve_zoom_join_url, oha_ve_zoom_meeting_uuid, oha_ve_zoom_start_url post meta. Auto-creates meeting on publish_gd_event if auto-create setting is enabled and no meeting exists yet. API errors shown as dismissible admin notices."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Phase 2 - Zoom webhook receiver REST endpoint",
+                        "notes":  "Added class-oha-ve-zoom-webhooks.php. REST endpoint /wp-json/oha-ve/v1/zoom-webhook handles: endpoint.url_validation (Zoom setup challenge), meeting.started (sets status=live), meeting.ended (sets status=closed), recording.completed (sets status=replay, marks archive_enabled, appends Zoom share URL to Admin Notes). All non-validation requests verified via HMAC-SHA256 with 5-minute replay-attack window."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Phase 2 - Admin settings page at Settings \u003e OHA Virtual Events",
+                        "notes":  "Added class-oha-ve-settings.php. Settings page stores Zoom Account ID, Client ID, Client Secret, Webhook Secret Token, auto-create toggle, default meeting settings (auto-record, waiting room, host video, duration). Password fields preserve existing value when saved blank. Test Connection button does live AJAX call to Zoom OAuth endpoint. Page also includes full shortcode reference, access level guide, replay workflow, and one-time oha_instructor role registration snippet."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.2.0",
+                        "type":  "change",
+                        "summary":  "Admin meta box Zoom section updated with Phase 2 status and Meeting UUID display",
+                        "notes":  "Zoom section now shows contextual Phase 2 status: green notice when API + auto-create are active, info tip with link to settings when configured but auto-create is off, standard manual-entry tip when not configured. Meeting UUID (oha_ve_zoom_meeting_uuid) displayed read-only once auto-created."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.1.2",
+                        "type":  "fix",
+                        "summary":  "Replaced all em dash characters with plain ASCII dashes across all PHP files",
+                        "notes":  "Em dashes (U+2014) in PHP string literals and HTML output can cause encoding issues on some server configurations. Replaced with standard hyphen-minus throughout all four plugin files."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.1.2",
+                        "type":  "feature",
+                        "summary":  "Added devlog.json for Board Hub dev log aggregator integration",
+                        "notes":  "Plugin now ships with devlog.json in root. OHA Dev Log Aggregator plugin will pick this up automatically and surface the full change history in the Board Hub dev log shortcode."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.1.2",
+                        "type":  "feature",
+                        "summary":  "Added OHA Instructor role management to WP Users Edit User screen",
+                        "notes":  "Admins can now grant or revoke the oha_instructor secondary role directly from any user profile. Replaces need for separate plugin or code snippet. Checkbox only visible to administrators. Role is additive - user\u0027s primary role (e.g. subscriber) is unchanged. Requires one-time add_role() snippet to register oha_instructor on the site."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.1.2",
+                        "type":  "change",
+                        "summary":  "Renamed tutor_instructor role slug to oha_instructor throughout plugin",
+                        "notes":  "Site no longer uses TutorLMS so the tutor_instructor role slug is not registered. Changed to oha_instructor for clarity and independence. Updated all role checks, get_users queries, dropdown hints, and docblock comments."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.1.2",
+                        "type":  "fix",
+                        "summary":  "Hardened save_meta sanitization: enum allowlists, revision guard, instructor role check",
+                        "notes":  "Four fixes: (1) Nonce verification was already present. (2) Added explicit wp_is_post_revision() guard alongside DOING_AUTOSAVE check. (3) Select fields (event_type, platform, access_level, event_status) now validated against allowlist - arbitrary strings stored as empty string. (4) Instructor user ID now validated with get_userdata() + role check against administrator/oha_board/oha_instructor before saving. Invalid IDs silently preserve existing value."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.1.2",
+                        "type":  "feature",
+                        "summary":  "Added pre-recorded YouTube video support as a first-class platform type",
+                        "notes":  "New platform option: prerecorded. Pre-recorded events suppress the Zoom section entirely on the event page. Replay card shows Watch Session instead of Event Replay. Shortcode On Demand query handles pre-recorded videos automatically via existing status=replay + replay_available=1 + archive_enabled=1 flags. No new meta keys needed. Workflow: upload to YouTube as unlisted, paste video ID into yt_replay_id, set status to replay, check both archive and replay flags."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.1.1",
+                        "type":  "fix",
+                        "summary":  "Fixed Zoom start URL expiration by constructing URL from Meeting ID at render time",
+                        "notes":  "Stored Zoom start URLs contain a ZAK token that expires in ~90 days. Solution: construct start URL dynamically as zoom.us/s/{MeetingID} which never expires and requires the host to be signed into Zoom. The oha_ve_zoom_start_url meta field is now Phase 2 only - if set it overrides the constructed URL but should only be filled by the API."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.1.1",
+                        "type":  "fix",
+                        "summary":  "Fixed upcoming events sort order in hub shortcodes",
+                        "notes":  "Shortcodes were ordering by post date DESC (creation order) instead of actual event date. Added oha_ve_start_date meta field (YYYY-MM-DD date input). Upcoming and Teaching shortcode queries use meta_key=oha_ve_start_date with orderby=meta_value ASC so events sort soonest-first. Admin must enter same date as GD event date."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.1.1",
+                        "type":  "feature",
+                        "summary":  "Added oha_ve_show_in_hub checkbox to control shortcode visibility per event",
+                        "notes":  "Board members can uncheck Show in Hub to keep an event off the My Account shortcode output while still making the event page accessible by direct URL. Defaults to checked (on) for new events. Teaching query skips the hub filter so instructors always see their assigned events."
+                    },
+                    {
+                        "date":  "2026-03-04",
+                        "version":  "1.1.1",
+                        "type":  "change",
+                        "summary":  "Removed board_meeting event type - board meetings moved to permanent Zoom room in Board Hub",
+                        "notes":  "Board meetings do not need GeoDirectory events. They use a permanent Zoom room configured with Only authenticated users can join plus waiting room, restricted to verified board member Zoom accounts. Removed board_meeting from event type dropdown and from all queries."
+                    },
+                    {
+                        "date":  "2026-02-28",
+                        "version":  "1.1.0",
+                        "type":  "fix",
+                        "summary":  "Corrected WordPress role slugs throughout - was using wrong role names from v1.0.0",
+                        "notes":  "v1.0.0 used incorrect role slugs: board_member, actor, vendor, member. Correct slugs are: oha_board (WP role in wp_capabilities), subscriber (paid member), listing_owner (free listing owner). Note: board-member is the UsersWP account type for My Account display routing only - it is not a WP role and is not used for access control."
+                    },
+                    {
+                        "date":  "2026-02-28",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added instructor assignment with Start Session vs Join Meeting button differentiation",
+                        "notes":  "New meta: oha_ve_instructor_user_id. Assigned instructor sees green Start Session button (zoom.us/s/MeetingID). Regular members see blue Join Meeting button (join URL). Board members and admins see both. Instructor dropdown populated from get_users() filtered to administrator, oha_board, oha_instructor roles."
+                    },
+                    {
+                        "date":  "2026-02-28",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added five My Account shortcodes for Education and Events tab",
+                        "notes":  "Shortcodes: [oha_education_events] master hub, [oha_education_live] live now, [oha_education_upcoming] upcoming sorted by start date, [oha_education_teaching] instructor view, [oha_education_ondemand] replay library. All use WP_Query on oha_ve_ wp_postmeta fields. On Demand requires status=replay + replay_available=1 + archive_enabled=1."
+                    },
+                    {
+                        "date":  "2026-02-28",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added event status field and archive/replay meta fields",
+                        "notes":  "New meta: oha_ve_event_status (upcoming/live/replay/closed/cancelled), oha_ve_archive_enabled, oha_ve_replay_available. Status must be changed manually in Phase 1 (upcoming to live when session starts, live to replay after recording is processed). Phase 2 will automate via Zoom webhooks."
+                    },
+                    {
+                        "date":  "2026-02-25",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Initial release - Phase 1 OHA Virtual Events plugin",
+                        "notes":  "Created new plugin extending events-for-geodirectory (gd_event post type). Admin meta box with virtual event settings. Frontend display with Zoom join button and YouTube embed. Access control by role. Replaced gd_show_events_on_place_page code snippet (shows upcoming events on haunt venue listing pages). Dependency checks for GeoDirectory core and Events for GeoDirectory. Warns if old snippet still active."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Add [oha_create_virtual_event] shortcode for board members to create Zoom events from the front end",
+                        "notes":  "Creates gd_event post (published immediately), inserts GD schedule row, sets all oha_ve_ meta, calls Zoom API. Access restricted to oha_board and admin roles."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Add timing-aware host launch and member join buttons on event pages",
+                        "notes":  "Instructor/board see Open Meeting + Copy Host Key button with 4-step instructions within configurable window (default 30 min before). Members see Join Now within their own window (default 15 min before). Outside window shows a notice with event date/time."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Add host key, join_before_host, instructor window, and member window to plugin settings",
+                        "notes":  "Host key stored as WP option, passed to frontend button via data attribute and copied to clipboard on click. join_before_host defaults on (disables waiting_room automatically). Both timing windows are admin-configurable in minutes."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Remove duplicate oha_ve_start_date field from admin meta box",
+                        "notes":  "Field was redundant with GD event_dates. Hub shortcode now sorts by GD schedule table via PHP usort instead of meta_key ordering."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Show/hide Zoom and YouTube sections in admin meta box based on platform selection",
+                        "notes":  "JS toggles #oha-ve-section-zoom and #oha-ve-section-youtube on platform dropdown change and on page load."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Auto-flip oha_ve_event_status to ended when GD expires a past event",
+                        "notes":  "Hooks into geodir_event_handle_past_event_after. Only acts on posts where oha_ve_enabled=1. Stops join/launch buttons appearing after event ends."
+                    }
+                ]
+}
