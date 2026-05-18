@@ -241,8 +241,10 @@ class OHA_VE_Frontend {
             $seconds_until    = 0;
             $event_time_label = '';
             if ( $ve_schedule ) {
-                $start_ts         = strtotime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ) );
-                $seconds_until    = $start_ts - current_time( 'timestamp' );
+                $wp_tz            = new DateTimeZone( get_option( 'timezone_string', 'UTC' ) ?: 'UTC' );
+                $dt               = new DateTime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ), $wp_tz );
+                $start_ts         = $dt->getTimestamp();
+                $seconds_until    = $start_ts - time();
                 $event_time_label = date_i18n( 'F j, Y \a\t g:i A', $start_ts );
             }
             $instructor_secs      = OHA_VE_Settings::get_instructor_window() * 60;

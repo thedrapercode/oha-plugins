@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.4.0",
+    "version":  "1.4.1",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -260,6 +260,13 @@
                         "type":  "feature",
                         "summary":  "Auto-flip oha_ve_event_status to ended when GD expires a past event",
                         "notes":  "Hooks into geodir_event_handle_past_event_after. Only acts on posts where oha_ve_enabled=1. Stops join/launch buttons appearing after event ends."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.1",
+                        "type":  "fix",
+                        "summary":  "Fix timing window comparison using correct timezone-aware DateTime instead of strtotime+current_time",
+                        "notes":  "strtotime() uses PHP server timezone (usually UTC) while current_time(timestamp) uses WP local time, causing seconds_until to be inflated by the UTC offset. Fixed by using new DateTime with WP timezone and time() for comparison."
                     }
                 ]
 }
