@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.4.1",
+    "version":  "1.4.2",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -267,6 +267,13 @@
                         "type":  "fix",
                         "summary":  "Fix timing window comparison using correct timezone-aware DateTime instead of strtotime+current_time",
                         "notes":  "strtotime() uses PHP server timezone (usually UTC) while current_time(timestamp) uses WP local time, causing seconds_until to be inflated by the UTC offset. Fixed by using new DateTime with WP timezone and time() for comparison."
+                    },
+                    {
+                        "date":  "2026-05-18",
+                        "version":  "1.4.2",
+                        "type":  "fix",
+                        "summary":  "Use wp_timezone() for timing window calc to handle UTC-offset sites; add temporary admin debug output",
+                        "notes":  "get_option(timezone_string) returns empty on sites using UTC offset instead of named timezone. wp_timezone() handles both cases correctly. Debug line shows schedule date/time, timestamps, and secs_until for admin users only -- remove once timing confirmed."
                     }
                 ]
 }

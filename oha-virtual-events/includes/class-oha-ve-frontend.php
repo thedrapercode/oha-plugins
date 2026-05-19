@@ -241,11 +241,19 @@ class OHA_VE_Frontend {
             $seconds_until    = 0;
             $event_time_label = '';
             if ( $ve_schedule ) {
-                $wp_tz            = new DateTimeZone( get_option( 'timezone_string', 'UTC' ) ?: 'UTC' );
+                $wp_tz            = wp_timezone();
                 $dt               = new DateTime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ), $wp_tz );
                 $start_ts         = $dt->getTimestamp();
                 $seconds_until    = $start_ts - time();
                 $event_time_label = date_i18n( 'F j, Y \a\t g:i A', $start_ts );
+                // Temporary admin debug -- remove after confirming buttons work
+                if ( current_user_can( 'manage_options' ) ) {
+                    $html .= '<p style="font-size:11px;color:#888;border:1px dashed #ccc;padding:4px;margin:4px 0;">'
+                           . 'VE Debug: schedule=' . esc_html( $ve_schedule->start_date . ' ' . $ve_schedule->start_time )
+                           . ' | start_ts=' . $start_ts . ' | now=' . time()
+                           . ' | secs_until=' . $seconds_until
+                           . '</p>';
+                }
             }
             $instructor_secs      = OHA_VE_Settings::get_instructor_window() * 60;
             $member_secs          = OHA_VE_Settings::get_member_window()     * 60;
