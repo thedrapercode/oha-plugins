@@ -131,28 +131,37 @@ class OHA_Board_Hub {
         $e[$member_id][] = ['ts'=>gmdate('c'), 'action'=>$action, 'by'=>$user_id ? intval($user_id) : 0, 'note'=>(string)$note];
         $this->save_card_events($e);
     }
-private function get_card_status($member_id){
+private function get_card_status($member_id, $wp_user_id = 0){
         global $wpdb;
-        $member_id = (string)intval($member_id);
-        if (!$member_id) return ['sent'=>0,'date'=>''];
+        $member_id  = intval($member_id);
+        $wp_user_id = intval($wp_user_id);
+        if (!$member_id && !$wp_user_id) return ['sent'=>0,'date'=>''];
+        // Collect distinct IDs to check (SWPM id first, then WP user id)
+        $ids = array_unique(array_filter([$member_id, $wp_user_id]));
         $t = $this->card_tbl_names();
         if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $t['status'])) === $t['status']){
-            $row = $wpdb->get_row($wpdb->prepare("SELECT sent,date FROM {$t['status']} WHERE member_id=%d LIMIT 1", $member_id), ARRAY_A);
-            if ($row){
-                return ['sent'=> intval($row['sent']) ? 1 : 0, 'date'=> $row['date'] ?: ''];
+            foreach ($ids as $id) {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT sent,date FROM {$t['status']} WHERE member_id=%d LIMIT 1", $id), ARRAY_A);
+                if ($row) {
+                    return ['sent'=> intval($row['sent']) ? 1 : 0, 'date'=> $row['date'] ?: ''];
+                }
             }
         }
         // Fallback to options
         $m = $this->get_card_store();
-        if (isset($m[$member_id]) && !empty($m[$member_id]['sent'])) {
-            return ['sent'=>1, 'date'=>($m[$member_id]['date'] ?? '')];
+        foreach ($ids as $id) {
+            $key = (string)$id;
+            if (isset($m[$key]) && !empty($m[$key]['sent'])) {
+                return ['sent'=>1, 'date'=>($m[$key]['date'] ?? '')];
+            }
         }
-        // Final fallback: oha_card_sent usermeta (for uwp members where member_id = wp_user_id)
-        // Accepts 'yes', '1', or any truthy string — covers both legacy and new writes.
-        $meta_sent = get_user_meta(intval($member_id), 'oha_card_sent', true);
-        if (!empty($meta_sent) && $meta_sent !== '0') {
-            $meta_date = get_user_meta(intval($member_id), 'oha_card_sent_date', true);
-            return ['sent'=>1, 'date'=>($meta_date ?: '')];
+        // Final fallback: oha_card_sent usermeta — try both ids
+        foreach ($ids as $id) {
+            $meta_sent = get_user_meta($id, 'oha_card_sent', true);
+            if (!empty($meta_sent) && $meta_sent !== '0') {
+                $meta_date = get_user_meta($id, 'oha_card_sent_date', true);
+                return ['sent'=>1, 'date'=>($meta_date ?: '')];
+            }
         }
         return ['sent'=>0, 'date'=>''];
     }
@@ -1503,7 +1512,7 @@ private function render_overview_tab($range = '30d') {
         
         if ($card !== 'any') {
             $rows = array_values(array_filter($rows, function($r){
-                $st = $this->get_card_status($r['member_id']);
+                $st = $this->get_card_status($r['member_id'], $r['wp_user_id'] ?? 0);
                 if ($st['sent']) return ($_GET['card']==='sent');
                 return ($_GET['card']==='not');
             }));
@@ -1660,7 +1669,8 @@ private function render_overview_tab($range = '30d') {
             $html .= '<td>'.($addr ? esc_html($addr) : '—').'</td>';
             $html .= '<td>'.esc_html($this->resolve_level_name($r['membership_level'] ?? '—')).'</td>';
             $html .= '<td>'.esc_html($start).'</td>';
-            $st = $this->get_card_status($r['member_id']);
+            $wp_uid = isset($r['wp_user_id']) ? intval($r['wp_user_id']) : intval($r['member_id']);
+            $st = $this->get_card_status($r['member_id'], $wp_uid);
             $nonce = wp_create_nonce('oha_card_sent_'.$r['member_id']);
             $label = $st['sent'] ? 'Card Sent'.($st['date']?' ('.$st['date'].')':'') : 'Mark Sent';
             $aria = $st['sent'] ? ' aria-pressed="true"' : '';
@@ -1668,7 +1678,6 @@ private function render_overview_tab($range = '30d') {
             $eid = (string)$r['member_id'];
             $last_title = '';
             if (!empty($ev[$eid])) { $last = end($ev[$eid]); $last_title = esc_attr($last['action'].' @ '.$last['ts']); }
-            $wp_uid = isset($r['wp_user_id']) ? intval($r['wp_user_id']) : intval($r['member_id']);
             $btn = '<button type="button" class="button oha-card-toggle" data-id="'.intval($r['member_id']).'" data-wp-user-id="'.$wp_uid.'" data-nonce="'.$nonce.'" data-sent="'.($st['sent']?1:0).'"'.$aria;
             if ($last_title) { $btn .= ' title="'.$last_title.'"'; }
             $btn .= '>'.$label.'</button>';
@@ -1871,7 +1880,7 @@ private function render_overview_tab($range = '30d') {
 
         if ($card !== 'any') {
             $rows = array_values(array_filter($rows, function($r) use ($card) {
-                $st = $this->get_card_status($r['member_id']);
+                $st = $this->get_card_status($r['member_id'], $r['wp_user_id'] ?? 0);
                 if ($st['sent']) return ($card === 'sent');
                 return ($card === 'not');
             }));
