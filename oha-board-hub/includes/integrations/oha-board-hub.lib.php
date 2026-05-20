@@ -540,9 +540,9 @@ private function current_user_sm_level_equals($target_level) {
             return '<div class="oha-board-denied">Board access only. Please log in with authorized credentials.</div>';
         }
         $s = get_option(self::OPT, []);
-        $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'all';
+        $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'oha';
         $allowed_lvl_keys = ['listing','board','vendors','sponsors','con2026','oha','all'];
-        if (!in_array($lvl_key, $allowed_lvl_keys, true)) $lvl_key = 'all';
+        if (!in_array($lvl_key, $allowed_lvl_keys, true)) $lvl_key = 'oha';
         $range = isset($_GET['range']) ? sanitize_key($_GET['range']) : '30d';
         $allowed_ranges = ['30d','90d','ytd','all'];
         if (!in_array($range, $allowed_ranges, true)) $range = '30d';
@@ -1493,7 +1493,7 @@ private function render_overview_tab($range = '30d') {
         $q = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
 
         
-        $card = isset($_GET['card']) ? sanitize_key($_GET['card']) : 'any';
+        $card = isset($_GET['card']) ? sanitize_key($_GET['card']) : 'not';
         $allowed_card_filters = ['any','sent','not'];
         if (!in_array($card, $allowed_card_filters, true)) $card = 'any';
 // One dataset for current level (or all), search applied; then range filtered in PHP
@@ -1563,7 +1563,7 @@ private function render_overview_tab($range = '30d') {
             <div class="oha-filters">
                 <strong>Card:</strong>
                 <?php
-                    $cards = ['any'=>'Any','sent'=>'Sent','not'=>'Not Sent'];
+                    $cards = ['any'=>'Any','sent'=>'Sent','not'=>'Create Membership Cards'];
                     foreach ($cards as $ck=>$clabel) {
                         $url = add_query_arg(['tab'=>'members','lvl'=>$lvl_key,'range'=>$range_key,'card'=>$ck,'q'=>$q]);
                         $cls = $card === $ck ? 'button-primary' : '';
