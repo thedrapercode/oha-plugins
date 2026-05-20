@@ -75,7 +75,7 @@ function oha_vh_year_tools_page() {
              ================================================================ -->
         <h2>Send Return Vendor Invites</h2>
         <p>Finds vendors from a prior year who reached <strong>Paid</strong> status and have <em>no</em>
-        application for the active year (<?php echo esc_html($active_year); ?>). For each one:</p>
+        application for the target year. For each one:</p>
         <ol style="padding-left:2em;">
             <li>A new <code>vendor_application</code> draft is created pre-populated with their contact info.</li>
             <li>Their permanent vendor ID is carried forward.</li>
@@ -88,8 +88,16 @@ function oha_vh_year_tools_page() {
                 <th scope="row">Prior year to invite from</th>
                 <td>
                     <input type="number" id="invite_from_year" class="small-text" min="2020" max="2100"
-                        value="<?php echo esc_attr($active_year - 1); ?>">
-                    <p class="description">Vendors with Paid status in this year who are not yet in <?php echo esc_html($active_year); ?> will receive an invite.</p>
+                        value="<?php echo esc_attr($active_year); ?>">
+                    <p class="description">Find Paid vendors from this year (e.g. 2026).</p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">Target year for new applications</th>
+                <td>
+                    <input type="number" id="invite_target_year" class="small-text" min="2020" max="2100"
+                        value="<?php echo esc_attr($active_year + 1); ?>">
+                    <p class="description">New applications will be stamped with this year (e.g. 2027). Vendors already in this year are skipped.</p>
                 </td>
             </tr>
             <tr>
@@ -132,7 +140,7 @@ echo esc_textarea($default_body);
         </p>
         <p>
             <button type="button" id="oha-invite-send" class="button button-primary">Send Return Invites</button>
-            <span style="margin-left:8px;color:#666;font-size:13px;">Each vendor receives one invite. Existing <?php echo esc_html($active_year); ?> applications are not duplicated.</span>
+            <span style="margin-left:8px;color:#666;font-size:13px;">Each vendor receives one invite. Existing target-year applications are not duplicated.</span>
         </p>
         <div id="oha-invite-result" style="margin-top:10px;max-width:640px;"></div>
     </div>
@@ -192,20 +200,24 @@ echo esc_textarea($default_body);
 
         function getInviteParams() {
             return {
-                from_year: parseInt($('#invite_from_year').val(), 10),
-                subject:   $('#invite_subject').val(),
-                body:      $('#invite_body').val()
+                from_year:   parseInt($('#invite_from_year').val(), 10),
+                target_year: parseInt($('#invite_target_year').val(), 10),
+                subject:     $('#invite_subject').val(),
+                body:        $('#invite_body').val()
             };
         }
 
         $('#oha-invite-count').on('click', function(){
             var p = getInviteParams();
             if (!p.from_year || p.from_year < 2020) { alert('Enter a valid prior year.'); return; }
+            if (!p.target_year || p.target_year < 2020) { alert('Enter a valid target year.'); return; }
+            if (p.from_year === p.target_year) { alert('Prior year and target year must be different.'); return; }
             $('#oha-invite-count-result').text('Counting...');
             $.post(ajaxUrl, {
-                action: 'oha_vh_return_invite_count',
-                nonce: nonceInvite,
-                from_year: p.from_year
+                action:      'oha_vh_return_invite_count',
+                nonce:       nonceInvite,
+                from_year:   p.from_year,
+                target_year: p.target_year
             }, function(r){
                 if (r.success) {
                     $('#oha-invite-count-result').text(r.data.count + ' eligible vendor(s) found.');
@@ -218,19 +230,22 @@ echo esc_textarea($default_body);
         $('#oha-invite-send').on('click', function(){
             var p = getInviteParams();
             if (!p.from_year || p.from_year < 2020) { alert('Enter a valid prior year.'); return; }
+            if (!p.target_year || p.target_year < 2020) { alert('Enter a valid target year.'); return; }
+            if (p.from_year === p.target_year) { alert('Prior year and target year must be different.'); return; }
             if (!p.subject.trim() || !p.body.trim()) { alert('Subject and body are required.'); return; }
-            if (!confirm('Send return invites to all eligible ' + p.from_year + ' Paid vendors?\n\nThis creates draft applications and emails each vendor a personalized link.')) return;
+            if (!confirm('Send return invites to all eligible ' + p.from_year + ' Paid vendors?\n\nThis creates ' + p.target_year + ' draft applications and emails each vendor a personalized link.')) return;
 
             var btn = $(this);
             btn.prop('disabled', true).text('Sending...');
             $('#oha-invite-result').html('<p style="color:#555;">Creating applications and sending emails, please wait...</p>');
 
             $.post(ajaxUrl, {
-                action: 'oha_vh_return_invite_send',
-                nonce: nonceInvite,
-                from_year: p.from_year,
-                subject:   p.subject,
-                body:      p.body
+                action:      'oha_vh_return_invite_send',
+                nonce:       nonceInvite,
+                from_year:   p.from_year,
+                target_year: p.target_year,
+                subject:     p.subject,
+                body:        p.body
             }, function(r){
                 btn.prop('disabled', false).text('Send Return Invites');
                 if (r.success) {
@@ -330,15 +345,14 @@ add_action('wp_ajax_oha_vh_return_invite_count', function() {
     check_ajax_referer('oha_vh_return_invites', 'nonce');
     if (!current_user_can('manage_options')) { wp_send_json_error('Unauthorized'); return; }
 
-    $from_year   = intval($_POST['from_year'] ?? 0);
-    $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+    $from_year   = intval($_POST['from_year']   ?? 0);
+    $target_year = intval($_POST['target_year'] ?? 0);
 
-    if ($from_year < 2020 || $from_year >= $active_year) {
-        wp_send_json_error('Prior year must be less than the active year (' . $active_year . ').');
-        return;
-    }
+    if ($from_year < 2020 || $from_year > 2100) { wp_send_json_error('Invalid prior year.'); return; }
+    if ($target_year < 2020 || $target_year > 2100) { wp_send_json_error('Invalid target year.'); return; }
+    if ($from_year === $target_year) { wp_send_json_error('Prior year and target year must be different.'); return; }
 
-    $eligible = oha_vh_get_return_invite_candidates($from_year, $active_year);
+    $eligible = oha_vh_get_return_invite_candidates($from_year, $target_year);
     wp_send_json_success(['count' => count($eligible)]);
 });
 
@@ -349,15 +363,14 @@ add_action('wp_ajax_oha_vh_return_invite_send', function() {
     check_ajax_referer('oha_vh_return_invites', 'nonce');
     if (!current_user_can('manage_options')) { wp_send_json_error('Unauthorized'); return; }
 
-    $from_year   = intval($_POST['from_year'] ?? 0);
-    $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+    $from_year   = intval($_POST['from_year']   ?? 0);
+    $active_year = intval($_POST['target_year'] ?? 0);
     $subject_tpl = sanitize_text_field(wp_unslash($_POST['subject'] ?? ''));
     $body_tpl    = sanitize_textarea_field(wp_unslash($_POST['body'] ?? ''));
 
-    if ($from_year < 2020 || $from_year >= $active_year) {
-        wp_send_json_error('Invalid prior year.');
-        return;
-    }
+    if ($from_year < 2020 || $from_year > 2100) { wp_send_json_error('Invalid prior year.'); return; }
+    if ($active_year < 2020 || $active_year > 2100) { wp_send_json_error('Invalid target year.'); return; }
+    if ($from_year === $active_year) { wp_send_json_error('Prior year and target year must be different.'); return; }
     if (!$subject_tpl || !$body_tpl) {
         wp_send_json_error('Subject and body are required.');
         return;
