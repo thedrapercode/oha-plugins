@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.9.0",
+    "version":  "3.10.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -239,6 +239,48 @@
                         "type":  "feature",
                         "summary":  "Private notes, returning vendor flag, and booth preference now displayed in board hub vendor detail modal",
                         "notes":  "returning_vendor and booth_preference added to oha_get_vendor_details AJAX response and showVendorDetailsModal JS."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Added convention year stamping on new vendor applications via active year setting",
+                        "notes":  "_convention_year meta stamped on submit using oha_vhcpt_active_year option. Set in Settings \u003e Convention Details."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Added _vendor_permanent_id meta to all new applications using post ID as permanent cross-year ID",
+                        "notes":  "Assigned on form submit. Carried forward by return invite tool when creating new-year applications."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Added {vendor_id} merge tag to all automated email templates",
+                        "notes":  "Resolves to _vendor_permanent_id meta, falls back to post ID if not set."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Added year filter dropdown and VID display to Board Hub vendor card view",
+                        "notes":  "Filter by _convention_year meta. VID-xxx shown on card header and in details modal."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Added Year Tools admin page with backfill tool and return vendor invite tool",
+                        "notes":  "Backfill stamps _convention_year and _vendor_permanent_id on all existing untagged posts. Return invite tool finds prior-year Paid vendors with no current-year app, creates pre-populated drafts, sends 7-day magic-link invite emails."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.0",
+                        "type":  "feature",
+                        "summary":  "Added Active Convention Year field to Convention Details settings section",
+                        "notes":  "Controls what year is stamped on new submissions. Update each season before opening applications."
                     }
                 ]
 }

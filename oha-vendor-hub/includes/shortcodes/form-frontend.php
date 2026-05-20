@@ -161,6 +161,11 @@ add_shortcode('oha_vendor_form', function(){
 
                     update_post_meta($post_id, '_oha_status', 'Submitted');
 
+                    // Stamp convention year and assign permanent vendor ID on every new submission.
+                    $active_year = intval( get_option('oha_vhcpt_active_year', date('Y')) );
+                    update_post_meta($post_id, '_convention_year', $active_year);
+                    update_post_meta($post_id, '_vendor_permanent_id', $post_id);
+
                     // Log the initial submission in history.
                     if (function_exists('oha_vhcpt_append_history')) {
                         oha_vhcpt_append_history($post_id, [

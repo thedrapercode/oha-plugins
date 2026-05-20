@@ -22,6 +22,16 @@ add_shortcode('oha_vendor_boardhub', function() {
 
     // CSV export is now handled by init hook in actions.php
 
+    // Collect all distinct years for the filter dropdown.
+    global $wpdb;
+    $year_rows = $wpdb->get_col(
+        "SELECT DISTINCT meta_value FROM {$wpdb->postmeta}
+         WHERE meta_key = '_convention_year' AND meta_value != ''
+         ORDER BY meta_value DESC"
+    );
+
+    $filter_year = isset($_GET['vh_year']) ? sanitize_text_field($_GET['vh_year']) : '';
+
     // Get all vendor applications
     $args = [
         'post_type' => 'vendor_application',
@@ -31,16 +41,28 @@ add_shortcode('oha_vendor_boardhub', function() {
         'order' => 'DESC'
     ];
 
-    // Handle search
+    // Handle search and year filter — combined into meta_query if both present.
+    $meta_clauses = [];
+
     if (!empty($_GET['s'])) {
         $search = sanitize_text_field($_GET['s']);
-        $args['meta_query'] = [
+        $meta_clauses[] = [
             'relation' => 'OR',
             ['key' => 'company_name', 'value' => $search, 'compare' => 'LIKE'],
             ['key' => 'email', 'value' => $search, 'compare' => 'LIKE'],
             ['key' => 'first_name', 'value' => $search, 'compare' => 'LIKE'],
             ['key' => 'last_name', 'value' => $search, 'compare' => 'LIKE'],
         ];
+    }
+
+    if ($filter_year !== '') {
+        $meta_clauses[] = ['key' => '_convention_year', 'value' => $filter_year, 'compare' => '='];
+    }
+
+    if (!empty($meta_clauses)) {
+        $args['meta_query'] = count($meta_clauses) === 1
+            ? $meta_clauses[0]
+            : array_merge(['relation' => 'AND'], $meta_clauses);
     }
 
     $vendors = get_posts($args);
@@ -876,7 +898,25 @@ add_shortcode('oha_vendor_boardhub', function() {
                 <form method="get" class="oha-search-box">
                     <span class="oha-search-icon">🔍</span>
                     <input type="text" name="s" placeholder="Search vendors..." value="<?php echo esc_attr($_GET['s'] ?? ''); ?>">
+                    <?php if ($filter_year !== ''): ?>
+                        <input type="hidden" name="vh_year" value="<?php echo esc_attr($filter_year); ?>">
+                    <?php endif; ?>
                 </form>
+
+                <?php if (!empty($year_rows)): ?>
+                <form method="get" style="display:flex;align-items:center;gap:6px;">
+                    <?php if (!empty($_GET['s'])): ?>
+                        <input type="hidden" name="s" value="<?php echo esc_attr($_GET['s']); ?>">
+                    <?php endif; ?>
+                    <label for="vh_year_filter" style="font-size:13px;color:#475569;font-weight:600;">Year:</label>
+                    <select id="vh_year_filter" name="vh_year" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
+                        <option value="">All Years</option>
+                        <?php foreach ($year_rows as $yr): ?>
+                            <option value="<?php echo esc_attr($yr); ?>" <?php selected($filter_year, $yr); ?>><?php echo esc_html($yr); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+                <?php endif; ?>
                 
                 <form method="post">
                     <?php wp_nonce_field('oha_export_vendors', 'oha_export_nonce'); ?>
@@ -1019,6 +1059,8 @@ add_shortcode('oha_vendor_boardhub', function() {
                     $phone = get_post_meta($app_id, 'phone', true);
                     $status = get_post_meta($app_id, '_oha_status', true) ?: 'Pending';
                     $booths = get_post_meta($app_id, 'booths', true) ?: 1;
+                    $conv_year  = get_post_meta($app_id, '_convention_year', true);
+                    $perm_id    = get_post_meta($app_id, '_vendor_permanent_id', true) ?: $app_id;
                     
                     // Checkboxes
                     $need_electric = get_post_meta($app_id, 'need_electric', true);
@@ -1037,7 +1079,12 @@ add_shortcode('oha_vendor_boardhub', function() {
                         <!-- Card Header (Always Visible) -->
                         <div class="oha-card-header" onclick="toggleCard(<?php echo $app_id; ?>)">
                             <div class="oha-card-main-info">
-                                <div class="oha-card-id">#<?php echo $app_id; ?></div>
+                                <div class="oha-card-id">
+                                    <div>VID-<?php echo esc_html($perm_id); ?></div>
+                                    <?php if ($conv_year): ?>
+                                        <div style="font-size:11px;color:#94a3b8;font-weight:500;"><?php echo esc_html($conv_year); ?></div>
+                                    <?php endif; ?>
+                                </div>
                                 <div>
                                     <div class="oha-card-company"><?php echo esc_html($company); ?></div>
                                     <div class="oha-card-contact"><?php echo esc_html($first . ' ' . $last); ?> • <?php echo esc_html($email); ?></div>
@@ -1517,6 +1564,8 @@ add_shortcode('oha_vendor_boardhub', function() {
             + '<div><h3>\uD83D\uDCC4 Status</h3>'
             + '<p><strong>Status:</strong> ' + escHtml(v.status) + '</p>'
             + '<p><strong>Submitted:</strong> ' + escHtml(v.date) + '</p>'
+            + (v.convention_year ? '<p><strong>Convention Year:</strong> ' + escHtml(v.convention_year) + '</p>' : '')
+            + '<p><strong>Vendor ID:</strong> VID-' + escHtml(String(v.vendor_permanent_id)) + '</p>'
             + signedHtml
             + '</div>'
             + historyHtml

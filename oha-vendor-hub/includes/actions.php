@@ -112,6 +112,8 @@ function oha_vhcpt_maybe_send_status_email($post_id, $status){
     $replacements['{agreement_link}'] = get_post_meta($post_id, '_agreement_url', true);
     $replacements['{payment_link}']   = get_post_meta($post_id, '_payment_url', true);
     $replacements['{application_id}'] = $post_id;
+    $perm_id = get_post_meta($post_id, '_vendor_permanent_id', true);
+    $replacements['{vendor_id}']      = $perm_id ?: $post_id;
 
     $subject = strtr($subject, $replacements);
     $body    = strtr($body, $replacements);
@@ -864,6 +866,8 @@ add_action('wp_ajax_oha_get_vendor_details', function() {
         'vendor_private_notes' => get_post_meta($app_id, 'vendor_private_notes', true) ?: '',
         'returning_vendor'     => (bool) get_post_meta($app_id, 'returning_vendor', true),
         'booth_preference'     => get_post_meta($app_id, 'booth_preference', true) ?: '',
+        'convention_year'      => get_post_meta($app_id, '_convention_year', true) ?: '',
+        'vendor_permanent_id'  => get_post_meta($app_id, '_vendor_permanent_id', true) ?: $app_id,
         'status' => get_post_meta($app_id, '_oha_status', true) ?: 'Submitted',
         'status_class' => sanitize_title_with_dashes(get_post_meta($app_id, '_oha_status', true) ?: 'Submitted'),
         'date' => get_the_date('M j, Y g:i A', $app_id),

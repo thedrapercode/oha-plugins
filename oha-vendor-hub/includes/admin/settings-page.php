@@ -173,6 +173,11 @@ function oha_vhcpt_settings_page(){
         update_option( 'oha_vhcpt_convention_load_in',    sanitize_text_field( wp_unslash( $_POST['convention_load_in']    ?? '' ) ) );
         update_option( 'oha_vhcpt_convention_booth_price',sanitize_text_field( wp_unslash( $_POST['convention_booth_price'] ?? '' ) ) );
 
+        // Active convention year — stamped on all new applications.
+        $active_year = intval( $_POST['active_year'] ?? date('Y') );
+        if ( $active_year < 2020 || $active_year > 2100 ) $active_year = intval( date('Y') );
+        update_option( 'oha_vhcpt_active_year', $active_year );
+
         echo '<div class="updated"><p>Settings saved.</p></div>';
     }
 
@@ -288,6 +293,14 @@ function oha_vhcpt_settings_page(){
                         <input type="text" id="convention_booth_price" name="convention_booth_price" class="regular-text"
                             value="<?php echo esc_attr( get_option('oha_vhcpt_convention_booth_price', '') ); ?>">
                         <p class="description">Example: $250.00 per space</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="active_year">Active Convention Year</label></th>
+                    <td>
+                        <input type="number" id="active_year" name="active_year" class="small-text" min="2020" max="2100"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_active_year', date('Y')) ); ?>">
+                        <p class="description">Year stamped on every new vendor application. Update this each season before opening applications. Used by the Return Invite tool to identify prior-year vendors.</p>
                     </td>
                 </tr>
             </table>
