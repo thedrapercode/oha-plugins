@@ -166,6 +166,13 @@ function oha_vhcpt_settings_page(){
             'products' => ! empty( $_POST['cards_field_products'] ),
         ] );
 
+        // Convention Details — used in automated email bodies.
+        update_option( 'oha_vhcpt_convention_name',       sanitize_text_field( wp_unslash( $_POST['convention_name']       ?? '' ) ) );
+        update_option( 'oha_vhcpt_convention_venue',      sanitize_text_field( wp_unslash( $_POST['convention_venue']      ?? '' ) ) );
+        update_option( 'oha_vhcpt_convention_dates',      sanitize_text_field( wp_unslash( $_POST['convention_dates']      ?? '' ) ) );
+        update_option( 'oha_vhcpt_convention_load_in',    sanitize_text_field( wp_unslash( $_POST['convention_load_in']    ?? '' ) ) );
+        update_option( 'oha_vhcpt_convention_booth_price',sanitize_text_field( wp_unslash( $_POST['convention_booth_price'] ?? '' ) ) );
+
         echo '<div class="updated"><p>Settings saved.</p></div>';
     }
 
@@ -240,10 +247,55 @@ function oha_vhcpt_settings_page(){
         <form method="post">
             <?php wp_nonce_field('oha_vhcpt_save','oha_vhcpt_nonce'); ?>
 
+            <h2 class="title">Convention Details</h2>
+            <p style="margin-bottom:1em;color:#555;">These values are inserted into automated vendor emails — fast-track invites, approval emails, and agreement notifications. Update them at the start of each convention year so emails always reflect current information.</p>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="convention_name">Convention Name</label></th>
+                    <td>
+                        <input type="text" id="convention_name" name="convention_name" class="regular-text"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_convention_name', 'OHA Convention') ); ?>">
+                        <p class="description">Used in email subjects and body copy. Example: OHA Convention 2027</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="convention_venue">Venue</label></th>
+                    <td>
+                        <input type="text" id="convention_venue" name="convention_venue" class="regular-text"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_convention_venue', '') ); ?>">
+                        <p class="description">Example: Mansfield Reformatory, Mansfield, Ohio</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="convention_dates">Event Dates</label></th>
+                    <td>
+                        <input type="text" id="convention_dates" name="convention_dates" class="regular-text"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_convention_dates', '') ); ?>">
+                        <p class="description">Example: May 8-9, 2027</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="convention_load_in">Load-In Window</label></th>
+                    <td>
+                        <input type="text" id="convention_load_in" name="convention_load_in" class="regular-text"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_convention_load_in', '') ); ?>">
+                        <p class="description">Example: Friday, May 7 from 4:00 PM - 9:00 PM</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="convention_booth_price">Booth Price</label></th>
+                    <td>
+                        <input type="text" id="convention_booth_price" name="convention_booth_price" class="regular-text"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_convention_booth_price', '') ); ?>">
+                        <p class="description">Example: $250.00 per space</p>
+                    </td>
+                </tr>
+            </table>
+
             <h2 class="title">Application Status</h2>
             <?php
             $apps_closed     = get_option('oha_vhcpt_apps_closed', 0);
-            $apps_closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Applications are closed for the 2026 Ohio Haunters Convention. Please keep us in mind for 2027.');
+            $apps_closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Vendor applications are currently closed. Please check back soon.');
             ?>
             <table class="form-table">
                 <tr>

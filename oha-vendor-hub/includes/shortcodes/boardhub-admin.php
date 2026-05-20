@@ -1505,11 +1505,14 @@ add_shortcode('oha_vendor_boardhub', function() {
             + '<p><strong>Website:</strong> ' + websiteDisplay + '</p>'
             + '</div>'
             + '<div><h3>\uD83D\uDCE6 Products</h3><p>' + escHtml(v.product_type) + '</p></div>'
+            + (v.vendor_private_notes ? '<div class="oha-full-width" style="background:#fffbe6;border:1px solid #e6c200;border-left:4px solid #e6c200;border-radius:4px;padding:0.75em 1em;margin-top:0.5em"><h3 style="margin:0 0 0.4em;font-size:0.9em;text-transform:uppercase;letter-spacing:0.05em;color:#7a6000">Note from Vendor (Board Only)</h3><p style="margin:0;white-space:pre-wrap">' + escHtml(v.vendor_private_notes) + '</p></div>' : '')
             + '<div><h3>\uD83C\uDFEA Booth</h3>'
             + '<p><strong>Booths:</strong> ' + escHtml(v.booths) + '</p>'
+            + '<p><strong>Returning Vendor:</strong> ' + (v.returning_vendor ? 'Yes' : 'No') + '</p>'
             + '<p><strong>Electric:</strong> ' + (v.need_electric ? '\u2705' : '\u274C') + '</p>'
             + '<p><strong>Air:</strong> ' + (v.need_air ? '\u2705' : '\u274C') + '</p>'
             + '<p><strong>Table:</strong> ' + (v.need_table ? '\u2705' : '\u274C') + '</p>'
+            + (v.booth_preference ? '<p><strong>Booth Preference:</strong> ' + escHtml(v.booth_preference) + '</p>' : '')
             + '</div>'
             + '<div><h3>\uD83D\uDCC4 Status</h3>'
             + '<p><strong>Status:</strong> ' + escHtml(v.status) + '</p>'

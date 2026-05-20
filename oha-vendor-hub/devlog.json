@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.8.1",
+    "version":  "3.9.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -190,6 +190,55 @@
                         "type":  "change",
                         "summary":  "Removed product_type lock from vendor edit form so vendors can update their description at any status",
                         "notes":  "Previously locked when status was Agreement Signed or Paid. Lock removed from save logic and form display. Status note banner also removed."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "feature",
+                        "summary":  "Restructured vendor form into public/private sections with field hints, badges, and logo callout notice",
+                        "notes":  "Sections: Business Information (public badge), Contact Information (board only badge), Convention Details, Booth Preference, Note to Board. Logo notice explains to upload after approval."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "feature",
+                        "summary":  "Added private notes field to vendor form for vendor-to-board messages",
+                        "notes":  "Saves as vendor_private_notes meta. Shown in board hub modal as yellow callout when present. Board-only, never public."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "feature",
+                        "summary":  "Added returning vendor checkbox and booth preference textarea to vendor form",
+                        "notes":  "Saves returning_vendor (bool) and booth_preference meta. Both shown in board hub modal Booth section. Callout box explains returning vendors get first pick."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "fix",
+                        "summary":  "Website field now normalizes URLs on save - strips junk chars and prepends https:// if protocol missing",
+                        "notes":  "Handles copy-paste artifacts: smart quotes, zero-width spaces. Uses esc_url_raw after normalization. Facebook links and partial URLs both handled."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "feature",
+                        "summary":  "Added Convention Details section to Vendor Hub Settings - name, venue, dates, load-in, booth price",
+                        "notes":  "Five options: oha_vhcpt_convention_name/venue/dates/load_in/booth_price. Update at start of each year. Fields omitted from emails if left blank."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "fix",
+                        "summary":  "Fast-track invite and approval emails now pull venue and dates from Convention Details settings instead of hardcoded 2026 values",
+                        "notes":  "Both emails fully dynamic. Hardcoded Mansfield Reformatory/May 9-10 2026 references removed. Plugin description also de-year-stamped."
+                    },
+                    {
+                        "date":  "2026-05-19",
+                        "version":  "3.9.0",
+                        "type":  "feature",
+                        "summary":  "Private notes, returning vendor flag, and booth preference now displayed in board hub vendor detail modal",
+                        "notes":  "returning_vendor and booth_preference added to oha_get_vendor_details AJAX response and showVendorDetailsModal JS."
                     }
                 ]
 }

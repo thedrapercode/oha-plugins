@@ -9,19 +9,17 @@ function oha_vhcpt_fields_default(){
     return [
         ['key'=>'first_name','label'=>'First Name','type'=>'text','required'=>true],
         ['key'=>'last_name','label'=>'Last Name','type'=>'text','required'=>true],
-        ['key'=>'company_name','label'=>'Company Name','type'=>'text','required'=>true],
+        ['key'=>'company_name','label'=>'Business / Brand Name','type'=>'text','required'=>true],
         ['key'=>'email','label'=>'Email','type'=>'email','required'=>true],
         ['key'=>'phone','label'=>'Phone','type'=>'text','required'=>true],
         ['key'=>'address_street','label'=>'Address','type'=>'text','required'=>true],
         ['key'=>'address_city','label'=>'City','type'=>'text','required'=>true],
-        ['key'=>'address_state','label'=>'US States','type'=>'state','required'=>true],
+        ['key'=>'address_state','label'=>'State','type'=>'state','required'=>true],
         ['key'=>'address_zip','label'=>'Zip','type'=>'text','required'=>true],
-        // Website as a simple text box (no URL validation or formatting enforcement).
-        ['key'=>'website','label'=>'Company Website (if applicable)','type'=>'text','required'=>false],
-        // Products as multiline textarea so longer descriptions can wrap.
-        ['key'=>'product_type','label'=>'What products are you selling?','type'=>'textarea','required'=>true],
+        ['key'=>'website','label'=>'Business Website','type'=>'text','required'=>false],
+        ['key'=>'product_type','label'=>'What will you be selling?','type'=>'textarea','required'=>true],
         ['key'=>'booths','label'=>'Number of booth spaces requested','type'=>'number','required'=>true],
-        ['key'=>'sponsor','label'=>'Would you be interested in being a sponsor?','type'=>'checkbox','required'=>false],
+        ['key'=>'sponsor','label'=>'I am interested in being a sponsor','type'=>'checkbox','required'=>false],
     ];
 }
 
@@ -33,45 +31,46 @@ function oha_vhcpt_fields_default(){
  * NOTE: This form is intentionally open to the public (no login required).
  */
 add_shortcode('oha_vendor_form', function(){
-    // Keep styling the same as before.
     wp_enqueue_style('oha-vhcpt');
 
-    // Applications closed check — must come before anything else.
+    // Applications closed check.
     if (get_option('oha_vhcpt_apps_closed', 0)) {
-        $closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Applications are closed for the 2026 Ohio Haunters Convention. Please keep us in mind for 2027.');
+        $closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Vendor applications are currently closed. Please check back soon.');
         return '<div class="oha-vh-notice" style="padding:1.2em 1.5em;border-left:4px solid #b32020;background:#fff5f5;border-radius:0 4px 4px 0;margin:1em 0;">' . wp_kses_post($closed_msg) . '</div>';
     }
 
     $user   = wp_get_current_user();
     $fields = get_option('oha_vhcpt_fields', oha_vhcpt_fields_default());
-    $msg    = '';
 
-    // Check for success redirect parameter (Post/Redirect/Get pattern)
+    // Build a key => config map for easy lookup.
+    $field_map = [];
+    foreach ($fields as $f) {
+        $field_map[$f['key']] = $f;
+    }
+
+    $msg = '';
+
+    // Success redirect (Post/Redirect/Get pattern).
     if (isset($_GET['vendor_submitted']) && $_GET['vendor_submitted'] === 'success') {
-        $msg = '<div class="oha-vh-success">✅ Your vendor application has been submitted successfully! We will review it and contact you soon at the email address you provided.</div>';
-        // Don't show the form after successful submission
-        return $msg;
+        return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
     }
 
     // Handle submission.
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['oha_vhcpt_nonce']) && wp_verify_nonce($_POST['oha_vhcpt_nonce'],'oha_vhcpt_submit')){
-        
-        // Honeypot check - if filled, it's a bot
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['oha_vhcpt_nonce']) && wp_verify_nonce($_POST['oha_vhcpt_nonce'], 'oha_vhcpt_submit')) {
+
+        // Honeypot check.
         if (!empty($_POST['vendor_website_url'])) {
-            // Silently fail - show success to avoid retry
-            $msg = '<div class="oha-vh-success">✅ Your vendor application has been submitted successfully! We will review it and contact you soon at the email address you provided.</div>' ;
-            return $msg;
+            return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
         }
 
-
-        $meta = [];
+        $meta   = [];
         $errors = [];
 
-        foreach($fields as $f){
+        foreach ($fields as $f) {
             $key = $f['key'];
             $raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : '';
 
-            switch($f['type']){
+            switch ($f['type']) {
                 case 'email':
                     $meta[$key] = sanitize_email($raw);
                     break;
@@ -85,60 +84,58 @@ add_shortcode('oha_vendor_form', function(){
                     $meta[$key] = sanitize_textarea_field($raw);
                     break;
                 default:
-                    // Includes 'text', 'state', and any other simple text-ish types.
                     $meta[$key] = sanitize_text_field($raw);
                     break;
             }
 
-            // Server-side validation for required fields
-            if (!empty($f['required'])){
+            if (!empty($f['required'])) {
                 if (empty($meta[$key]) && $meta[$key] !== '0' && $meta[$key] !== 0) {
                     $errors[] = sprintf('The field "%s" is required.', $f['label']);
                 }
             }
         }
 
-        // If validation errors, show them and stop
+        // Normalize website URL — add https:// if protocol is missing, strip junk characters.
+        if (!empty($meta['website'])) {
+            $url = trim($meta['website']);
+            // Strip common copy-paste artifacts: smart quotes, zero-width spaces, trailing slashes noise.
+            $url = preg_replace('/[\x{00AD}\x{200B}\x{FEFF}]/u', '', $url);
+            $url = trim($url, " \t\n\r\0\x0B\"'\u{201C}\u{201D}\u{2018}\u{2019}");
+            if ($url !== '' && !preg_match('#^https?://#i', $url)) {
+                $url = 'https://' . $url;
+            }
+            $meta['website'] = $url !== '' ? esc_url_raw($url) : '';
+        }
+
+        // Private notes (not in $fields loop — always optional, always textarea).
+        $private_notes   = sanitize_textarea_field(wp_unslash($_POST['vendor_private_notes'] ?? ''));
+        $returning_vendor = isset($_POST['returning_vendor']) ? 1 : 0;
+        $booth_preference = sanitize_textarea_field(wp_unslash($_POST['booth_preference'] ?? ''));
+
         if (!empty($errors)) {
-            $msg = '<div class="oha-vh-error">❌ Please correct the following errors:<ul>';
-            foreach($errors as $err) {
+            $msg = '<div class="oha-vh-error">Please correct the following errors:<ul>';
+            foreach ($errors as $err) {
                 $msg .= '<li>' . esc_html($err) . '</li>';
             }
             $msg .= '</ul></div>';
         } else {
-            // Check for duplicate submission by email within last 10 minutes
+            // Duplicate check — same email within last 10 minutes.
             $recent_duplicate = new WP_Query([
-                'post_type' => 'vendor_application',
-                'post_status' => 'publish',
-                'meta_query' => [
-                    [
-                        'key' => 'email',
-                        'value' => $meta['email'],
-                        'compare' => '='
-                    ]
-                ],
-                'date_query' => [
-                    [
-                        'after' => '10 minutes ago'
-                    ]
-                ],
-                'posts_per_page' => 1
+                'post_type'      => 'vendor_application',
+                'post_status'    => 'publish',
+                'meta_query'     => [['key' => 'email', 'value' => $meta['email'], 'compare' => '=']],
+                'date_query'     => [['after' => '10 minutes ago']],
+                'posts_per_page' => 1,
             ]);
 
             if ($recent_duplicate->have_posts()) {
                 wp_reset_postdata();
-                $msg = '<div class="oha-vh-error">⚠️ We recently received an application from this email address. If you need to update your application, please contact us directly at <a href="mailto:info@ohiohaunters.com">info@ohiohaunters.com</a>.</div>';
+                $msg = '<div class="oha-vh-error">We recently received an application from this email address. If you need to update your application, please contact us directly at <a href="mailto:info@ohiohaunters.com">info@ohiohaunters.com</a>.</div>';
             } else {
-                // Build a sensible title.
-                $title = '';
-                if (!empty($meta['company_name'])){
-                    $title = $meta['company_name'];
-                } elseif (!empty($meta['first_name']) || !empty($meta['last_name'])) {
-                    $title = trim(($meta['first_name'] ?? '').' '.($meta['last_name'] ?? ''));
-                }
-                if ($title === ''){
-                    $title = 'Vendor Application';
-                }
+                $title = !empty($meta['company_name'])
+                    ? $meta['company_name']
+                    : trim(($meta['first_name'] ?? '') . ' ' . ($meta['last_name'] ?? ''));
+                if ($title === '') $title = 'Vendor Application';
 
                 $post_id = wp_insert_post([
                     'post_type'   => 'vendor_application',
@@ -147,107 +144,203 @@ add_shortcode('oha_vendor_form', function(){
                     'post_author' => get_current_user_id(),
                 ], true);
 
-                if (is_wp_error($post_id)){
-                    $msg = '<div class="oha-vh-error">❌ Error creating application: '.esc_html($post_id->get_error_message()).'</div>';
+                if (is_wp_error($post_id)) {
+                    $msg = '<div class="oha-vh-error">Error creating application: ' . esc_html($post_id->get_error_message()) . '</div>';
                 } else {
-                    foreach($meta as $k => $v){
+                    foreach ($meta as $k => $v) {
                         update_post_meta($post_id, $k, $v);
                     }
-                    // Initial status.
+
+                    if (!empty($private_notes)) {
+                        update_post_meta($post_id, 'vendor_private_notes', $private_notes);
+                    }
+                    update_post_meta($post_id, 'returning_vendor', $returning_vendor);
+                    if (!empty($booth_preference)) {
+                        update_post_meta($post_id, 'booth_preference', $booth_preference);
+                    }
+
                     update_post_meta($post_id, '_oha_status', 'Submitted');
 
-                    // Fire automated email for the "Submitted" step, if configured.
-                    if (function_exists('oha_vhcpt_maybe_send_status_email')){
+                    // Log the initial submission in history.
+                    if (function_exists('oha_vhcpt_append_history')) {
+                        oha_vhcpt_append_history($post_id, [
+                            'type'        => 'application_submitted',
+                            'description' => 'Application submitted via vendor application form.',
+                        ]);
+                    }
+
+                    if (function_exists('oha_vhcpt_maybe_send_status_email')) {
                         oha_vhcpt_maybe_send_status_email($post_id, 'Submitted');
                     }
 
-                                        // Inline success (legacy behavior) - do not redirect from inside a shortcode
-                    $msg = '<div class="oha-vh-success">✅ Your vendor application has been submitted successfully! We will review it and contact you soon at the email address you provided.</div>';
-                    return $msg;
-
+                    return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
                 }
             }
         }
     }
 
+    // Helper: render a single form field row.
+    $render_field = function($key, $hint = '') use ($field_map, $user) {
+        if (!isset($field_map[$key])) return;
+        $f       = $field_map[$key];
+        $id      = esc_attr($key);
+        $label   = esc_html($f['label']);
+        $req     = !empty($f['required']);
+        $prefill = '';
+
+        if ($key === 'first_name' && $user && $user->ID) $prefill = esc_attr($user->user_firstname);
+        elseif ($key === 'last_name' && $user && $user->ID) $prefill = esc_attr($user->user_lastname);
+        elseif ($key === 'email' && $user && $user->ID)     $prefill = esc_attr($user->user_email);
+
+        echo '<div class="oha-vh-row">';
+        echo '<label for="' . $id . '">' . $label . ($req ? ' <span class="oha-vh-req">*</span>' : '') . '</label>';
+
+        if ($f['type'] === 'state') {
+            echo '<select id="' . $id . '" name="' . $id . '"' . ($req ? ' required' : '') . '>';
+            echo '<option value="">Select a state...</option>';
+            echo oha_vhcpt_render_states();
+            echo '</select>';
+        } elseif ($f['type'] === 'checkbox') {
+            echo '<label class="oha-vh-checkbox-label"><input type="checkbox" id="' . $id . '" name="' . $id . '" value="1"> Yes</label>';
+        } elseif ($f['type'] === 'textarea') {
+            echo '<textarea id="' . $id . '" name="' . $id . '" rows="4"' . ($req ? ' required' : '') . '>' . esc_textarea($prefill) . '</textarea>';
+        } else {
+            $type = $f['type'] === 'number' ? 'number' : 'text';
+            echo '<input type="' . $type . '" id="' . $id . '" name="' . $id . '" value="' . $prefill . '"' . ($req ? ' required' : '') . '>';
+        }
+
+        if ($hint) {
+            echo '<span class="oha-vh-hint">' . esc_html($hint) . '</span>';
+        }
+
+        echo '</div>';
+    };
+
     ob_start();
     echo $msg;
     ?>
+    <style>
+    .oha-vh-section { margin-bottom: 2em; }
+    .oha-vh-section-head { margin-bottom: 1em; padding-bottom: 0.5em; border-bottom: 2px solid #e0e0e0; }
+    .oha-vh-section-title { font-size: 1.05em; font-weight: 700; margin: 0 0 0.25em; }
+    .oha-vh-section-desc { font-size: 0.875em; margin: 0; }
+    .oha-vh-badge-public { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #1a7a3a; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+    .oha-vh-badge-private { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #555; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+    .oha-vh-hint { display: block; font-size: 0.8em; color: #666; margin-top: 4px; line-height: 1.4; }
+    .oha-vh-logo-notice { background: #f0f6ff; border: 1px solid #b8d4f5; border-left: 4px solid #1159af; border-radius: 4px; padding: 1em 1.25em; margin-bottom: 2em; }
+    .oha-vh-logo-notice p { margin: 0 0 0.5em; font-size: 0.9em; line-height: 1.5; }
+    .oha-vh-logo-notice p:last-child { margin-bottom: 0; }
+    .oha-vh-logo-notice strong { color: #1159af; }
+    .oha-vh-req { color: #b32020; }
+    .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
+    .oha-vh-booth-notice { background: #fff8f0; border: 1px solid #f0c070; border-left: 4px solid #c87000; border-radius: 4px; padding: 1em 1.25em; margin-bottom: 1.25em; }
+    .oha-vh-booth-notice p { margin: 0 0 0.5em; font-size: 0.9em; line-height: 1.5; }
+    .oha-vh-booth-notice p:last-child { margin-bottom: 0; }
+    </style>
+
     <form class="oha-vh-form" method="post">
         <?php wp_nonce_field('oha_vhcpt_submit', 'oha_vhcpt_nonce'); ?>
-        
-        <!-- Honeypot field - hidden from real users, caught by bots -->
+
+        <!-- Honeypot -->
         <div style="position:absolute;left:-9999px;" aria-hidden="true">
             <label>Leave this field blank
                 <input type="text" name="vendor_website_url" value="" tabindex="-1" autocomplete="off">
             </label>
         </div>
 
-        <?php foreach($fields as $f):
-            $key   = esc_attr($f['key']);
-            $label = esc_html($f['label']);
-            $req   = !empty($f['required']) ? 'required' : '';
-            $prefill = '';
-            if ($key === 'first_name' && $user && $user->ID){
-                $prefill = esc_attr($user->user_firstname);
-            } elseif ($key === 'last_name' && $user && $user->ID){
-                $prefill = esc_attr($user->user_lastname);
-            } elseif ($key === 'email' && $user && $user->ID){
-                $prefill = esc_attr($user->user_email);
-            }
-        ?>
-        <div class="oha-vh-row">
-            <label for="<?php echo $key; ?>"><?php echo $label; ?><?php echo $req ? ' *' : ''; ?></label>
-            <?php if ($f['type'] === 'state'): ?>
-                <select id="<?php echo $key; ?>" name="<?php echo $key; ?>" <?php echo $req; ?>>
-                    <option value=""><?php esc_html_e('Select…','oha-vhcpt'); ?></option>
-                    <?php echo oha_vhcpt_render_states(); ?>
-                </select>
-            <?php elseif ($f['type'] === 'checkbox'): ?>
-                <input type="checkbox" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="1">
-            <?php elseif ($f['type'] === 'textarea'): ?>
-                <textarea id="<?php echo $key; ?>" name="<?php echo $key; ?>" rows="4" <?php echo $req; ?>><?php echo esc_textarea($prefill); ?></textarea>
-            <?php else: ?>
-                <input
-                    type="<?php echo esc_attr($f['type'] === 'number' ? 'number' : 'text'); ?>"
-                    id="<?php echo $key; ?>"
-                    name="<?php echo $key; ?>"
-                    value="<?php echo $prefill; ?>"
-                    <?php echo $req; ?>
-                >
-            <?php endif; ?>
+        <?php /* ── SECTION 1: PUBLIC BUSINESS INFORMATION ── */ ?>
+        <div class="oha-vh-section">
+            <div class="oha-vh-section-head">
+                <p class="oha-vh-section-title">Business Information <span class="oha-vh-badge-public">Shown Publicly</span></p>
+                <p class="oha-vh-section-desc">This information appears on the OHA website vendor listing, the convention map, and in the convention app. Make sure it represents your business accurately.</p>
+            </div>
+            <?php $render_field('company_name', 'Your business or brand name as it will appear publicly. Use your vendor name here - not your personal name.'); ?>
+            <?php $render_field('website', 'Your business website or Facebook page. Enter the full address including https:// -- for example: https://www.yourbusiness.com or https://www.facebook.com/yourpage. Leave blank if you do not have one.'); ?>
+            <?php $render_field('product_type', 'Describe what you will be selling at the convention. This description appears on your public vendor card - be specific so attendees can find you.'); ?>
         </div>
-        <?php endforeach; ?>
-        
-        <button type="submit" class="oha-vh-btn" id="oha-submit-btn">
-            <?php esc_html_e('Submit Application','oha-vhcpt'); ?>
-        </button>
+
+        <?php /* ── SECTION 2: CONTACT INFORMATION ── */ ?>
+        <div class="oha-vh-section">
+            <div class="oha-vh-section-head">
+                <p class="oha-vh-section-title">Your Contact Information <span class="oha-vh-badge-private">Board Only</span></p>
+                <p class="oha-vh-section-desc">This information is seen only by the OHA board. It is never displayed publicly and is used for communication and agreement purposes only.</p>
+            </div>
+            <?php $render_field('first_name'); ?>
+            <?php $render_field('last_name'); ?>
+            <?php $render_field('email', 'We will send your application updates and agreement to this address.'); ?>
+            <?php $render_field('phone'); ?>
+            <?php $render_field('address_street'); ?>
+            <?php $render_field('address_city'); ?>
+            <?php $render_field('address_state'); ?>
+            <?php $render_field('address_zip'); ?>
+        </div>
+
+        <?php /* ── SECTION 3: CONVENTION DETAILS ── */ ?>
+        <div class="oha-vh-section">
+            <div class="oha-vh-section-head">
+                <p class="oha-vh-section-title">Convention Details</p>
+            </div>
+            <?php $render_field('booths', 'Each booth space is 10x10. Contact us if you need clarification before submitting.'); ?>
+            <?php $render_field('sponsor'); ?>
+        </div>
+
+        <?php /* ── SECTION 4: BOOTH PREFERENCE (RETURNING VENDORS) ── */ ?>
+        <div class="oha-vh-section">
+            <div class="oha-vh-section-head">
+                <p class="oha-vh-section-title">Booth Preference <span class="oha-vh-badge-private">Board Only</span></p>
+            </div>
+            <div class="oha-vh-booth-notice">
+                <p><strong>Returning vendors receive first choice on booth location.</strong></p>
+                <p>If you vended with us at a previous OHA convention, you may request to keep your current spot or indicate a preference for a new one. New vendors are welcome to note any preferences as well - we will do our best to accommodate requests based on availability.</p>
+            </div>
+            <div class="oha-vh-row">
+                <label class="oha-vh-checkbox-label">
+                    <input type="checkbox" name="returning_vendor" value="1">
+                    I am a returning vendor from a previous OHA convention
+                </label>
+            </div>
+            <div class="oha-vh-row" style="margin-top:0.75em">
+                <label for="booth_preference">Booth preference or location notes (optional)</label>
+                <textarea id="booth_preference" name="booth_preference" rows="3" placeholder="Example: I would like to keep booth 14 from last year. Or: I would prefer to be near the main entrance."></textarea>
+            </div>
+        </div>
+
+        <?php /* ── LOGO NOTICE ── */ ?>
+        <div class="oha-vh-logo-notice">
+            <p><strong>A company logo is strongly preferred.</strong></p>
+            <p>Your logo appears next to your business name on the vendor listing, the convention map, and in the convention app. Vendors with a logo receive significantly more visibility than those without one.</p>
+            <p>You do not need to upload a logo now. After your application is reviewed and approved, you will receive a secure link by email to update your profile and upload your logo at any time.</p>
+        </div>
+
+        <?php /* ── SECTION 5: PRIVATE NOTES ── */ ?>
+        <div class="oha-vh-section">
+            <div class="oha-vh-section-head">
+                <p class="oha-vh-section-title">Note to the OHA Board <span class="oha-vh-badge-private">Board Only</span></p>
+                <p class="oha-vh-section-desc">Share anything the board should know - booth placement preferences, accessibility needs, questions, or special requests. This message is seen only by the board and is never shared publicly.</p>
+            </div>
+            <div class="oha-vh-row">
+                <label for="vendor_private_notes">Notes (optional)</label>
+                <textarea id="vendor_private_notes" name="vendor_private_notes" rows="4" placeholder="Example: I would prefer to be near my business partner who is also applying. Their business name is..."></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="oha-vh-btn" id="oha-submit-btn">Submit Application</button>
     </form>
 
     <script>
     (function(){
         var form = document.querySelector('.oha-vh-form');
-        var btn = document.getElementById('oha-submit-btn');
+        var btn  = document.getElementById('oha-submit-btn');
         if (form && btn) {
             var submitted = false;
             form.addEventListener('submit', function(e){
-                // Prevent double submission
-                if (submitted) {
-                    e.preventDefault();
-                    return false;
-                }
-                
-                // Disable button to prevent double-clicks
+                if (submitted) { e.preventDefault(); return false; }
                 submitted = true;
                 btn.disabled = true;
-                btn.classList.add('submitting');
                 btn.textContent = 'Submitting...';
-                
-                // Re-enable after 5 seconds as fallback (in case validation fails)
                 setTimeout(function(){
                     submitted = false;
                     btn.disabled = false;
-                    btn.classList.remove('submitting');
                     btn.textContent = 'Submit Application';
                 }, 5000);
             });

@@ -427,19 +427,35 @@ add_action('wp_ajax_oha_send_final_app_email', function(){
     // Build pre-populated link
     $final_link = add_query_arg('app_id', $app_id, $final_app_url);
     
+    $conv_name    = get_option('oha_vhcpt_convention_name',         'OHA Convention');
+    $conv_venue   = get_option('oha_vhcpt_convention_venue',        '');
+    $conv_dates   = get_option('oha_vhcpt_convention_dates',        '');
+    $conv_load_in = get_option('oha_vhcpt_convention_load_in',      '');
+    $conv_price   = get_option('oha_vhcpt_convention_booth_price',  '');
+
     // Email subject
-    $subject = 'Complete Your OHA Vendor Application - Action Required';
-    
+    $subject = 'Complete Your ' . $conv_name . ' Vendor Application - Action Required';
+
     // Email body
-    $body = "Hi " . $first_name . ",\n\n";
-    $body .= "Good news! Your vendor application for " . $company_name . " has been approved.\n\n";
+    $body  = "Hi " . $first_name . ",\n\n";
+    $body .= "Good news! Your vendor application for " . $company_name . " has been approved for the " . $conv_name . ".\n\n";
     $body .= "Please complete your final vendor application and payment by clicking the link below:\n\n";
     $body .= $final_link . "\n\n";
-    $body .= "Important Details:\n";
-    $body .= "• Venue: Mansfield Reformatory, Mansfield Ohio\n";
-    $body .= "• Dates: May 9-10, 2026\n";
-    $body .= "• Load-in: Friday May 8, 4pm-9pm\n";
-    $body .= "• Booth Price: $250.00 per space\n\n";
+
+    $details = [];
+    if ( $conv_venue   ) $details[] = "Venue: " . $conv_venue;
+    if ( $conv_dates   ) $details[] = "Dates: " . $conv_dates;
+    if ( $conv_load_in ) $details[] = "Load-in: " . $conv_load_in;
+    if ( $conv_price   ) $details[] = "Booth Price: " . $conv_price;
+
+    if ( $details ) {
+        $body .= "Important Details:\n";
+        foreach ( $details as $line ) {
+            $body .= "• " . $line . "\n";
+        }
+        $body .= "\n";
+    }
+
     $body .= "The form will be pre-filled with your information from your initial application. You'll need to:\n";
     $body .= "1. Review and confirm your information\n";
     $body .= "2. Read the venue terms and conditions\n";
@@ -845,6 +861,9 @@ add_action('wp_ajax_oha_get_vendor_details', function() {
         'need_air' => get_post_meta($app_id, 'need_air', true) ? true : false,
         'need_table' => get_post_meta($app_id, 'need_table', true) ? true : false,
         'sponsor' => get_post_meta($app_id, 'sponsor', true) ? true : false,
+        'vendor_private_notes' => get_post_meta($app_id, 'vendor_private_notes', true) ?: '',
+        'returning_vendor'     => (bool) get_post_meta($app_id, 'returning_vendor', true),
+        'booth_preference'     => get_post_meta($app_id, 'booth_preference', true) ?: '',
         'status' => get_post_meta($app_id, '_oha_status', true) ?: 'Submitted',
         'status_class' => sanitize_title_with_dashes(get_post_meta($app_id, '_oha_status', true) ?: 'Submitted'),
         'date' => get_the_date('M j, Y g:i A', $app_id),
@@ -1099,23 +1118,33 @@ add_action('wp_ajax_oha_vh_fasttrack_invite', function() {
         $final_app_url = 'https://ohiohaunters.com/convention-registration/final-vendor-application/';
     }
 
+    $conv_name    = get_option('oha_vhcpt_convention_name',        'OHA Convention');
+    $conv_venue   = get_option('oha_vhcpt_convention_venue',       '');
+    $conv_dates   = get_option('oha_vhcpt_convention_dates',       '');
+    $conv_load_in = get_option('oha_vhcpt_convention_load_in',     '');
+
     $greeting = $to_name ? 'Hi ' . $to_name . ',' : 'Hello,';
 
-    $subject  = "You're Invited to Vend at OHA Convention 2026";
+    $subject  = "You're Invited to Vend at the " . $conv_name;
 
     $body  = $greeting . "\n\n";
-    $body .= "We are thrilled to invite you to join us as a vendor at the Ohio Haunters Association Convention 2026!\n\n";
+    $body .= "We are thrilled to invite you to join us as a vendor at the " . $conv_name . "!\n\n";
     $body .= "This is a fantastic opportunity to showcase your products to hundreds of haunted attraction enthusiasts, ";
     $body .= "professionals, and fans from across the region.\n\n";
-    $body .= "EVENT DETAILS\n";
-    $body .= "Venue:    Mansfield Reformatory, Mansfield, Ohio\n";
-    $body .= "Dates:    May 9-10, 2026\n";
-    $body .= "Load-In:  Friday, May 8 from 4:00 PM - 9:00 PM\n\n";
+
+    if ( $conv_venue || $conv_dates || $conv_load_in ) {
+        $body .= "EVENT DETAILS\n";
+        if ( $conv_venue   ) $body .= "Venue:    " . $conv_venue   . "\n";
+        if ( $conv_dates   ) $body .= "Dates:    " . $conv_dates   . "\n";
+        if ( $conv_load_in ) $body .= "Load-In:  " . $conv_load_in . "\n";
+        $body .= "\n";
+    }
+
     $body .= "To secure your booth, please complete your vendor application using the link below:\n\n";
     $body .= $final_app_url . "\n\n";
     $body .= "Booth spaces are limited and fill up quickly, so we encourage you to complete your application as soon as possible.\n\n";
     $body .= "If you have any questions or need assistance, please don't hesitate to reply to this email. ";
-    $body .= "We are happy to help and look forward to having you with us this year!\n\n";
+    $body .= "We look forward to having you with us this year!\n\n";
     $body .= "Warm regards,\n";
     $body .= "Ohio Haunters Association\n";
     $body .= "https://ohiohaunters.com";
