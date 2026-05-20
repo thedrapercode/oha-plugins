@@ -1347,238 +1347,87 @@ private function render_overview_tab($range = '30d') {
         $levels = $this->get_level_map();
         $rows_all = $this->fetch_members_legacy_raw(null, '');
 
-        $counts = ['listing_owners'=>0,'board'=>0,'vendors'=>0,'sponsors'=>0,'convention2026'=>0,'oha_member'=>0];
+        $counts = ['oha_member' => 0, 'listing_owners' => 0, 'board' => 0];
         foreach ($rows_all as $r) {
             $d = isset($r['subscription_starts']) ? trim($r['subscription_starts']) : '';
-            if ($d === '') { continue; }
+            if ($d === '') continue;
             $ts = strtotime($d);
-            if (!$ts || $ts < $since_ts) { continue; }
+            if (!$ts || $ts < $since_ts) continue;
             $lvl = (string)($r['membership_level'] ?? '');
+            if ($lvl === (string)$levels['oha_member'])     $counts['oha_member']++;
             if ($lvl === (string)$levels['listing_owners']) $counts['listing_owners']++;
             if ($lvl === (string)$levels['board'])          $counts['board']++;
-            if ($lvl === (string)$levels['vendors'])        $counts['vendors']++;
-            if ($lvl === (string)$levels['sponsors'])       $counts['sponsors']++;
-            if ($lvl === (string)$levels['convention2026']) $counts['convention2026']++;
-            if ($lvl === (string)$levels['oha_member']) $counts['oha_member']++;
         }
         return $counts;
     }
 
     private function fetch_members_legacy_raw($level_id = null, $q = '') {
         global $wpdb;
-        $members_tbl = $wpdb->prefix . 'swpm_members_tbl';
-        $levels      = $this->get_level_map();
+        $levels  = $this->get_level_map();
+        $cap_key = $wpdb->prefix . 'capabilities';
 
-        $swpm_rows   = [];
-        $swpm_wp_ids = []; // WP user IDs already covered by SWPM records
+        // Canonical type definitions: form_id + WP role + SWPM level ID for membership_level output
+        $type_defs = [
+            'oha_member'    => ['form_id' => '1', 'role' => 'subscriber',    'lvl' => $levels['oha_member']],
+            'listing_owner' => ['form_id' => '4', 'role' => 'listing_owner', 'lvl' => $levels['listing_owners']],
+            'board'         => ['form_id' => '2', 'role' => 'oha_board',     'lvl' => $levels['board']],
+        ];
 
-        // ── Part 1: SWPM legacy members ──────────────────────────────────────
-        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $members_tbl)) === $members_tbl) {
-            $where  = [];
-            $params = [];
-            if ($level_id) {
-                $where[]  = 'membership_level = %d';
-                $params[] = intval($level_id);
+        if ($level_id !== null) {
+            $wanted = [];
+            foreach ($type_defs as $key => $def) {
+                if ((string)$level_id === (string)$def['lvl']) $wanted[$key] = $def;
             }
-            if ($q !== '') {
-                $like    = '%' . $wpdb->esc_like($q) . '%';
-                $where[] = '(first_name LIKE %s OR last_name LIKE %s OR user_name LIKE %s OR email LIKE %s)';
-                array_push($params, $like, $like, $like, $like);
-            }
-            $where_sql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
-            $sql = "SELECT * FROM $members_tbl $where_sql ORDER BY member_id DESC LIMIT 5000";
-            if ($params) {
-                $raw = $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], array_merge([$sql], $params)), ARRAY_A);
-            } else {
-                $raw = $wpdb->get_results($sql, ARRAY_A);
-            }
-            foreach ((is_array($raw) ? $raw : []) as $r) {
-                // Augment empty SWPM address fields.
-                // Priority: billing_* usermeta (Stripe) → address_* usermeta (legacy Board Hub)
-                $uid = intval($r['wp_user_id'] ?? 0);
-                if ($uid) {
-                    if (empty(trim($r['address_street'] ?? ''))) {
-                        $r['address_street'] = get_user_meta($uid, 'billing_address_line1', true)
-                                            ?: get_user_meta($uid, 'address_street', true) ?: '';
-                    }
-                    if (empty(trim($r['address_city'] ?? ''))) {
-                        $r['address_city'] = get_user_meta($uid, 'billing_city', true)
-                                          ?: get_user_meta($uid, 'address_city', true) ?: '';
-                    }
-                    if (empty(trim($r['address_state'] ?? ''))) {
-                        $r['address_state'] = get_user_meta($uid, 'billing_state', true)
-                                           ?: get_user_meta($uid, 'address_state', true) ?: '';
-                    }
-                    if (empty(trim($r['address_zipcode'] ?? ''))) {
-                        $r['address_zipcode'] = get_user_meta($uid, 'billing_postal_code', true)
-                                             ?: get_user_meta($uid, 'address_zipcode', true) ?: '';
-                    }
-                    if (empty(trim($r['country'] ?? ''))) {
-                        $r['country'] = get_user_meta($uid, 'billing_country', true)
-                                     ?: get_user_meta($uid, 'country', true) ?: '';
-                    }
-                    $swpm_wp_ids[] = $uid;
-                }
-                $r['_source'] = 'swpm';
-                $swpm_rows[]  = $r;
-            }
-        }
-
-        // ── Part 2: UsersWP members not already covered by SWPM ──────────────
-        // Determine which _uwp_register_form_id values to include given the level filter.
-        if ($level_id) {
-            $want_types = [];
-            if ((string)$levels['oha_member']     === (string)$level_id) $want_types[] = 'oha_member';
-            if ((string)$levels['listing_owners'] === (string)$level_id) $want_types[] = 'listing_owner';
-            if (empty($want_types)) {
-                // Requested level has no UsersWP form equivalent (board/vendor/etc) – return SWPM only.
-                return $swpm_rows;
-            }
+            if (empty($wanted)) return [];
         } else {
-            $want_types = ['oha_member', 'listing_owner'];
+            $wanted = $type_defs;
         }
 
-        // Map account type labels to _uwp_register_form_id values.
-        // form 1 = paid OHA member, form 4 = listing owner.
-        $form_id_map = ['oha_member' => '1', 'listing_owner' => '4'];
+        $all_rows = [];
+        $seen_ids = [];
 
-        $uwp_rows = [];
-        foreach ($want_types as $acct_type) {
-            $form_id_val = $form_id_map[$acct_type] ?? '1';
-            $sql_args    = [$form_id_val];
-            $uwp_where   = "WHERE EXISTS (
-    SELECT 1 FROM {$wpdb->usermeta} um
-    WHERE um.user_id = u.ID AND um.meta_key = '_uwp_register_form_id' AND um.meta_value = %s
-)";
+        foreach ($wanted as $def) {
+            $form_id   = $def['form_id'];
+            $role_like = '%"' . $def['role'] . '"%';
+            $lvl_num   = $def['lvl'];
 
-            if (!empty($swpm_wp_ids)) {
-                $ph         = implode(',', array_fill(0, count($swpm_wp_ids), '%d'));
-                $uwp_where .= " AND u.ID NOT IN ($ph)";
-                foreach ($swpm_wp_ids as $swid) $sql_args[] = intval($swid);
-            }
+            $params     = [$form_id, $role_like];
+            $search_sql = '';
             if ($q !== '') {
                 $like = '%' . $wpdb->esc_like($q) . '%';
                 if (ctype_digit($q)) {
-                    $uwp_where .= ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)';
-                    array_push($sql_args, $like, $like, $like, intval($q));
+                    $search_sql = ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)';
+                    array_push($params, $like, $like, $like, intval($q));
                 } else {
-                    $uwp_where .= ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
-                    array_push($sql_args, $like, $like, $like);
+                    $search_sql = ' AND (u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
+                    array_push($params, $like, $like, $like);
                 }
             }
 
-            $uwp_sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
-                               (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'first_name' LIMIT 1) AS first_name,
-                               (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'last_name' LIMIT 1) AS last_name,
-                               (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since
-                        FROM {$wpdb->users} u
-                        $uwp_where
-                        ORDER BY u.user_registered DESC LIMIT 5000";
+            $sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
+                           (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'first_name' LIMIT 1) AS first_name,
+                           (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'last_name' LIMIT 1) AS last_name,
+                           (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since
+                    FROM {$wpdb->users} u
+                    WHERE EXISTS (
+                        SELECT 1 FROM {$wpdb->usermeta} um_f
+                        WHERE um_f.user_id = u.ID AND um_f.meta_key = '_uwp_register_form_id' AND um_f.meta_value = %s
+                    )
+                    AND EXISTS (
+                        SELECT 1 FROM {$wpdb->usermeta} um_r
+                        WHERE um_r.user_id = u.ID AND um_r.meta_key = '{$cap_key}' AND um_r.meta_value LIKE %s
+                    ){$search_sql}
+                    ORDER BY u.user_registered DESC LIMIT 5000";
 
-            $uwp_raw = $wpdb->get_results(
-                call_user_func_array([$wpdb, 'prepare'], array_merge([$uwp_sql], $sql_args)),
+            $raw = $wpdb->get_results(
+                call_user_func_array([$wpdb, 'prepare'], array_merge([$sql], $params)),
                 ARRAY_A
             );
 
-            foreach ((is_array($uwp_raw) ? $uwp_raw : []) as $ur) {
-                $uid       = intval($ur['ID']);
-                $level_num = ($acct_type === 'oha_member') ? $levels['oha_member'] : $levels['listing_owners'];
-                $start     = !empty($ur['oha_paid_since']) ? $ur['oha_paid_since'] : $ur['user_registered'];
-
-                $fname = $ur['first_name'] ?: '';
-                $lname = $ur['last_name']  ?: '';
-                if (!$fname && !$lname) {
-                    // Attempt to split display_name
-                    $parts = explode(' ', $ur['display_name'], 2);
-                    $fname = $parts[0] ?? '';
-                    $lname = $parts[1] ?? '';
-                }
-
-                $uwp_rows[] = [
-                    'member_id'           => $uid,
-                    'wp_user_id'          => $uid,
-                    'user_name'           => $ur['user_login'],
-                    'first_name'          => $fname,
-                    'last_name'           => $lname,
-                    'email'               => $ur['user_email'],
-                    'membership_level'    => $level_num,
-                    'account_state'       => 'active',
-                    'subscription_starts' => $start,
-                    // Address: billing_* (Stripe) → address_* (legacy Board Hub)
-                    'address_street'      => get_user_meta($uid, 'billing_address_line1', true)
-                                         ?: get_user_meta($uid, 'address_street',  true) ?: '',
-                    'address_city'        => get_user_meta($uid, 'billing_city',    true)
-                                         ?: get_user_meta($uid, 'address_city',    true) ?: '',
-                    'address_state'       => get_user_meta($uid, 'billing_state',   true)
-                                         ?: get_user_meta($uid, 'address_state',   true) ?: '',
-                    'address_zipcode'     => get_user_meta($uid, 'billing_postal_code', true)
-                                         ?: get_user_meta($uid, 'address_zipcode', true) ?: '',
-                    'country'             => get_user_meta($uid, 'billing_country', true)
-                                         ?: get_user_meta($uid, 'country',         true) ?: '',
-                    '_source'             => 'uwp',
-                ];
-            }
-        }
-
-        // ── Part 3: Fallback for _uwp_register_form_id=1 users not already in Part 1 or Part 2 ──
-        // Only run when the level filter maps to oha_member (or no filter).
-        $include_fb_level = !$level_id || (string)$levels['oha_member'] === (string)$level_id;
-        $fb_rows = [];
-
-        if ($include_fb_level) {
-            // Collect all already-covered WP user IDs and emails
-            $fb_excl_ids    = array_unique(array_filter($swpm_wp_ids));
-            $fb_excl_emails = [];
-            foreach ($swpm_rows as $sr) {
-                if (!empty($sr['email'])) $fb_excl_emails[] = strtolower($sr['email']);
-            }
-            foreach ($uwp_rows as $ur) {
-                if ($ur['wp_user_id'] > 0) $fb_excl_ids[]    = $ur['wp_user_id'];
-                if (!empty($ur['email']))   $fb_excl_emails[] = strtolower($ur['email']);
-            }
-            $fb_excl_ids    = array_unique(array_filter($fb_excl_ids));
-            $fb_excl_emails = array_unique($fb_excl_emails);
-
-            $fb_where  = [];
-            $fb_params = [];
-
-            $fb_where[] = "EXISTS (
-    SELECT 1 FROM {$wpdb->usermeta} um_form
-    WHERE um_form.user_id = u.ID AND um_form.meta_key = '_uwp_register_form_id' AND um_form.meta_value = '1'
-)";
-
-            if (!empty($fb_excl_ids)) {
-                $ph = implode(',', array_fill(0, count($fb_excl_ids), '%d'));
-                $fb_where[] = "u.ID NOT IN ($ph)";
-                foreach ($fb_excl_ids as $eid) $fb_params[] = intval($eid);
-            }
-            if ($q !== '') {
-                $like = '%' . $wpdb->esc_like($q) . '%';
-                if (ctype_digit($q)) {
-                    $fb_where[] = '(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)';
-                    array_push($fb_params, $like, $like, $like, intval($q));
-                } else {
-                    $fb_where[] = '(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)';
-                    array_push($fb_params, $like, $like, $like);
-                }
-            }
-
-            $fb_sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
-                              (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'first_name' LIMIT 1) AS first_name,
-                              (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'last_name' LIMIT 1) AS last_name,
-                              (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since
-                       FROM {$wpdb->users} u
-                       WHERE " . implode(' AND ', $fb_where) . "
-                       ORDER BY u.user_registered DESC LIMIT 5000";
-
-            $fb_raw = $fb_params
-                ? $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], array_merge([$fb_sql], $fb_params)), ARRAY_A)
-                : $wpdb->get_results($fb_sql, ARRAY_A);
-
-            foreach (is_array($fb_raw) ? $fb_raw : [] as $ur) {
+            foreach ((is_array($raw) ? $raw : []) as $ur) {
                 $uid = intval($ur['ID']);
-                // Skip if already covered by email (handles SWPM rows with wp_user_id=0)
-                if (in_array(strtolower($ur['user_email']), $fb_excl_emails, true)) continue;
+                if (isset($seen_ids[$uid])) continue;
+                $seen_ids[$uid] = true;
 
                 $fname = $ur['first_name'] ?: '';
                 $lname = $ur['last_name']  ?: '';
@@ -1589,33 +1438,32 @@ private function render_overview_tab($range = '30d') {
                 }
                 $start = !empty($ur['oha_paid_since']) ? $ur['oha_paid_since'] : $ur['user_registered'];
 
-                $fb_rows[] = [
+                $all_rows[] = [
                     'member_id'           => $uid,
                     'wp_user_id'          => $uid,
                     'user_name'           => $ur['user_login'],
                     'first_name'          => $fname,
                     'last_name'           => $lname,
                     'email'               => $ur['user_email'],
-                    'membership_level'    => $levels['oha_member'],
+                    'membership_level'    => $lvl_num,
                     'account_state'       => 'active',
                     'subscription_starts' => $start,
                     'address_street'      => get_user_meta($uid, 'billing_address_line1', true)
-                                         ?: get_user_meta($uid, 'address_street',  true) ?: '',
+                                          ?: get_user_meta($uid, 'address_street',  true) ?: '',
                     'address_city'        => get_user_meta($uid, 'billing_city',    true)
-                                         ?: get_user_meta($uid, 'address_city',    true) ?: '',
+                                          ?: get_user_meta($uid, 'address_city',    true) ?: '',
                     'address_state'       => get_user_meta($uid, 'billing_state',   true)
-                                         ?: get_user_meta($uid, 'address_state',   true) ?: '',
+                                          ?: get_user_meta($uid, 'address_state',   true) ?: '',
                     'address_zipcode'     => get_user_meta($uid, 'billing_postal_code', true)
-                                         ?: get_user_meta($uid, 'address_zipcode', true) ?: '',
+                                          ?: get_user_meta($uid, 'address_zipcode', true) ?: '',
                     'country'             => get_user_meta($uid, 'billing_country', true)
-                                         ?: get_user_meta($uid, 'country',         true) ?: '',
-                    '_source'             => 'uwp',
+                                          ?: get_user_meta($uid, 'country',         true) ?: '',
+                    '_source'             => 'canonical',
                 ];
             }
         }
 
-        // SWPM rows first (legacy), then uwp rows (newer members), then form-id-1 fallback
-        return array_merge($swpm_rows, $uwp_rows, $fb_rows);
+        return $all_rows;
     }
 
     private function php_filter_by_range($rows, $range_key) {
@@ -1635,15 +1483,11 @@ private function render_overview_tab($range = '30d') {
         $levels = $this->get_level_map();
         $active_level_id = null;
         switch ($lvl_key) {
-            case 'listing':  $active_level_id = $levels['listing_owners']; break;
-            case 'board':    $active_level_id = $levels['board']; break;
-            case 'vendors':  $active_level_id = $levels['vendors']; break;
-            case 'sponsors': $active_level_id = $levels['sponsors']; break;
-            case 'con2026':  $active_level_id = $levels['convention2026']; break;
+            case 'listing': $active_level_id = $levels['listing_owners']; break;
+            case 'board':   $active_level_id = $levels['board']; break;
             case 'oha':     $active_level_id = $levels['oha_member']; break;
-            default: $active_level_id = null;
+            default:        $active_level_id = null;
         }
-        if ($lvl_key === 'oha') { $active_level_id = $levels['oha_member']; }
 
 
         $q = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
@@ -1666,16 +1510,13 @@ private function render_overview_tab($range = '30d') {
         }
 // Counts by level from a single "all-levels" dataset for consistency
         $rows_for_counts = $this->php_filter_by_range($this->fetch_members_legacy_raw(null, $q), $range_key);
-        $counts = ['listing_owners'=>0,'board'=>0,'vendors'=>0,'sponsors'=>0,'convention2026'=>0,'oha_member'=>0];
+        $counts = ['oha_member' => 0, 'listing_owners' => 0, 'board' => 0];
         foreach ($rows_for_counts as $r) {
             $lvl = (string)($r['membership_level'] ?? '');
+            if ($lvl === (string)$levels['oha_member'])     $counts['oha_member']++;
             if ($lvl === (string)$levels['listing_owners']) $counts['listing_owners']++;
             if ($lvl === (string)$levels['board'])          $counts['board']++;
-            if ($lvl === (string)$levels['vendors'])        $counts['vendors']++;
-            if ($lvl === (string)$levels['sponsors'])       $counts['sponsors']++;
-            if ($lvl === (string)$levels['convention2026']) $counts['convention2026']++;
-                    if ($lvl === (string)$levels['oha_member']) $counts['oha_member']++;
-}
+        }
 
         $export_url = admin_url('admin-post.php?action=oha_export_members_csv');
         $export_url = add_query_arg(['range'=>$range_key], $export_url);
@@ -1704,17 +1545,6 @@ private function render_overview_tab($range = '30d') {
                     $cls_board = ($lvl_key==='board') ? 'button button-primary' : 'button';
                     echo '<a class="'.$cls_board.'" href="'.esc_url($url_board).'">Board ('.intval($counts['board']).')</a> ';
 
-                    $url_vendors = add_query_arg(['tab'=>'members','lvl'=>'vendors','range'=>$range_key,'q'=>$q]);
-                    $cls_vendors = ($lvl_key==='vendors') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_vendors.'" href="'.esc_url($url_vendors).'">Vendors ('.intval($counts['vendors']).')</a> ';
-
-                    $url_sponsors = add_query_arg(['tab'=>'members','lvl'=>'sponsors','range'=>$range_key,'q'=>$q]);
-                    $cls_sponsors = ($lvl_key==='sponsors') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_sponsors.'" href="'.esc_url($url_sponsors).'">Sponsors ('.intval($counts['sponsors']).')</a> ';
-
-                    $url_con = add_query_arg(['tab'=>'members','lvl'=>'con2026','range'=>$range_key,'q'=>$q]);
-                    $cls_con = ($lvl_key==='con2026') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_con.'" href="'.esc_url($url_con).'">Convention 2026 ('.intval($counts['convention2026']).')</a> ';
                 ?>
             </div>
 
@@ -2028,15 +1858,10 @@ private function render_overview_tab($range = '30d') {
         $levels = $this->get_level_map();
         $level_id = null;
         switch ($lvl_key) {
-            case 'listing':  $level_id = $levels['listing_owners']; break;
-            case 'board':    $level_id = $levels['board']; break;
-            case 'vendors':  $level_id = $levels['vendors']; break;
-            case 'sponsors': $level_id = $levels['sponsors']; break;
-            case 'con2026':  $level_id = $levels['convention2026']; break;
+            case 'listing': $level_id = $levels['listing_owners']; break;
+            case 'board':   $level_id = $levels['board']; break;
             case 'oha':     $level_id = $levels['oha_member']; break;
         }
-        // OHA Member level
-        if ($lvl_key === 'oha') { $level_id = $levels['oha_member']; }
 
 
         $rows = $this->fetch_members_legacy_raw($level_id, $q);

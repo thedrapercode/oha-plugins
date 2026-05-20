@@ -117,7 +117,7 @@ class OHA_Members_Table {
                     <div class="filter-group">
                         <label><?php esc_html_e('Search:', 'oha-board-hub'); ?></label>
                         <input type="search" name="member_search" value="<?php echo esc_attr($search); ?>"
-                               placeholder="<?php esc_attr_e('Name, email, username, or User ID', 'oha-board-hub'); ?>">
+                               placeholder="<?php esc_attr_e('Name, email, username, or Member ID', 'oha-board-hub'); ?>">
                         <button type="submit" class="button"><?php esc_html_e('Search', 'oha-board-hub'); ?></button>
                         <?php if (!empty($search)) : ?>
                             <a href="?page=<?php echo esc_attr($_GET['page'] ?? ''); ?>&tab=<?php echo esc_attr($_GET['tab'] ?? ''); ?>&member_view=<?php echo esc_attr($view); ?>"
@@ -156,15 +156,16 @@ class OHA_Members_Table {
                     <?php else : ?>
                         <?php foreach ($members as $member) : ?>
                             <?php
-                            $user_id    = intval($member['user_id'] ?? 0);
-                            $email      = $member['user_email']   ?? '';
-                            $name       = $member['display_name'] ?? '';
-                            $registered = $member['user_registered'] ?? '';
-                            $paid_since = $member['paid_since']   ?? null;
-                            $is_upgrade = $member['is_upgrade']   ?? false;
-                            $source     = $member['_source']      ?? 'uwp';
-                            $swpm_mid   = intval($member['_swpm_member_id'] ?? 0);
-                            $level_label= self::get_member_type_label($member['account_type'] ?? '');
+                            $user_id       = intval($member['user_id'] ?? 0);
+                            $email         = $member['user_email']     ?? '';
+                            $name          = $member['display_name']   ?? '';
+                            $registered    = $member['user_registered'] ?? '';
+                            $paid_since    = $member['paid_since']     ?? null;
+                            $is_upgrade    = $member['is_upgrade']     ?? false;
+                            $source        = $member['_source']        ?? 'uwp';
+                            $swpm_mid      = intval($member['_swpm_member_id'] ?? 0);
+                            $oha_member_id = $member['oha_member_id']  ?? '';
+                            $level_label   = self::get_member_type_label($member['account_type'] ?? '');
 
                             // Address: usermeta first, then SWPM columns
                             $address = self::get_member_address($user_id, $member['_swpm_address'] ?? null);
@@ -174,7 +175,7 @@ class OHA_Members_Table {
                             $card_sent  = $card_info['sent'];
                             ?>
                             <tr>
-                                <td><?php echo $user_id ?: esc_html('SM:' . $swpm_mid); ?></td>
+                                <td><?php echo $oha_member_id ? esc_html($oha_member_id) : esc_html($user_id ?: ('SM:' . $swpm_mid)); ?></td>
                                 <td>
                                     <strong><?php echo esc_html($name); ?></strong>
                                     <?php if ($source === 'swpm') : ?>
@@ -454,8 +455,13 @@ class OHA_Members_Table {
         global $wpdb;
         $cap_key = $wpdb->prefix . 'capabilities';
 
-        // OHA member: form_id = 1 AND WP role = subscriber
+        // OHA member: oha_member_id assigned AND form_id = 1 AND WP role = subscriber
         $canonical = "EXISTS (
+            SELECT 1 FROM {$wpdb->usermeta} om
+            WHERE om.user_id = u.ID
+            AND om.meta_key = 'oha_member_id'
+        )
+        AND EXISTS (
             SELECT 1 FROM {$wpdb->usermeta} mf
             WHERE mf.user_id = u.ID
             AND mf.meta_key = '_uwp_register_form_id'
@@ -504,27 +510,25 @@ class OHA_Members_Table {
                 break;
         }
 
-        if (!empty($search)) {
+        if (!empty($search) && ctype_digit($search)) {
             $like     = '%' . $wpdb->esc_like($search) . '%';
-            // If the search is a plain integer, also match by exact user ID
-            if (ctype_digit($search)) {
-                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)";
-                $params[] = $like;
-                $params[] = $like;
-                $params[] = $like;
-                $params[] = intval($search);
-            } else {
-                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-                $params[] = $like;
-                $params[] = $like;
-                $params[] = $like;
-            }
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d OR EXISTS (SELECT 1 FROM {$wpdb->usermeta} si WHERE si.user_id = u.ID AND si.meta_key = 'oha_member_id' AND si.meta_value = %s))";
+            $params[] = $like; $params[] = $like; $params[] = $like;
+            $params[] = intval($search);
+            $params[] = $search;
+        } elseif (!empty($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+            $params[] = $like; $params[] = $like; $params[] = $like;
         }
 
         $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
                     (SELECT meta_value FROM {$wpdb->usermeta}
                      WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
-                     LIMIT 1) as paid_since
+                     LIMIT 1) as paid_since,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_member_id'
+                     LIMIT 1) as oha_member_id
                 FROM {$wpdb->users} u";
 
         $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -554,6 +558,7 @@ class OHA_Members_Table {
                 'account_type'    => 'oha_member',
                 'paid_since'      => $paid_since,
                 'is_upgrade'      => $is_upgrade,
+                'oha_member_id'   => $row['oha_member_id'] ?: '',
                 '_source'         => 'canonical',
                 '_swpm_member_id' => 0,
                 '_swpm_address'   => null,
@@ -571,6 +576,11 @@ class OHA_Members_Table {
         global $wpdb;
         $cap_key = $wpdb->prefix . 'capabilities';
         $where   = [
+            "EXISTS (
+                SELECT 1 FROM {$wpdb->usermeta} om
+                WHERE om.user_id = u.ID
+                AND om.meta_key = 'oha_member_id'
+            )",
             "EXISTS (
                 SELECT 1 FROM {$wpdb->usermeta} mf
                 WHERE mf.user_id = u.ID
@@ -591,18 +601,25 @@ class OHA_Members_Table {
             $params[] = $thirty_days_ago;
         }
 
-        if (!empty($search)) {
+        if (!empty($search) && ctype_digit($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d OR EXISTS (SELECT 1 FROM {$wpdb->usermeta} si WHERE si.user_id = u.ID AND si.meta_key = 'oha_member_id' AND si.meta_value = %s))";
+            $params[] = $like; $params[] = $like; $params[] = $like;
+            $params[] = intval($search);
+            $params[] = $search;
+        } elseif (!empty($search)) {
             $like     = '%' . $wpdb->esc_like($search) . '%';
             $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
+            $params[] = $like; $params[] = $like; $params[] = $like;
         }
 
         $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
                     (SELECT meta_value FROM {$wpdb->usermeta}
                      WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
-                     LIMIT 1) as paid_since
+                     LIMIT 1) as paid_since,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_member_id'
+                     LIMIT 1) as oha_member_id
                 FROM {$wpdb->users} u
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY u.user_registered DESC";
@@ -628,6 +645,7 @@ class OHA_Members_Table {
                 'account_type'    => 'listing_owner',
                 'paid_since'      => $paid_since,
                 'is_upgrade'      => $is_upgrade,
+                'oha_member_id'   => $row['oha_member_id'] ?: '',
                 '_source'         => 'uwp',
                 '_swpm_member_id' => 0,
                 '_swpm_address'   => null,
@@ -660,22 +678,25 @@ class OHA_Members_Table {
         ];
         $params = [];
 
-        if (!empty($search)) {
-            $like = '%' . $wpdb->esc_like($search) . '%';
-            if (ctype_digit($search)) {
-                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)";
-                $params[] = $like; $params[] = $like; $params[] = $like;
-                $params[] = intval($search);
-            } else {
-                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-                $params[] = $like; $params[] = $like; $params[] = $like;
-            }
+        if (!empty($search) && ctype_digit($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d OR EXISTS (SELECT 1 FROM {$wpdb->usermeta} si WHERE si.user_id = u.ID AND si.meta_key = 'oha_member_id' AND si.meta_value = %s))";
+            $params[] = $like; $params[] = $like; $params[] = $like;
+            $params[] = intval($search);
+            $params[] = $search;
+        } elseif (!empty($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+            $params[] = $like; $params[] = $like; $params[] = $like;
         }
 
         $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
                     (SELECT meta_value FROM {$wpdb->usermeta}
                      WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
-                     LIMIT 1) as paid_since
+                     LIMIT 1) as paid_since,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_member_id'
+                     LIMIT 1) as oha_member_id
                 FROM {$wpdb->users} u
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY u.display_name ASC";
@@ -695,6 +716,7 @@ class OHA_Members_Table {
                 'account_type'    => 'board_member',
                 'paid_since'      => $row['paid_since'] ?: null,
                 'is_upgrade'      => false,
+                'oha_member_id'   => $row['oha_member_id'] ?: '',
                 '_source'         => 'canonical',
                 '_swpm_member_id' => 0,
                 '_swpm_address'   => null,
@@ -715,16 +737,16 @@ class OHA_Members_Table {
         $where  = [];
         $params = [];
 
-        if (!empty($search)) {
-            $like = '%' . $wpdb->esc_like($search) . '%';
-            if (ctype_digit($search)) {
-                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d)";
-                $params[] = $like; $params[] = $like; $params[] = $like;
-                $params[] = intval($search);
-            } else {
-                $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
-                $params[] = $like; $params[] = $like; $params[] = $like;
-            }
+        if (!empty($search) && ctype_digit($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s OR u.ID = %d OR EXISTS (SELECT 1 FROM {$wpdb->usermeta} si WHERE si.user_id = u.ID AND si.meta_key = 'oha_member_id' AND si.meta_value = %s))";
+            $params[] = $like; $params[] = $like; $params[] = $like;
+            $params[] = intval($search);
+            $params[] = $search;
+        } elseif (!empty($search)) {
+            $like     = '%' . $wpdb->esc_like($search) . '%';
+            $where[]  = "(u.display_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)";
+            $params[] = $like; $params[] = $like; $params[] = $like;
         }
 
         $sql = "SELECT u.ID as user_id, u.display_name, u.user_email, u.user_registered,
@@ -736,7 +758,10 @@ class OHA_Members_Table {
                      LIMIT 1) as capabilities,
                     (SELECT meta_value FROM {$wpdb->usermeta}
                      WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since'
-                     LIMIT 1) as paid_since
+                     LIMIT 1) as paid_since,
+                    (SELECT meta_value FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_member_id'
+                     LIMIT 1) as oha_member_id
                 FROM {$wpdb->users} u";
 
         if (!empty($where)) {
@@ -778,6 +803,7 @@ class OHA_Members_Table {
                 'account_type'    => $account_type,
                 'paid_since'      => $paid_since,
                 'is_upgrade'      => $is_upgrade,
+                'oha_member_id'   => $row['oha_member_id'] ?: '',
                 '_source'         => 'canonical',
                 '_swpm_member_id' => 0,
                 '_swpm_address'   => null,
@@ -1019,7 +1045,7 @@ class OHA_Members_Table {
             $card_info  = self::get_card_status_for_user($user_id);
 
             fputcsv($output, [
-                $user_id ?: ('SM:' . ($member['_swpm_member_id'] ?? '?')),
+                $member['oha_member_id'] ?: ($user_id ?: ('SM:' . ($member['_swpm_member_id'] ?? '?'))),
                 self::sanitize_csv_value($member['display_name'] ?? ''),
                 self::sanitize_csv_value($member['user_email']   ?? ''),
                 self::sanitize_csv_value(self::get_member_type_label($member['account_type'] ?? '')),

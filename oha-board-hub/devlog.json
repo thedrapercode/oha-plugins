@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.7.0",
+    "version":  "2.8.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -379,6 +379,27 @@
                         "type":  "feature",
                         "summary":  "Added Card Status Sync section to Membership Health admin panel with record counts and sync button",
                         "notes":  "Shows live count of usermeta and card table sent records before sync. Displays meta_to_table and table_to_meta counts after sync completes."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "fix",
+                        "summary":  "Fixed inflated member counts by gating OHA Member and Basic Member queries on oha_member_id usermeta",
+                        "notes":  "oha_member_id was migrated to usermeta 2026-05-20 for all 269 known members. Gate ensures only real members appear in filtered views, not all users with matching role/form_id."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "feature",
+                        "summary":  "ID column now shows permanent OHA member card number (oha_member_id) instead of WP user ID",
+                        "notes":  "All 4 query functions now SELECT oha_member_id subquery and include it in returned member array. CSV export also uses oha_member_id."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "feature",
+                        "summary":  "Numeric search now matches against oha_member_id card number in all member views",
+                        "notes":  "Searching for a number (e.g. 5) now finds the member with card #5, not WP user ID 5. Updated in all 4 query functions."
                     }
                 ]
 }
