@@ -1417,7 +1417,8 @@ private function render_overview_tab($range = '30d') {
             $sql = "SELECT u.ID, u.user_login, u.user_email, u.display_name, u.user_registered,
                            (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'first_name' LIMIT 1) AS first_name,
                            (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'last_name' LIMIT 1) AS last_name,
-                           (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since
+                           (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' LIMIT 1) AS oha_paid_since,
+                           (SELECT meta_value FROM {$wpdb->usermeta} WHERE user_id = u.ID AND meta_key = 'oha_member_id' LIMIT 1) AS oha_member_id
                     FROM {$wpdb->users} u
                     WHERE EXISTS (
                         SELECT 1 FROM {$wpdb->usermeta} um_f
@@ -1451,6 +1452,7 @@ private function render_overview_tab($range = '30d') {
                 $all_rows[] = [
                     'member_id'           => $uid,
                     'wp_user_id'          => $uid,
+                    'oha_member_id'       => $ur['oha_member_id'] ?: '',
                     'user_name'           => $ur['user_login'],
                     'first_name'          => $fname,
                     'last_name'           => $lname,
@@ -1667,7 +1669,8 @@ private function render_overview_tab($range = '30d') {
             $addr = implode(' ', $addr_parts);
             $start = !empty($r['subscription_starts']) ? $r['subscription_starts'] : '—';
             $html .= '<tr>';
-            $html .= '<td>'.intval($r['member_id']).'</td>';
+            $display_id = !empty($r['oha_member_id']) ? esc_html($r['oha_member_id']) : intval($r['member_id']);
+            $html .= '<td>'.$display_id.'</td>';
             $html .= '<td>'.esc_html($name ?: ($r['user_name'] ?? '')) .'</td>';
             $email = $r['email'] ?? '';
             $html .= '<td>'.($email ? '<a href="mailto:'.esc_attr($email).'">'.esc_html($email).'</a>' : '—').'</td>';

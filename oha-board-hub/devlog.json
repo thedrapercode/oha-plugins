@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.8.6",
+    "version":  "2.8.7",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -477,6 +477,13 @@
                         "type":  "fix",
                         "summary":  "Create Membership Cards view now uses All Time range so backlog members with corrupted paid dates are not filtered out",
                         "notes":  "oha_paid_member_since was written as the Stripe Sync run date for legacy members rather than actual payment date. A 30d filter based on that date hid members like Tyler Bell (paid Sept 2025, date stored as April 14 2026). Default and CMC button now use range=all so the filter is purely card_not_sent. The 30d/90d/ytd range buttons are still available for narrowing. Export default also updated to all."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.7",
+                        "type":  "fix",
+                        "summary":  "Frontend member table now shows oha_member_id card number instead of WP user ID",
+                        "notes":  "fetch_members_legacy_raw() now fetches oha_member_id from usermeta in the SQL query. render_members_table() displays oha_member_id when available, falls back to WP user_id. Previously WP user_id (e.g. 87) was shown instead of card number (e.g. 83), causing mismatch with admin panel."
                     }
                 ]
 }
