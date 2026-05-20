@@ -1969,7 +1969,28 @@ private function render_sponsors_tab() {
     }
 
     public function register_settings() {
-        register_setting(self::OPT, self::OPT);
+        register_setting(self::OPT, self::OPT, function($input) {
+            if (!is_array($input)) return $input;
+            if (isset($input['tab_management']) && is_array($input['tab_management'])) {
+                $rekeyed = [];
+                foreach ($input['tab_management'] as $old_key => $tab_data) {
+                    if (isset($tab_data['type']) && $tab_data['type'] === 'custom' && !empty($tab_data['slug'])) {
+                        $new_key = sanitize_key($tab_data['slug']);
+                        if ($new_key === '') $new_key = $old_key;
+                        // prevent collisions with existing built-in or already-rekeyed entries
+                        if (isset($rekeyed[$new_key]) && $new_key !== $old_key) {
+                            $new_key = $old_key;
+                        }
+                        $tab_data['slug'] = $new_key;
+                        $rekeyed[$new_key] = $tab_data;
+                    } else {
+                        $rekeyed[$old_key] = $tab_data;
+                    }
+                }
+                $input['tab_management'] = $rekeyed;
+            }
+            return $input;
+        });
 
         // Phase 2A: Stat Card Links
         add_settings_section('stat_card_links', 'Dashboard Stat Card Links', function(){
