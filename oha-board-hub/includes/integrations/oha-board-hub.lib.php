@@ -549,13 +549,14 @@ private function current_user_sm_level_equals($target_level) {
             return '<div class="oha-board-denied">Board access only. Please log in with authorized credentials.</div>';
         }
         $s = get_option(self::OPT, []);
+        $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
         $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'oha';
         $allowed_lvl_keys = ['listing','board','vendors','sponsors','con2026','oha','all'];
         if (!in_array($lvl_key, $allowed_lvl_keys, true)) $lvl_key = 'oha';
-        $range = isset($_GET['range']) ? sanitize_key($_GET['range']) : '30d';
+        $range_default = ($tab === 'members') ? 'all' : '30d';
+        $range = isset($_GET['range']) ? sanitize_key($_GET['range']) : $range_default;
         $allowed_ranges = ['30d','90d','ytd','all'];
-        if (!in_array($range, $allowed_ranges, true)) $range = '30d';
-        $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
+        if (!in_array($range, $allowed_ranges, true)) $range = $range_default;
         
         // Get all tabs (built-in and custom) in their configured order
         $all_tabs_data = $this->get_all_tabs_ordered();
@@ -1861,7 +1862,7 @@ private function render_overview_tab($range = '30d') {
     public function export_members_csv() {
         if (!is_user_logged_in() || !$this->user_can_view()) { wp_die('Access denied.'); }
         $lvl_key   = isset($_GET['lvl'])   ? sanitize_key($_GET['lvl'])          : 'oha';
-        $range_key = isset($_GET['range']) ? sanitize_key($_GET['range'])         : '30d';
+        $range_key = isset($_GET['range']) ? sanitize_key($_GET['range'])         : 'all';
         $q         = isset($_GET['q'])     ? sanitize_text_field($_GET['q'])      : '';
         $card      = isset($_GET['card'])  ? sanitize_key($_GET['card'])          : 'not';
         $allowed_card_filters = ['any', 'sent', 'not'];

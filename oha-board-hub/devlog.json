@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.8.3",
+    "version":  "2.8.4",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -456,6 +456,13 @@
                         "type":  "fix",
                         "summary":  "Fixed card status lookup in frontend shortcode: SWPM member_id did not match WP user_id in card table",
                         "notes":  "get_card_status() now accepts optional wp_user_id param and checks both ids against card table, options store, and usermeta. Admin panel marks cards against WP user_id; SWPM table uses SWPM member_id. Both lookups now attempted. All three call sites updated (tab filter, table display, CSV export)."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.4",
+                        "type":  "fix",
+                        "summary":  "Members tab now defaults to All Time range so card-making view shows all members needing cards",
+                        "notes":  "Range default changed from 30d to all when tab=members. Previously the 30d default combined with card=not produced zero results on initial load. Export handler range default also updated to all. Overview tab unaffected -- it uses its own hardcoded date logic."
                     }
                 ]
 }
