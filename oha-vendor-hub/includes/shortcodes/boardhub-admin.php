@@ -15,6 +15,12 @@
 
 if (!defined('ABSPATH')) exit;
 
+// Register vh_year as a WordPress query var so canonical redirect doesn't strip it.
+add_filter('query_vars', function($vars) {
+    $vars[] = 'vh_year';
+    return $vars;
+});
+
 add_shortcode('oha_vendor_boardhub', function() {
     if (!current_user_can('manage_options')) {
         return '<p>Access denied. Admin privileges required.</p>';
@@ -30,7 +36,21 @@ add_shortcode('oha_vendor_boardhub', function() {
          ORDER BY meta_value DESC"
     );
 
-    $filter_year = isset($_GET['vh_year']) ? sanitize_text_field($_GET['vh_year']) : '';
+    // Read year filter — use get_query_var (respects WP canonical) with $_GET fallback.
+    // 'all' means show every year. Default to active year so current-year vendors show first.
+    $active_year  = strval(get_option('oha_vhcpt_active_year', date('Y')));
+    $raw_year     = get_query_var('vh_year', null);
+    if ($raw_year === null) {
+        $raw_year = isset($_GET['vh_year']) ? $_GET['vh_year'] : null;
+    }
+    if ($raw_year === null) {
+        // No explicit selection — default to active year if year data exists, otherwise show all.
+        $filter_year = !empty($year_rows) ? $active_year : '';
+    } elseif ($raw_year === 'all') {
+        $filter_year = '';
+    } else {
+        $filter_year = sanitize_text_field($raw_year);
+    }
 
     // Get all vendor applications
     $args = [
@@ -910,7 +930,7 @@ add_shortcode('oha_vendor_boardhub', function() {
                     <?php endif; ?>
                     <label for="vh_year_filter" style="font-size:13px;color:#475569;font-weight:600;">Year:</label>
                     <select id="vh_year_filter" name="vh_year" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
-                        <option value="">All Years</option>
+                        <option value="all" <?php selected($filter_year, ''); ?>>All Years</option>
                         <?php foreach ($year_rows as $yr): ?>
                             <option value="<?php echo esc_attr($yr); ?>" <?php selected($filter_year, $yr); ?>><?php echo esc_html($yr); ?></option>
                         <?php endforeach; ?>

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.10.1",
+    "version":  "3.10.2",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -288,6 +288,20 @@
                         "type":  "fix",
                         "summary":  "Year Tools: return invite tool now accepts explicit target year instead of relying on settings active year",
                         "notes":  "Added target_year field to UI and AJAX. Removed validation that blocked from_year \u003e= active_year. Both years are now fully user-controlled on the tool page."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.2",
+                        "type":  "fix",
+                        "summary":  "Board hub year filter: register vh_year as WP query var to prevent canonical redirect stripping it",
+                        "notes":  "WordPress strips unknown GET params via canonical redirect. Added query_vars filter for vh_year. Switched to get_query_var() with  fallback."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "3.10.2",
+                        "type":  "fix",
+                        "summary":  "Board hub year filter: default to active convention year instead of showing all vendors",
+                        "notes":  "When no year is selected, defaults to oha_vhcpt_active_year. Selecting All Years now uses value=all to explicitly override the default."
                     }
                 ]
 }
