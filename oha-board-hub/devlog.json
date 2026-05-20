@@ -400,6 +400,41 @@
                         "type":  "feature",
                         "summary":  "Numeric search now matches against oha_member_id card number in all member views",
                         "notes":  "Searching for a number (e.g. 5) now finds the member with card #5, not WP user ID 5. Updated in all 4 query functions."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "feature",
+                        "summary":  "Migrated OHA member IDs from SWPM to oha_member_id usermeta for all 269 members",
+                        "notes":  "SWPM plugin removed; IDs 1-192 preserved from physical cards; IDs 284-370 assigned to new members by reg date; Florence Gepperth WP 169 mapped to card 165 (email mismatch). Migration SQL in session transcript."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "fix",
+                        "summary":  "Canonical member query gates on oha_member_id EXISTS, fixing inflated counts seen in v2.7.0",
+                        "notes":  "v2.7.0 showed All(446)/OHA(158)/Basic(283); correct baseline is All(208)/OHA(91)/Basic(112). Root cause was form_id=1 false positives. oha_member_id gate caps results to known members only."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "feature",
+                        "summary":  "Member table ID column displays permanent OHA card number from oha_member_id usermeta",
+                        "notes":  "Falls back to WP user_id or SM:{swpm_id} if oha_member_id not set. Search box placeholder updated to include Member ID."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "change",
+                        "summary":  "Default Membership tab view changed to Create Membership Cards (cards not yet sent)",
+                        "notes":  "Board member workflow: load tab -\u003e see members needing cards -\u003e send card -\u003e mark sent. Renamed dropdown option from Cards Not Sent to Create Membership Cards."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.0",
+                        "type":  "fix",
+                        "summary":  "CSV export now correctly exports the current filtered view, not the default view",
+                        "notes":  "Hidden inputs capture current GET view/search params so POST handler exports matching records. Default fallback also updated to cards_not_sent."
                     }
                 ]
 }

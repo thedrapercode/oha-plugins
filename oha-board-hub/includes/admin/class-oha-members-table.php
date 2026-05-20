@@ -72,7 +72,7 @@ class OHA_Members_Table {
             isset($_POST['oha_export_members_csv'], $_POST['oha_export_nonce']) &&
             wp_verify_nonce($_POST['oha_export_nonce'], 'oha_export_members')
         ) {
-            $view    = sanitize_text_field($_POST['member_view'] ?? 'new_paid');
+            $view    = sanitize_text_field($_POST['member_view'] ?? 'cards_not_sent');
             $search  = sanitize_text_field($_POST['member_search'] ?? '');
             $members = self::get_members($view, $search);
             self::export_csv($members);
@@ -80,7 +80,7 @@ class OHA_Members_Table {
         }
 
         // Get filter parameters
-        $view   = isset($_GET['member_view'])   ? sanitize_text_field($_GET['member_view'])   : 'new_paid';
+        $view   = isset($_GET['member_view'])   ? sanitize_text_field($_GET['member_view'])   : 'cards_not_sent';
         $search = isset($_GET['member_search']) ? sanitize_text_field($_GET['member_search']) : '';
 
         $members = self::get_members($view, $search);
@@ -109,7 +109,7 @@ class OHA_Members_Table {
                             <option value="all_listing"    <?php selected($view, 'all_listing'); ?>><?php esc_html_e('Basic Members',                'oha-board-hub'); ?></option>
                             <option value="new_listing"    <?php selected($view, 'new_listing'); ?>><?php esc_html_e('New Basic Members (30 days)',  'oha-board-hub'); ?></option>
                             <option value="board"          <?php selected($view, 'board'); ?>><?php esc_html_e('Board Members',                  'oha-board-hub'); ?></option>
-                            <option value="cards_not_sent" <?php selected($view, 'cards_not_sent'); ?>><?php esc_html_e('Cards Not Sent',             'oha-board-hub'); ?></option>
+                            <option value="cards_not_sent" <?php selected($view, 'cards_not_sent'); ?>><?php esc_html_e('Create Membership Cards',     'oha-board-hub'); ?></option>
                             <option value="all"            <?php selected($view, 'all'); ?>><?php esc_html_e('All Users',                      'oha-board-hub'); ?></option>
                         </select>
                     </div>
