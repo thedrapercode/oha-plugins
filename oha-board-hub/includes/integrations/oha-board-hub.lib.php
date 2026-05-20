@@ -1851,9 +1851,12 @@ private function render_overview_tab($range = '30d') {
 
     public function export_members_csv() {
         if (!is_user_logged_in() || !$this->user_can_view()) { wp_die('Access denied.'); }
-        $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'all';
-        $range_key = isset($_GET['range']) ? sanitize_key($_GET['range']) : '30d';
-        $q     = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
+        $lvl_key   = isset($_GET['lvl'])   ? sanitize_key($_GET['lvl'])          : 'oha';
+        $range_key = isset($_GET['range']) ? sanitize_key($_GET['range'])         : '30d';
+        $q         = isset($_GET['q'])     ? sanitize_text_field($_GET['q'])      : '';
+        $card      = isset($_GET['card'])  ? sanitize_key($_GET['card'])          : 'not';
+        $allowed_card_filters = ['any', 'sent', 'not'];
+        if (!in_array($card, $allowed_card_filters, true)) $card = 'not';
 
         $levels = $this->get_level_map();
         $level_id = null;
@@ -1863,9 +1866,16 @@ private function render_overview_tab($range = '30d') {
             case 'oha':     $level_id = $levels['oha_member']; break;
         }
 
-
         $rows = $this->fetch_members_legacy_raw($level_id, $q);
         $rows = $this->php_filter_by_range($rows, $range_key);
+
+        if ($card !== 'any') {
+            $rows = array_values(array_filter($rows, function($r) use ($card) {
+                $st = $this->get_card_status($r['member_id']);
+                if ($st['sent']) return ($card === 'sent');
+                return ($card === 'not');
+            }));
+        }
 
         $filename = 'oha_members_' . ($level_id ? ('level'.$level_id.'_') : '') . $range_key . ($q? '_q' : '') . '.csv';
         header('Content-Type: text/csv; charset=utf-8');

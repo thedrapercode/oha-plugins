@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.8.1",
+    "version":  "2.8.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -442,6 +442,13 @@
                         "type":  "change",
                         "summary":  "Frontend [oha_board_hub] shortcode Members tab now defaults to OHA Members / Create Membership Cards view",
                         "notes":  "Default lvl changed from all to oha; default card filter changed from any to not; Not Sent button label renamed to Create Membership Cards. Matches admin panel default behavior."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.2",
+                        "type":  "fix",
+                        "summary":  "Frontend CSV export now applies card filter; was exporting all members regardless of Not Sent selection",
+                        "notes":  "export_members_csv() handler now reads card GET param and applies same PHP filter as render_members_tab(). Default card fallback is not to match tab default."
                     }
                 ]
 }
