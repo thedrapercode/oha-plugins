@@ -553,10 +553,9 @@ private function current_user_sm_level_equals($target_level) {
         $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'oha';
         $allowed_lvl_keys = ['listing','board','vendors','sponsors','con2026','oha','all'];
         if (!in_array($lvl_key, $allowed_lvl_keys, true)) $lvl_key = 'oha';
-        $range_default = ($tab === 'members') ? 'all' : '30d';
-        $range = isset($_GET['range']) ? sanitize_key($_GET['range']) : $range_default;
+        $range = isset($_GET['range']) ? sanitize_key($_GET['range']) : '30d';
         $allowed_ranges = ['30d','90d','ytd','all'];
-        if (!in_array($range, $allowed_ranges, true)) $range = $range_default;
+        if (!in_array($range, $allowed_ranges, true)) $range = '30d';
         
         // Get all tabs (built-in and custom) in their configured order
         $all_tabs_data = $this->get_all_tabs_ordered();
@@ -1573,12 +1572,16 @@ private function render_overview_tab($range = '30d') {
             <div class="oha-filters">
                 <strong>Card:</strong>
                 <?php
-                    $cards = ['any'=>'Any','sent'=>'Sent','not'=>'Create Membership Cards'];
+                    $cards = ['any'=>'Any','sent'=>'Sent'];
                     foreach ($cards as $ck=>$clabel) {
                         $url = add_query_arg(['tab'=>'members','lvl'=>$lvl_key,'range'=>$range_key,'card'=>$ck,'q'=>$q]);
                         $cls = $card === $ck ? 'button-primary' : '';
                         echo '<a class="button '.$cls.'" href="'.esc_url($url).'">'.esc_html($clabel).'</a> ';
                     }
+                    // "Create Membership Cards" always resets to the baseline card-making view
+                    $cls_cmc = ($card === 'not') ? 'button-primary' : '';
+                    $url_cmc = add_query_arg(['tab'=>'members','lvl'=>'oha','range'=>'30d','card'=>'not','q'=>'']);
+                    echo '<a class="button '.$cls_cmc.'" href="'.esc_url($url_cmc).'">Create Membership Cards</a> ';
                 ?>
             </div>
 </div>
@@ -1862,7 +1865,7 @@ private function render_overview_tab($range = '30d') {
     public function export_members_csv() {
         if (!is_user_logged_in() || !$this->user_can_view()) { wp_die('Access denied.'); }
         $lvl_key   = isset($_GET['lvl'])   ? sanitize_key($_GET['lvl'])          : 'oha';
-        $range_key = isset($_GET['range']) ? sanitize_key($_GET['range'])         : 'all';
+        $range_key = isset($_GET['range']) ? sanitize_key($_GET['range'])         : '30d';
         $q         = isset($_GET['q'])     ? sanitize_text_field($_GET['q'])      : '';
         $card      = isset($_GET['card'])  ? sanitize_key($_GET['card'])          : 'not';
         $allowed_card_filters = ['any', 'sent', 'not'];

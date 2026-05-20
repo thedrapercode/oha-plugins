@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.8.4",
+    "version":  "2.8.5",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -463,6 +463,13 @@
                         "type":  "fix",
                         "summary":  "Members tab now defaults to All Time range so card-making view shows all members needing cards",
                         "notes":  "Range default changed from 30d to all when tab=members. Previously the 30d default combined with card=not produced zero results on initial load. Export handler range default also updated to all. Overview tab unaffected -- it uses its own hardcoded date logic."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.5",
+                        "type":  "fix",
+                        "summary":  "Members tab initial load shows last 30 days new/upgraded OHA members not yet sent a card",
+                        "notes":  "Range default reverted to 30d. subscription_starts already prefers oha_paid_member_since over user_registered so upgraded members are included. Create Membership Cards button now always hard-resets to lvl=oha range=30d card=not q= regardless of current state -- acts as a bookmark back to the baseline card-making view."
                     }
                 ]
 }
