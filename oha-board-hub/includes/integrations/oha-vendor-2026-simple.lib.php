@@ -84,29 +84,8 @@ add_shortcode('oha_vendor_board_hub', function($atts){
     <?php return ob_get_clean();
 });
 
-// Inject into Convention 2026 tab via hooks if available
-add_action('oha_board_hub_render_tab_convention_2026', function(){
-    echo do_shortcode('[oha_vendor_board_hub]');
-});
-add_action('oha_board_hub_render_tab', function($slug){
-    if ($slug === 'convention_2026') echo do_shortcode('[oha_vendor_board_hub]');
-}, 10, 1);
-
-// Optional: content-injection fallback by Page ID
-add_filter('the_content', function($content){
-    if (!is_user_logged_in()) return $content;
-    if (!current_user_can(get_option('oha_vbh_front_cap','edit_posts'))) return $content;
-    $page_id = (int) get_option('oha_vbh_convention_2026_page_id', 0);
-    if ($page_id && is_page($page_id)){
-        $dashboard = do_shortcode('[oha_vendor_board_hub]');
-        $placeholder = 'Convention tools enabled (placeholder panel). We can reintroduce full UI once the Members tab is confirmed stable.';
-        if (strpos($content, $placeholder) !== false){
-            return str_replace($placeholder, $dashboard, $content);
-        }
-        return $content . $dashboard;
-    }
-    return $content;
-}, 20);
+// Hardcoded tab hooks removed -- vendor hub is now added as a custom tab
+// via Board Hub Settings > Tab Management with shortcode [oha_vendor_boardhub].
 
 // Settings (minimal for Page ID + capability)
 function oha_vbh_2026_settings(){

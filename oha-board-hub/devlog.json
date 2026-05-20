@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.8.7",
+    "version":  "2.8.8",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -484,6 +484,13 @@
                         "type":  "fix",
                         "summary":  "Frontend member table now shows oha_member_id card number instead of WP user ID",
                         "notes":  "fetch_members_legacy_raw() now fetches oha_member_id from usermeta in the SQL query. render_members_table() displays oha_member_id when available, falls back to WP user_id. Previously WP user_id (e.g. 87) was shown instead of card number (e.g. 83), causing mismatch with admin panel."
+                    },
+                    {
+                        "date":  "2026-05-20",
+                        "version":  "2.8.8",
+                        "type":  "change",
+                        "summary":  "Removed hardcoded convention_2026 vendor tab hooks and the_content injection from vendor integration lib",
+                        "notes":  "oha-vendor-2026-simple.lib.php action hooks removed. Vendor hub now added as custom tab in Board Hub settings using [oha_vendor_boardhub]."
                     }
                 ]
 }

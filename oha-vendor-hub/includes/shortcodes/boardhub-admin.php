@@ -36,6 +36,9 @@ add_shortcode('oha_vendor_boardhub', function() {
          ORDER BY meta_value DESC"
     );
 
+    // Preserve the active Board Hub tab (e.g. ?tab=vendors) across filter form submissions.
+    $current_tab = sanitize_text_field(get_query_var('tab', $_GET['tab'] ?? ''));
+
     // Read year filter — use get_query_var (respects WP canonical) with $_GET fallback.
     // 'all' means show every year. Default to active year so current-year vendors show first.
     $active_year  = strval(get_option('oha_vhcpt_active_year', date('Y')));
@@ -921,12 +924,18 @@ add_shortcode('oha_vendor_boardhub', function() {
                     <?php if ($filter_year !== ''): ?>
                         <input type="hidden" name="vh_year" value="<?php echo esc_attr($filter_year); ?>">
                     <?php endif; ?>
+                    <?php if ($current_tab !== ''): ?>
+                        <input type="hidden" name="tab" value="<?php echo esc_attr($current_tab); ?>">
+                    <?php endif; ?>
                 </form>
 
                 <?php if (!empty($year_rows)): ?>
                 <form method="get" style="display:flex;align-items:center;gap:6px;">
                     <?php if (!empty($_GET['s'])): ?>
                         <input type="hidden" name="s" value="<?php echo esc_attr($_GET['s']); ?>">
+                    <?php endif; ?>
+                    <?php if ($current_tab !== ''): ?>
+                        <input type="hidden" name="tab" value="<?php echo esc_attr($current_tab); ?>">
                     <?php endif; ?>
                     <label for="vh_year_filter" style="font-size:13px;color:#475569;font-weight:600;">Year:</label>
                     <select id="vh_year_filter" name="vh_year" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
