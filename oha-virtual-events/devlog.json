@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.4.4",
+    "version":  "1.5.0",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -295,6 +295,41 @@
                         "type":  "feature",
                         "summary":  "Auto-compute live/ended event status from GD schedule - no manual status flip required",
                         "notes":  "Schedule fetch moved before badge rendering. effective_status derived from start_ts/end_ts vs time(). If current time is between start and end: effective_status=live. If past end: effective_status=ended. Stored oha_ve_event_status still respected for cancelled/replay/closed states. LIVE NOW badge, member join heading, YouTube embed, and always_show flag all use effective_status."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Added 5-minute WP cron to auto-flip event status: upcoming to live at start, live to ended at end",
+                        "notes":  "Cron action oha_ve_auto_flip_statuses, interval oha_ve_5min (300s), registered in OHA_VE_Zoom_API constructor. Parses GD schedule start/end times as UTC. Eliminates need to manually flip status to Live."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.5.0",
+                        "type":  "fix",
+                        "summary":  "Fixed event time displaying wrong hour by parsing GD schedule times as UTC instead of local time",
+                        "notes":  "GD stores wp_geodir_event_schedule times as UTC. Was previously treating them as local time causing offset inflation (e.g. 8pm showing as 1am on UTC-5 site)."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.5.0",
+                        "type":  "change",
+                        "summary":  "Removed member timing window - members always see join button; Zoom join_before_host handles access control",
+                        "notes":  "Removed seconds_until, always_show, in_member_window logic from frontend.php. OPT_MEMBER_WINDOW setting still registered but no longer applied."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.5.0",
+                        "type":  "change",
+                        "summary":  "Removed oha_ve_zoom_start_url field; start URL now always built from meeting ID which never expires",
+                        "notes":  "zoom.us/s/{ID} is permanent. Stored start URL token expired after 90 days. Removed from admin meta box render, save_meta URLs array, and frontend read."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.5.0",
+                        "type":  "change",
+                        "summary":  "Removed oha_ve_zoom_recording and oha_ve_archive_enabled meta fields; merged into single replay_available checkbox",
+                        "notes":  "archive_enabled filter removed from query_events in shortcodes.php. Admin Section 6 simplified to one checkbox. On Demand query now only requires status=replay and replay_available=1."
                     }
                 ]
 }

@@ -114,22 +114,18 @@ class OHA_VE_Admin {
         $instructor_id    = get_post_meta( $post->ID, 'oha_ve_instructor_user_id', true );
         $instructor_notes = get_post_meta( $post->ID, 'oha_ve_instructor_notes',   true );
         $zoom_join        = get_post_meta( $post->ID, 'oha_ve_zoom_join_url',      true );
-        $zoom_start       = get_post_meta( $post->ID, 'oha_ve_zoom_start_url',     true );
         $zoom_id          = get_post_meta( $post->ID, 'oha_ve_zoom_id',            true );
         $zoom_pass        = get_post_meta( $post->ID, 'oha_ve_zoom_passcode',      true );
-        $zoom_recording   = get_post_meta( $post->ID, 'oha_ve_zoom_recording',     true );
         $zoom_btn_label   = get_post_meta( $post->ID, 'oha_ve_zoom_btn_label',     true );
         $zoom_uuid        = get_post_meta( $post->ID, 'oha_ve_zoom_meeting_uuid',  true );
         $yt_live_id       = get_post_meta( $post->ID, 'oha_ve_yt_live_id',         true );
         $yt_replay_id     = get_post_meta( $post->ID, 'oha_ve_yt_replay_id',       true );
-        $archive_enabled  = get_post_meta( $post->ID, 'oha_ve_archive_enabled',    true );
         $replay_available = get_post_meta( $post->ID, 'oha_ve_replay_available',   true );
         $resources_url    = get_post_meta( $post->ID, 'oha_ve_resources_url',      true );
         $notes            = get_post_meta( $post->ID, 'oha_ve_notes',              true );
 
         // Defaults for new events
-        if ( '' === $zoom_recording ) $zoom_recording = '1';
-        if ( '' === $show_in_hub )    $show_in_hub    = '1';
+        if ( '' === $show_in_hub ) $show_in_hub = '1';
 
         $platform         = get_post_meta( $post->ID, 'oha_ve_platform', true );
 
@@ -383,21 +379,6 @@ class OHA_VE_Admin {
                         Custom text for the attendee join button. Leave blank to use "Join Meeting".
                     </p>
                 </div>
-                <div class="oha-ve-field">
-                    <label for="oha_ve_zoom_start_url">Zoom Start URL <span style="font-weight:400;color:#888;">(Phase 2 - leave blank)</span></label>
-                    <input type="url" name="oha_ve_zoom_start_url" id="oha_ve_zoom_start_url"
-                           value="<?php echo esc_url( $zoom_start ); ?>"
-                           placeholder="Auto-filled by Zoom API in Phase 2. Leave blank." />
-                    <p style="font-size:12px;color:#888;margin:4px 0 0;">
-                        If filled, overrides the auto-constructed start URL. Zoom start URL tokens expire - only use if set programmatically by the API.
-                    </p>
-                </div>
-            </div>
-            <div class="oha-ve-field" style="margin-top:10px;">
-                <label>
-                    <input type="checkbox" name="oha_ve_zoom_recording" value="1" <?php checked( $zoom_recording, '1' ); ?> />
-                    <span class="inline">Auto-record to Zoom Cloud (all sessions should record - keep this checked)</span>
-                </label>
             </div>
             <?php if ( $zoom_uuid ) : ?>
             <div class="oha-ve-field" style="margin-top:8px;">
@@ -434,24 +415,18 @@ class OHA_VE_Admin {
             </div>
         </div>
 
-        <!-- Section 6: Archive & Replay -->
+        <!-- Section 6: Replay -->
         <div class="oha-ve-section">
-            <h4>Archive &amp; Replay</h4>
+            <h4>Replay</h4>
             <p class="oha-ve-tip">
-                All sessions record automatically. Use <strong>Archive Recording</strong> to decide if the recording
-                goes into the member On Demand library. Check <strong>Replay is Ready</strong> only after the
-                recording has finished processing in Zoom cloud and you have added the YouTube replay ID above.
+                After the session ends, add the YouTube replay video ID above, then check <strong>Replay is Ready</strong>
+                and change the Status (above) to <strong>Replay / On Demand</strong>. The recording will appear
+                in the member On Demand library immediately.
             </p>
             <div class="oha-ve-field">
                 <label>
-                    <input type="checkbox" name="oha_ve_archive_enabled" value="1" <?php checked( $archive_enabled, '1' ); ?> />
-                    <span class="inline">Archive this recording - add to On Demand library after processing</span>
-                </label>
-            </div>
-            <div class="oha-ve-field">
-                <label>
                     <input type="checkbox" name="oha_ve_replay_available" value="1" <?php checked( $replay_available, '1' ); ?> />
-                    <span class="inline">Replay is ready - show to members now (check this after YouTube ID is added and recording is processed)</span>
+                    <span class="inline">Replay is ready - show recording to members now</span>
                 </label>
             </div>
             <div class="oha-ve-field">
@@ -528,8 +503,6 @@ class OHA_VE_Admin {
         $checkboxes = [
             'oha_ve_enabled',
             'oha_ve_show_in_hub',
-            'oha_ve_zoom_recording',
-            'oha_ve_archive_enabled',
             'oha_ve_replay_available',
         ];
         foreach ( $checkboxes as $field ) {
@@ -587,7 +560,7 @@ class OHA_VE_Admin {
         }
 
         // URLs
-        foreach ( [ 'oha_ve_zoom_join_url', 'oha_ve_zoom_start_url', 'oha_ve_resources_url' ] as $field ) {
+        foreach ( [ 'oha_ve_zoom_join_url', 'oha_ve_resources_url' ] as $field ) {
             if ( isset( $_POST[ $field ] ) ) {
                 update_post_meta( $post_id, $field, esc_url_raw( $_POST[ $field ] ) );
             }

@@ -62,9 +62,14 @@ class OHA_VE_Zoom_API {
 
     /** Private constructor - use get_instance(). */
     private function __construct() {
-        add_action( 'publish_gd_event',                   [ $this, 'maybe_create_meeting_on_publish' ], 20, 2 );
-        add_action( 'geodir_event_handle_past_event_after', [ $this, 'mark_ended_on_expire' ],          10, 3 );
-        add_action( 'admin_notices',                      [ $this, 'show_api_error_notice' ] );
+        add_action( 'publish_gd_event',                     [ $this, 'maybe_create_meeting_on_publish' ], 20, 2 );
+        add_action( 'geodir_event_handle_past_event_after', [ $this, 'mark_ended_on_expire' ],            10, 3 );
+        add_action( 'admin_notices',                        [ $this, 'show_api_error_notice' ] );
+        add_filter( 'cron_schedules',                       [ $this, 'add_cron_interval' ] );
+        add_action( 'oha_ve_auto_flip_statuses',            [ $this, 'auto_flip_statuses' ] );
+        if ( ! wp_next_scheduled( 'oha_ve_auto_flip_statuses' ) ) {
+            wp_schedule_event( time(), 'oha_ve_5min', 'oha_ve_auto_flip_statuses' );
+        }
     }
 
     // =========================================================
@@ -137,6 +142,88 @@ class OHA_VE_Zoom_API {
             return;
         }
         update_post_meta( $post_id, 'oha_ve_event_status', 'ended' );
+    }
+
+    // =========================================================
+    // AUTO-FLIP EVENT STATUS VIA CRON
+    // =========================================================
+
+    /**
+     * Register a 5-minute cron interval.
+     */
+    public function add_cron_interval( $schedules ) {
+        $schedules['oha_ve_5min'] = [
+            'interval' => 300,
+            'display'  => 'Every 5 Minutes (OHA Virtual Events)',
+        ];
+        return $schedules;
+    }
+
+    /**
+     * Cron job: automatically flip oha_ve_event_status for enabled virtual events.
+     *
+     * upcoming -> live  when now is between start_ts and end_ts
+     * live     -> ended when now is past end_ts
+     *
+     * Only acts on events with stored status of 'upcoming' or 'live'.
+     * cancelled, replay, closed, and ended are never overridden here.
+     * GD's geodir_event_handle_past_event_after hook also sets ended on expiry.
+     */
+    public function auto_flip_statuses() {
+        global $wpdb;
+
+        $table = defined( 'GEODIR_EVENT_SCHEDULES_TABLE' )
+            ? GEODIR_EVENT_SCHEDULES_TABLE
+            : $wpdb->prefix . 'geodir_event_schedule';
+
+        $event_ids = get_posts( [
+            'post_type'      => 'gd_event',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'meta_query'     => [
+                'relation' => 'AND',
+                [ 'key' => 'oha_ve_enabled',      'value' => '1' ],
+                [ 'key' => 'oha_ve_event_status',  'value' => [ 'upcoming', 'live' ], 'compare' => 'IN' ],
+            ],
+        ] );
+
+        if ( empty( $event_ids ) ) {
+            return;
+        }
+
+        $now    = time();
+        $utc_tz = new DateTimeZone( 'UTC' );
+
+        foreach ( $event_ids as $event_id ) {
+            $schedule = $wpdb->get_row( $wpdb->prepare(
+                "SELECT start_date, start_time, end_date, end_time FROM {$table} WHERE event_id = %d ORDER BY start_date ASC LIMIT 1",
+                $event_id
+            ) );
+
+            if ( ! $schedule || ! $schedule->start_date ) {
+                continue;
+            }
+
+            $dt_start = new DateTime( $schedule->start_date . ' ' . ( $schedule->start_time ?: '00:00:00' ), $utc_tz );
+            $start_ts = $dt_start->getTimestamp();
+
+            $end_ts = null;
+            if ( ! empty( $schedule->end_date ) && ! empty( $schedule->end_time ) ) {
+                $dt_end = new DateTime( $schedule->end_date . ' ' . $schedule->end_time, $utc_tz );
+                $end_ts = $dt_end->getTimestamp();
+            }
+
+            $stored = get_post_meta( $event_id, 'oha_ve_event_status', true );
+
+            if ( $start_ts <= $now && ( null === $end_ts || $now < $end_ts ) ) {
+                if ( 'live' !== $stored ) {
+                    update_post_meta( $event_id, 'oha_ve_event_status', 'live' );
+                }
+            } elseif ( null !== $end_ts && $now >= $end_ts ) {
+                update_post_meta( $event_id, 'oha_ve_event_status', 'ended' );
+            }
+        }
     }
 
     // =========================================================

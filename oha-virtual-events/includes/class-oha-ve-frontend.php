@@ -179,12 +179,10 @@ class OHA_VE_Frontend {
         $zoom_join        = get_post_meta( $event_id, 'oha_ve_zoom_join_url',      true );
         $zoom_id          = get_post_meta( $event_id, 'oha_ve_zoom_id',            true );
 
-        // Build the start URL from meeting ID so it never expires.
-        // Phase 2: Zoom API will populate oha_ve_zoom_start_url with a fresh token - use that if set.
-        $zoom_start_stored = get_post_meta( $event_id, 'oha_ve_zoom_start_url', true );
-        $zoom_start = $zoom_start_stored;
-        if ( empty( $zoom_start ) && ! empty( $zoom_id ) ) {
-            $clean_id   = preg_replace( '/\D/', '', $zoom_id ); // strip spaces from ID
+        // Build the start URL from meeting ID — never expires, no token needed.
+        $zoom_start = '';
+        if ( ! empty( $zoom_id ) ) {
+            $clean_id   = preg_replace( '/\D/', '', $zoom_id );
             $zoom_start = 'https://zoom.us/s/' . rawurlencode( $clean_id );
         }
         $zoom_pass        = get_post_meta( $event_id, 'oha_ve_zoom_passcode',      true );
@@ -209,20 +207,21 @@ class OHA_VE_Frontend {
         // Resolve schedule and auto-compute effective status before any rendering.
         // This allows the LIVE NOW badge and all display logic to use time-based status
         // without requiring the board to manually flip oha_ve_event_status.
+        // Resolve schedule and auto-compute effective status before any rendering.
+        // The cron (auto_flip_statuses) keeps stored status current, but we also
+        // compute it here as a real-time fallback for the page view itself.
         $ve_schedule      = $this->get_frontend_schedule( $event_id );
-        $seconds_until    = 0;
         $event_time_label = '';
         $effective_status = $event_status;
         if ( $ve_schedule ) {
-            $wp_tz        = wp_timezone();
-            $dt           = new DateTime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ), $wp_tz );
-            $start_ts     = $dt->getTimestamp();
-            $seconds_until = $start_ts - time();
+            $utc_tz   = new DateTimeZone( 'UTC' );
+            $dt       = new DateTime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ), $utc_tz );
+            $start_ts = $dt->getTimestamp();
             $event_time_label = date_i18n( 'F j, Y \a\t g:i A', $start_ts );
             if ( in_array( $event_status, [ 'upcoming', 'live' ], true ) ) {
                 $end_ts = null;
                 if ( ! empty( $ve_schedule->end_date ) && ! empty( $ve_schedule->end_time ) ) {
-                    $dt_end = new DateTime( $ve_schedule->end_date . ' ' . $ve_schedule->end_time, $wp_tz );
+                    $dt_end = new DateTime( $ve_schedule->end_date . ' ' . $ve_schedule->end_time, $utc_tz );
                     $end_ts = $dt_end->getTimestamp();
                 }
                 $now = time();
@@ -263,16 +262,12 @@ class OHA_VE_Frontend {
         $has_zoom = ! $is_prerecorded && ( ! empty( $zoom_join ) || ! empty( $zoom_start ) );
 
         if ( $has_zoom ) {
-            $always_show      = ( 'live' === $effective_status || null === $ve_schedule );
-            $member_secs          = OHA_VE_Settings::get_member_window() * 60;
-            $in_member_window     = $always_show || $seconds_until <= $member_secs;
-            $host_key             = OHA_VE_Settings::get_host_key();
-            $protected_url        = self::get_protected_join_url( $event_id );
+            $host_key      = OHA_VE_Settings::get_host_key();
+            $protected_url = self::get_protected_join_url( $event_id );
 
             $html .= '<div class="oha-ve-card oha-ve-zoom-card">';
 
             if ( $show_host_view ) {
-                // Host/instructor always sees the launch button - no timing window restriction.
                 $html .= '<h3 class="oha-ve-card-title">You are hosting this session</h3>';
                 if ( ! empty( $zoom_join ) ) {
                     $html .= '<p>Click the button below. Your host key will be copied to your clipboard and Zoom will open in a new tab.</p>';
@@ -296,18 +291,15 @@ class OHA_VE_Frontend {
                     $html .= '<p class="oha-ve-timing-notice">No Zoom link has been set for this event yet. Edit the event to add one.</p>';
                 }
             } else {
-                if ( $in_member_window && ! empty( $zoom_join ) ) {
+                if ( ! empty( $zoom_join ) ) {
                     $html .= '<h3 class="oha-ve-card-title">'
                            . ( 'live' === $effective_status ? 'Session is Live' : 'Join Now' ) . '</h3>';
                     $html .= '<p>Click below to join this session in Zoom.</p>';
                     $html .= '<a href="' . esc_url( $protected_url ) . '" target="_blank" rel="noopener noreferrer"'
                            . ' class="oha-ve-btn oha-ve-btn-zoom">' . esc_html( $join_btn_text ) . '</a>';
-                } elseif ( ! $in_member_window ) {
-                    $window_min = OHA_VE_Settings::get_member_window();
-                    $html .= '<h3 class="oha-ve-card-title">Zoom Meeting</h3>';
-                    $html .= '<p class="oha-ve-timing-notice">Joining opens <strong>' . esc_html( $window_min ) . ' minutes</strong> before this session.'
-                           . ( $event_time_label ? ' This event starts <strong>' . esc_html( $event_time_label ) . '</strong>.' : '' )
-                           . '</p>';
+                    if ( $event_time_label ) {
+                        $html .= '<p class="oha-ve-meta">Session time: <strong>' . esc_html( $event_time_label ) . '</strong></p>';
+                    }
                 }
             }
 

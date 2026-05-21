@@ -190,10 +190,9 @@ class OHA_VE_Shortcodes {
         $limit = intval( $atts['limit'] );
 
         $events = $this->query_events( [
-            'status'          => 'replay',
-            'replay_ready'    => true,
-            'archive_enabled' => true,
-            'limit'           => $limit,
+            'status'       => 'replay',
+            'replay_ready' => true,
+            'limit'        => $limit,
         ] );
 
         $accessible = $this->filter_accessible( $events );
@@ -225,7 +224,6 @@ class OHA_VE_Shortcodes {
      *   status_in       - array of status values (overrides status)
      *   instructor_id   - filter by oha_ve_instructor_user_id
      *   replay_ready    - bool, filter oha_ve_replay_available = 1
-     *   archive_enabled - bool, filter oha_ve_archive_enabled = 1
      *   limit           - posts_per_page
      * }
      * @return WP_Post[]
@@ -275,14 +273,6 @@ class OHA_VE_Shortcodes {
         if ( ! empty( $args['replay_ready'] ) ) {
             $meta_query[] = [
                 'key'   => 'oha_ve_replay_available',
-                'value' => '1',
-            ];
-        }
-
-        // Archive enabled
-        if ( ! empty( $args['archive_enabled'] ) ) {
-            $meta_query[] = [
-                'key'   => 'oha_ve_archive_enabled',
                 'value' => '1',
             ];
         }
