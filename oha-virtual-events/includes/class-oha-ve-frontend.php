@@ -246,18 +246,8 @@ class OHA_VE_Frontend {
                 $start_ts         = $dt->getTimestamp();
                 $seconds_until    = $start_ts - time();
                 $event_time_label = date_i18n( 'F j, Y \a\t g:i A', $start_ts );
-                // Temporary admin debug -- remove after confirming buttons work
-                if ( current_user_can( 'manage_options' ) ) {
-                    $html .= '<p style="font-size:11px;color:#888;border:1px dashed #ccc;padding:4px;margin:4px 0;">'
-                           . 'VE Debug: schedule=' . esc_html( $ve_schedule->start_date . ' ' . $ve_schedule->start_time )
-                           . ' | start_ts=' . $start_ts . ' | now=' . time()
-                           . ' | secs_until=' . $seconds_until
-                           . '</p>';
-                }
             }
-            $instructor_secs      = OHA_VE_Settings::get_instructor_window() * 60;
-            $member_secs          = OHA_VE_Settings::get_member_window()     * 60;
-            $in_instructor_window = $always_show || $seconds_until <= $instructor_secs;
+            $member_secs          = OHA_VE_Settings::get_member_window() * 60;
             $in_member_window     = $always_show || $seconds_until <= $member_secs;
             $host_key             = OHA_VE_Settings::get_host_key();
             $protected_url        = self::get_protected_join_url( $event_id );
@@ -265,30 +255,28 @@ class OHA_VE_Frontend {
             $html .= '<div class="oha-ve-card oha-ve-zoom-card">';
 
             if ( $show_host_view ) {
-                if ( $in_instructor_window ) {
-                    $html .= '<h3 class="oha-ve-card-title">You are hosting this session</h3>';
+                // Host/instructor always sees the launch button - no timing window restriction.
+                $html .= '<h3 class="oha-ve-card-title">You are hosting this session</h3>';
+                if ( ! empty( $zoom_join ) ) {
                     $html .= '<p>Click the button below. Your host key will be copied to your clipboard and Zoom will open in a new tab.</p>';
-                    if ( ! empty( $zoom_join ) ) {
-                        $html .= '<button class="oha-ve-btn oha-ve-btn-host oha-ve-host-launch-btn"'
-                               . ' data-join-url="' . esc_attr( esc_url( $protected_url ) ) . '"'
-                               . ' data-host-key="' . esc_attr( $host_key ) . '"'
-                               . ' onclick="ohaVeHostLaunch(this)">Open Meeting + Copy Host Key</button>';
-                        $html .= '<ol class="oha-ve-host-steps">'
-                               . '<li>Zoom opens in a new tab - join as a participant</li>'
-                               . '<li>In Zoom, click <strong>Participants</strong></li>'
-                               . '<li>Click <strong>Claim Host</strong> at the bottom of the participant list</li>'
-                               . '<li>Paste the host key when prompted (it was copied to your clipboard)</li>'
-                               . '</ol>';
-                        if ( $host_key ) {
-                            $html .= '<p class="oha-ve-meta">Backup host key: <code>' . esc_html( $host_key ) . '</code></p>';
-                        }
+                    $html .= '<button class="oha-ve-btn oha-ve-btn-host oha-ve-host-launch-btn"'
+                           . ' data-join-url="' . esc_attr( esc_url( $protected_url ) ) . '"'
+                           . ' data-host-key="' . esc_attr( $host_key ) . '"'
+                           . ' onclick="ohaVeHostLaunch(this)">Open Meeting + Copy Host Key</button>';
+                    $html .= '<ol class="oha-ve-host-steps">'
+                           . '<li>Zoom opens in a new tab - join as a participant</li>'
+                           . '<li>In Zoom, click <strong>Participants</strong></li>'
+                           . '<li>Click <strong>Claim Host</strong> at the bottom of the participant list</li>'
+                           . '<li>Paste the host key when prompted (it was copied to your clipboard)</li>'
+                           . '</ol>';
+                    if ( $host_key ) {
+                        $html .= '<p class="oha-ve-meta">Backup host key: <code>' . esc_html( $host_key ) . '</code></p>';
+                    }
+                    if ( $event_time_label ) {
+                        $html .= '<p class="oha-ve-meta">Session time: <strong>' . esc_html( $event_time_label ) . '</strong></p>';
                     }
                 } else {
-                    $window_min = OHA_VE_Settings::get_instructor_window();
-                    $html .= '<h3 class="oha-ve-card-title">You are hosting this session</h3>';
-                    $html .= '<p class="oha-ve-timing-notice">This session begins <strong>'
-                           . esc_html( $event_time_label ) . '</strong>. '
-                           . 'The host launch button will appear <strong>' . esc_html( $window_min ) . ' minutes</strong> before the event.</p>';
+                    $html .= '<p class="oha-ve-timing-notice">No Zoom link has been set for this event yet. Edit the event to add one.</p>';
                 }
             } else {
                 if ( $in_member_window && ! empty( $zoom_join ) ) {

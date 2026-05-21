@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.4.2",
+    "version":  "1.4.3",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -274,6 +274,20 @@
                         "type":  "fix",
                         "summary":  "Use wp_timezone() for timing window calc to handle UTC-offset sites; add temporary admin debug output",
                         "notes":  "get_option(timezone_string) returns empty on sites using UTC offset instead of named timezone. wp_timezone() handles both cases correctly. Debug line shows schedule date/time, timestamps, and secs_until for admin users only -- remove once timing confirmed."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.4.3",
+                        "type":  "fix",
+                        "summary":  "Remove timing window restriction for host/instructor - host button now always visible regardless of event time",
+                        "notes":  "Timing window only applies to members now. Host always sees the launch button and session time. This eliminates the failure mode where timezone calc errors blocked the host from their own meeting controls."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.4.3",
+                        "type":  "fix",
+                        "summary":  "Remove temporary admin debug output added in v1.4.2",
+                        "notes":  "Debug lines from the timezone investigation have been cleaned up."
                     }
                 ]
 }

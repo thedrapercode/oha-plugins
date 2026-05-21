@@ -8,7 +8,7 @@
  *              displays upcoming events on haunt venue listing pages (replaces
  *              the gd_show_events_on_place_page code snippet - remove that
  *              snippet after activating this plugin).
- * Version:     1.4.2
+ * Version:     1.4.3
  * Author:      OHA Development
  * License:     GPLv3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -112,7 +112,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'OHA_VE_VERSION',    '1.4.2' );
+define( 'OHA_VE_VERSION',    '1.4.3' );
 define( 'OHA_VE_PLUGIN_FILE', __FILE__ );
 define( 'OHA_VE_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'OHA_VE_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
