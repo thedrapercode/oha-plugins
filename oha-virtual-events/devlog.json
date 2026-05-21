@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.4.3",
+    "version":  "1.4.4",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -288,6 +288,13 @@
                         "type":  "fix",
                         "summary":  "Remove temporary admin debug output added in v1.4.2",
                         "notes":  "Debug lines from the timezone investigation have been cleaned up."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.4.4",
+                        "type":  "feature",
+                        "summary":  "Auto-compute live/ended event status from GD schedule - no manual status flip required",
+                        "notes":  "Schedule fetch moved before badge rendering. effective_status derived from start_ts/end_ts vs time(). If current time is between start and end: effective_status=live. If past end: effective_status=ended. Stored oha_ve_event_status still respected for cancelled/replay/closed states. LIVE NOW badge, member join heading, YouTube embed, and always_show flag all use effective_status."
                     }
                 ]
 }

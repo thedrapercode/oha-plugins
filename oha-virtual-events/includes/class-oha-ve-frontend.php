@@ -206,6 +206,34 @@ class OHA_VE_Frontend {
             return $content . $this->render_access_denied( $access_level );
         }
 
+        // Resolve schedule and auto-compute effective status before any rendering.
+        // This allows the LIVE NOW badge and all display logic to use time-based status
+        // without requiring the board to manually flip oha_ve_event_status.
+        $ve_schedule      = $this->get_frontend_schedule( $event_id );
+        $seconds_until    = 0;
+        $event_time_label = '';
+        $effective_status = $event_status;
+        if ( $ve_schedule ) {
+            $wp_tz        = wp_timezone();
+            $dt           = new DateTime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ), $wp_tz );
+            $start_ts     = $dt->getTimestamp();
+            $seconds_until = $start_ts - time();
+            $event_time_label = date_i18n( 'F j, Y \a\t g:i A', $start_ts );
+            if ( in_array( $event_status, [ 'upcoming', 'live' ], true ) ) {
+                $end_ts = null;
+                if ( ! empty( $ve_schedule->end_date ) && ! empty( $ve_schedule->end_time ) ) {
+                    $dt_end = new DateTime( $ve_schedule->end_date . ' ' . $ve_schedule->end_time, $wp_tz );
+                    $end_ts = $dt_end->getTimestamp();
+                }
+                $now = time();
+                if ( $start_ts <= $now && ( null === $end_ts || $now < $end_ts ) ) {
+                    $effective_status = 'live';
+                } elseif ( null !== $end_ts && $now >= $end_ts ) {
+                    $effective_status = 'ended';
+                }
+            }
+        }
+
         $html = '<div class="oha-virtual-event-section">';
 
         // Event type badge
@@ -216,7 +244,7 @@ class OHA_VE_Frontend {
         }
 
         // Status badge (Live Now is prominent)
-        if ( 'live' === $event_status ) {
+        if ( 'live' === $effective_status ) {
             $html .= '<div class="oha-ve-live-badge">&#128994; LIVE NOW</div>';
         }
 
@@ -235,18 +263,7 @@ class OHA_VE_Frontend {
         $has_zoom = ! $is_prerecorded && ( ! empty( $zoom_join ) || ! empty( $zoom_start ) );
 
         if ( $has_zoom ) {
-            // Resolve timing windows against the GD event schedule.
-            $ve_schedule      = $this->get_frontend_schedule( $event_id );
-            $always_show      = ( 'live' === $event_status || null === $ve_schedule );
-            $seconds_until    = 0;
-            $event_time_label = '';
-            if ( $ve_schedule ) {
-                $wp_tz            = wp_timezone();
-                $dt               = new DateTime( $ve_schedule->start_date . ' ' . ( $ve_schedule->start_time ?: '00:00:00' ), $wp_tz );
-                $start_ts         = $dt->getTimestamp();
-                $seconds_until    = $start_ts - time();
-                $event_time_label = date_i18n( 'F j, Y \a\t g:i A', $start_ts );
-            }
+            $always_show      = ( 'live' === $effective_status || null === $ve_schedule );
             $member_secs          = OHA_VE_Settings::get_member_window() * 60;
             $in_member_window     = $always_show || $seconds_until <= $member_secs;
             $host_key             = OHA_VE_Settings::get_host_key();
@@ -281,7 +298,7 @@ class OHA_VE_Frontend {
             } else {
                 if ( $in_member_window && ! empty( $zoom_join ) ) {
                     $html .= '<h3 class="oha-ve-card-title">'
-                           . ( 'live' === $event_status ? 'Session is Live' : 'Join Now' ) . '</h3>';
+                           . ( 'live' === $effective_status ? 'Session is Live' : 'Join Now' ) . '</h3>';
                     $html .= '<p>Click below to join this session in Zoom.</p>';
                     $html .= '<a href="' . esc_url( $protected_url ) . '" target="_blank" rel="noopener noreferrer"'
                            . ' class="oha-ve-btn oha-ve-btn-zoom">' . esc_html( $join_btn_text ) . '</a>';
@@ -312,7 +329,7 @@ class OHA_VE_Frontend {
         }
 
         // ── YOUTUBE LIVE EMBED ──
-        if ( ! empty( $yt_live_id ) && in_array( $event_status, [ 'live', 'upcoming' ], true ) ) {
+        if ( ! empty( $yt_live_id ) && in_array( $effective_status, [ 'live', 'upcoming' ], true ) ) {
             $html .= '<div class="oha-ve-card oha-ve-youtube-card">';
             $html .= '<h3 class="oha-ve-card-title">&#9654; Live Stream</h3>';
             $html .= '<div class="oha-ve-video-wrapper">';
@@ -603,7 +620,7 @@ class OHA_VE_Frontend {
             ? GEODIR_EVENT_SCHEDULES_TABLE
             : $wpdb->prefix . 'geodir_event_schedule';
         return $wpdb->get_row( $wpdb->prepare(
-            "SELECT start_date, start_time FROM {$table} WHERE event_id = %d ORDER BY start_date ASC LIMIT 1",
+            "SELECT start_date, start_time, end_date, end_time FROM {$table} WHERE event_id = %d ORDER BY start_date ASC LIMIT 1",
             $event_id
         ) );
     }
