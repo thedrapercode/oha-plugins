@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.5.0",
+    "version":  "1.5.1",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -330,6 +330,13 @@
                         "type":  "change",
                         "summary":  "Removed oha_ve_zoom_recording and oha_ve_archive_enabled meta fields; merged into single replay_available checkbox",
                         "notes":  "archive_enabled filter removed from query_events in shortcodes.php. Admin Section 6 simplified to one checkbox. On Demand query now only requires status=replay and replay_available=1."
+                    },
+                    {
+                        "date":  "2026-05-21",
+                        "version":  "1.5.1",
+                        "type":  "fix",
+                        "summary":  "Fixed 403 cookie check failed error on Zoom join redirect - renamed _wpnonce param to _token",
+                        "notes":  "WordPress REST API intercepts _wpnonce and verifies it as wp_rest nonce, which fails for our custom oha_ve_zoom_join_{id} nonce. Renamed to _token in get_protected_join_url() and zoom_join_redirect() to avoid the collision."
                     }
                 ]
 }

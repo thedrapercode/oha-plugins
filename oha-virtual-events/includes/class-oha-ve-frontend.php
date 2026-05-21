@@ -60,7 +60,7 @@ class OHA_VE_Frontend {
 
     public function zoom_join_redirect( \WP_REST_Request $request ) {
         $event_id = absint( $request->get_param( 'event_id' ) );
-        $nonce    = sanitize_text_field( (string) $request->get_param( '_wpnonce' ) );
+        $nonce    = sanitize_text_field( (string) $request->get_param( '_token' ) );
 
         // Verify time-limited nonce.
         if ( ! wp_verify_nonce( $nonce, 'oha_ve_zoom_join_' . $event_id ) ) {
@@ -132,7 +132,7 @@ class OHA_VE_Frontend {
      */
     public static function get_protected_join_url( $event_id ) {
         return add_query_arg(
-            '_wpnonce',
+            '_token',
             wp_create_nonce( 'oha_ve_zoom_join_' . absint( $event_id ) ),
             rest_url( 'oha-ve/v1/zoom-join/' . absint( $event_id ) )
         );
