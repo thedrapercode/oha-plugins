@@ -347,6 +347,25 @@ class OHA_Convention_Survey {
         $survey_type = self::context_to_type($context);
         $title       = self::survey_title($survey_type);
 
+        // Enqueue here directly so scripts load even when has_shortcode() misses this page
+        wp_enqueue_style(
+            'oha-survey-hub-style',
+            OHA_SURVEY_HUB_PLUGIN_URL . 'assets/css/survey-style.css',
+            [],
+            OHA_SURVEY_HUB_VERSION
+        );
+        wp_enqueue_script(
+            'oha-convention-survey-script',
+            OHA_SURVEY_HUB_PLUGIN_URL . 'assets/js/convention-survey.js',
+            ['jquery'],
+            OHA_SURVEY_HUB_VERSION,
+            true
+        );
+        wp_localize_script('oha-convention-survey-script', 'oha_conv_ajax', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce'    => wp_create_nonce('oha_survey_nonce'),
+        ]);
+
         global $wpdb;
         $table     = $wpdb->prefix . 'oha_survey_convention_questions';
         $questions = $wpdb->get_results($wpdb->prepare(
