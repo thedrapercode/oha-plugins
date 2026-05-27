@@ -1,0 +1,121 @@
+.oha-att-wrap h1 { margin-bottom: 16px; }
+.oha-att-wrap hr  { margin: 20px 0; border-color: #ddd; }
+
+/* --- Filter bar --- */
+.oha-att-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.oha-att-filter-bar select,
+.oha-att-filter-bar input[type="search"] { height: 30px; }
+.oha-att-count { color: #666; font-size: 13px; }
+
+/* --- Table --- */
+.oha-att-table .col-name  { width: 180px; }
+.oha-att-table .col-email { width: 200px; }
+
+/* --- Badges --- */
+.oha-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.oha-badge-new      { background: #e6f3e6; color: #1a6b1a; }
+.oha-badge-existing { background: #e6eef7; color: #1a4b8a; }
+.oha-badge-none     { background: #f0f0f0; color: #888; }
+.oha-badge-sent     { background: #e6f3e6; color: #1a6b1a; }
+.oha-badge-pending  { background: #fff3cd; color: #856404; }
+
+/* --- Import: column list --- */
+.oha-att-col-list {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #333;
+    max-width: 800px;
+}
+
+/* --- Import: stats row --- */
+.oha-att-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.oha-att-stat {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 110px;
+}
+.oha-att-stat span {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.oha-s-new   { border-color: #2ecc71; }
+.oha-s-new   span { color: #1a6b1a; }
+.oha-s-exist { border-color: #3498db; }
+.oha-s-exist span { color: #1a4b8a; }
+.oha-s-skip  { border-color: #e67e22; }
+.oha-s-skip  span { color: #7a4000; }
+
+.oha-att-import-btns { margin: 16px 0; }
+.oha-att-loading     { color: #666; font-style: italic; }
+
+/* --- Welcome email page --- */
+.oha-att-tag-list { font-size: 13px; margin-bottom: 4px; }
+.oha-att-tag-list code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; margin: 0 2px; }
+
+.oha-att-unsent {
+    display: inline-block;
+    margin-left: 10px;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    border-radius: 3px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.oha-att-actions { margin: 12px 0 20px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* --- Email preview box --- */
+.oha-preview-subject {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 4px 4px 0 0;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #333;
+}
+.oha-preview-body {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 680px;
+    margin: 0 0 20px;
+}
+
+/* --- Settings page --- */
+.oha-att-warn {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 8px 12px;
+    display: inline-block;
+}

@@ -1,0 +1,13 @@
+{
+    "plugin":  "oha-attendee-hub",
+    "version":  "1.0.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Initial build: CSV import, WP account creation with Convention Attendee role, year-over-year tracking, welcome email",
+                        "notes":  "New plugin. DB table wp_oha_attendees (unique key email+year). Convention Attendee role (oha_convention_attendee, read-only). JEmail integration via WP role filter - no JEmail code changes needed. Welcome email body stored with wp_unslash only (no stripping) to preserve special chars. Batched send via AJAX loop (25/batch). merge tags: first_name, last_name, email, username, year, ticket_level, add_ons, purchase_amount, set_password_link, site_name, site_url. set_password_link only outputs for newly created accounts."
+                    }
+                ]
+}
