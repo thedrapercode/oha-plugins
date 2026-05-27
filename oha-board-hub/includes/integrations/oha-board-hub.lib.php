@@ -1498,6 +1498,12 @@ private function render_overview_tab($range = '30d') {
             }
         }
 
+        usort($all_rows, function($a, $b) {
+            $ta = !empty($a['subscription_starts']) ? strtotime($a['subscription_starts']) : 0;
+            $tb = !empty($b['subscription_starts']) ? strtotime($b['subscription_starts']) : 0;
+            return $tb - $ta;
+        });
+
         return $all_rows;
     }
 

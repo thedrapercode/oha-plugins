@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.10.1",
+    "version":  "2.10.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -533,6 +533,13 @@
                         "type":  "change",
                         "summary":  "Replace pencil button on ID column with clickable dotted-underline number",
                         "notes":  "Removed separate button element that inherited large theme styles. oha-mid-display span is now the click target with cursor:pointer and text-decoration:underline dotted. JS updated to match."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "2.10.2",
+                        "type":  "fix",
+                        "summary":  "Sort member table by subscription_starts DESC so upgraded listing owners appear newest first",
+                        "notes":  "usort added at end of fetch_members_legacy_raw(); sorts by oha_paid_member_since (stored as subscription_starts) rather than user_registered from DB ORDER BY"
                     }
                 ]
 }
