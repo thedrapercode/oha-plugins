@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.10.0",
+    "version":  "2.10.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -526,6 +526,13 @@
                         "type":  "note",
                         "summary":  "oha_member_id usermeta was never written to DB; initial population SQL created in tmp/init-oha-member-ids.sql",
                         "notes":  "Run init-oha-member-ids.sql in phpMyAdmin to populate oha_member_id for all 90 existing OHA members. Pyle card numbers used where known; WP user ID used as fallback for all others. INSERT IGNORE so safe to re-run."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "2.10.1",
+                        "type":  "change",
+                        "summary":  "Replace pencil button on ID column with clickable dotted-underline number",
+                        "notes":  "Removed separate button element that inherited large theme styles. oha-mid-display span is now the click target with cursor:pointer and text-decoration:underline dotted. JS updated to match."
                     }
                 ]
 }

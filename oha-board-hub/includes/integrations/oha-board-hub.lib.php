@@ -1660,11 +1660,11 @@ private function render_overview_tab($range = '30d') {
 
             // Member ID inline edit
             function onEditClick(e){
-                var btn = e.target.closest('.oha-mid-edit');
-                if(!btn) return;
+                var btn = e.target.closest('.oha-mid-display');
+                if(!btn || btn.closest('.oha-mid-input')) return;
                 e.preventDefault();
                 var cell = btn.closest('.oha-member-id-cell');
-                var display = cell.querySelector('.oha-mid-display');
+                var display = btn;
                 var current = display.textContent.trim();
                 // Replace display + edit btn with input + save/cancel
                 cell.innerHTML =
@@ -1699,8 +1699,7 @@ private function render_overview_tab($range = '30d') {
                 .then(function(resp){
                     if(resp && resp.success){
                         cell.innerHTML =
-                            '<span class="oha-mid-display">'+resp.data.oha_member_id+'</span>' +
-                            ' <button type="button" class="oha-mid-edit" title="Edit card number" aria-label="Edit card number">&#9998;</button>';
+                            '<span class="oha-mid-display" title="Click to edit card number" style="cursor:pointer;text-decoration:underline dotted;">'+resp.data.oha_member_id+'</span>';
                     } else {
                         alert((resp && resp.data && resp.data.message) ? resp.data.message : 'Failed to save.');
                         btn.disabled = false;
@@ -1718,8 +1717,7 @@ private function render_overview_tab($range = '30d') {
                 var oldVal = input.getAttribute('value');
                 var nonce  = cell.getAttribute('data-nonce');
                 cell.innerHTML =
-                    '<span class="oha-mid-display">'+oldVal+'</span>' +
-                    ' <button type="button" class="oha-mid-edit" title="Edit card number" aria-label="Edit card number">&#9998;</button>';
+                    '<span class="oha-mid-display" title="Click to edit card number" style="cursor:pointer;text-decoration:underline dotted;">'+oldVal+'</span>';
             }
 
             document.addEventListener('click', function(e){
@@ -1769,8 +1767,7 @@ private function render_overview_tab($range = '30d') {
             $display_id    = !empty($r['oha_member_id']) ? esc_html($r['oha_member_id']) : intval($r['member_id']);
             $id_nonce      = wp_create_nonce('oha_set_member_id_' . $wp_uid_for_id);
             $html .= '<td class="oha-member-id-cell" data-wp-user-id="'.intval($wp_uid_for_id).'" data-nonce="'.esc_attr($id_nonce).'">';
-            $html .= '<span class="oha-mid-display">'.esc_html($display_id).'</span>';
-            $html .= ' <button type="button" class="oha-mid-edit" title="Edit card number" aria-label="Edit card number">&#9998;</button>';
+            $html .= '<span class="oha-mid-display" title="Click to edit card number" style="cursor:pointer;text-decoration:underline dotted;">'.esc_html($display_id).'</span>';
             $html .= '</td>';
             $html .= '<td>'.esc_html($name ?: ($r['user_name'] ?? '')) .'</td>';
             $email = $r['email'] ?? '';
