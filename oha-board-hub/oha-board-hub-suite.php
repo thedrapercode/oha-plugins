@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.9.0
+ * Version: 2.10.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.9.0');
+define('OHA_BHS_VERSION', '2.10.0');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -787,6 +787,12 @@ private function userswp_set_paid_member($user_id) {
     // This powers the "new member" date filter in Board Hub member lists.
     if (!get_user_meta($user_id, 'oha_paid_member_since', true)) {
         update_user_meta($user_id, 'oha_paid_member_since', current_time('mysql'));
+    }
+
+    // Assign permanent card number using WP user ID if not already set.
+    // Never overwrite — once set (manually or here) it stays forever.
+    if (!get_user_meta($user_id, 'oha_member_id', true)) {
+        update_user_meta($user_id, 'oha_member_id', (string) $user_id);
     }
 
     // Role alignment

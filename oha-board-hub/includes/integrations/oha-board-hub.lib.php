@@ -395,6 +395,7 @@ const CAP = 'read_oha_board_hub';
             }
             // Card-sent toggle must be available regardless of convention mode
             add_action('wp_ajax_oha_toggle_card_sent', [$this,'action_oha_toggle_card_sent']);
+            add_action('wp_ajax_oha_set_member_id',    [$this,'action_oha_set_member_id']);
         });
     }
 
@@ -530,6 +531,28 @@ try {
     if ($__oha_prev_err !== null) { set_error_handler($__oha_prev_err); } else { restore_error_handler(); }
 }
 }
+
+    public function action_oha_set_member_id() {
+        if (!is_user_logged_in() || !$this->user_can_view()) {
+            wp_send_json_error(['message' => 'Unauthorized'], 200);
+        }
+        $wp_user_id = isset($_POST['wp_user_id']) ? intval($_POST['wp_user_id']) : 0;
+        $new_id     = isset($_POST['new_member_id']) ? sanitize_text_field(trim($_POST['new_member_id'])) : '';
+        $nonce      = isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : '';
+
+        if ($wp_user_id <= 0 || $new_id === '') {
+            wp_send_json_error(['message' => 'Invalid data'], 200);
+        }
+        if (!wp_verify_nonce($nonce, 'oha_set_member_id_' . $wp_user_id)) {
+            wp_send_json_error(['message' => 'Bad nonce'], 200);
+        }
+        if (!get_user_by('ID', $wp_user_id)) {
+            wp_send_json_error(['message' => 'User not found'], 200);
+        }
+        update_user_meta($wp_user_id, 'oha_member_id', $new_id);
+        wp_send_json_success(['wp_user_id' => $wp_user_id, 'oha_member_id' => $new_id], 200);
+    }
+
 private function current_user_sm_level_equals($target_level) {
         if (!is_user_logged_in()) return false;
         $user = wp_get_current_user();
@@ -1602,7 +1625,10 @@ private function render_overview_tab($range = '30d') {
         <?php echo $this->render_members_table($rows); ?>
         <script>
         (function(){
-            function onClick(e){
+            var ajaxUrl = '<?php echo esc_url( admin_url('admin-ajax.php', 'relative') ); ?>';
+
+            // Card sent toggle
+            function onCardClick(e){
                 var b = e.target.closest('.oha-card-toggle');
                 if(!b) return;
                 e.preventDefault();
@@ -1617,7 +1643,7 @@ private function render_overview_tab($range = '30d') {
                 fd.append('wp_user_id', wpUserId);
                 fd.append('sent', sent);
                 fd.append('_wpnonce', nonce);
-                fetch('<?php echo esc_url( admin_url('admin-ajax.php', 'relative') ); ?>', {method:'POST', credentials:'same-origin', body:fd})
+                fetch(ajaxUrl, {method:'POST', credentials:'same-origin', body:fd})
                 .then(function(r){ return r.json().catch(function(){ return {success:false, data:{message:'Invalid JSON'}}; }); })
                 .then(function(resp){
                     if(resp && resp.success){
@@ -1631,7 +1657,77 @@ private function render_overview_tab($range = '30d') {
                 .catch(function(){ alert('Network error.'); })
                 .finally(function(){ b.disabled = false; });
             }
-            document.addEventListener('click', onClick);
+
+            // Member ID inline edit
+            function onEditClick(e){
+                var btn = e.target.closest('.oha-mid-edit');
+                if(!btn) return;
+                e.preventDefault();
+                var cell = btn.closest('.oha-member-id-cell');
+                var display = cell.querySelector('.oha-mid-display');
+                var current = display.textContent.trim();
+                // Replace display + edit btn with input + save/cancel
+                cell.innerHTML =
+                    '<input type="text" class="oha-mid-input" value="'+current.replace(/"/g,'&quot;')+'" style="width:60px;" maxlength="10" />' +
+                    ' <button type="button" class="oha-mid-save button button-small">Save</button>' +
+                    ' <button type="button" class="oha-mid-cancel button button-small">Cancel</button>';
+                cell.querySelector('.oha-mid-input').focus();
+            }
+
+            function onSaveClick(e){
+                var btn = e.target.closest('.oha-mid-save');
+                if(!btn) return;
+                e.preventDefault();
+                var cell = btn.closest('.oha-member-id-cell');
+                var input = cell.querySelector('.oha-mid-input');
+                var newVal = input.value.trim();
+                if(!newVal){ alert('Card number cannot be blank.'); return; }
+                var wpUserId = cell.getAttribute('data-wp-user-id');
+                var nonce    = cell.getAttribute('data-nonce');
+                var oldVal   = input.getAttribute('value');
+                if(!confirm('Warning: This will permanently change the card number stored in the database from ' + oldVal + ' to ' + newVal + '.\n\nDouble-check before submitting. Continue?')){
+                    return;
+                }
+                btn.disabled = true;
+                var fd = new FormData();
+                fd.append('action', 'oha_set_member_id');
+                fd.append('wp_user_id', wpUserId);
+                fd.append('new_member_id', newVal);
+                fd.append('_wpnonce', nonce);
+                fetch(ajaxUrl, {method:'POST', credentials:'same-origin', body:fd})
+                .then(function(r){ return r.json().catch(function(){ return {success:false, data:{message:'Invalid JSON'}}; }); })
+                .then(function(resp){
+                    if(resp && resp.success){
+                        cell.innerHTML =
+                            '<span class="oha-mid-display">'+resp.data.oha_member_id+'</span>' +
+                            ' <button type="button" class="oha-mid-edit" title="Edit card number" aria-label="Edit card number">&#9998;</button>';
+                    } else {
+                        alert((resp && resp.data && resp.data.message) ? resp.data.message : 'Failed to save.');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(function(){ alert('Network error.'); btn.disabled = false; });
+            }
+
+            function onCancelClick(e){
+                var btn = e.target.closest('.oha-mid-cancel');
+                if(!btn) return;
+                e.preventDefault();
+                var cell = btn.closest('.oha-member-id-cell');
+                var input = cell.querySelector('.oha-mid-input');
+                var oldVal = input.getAttribute('value');
+                var nonce  = cell.getAttribute('data-nonce');
+                cell.innerHTML =
+                    '<span class="oha-mid-display">'+oldVal+'</span>' +
+                    ' <button type="button" class="oha-mid-edit" title="Edit card number" aria-label="Edit card number">&#9998;</button>';
+            }
+
+            document.addEventListener('click', function(e){
+                onCardClick(e);
+                onEditClick(e);
+                onSaveClick(e);
+                onCancelClick(e);
+            });
         })();
         </script>
 
@@ -1669,8 +1765,13 @@ private function render_overview_tab($range = '30d') {
             $addr = implode(' ', $addr_parts);
             $start = !empty($r['subscription_starts']) ? $r['subscription_starts'] : '—';
             $html .= '<tr>';
-            $display_id = !empty($r['oha_member_id']) ? esc_html($r['oha_member_id']) : intval($r['member_id']);
-            $html .= '<td>'.$display_id.'</td>';
+            $wp_uid_for_id = isset($r['wp_user_id']) ? intval($r['wp_user_id']) : intval($r['member_id']);
+            $display_id    = !empty($r['oha_member_id']) ? esc_html($r['oha_member_id']) : intval($r['member_id']);
+            $id_nonce      = wp_create_nonce('oha_set_member_id_' . $wp_uid_for_id);
+            $html .= '<td class="oha-member-id-cell" data-wp-user-id="'.intval($wp_uid_for_id).'" data-nonce="'.esc_attr($id_nonce).'">';
+            $html .= '<span class="oha-mid-display">'.esc_html($display_id).'</span>';
+            $html .= ' <button type="button" class="oha-mid-edit" title="Edit card number" aria-label="Edit card number">&#9998;</button>';
+            $html .= '</td>';
             $html .= '<td>'.esc_html($name ?: ($r['user_name'] ?? '')) .'</td>';
             $email = $r['email'] ?? '';
             $html .= '<td>'.($email ? '<a href="mailto:'.esc_attr($email).'">'.esc_html($email).'</a>' : '—').'</td>';

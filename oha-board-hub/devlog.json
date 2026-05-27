@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.9.0",
+    "version":  "2.10.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -505,6 +505,27 @@
                         "type":  "fix",
                         "summary":  "Fixed custom tab slug revert bug where edited slug reverted to auto-generated key on save",
                         "notes":  "Added sanitize callback to register_setting that re-keys tab_management array entries when slug value differs from array key. Applies only to type=custom tabs."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "2.10.0",
+                        "type":  "feature",
+                        "summary":  "Auto-assign WP user ID as oha_member_id on membership activation if not already set",
+                        "notes":  "Called from userswp_set_paid_member() in oha-board-hub-suite.php. Uses INSERT-or-skip logic: get_user_meta check before update_user_meta, so existing values are never overwritten. Going forward all new members get their WP user ID as permanent card number."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "2.10.0",
+                        "type":  "feature",
+                        "summary":  "Editable card number field in frontend member table with database warning",
+                        "notes":  "Pencil icon on ID column opens inline input. Save triggers confirm dialog warning before writing to DB. AJAX handler action_oha_set_member_id() in oha-board-hub.lib.php writes oha_member_id usermeta. Nonce scoped to wp_user_id."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "2.10.0",
+                        "type":  "note",
+                        "summary":  "oha_member_id usermeta was never written to DB; initial population SQL created in tmp/init-oha-member-ids.sql",
+                        "notes":  "Run init-oha-member-ids.sql in phpMyAdmin to populate oha_member_id for all 90 existing OHA members. Pyle card numbers used where known; WP user ID used as fallback for all others. INSERT IGNORE so safe to re-run."
                     }
                 ]
 }
