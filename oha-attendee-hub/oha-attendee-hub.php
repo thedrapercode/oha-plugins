@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Attendee Hub
  * Description: Convention attendee CSV import, WP account creation, year-over-year tracking, and welcome email system.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: OHA
  * License: GPL v2 or later
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_ATTENDEE_HUB_VERSION', '1.0.0' );
+define( 'OHA_ATTENDEE_HUB_VERSION', '1.0.1' );
 define( 'OHA_ATTENDEE_HUB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OHA_ATTENDEE_HUB_URL', plugin_dir_url( __FILE__ ) );
 

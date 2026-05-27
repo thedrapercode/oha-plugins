@@ -175,6 +175,13 @@ class OHA_Attendee_Importer {
 				$wp_user = get_user_by( 'ID', $user_id );
 				$is_new  = true;
 				$created++;
+
+				// Set UsersWP form type so UWP doesn't default these accounts to form 1 (OHA Member).
+				// Form ID is configured in Attendee Hub > Settings.
+				$uwp_form_id = (int) get_option( 'oha_attendee_uwp_form_id', 4 );
+				if ( $uwp_form_id ) {
+					update_user_meta( $user_id, '_uwp_register_form_id', $uwp_form_id );
+				}
 			} else {
 				$user_id = $wp_user->ID;
 				// Fill in missing name fields

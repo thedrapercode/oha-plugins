@@ -418,12 +418,14 @@ class OHA_Attendee_Admin {
 	public static function page_settings() : void {
 		if ( isset( $_POST['_oha_att_settings_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['_oha_att_settings_nonce'] ), 'oha_att_settings' ) ) {
 			if ( current_user_can( 'manage_options' ) ) {
-				update_option( 'oha_attendee_default_year', (int) ( $_POST['default_year'] ?? date( 'Y' ) ) );
+				update_option( 'oha_attendee_default_year',  (int) ( $_POST['default_year']   ?? date( 'Y' ) ) );
+				update_option( 'oha_attendee_uwp_form_id',   (int) ( $_POST['uwp_form_id']    ?? 4 ) );
 				echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
 			}
 		}
 
 		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
+		$uwp_form_id  = (int) get_option( 'oha_attendee_uwp_form_id', 4 );
 		$current_year = (int) date( 'Y' );
 		$role         = get_role( 'oha_convention_attendee' );
 		$role_count   = $role ? count( get_users( [ 'role' => 'oha_convention_attendee', 'fields' => 'ID', 'number' => -1 ] ) ) : 0;
@@ -443,6 +445,13 @@ class OHA_Attendee_Admin {
 								<?php endfor; ?>
 							</select>
 							<p class="description">Pre-selects this year on the Attendees, Import, and Welcome Email pages.</p>
+						</td>
+					</tr>
+					<tr>
+						<th><label for="uwp_form_id">UsersWP Form ID for new attendees</label></th>
+						<td>
+							<input type="number" name="uwp_form_id" id="uwp_form_id" value="<?php echo $uwp_form_id; ?>" min="1" style="width:80px">
+							<p class="description">The UsersWP registration form ID assigned to newly imported accounts. Check WP Admin &gt; UsersWP &gt; User Types to confirm the correct ID. Default: 4.</p>
 						</td>
 					</tr>
 				</table>
