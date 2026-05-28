@@ -308,6 +308,20 @@ class OHA_Convention_Survey {
         }
     }
 
+    public static function dedup_vendor_questions() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'oha_survey_convention_questions';
+        // Keep only the lowest id per (survey_context, sort_order) — removes duplicates from concurrent seeding
+        $wpdb->query("
+            DELETE q1 FROM {$table} q1
+            INNER JOIN {$table} q2
+                ON q1.survey_context = q2.survey_context
+                AND q1.sort_order = q2.sort_order
+                AND q1.id > q2.id
+            WHERE q1.survey_context = 'vendor'
+        ");
+    }
+
     private static function qv($sort, $group, $text, $type, $opts, $required, $gate_for = 0, $gate_val = '', $smin = 1, $smax = 5, $slmin = '', $slmax = '') {
         return [
             'survey_context'  => 'vendor',
@@ -1323,6 +1337,20 @@ class OHA_Convention_Survey {
     // -------------------------------------------------------------------------
 
     public static function shortcode_survey_results($atts) {
+        wp_enqueue_style(
+            'oha-survey-hub-style',
+            OHA_SURVEY_HUB_PLUGIN_URL . 'assets/css/survey-style.css',
+            [],
+            OHA_SURVEY_HUB_VERSION
+        );
+        wp_enqueue_script(
+            'chartjs',
+            'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js',
+            [],
+            '4',
+            true
+        );
+
         $types = [
             self::SURVEY_TYPE_ATTENDEE  => 'Attendee',
             self::SURVEY_TYPE_VENDOR    => 'Vendor',

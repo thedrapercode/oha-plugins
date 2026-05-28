@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.3.0",
+    "version":  "1.3.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -176,6 +176,20 @@
                         "type":  "fix",
                         "summary":  "Made page_titles array context-aware so vendor/attendee/volunteer page groups show correct names",
                         "notes":  " changed to 2D array keyed by context. Added get_page_title(, ) helper. All 6 usages updated. render_results_panel() now accepts  param. Admin modal dropdown uses current context page titles."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.3.1",
+                        "type":  "fix",
+                        "summary":  "Survey results CSS and Chart.js not loading when shortcode is embedded inside Board Hub",
+                        "notes":  "has_shortcode() only checks post_content so it missed nested shortcodes. Fixed by enqueuing style and Chart.js directly inside shortcode_survey_results() same pattern as v1.2.4 convention survey fix."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.3.1",
+                        "type":  "fix",
+                        "summary":  "Vendor questions seeded multiple times due to concurrent requests during plugin install",
+                        "notes":  "Concurrent init requests can both pass the count\u003e0 guard before either commits inserts. Added dedup_vendor_questions() which runs once via oha_vendor_q_dedup_done option flag and removes duplicate rows keeping lowest id per sort_order."
                     }
                 ]
 }
