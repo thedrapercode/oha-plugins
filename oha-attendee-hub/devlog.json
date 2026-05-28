@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-attendee-hub",
-    "version":  "1.0.2",
+    "version":  "1.1.0",
     "entries":  [
                     {
                         "date":  "2026-05-27",
@@ -43,6 +43,34 @@
                         "type":  "fix",
                         "summary":  "Fix import grouping so multiple CSV rows per email merge add-ons into one comma-separated record",
                         "notes":  "group_by_email() pre-processes raw rows before import/preview. Duplicate add-ons for same email are deduplicated. Preview now shows Add-Ons column and raw row vs attendee count."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added wp_oha_attendee_addons table with one row per add-on per attendee, including individual amounts",
+                        "notes":  "attendee_id FK to wp_oha_attendees.id; amount decimal(8,2); year+email duplicated for fast roster queries; idempotent on re-import via delete+reinsert"
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added Roster admin page showing per-add-on attendance lists for instructors",
+                        "notes":  "Page slug oha-attendee-roster; shows name, email, ticket level, amount, included-in-ticket badge; only populated for records imported with v1.1.0+; stats page addon rows link to roster"
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.1.0",
+                        "type":  "change",
+                        "summary":  "Rewrote group_by_email() to separate ticket rows (blank add-on col) from add-on rows",
+                        "notes":  "Ticket row = CSV row where COL_ADDON is blank; add-on rows = non-blank; if no blank row exists first row used as ticket row; main record gets comma-sep summary for display; importer stores full per-addon data in new table"
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.1.0",
+                        "type":  "fix",
+                        "summary":  "Fixed fatal PHP parse error where page_stats was declared inside page_settings method body",
+                        "notes":  "Previous class-attendee-admin.php had duplicate page_settings and page_stats nested inside another method - both PHP syntax errors; file fully rewritten with correct structure"
                     }
                 ]
 }

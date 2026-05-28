@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Attendee Hub
  * Description: Convention attendee CSV import, WP account creation, year-over-year tracking, and welcome email system.
- * Version: 1.0.2
+ * Version: 1.1.0
  * Author: OHA
  * License: GPL v2 or later
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_ATTENDEE_HUB_VERSION', '1.0.2' );
+define( 'OHA_ATTENDEE_HUB_VERSION', '1.1.0' );
 define( 'OHA_ATTENDEE_HUB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OHA_ATTENDEE_HUB_URL', plugin_dir_url( __FILE__ ) );
 
@@ -66,6 +66,7 @@ class OHA_Attendee_Hub {
 		add_submenu_page( 'oha-attendee-hub', 'Import CSV',    'Import CSV',     'manage_options', 'oha-attendee-import',   [ 'OHA_Attendee_Admin', 'page_import' ] );
 		add_submenu_page( 'oha-attendee-hub', 'Welcome Email', 'Welcome Email',  'manage_options', 'oha-attendee-welcome',  [ 'OHA_Attendee_Admin', 'page_welcome' ] );
 		add_submenu_page( 'oha-attendee-hub', 'Stats',         'Stats',          'manage_options', 'oha-attendee-stats',    [ 'OHA_Attendee_Admin', 'page_stats' ] );
+		add_submenu_page( 'oha-attendee-hub', 'Roster',        'Roster',         'manage_options', 'oha-attendee-roster',   [ 'OHA_Attendee_Admin', 'page_roster' ] );
 		add_submenu_page( 'oha-attendee-hub', 'Settings',      'Settings',       'manage_options', 'oha-attendee-settings', [ 'OHA_Attendee_Admin', 'page_settings' ] );
 	}
 

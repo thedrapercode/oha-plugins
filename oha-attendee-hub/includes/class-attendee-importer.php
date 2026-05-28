@@ -75,19 +75,23 @@ class OHA_Attendee_Importer {
 		$skipped     = 0;
 		$preview     = [];
 
-		foreach ( $grouped as $email => $row ) {
+		foreach ( $grouped as $email => $data ) {
 			if ( ! is_email( $email ) ) { $skipped++; continue; }
 
+			$row    = $data['ticket_row'];
 			$is_new = ! get_user_by( 'email', $email );
 			$is_new ? $new_count++ : $exist_count++;
 
 			if ( count( $preview ) < 10 ) {
+				$addon_names = array_map( function( $r ) {
+					return sanitize_text_field( $r[ self::COL_ADDON ] ?? '' );
+				}, $data['addon_rows'] );
 				$preview[] = [
 					'first'  => sanitize_text_field( $row[ self::COL_FIRST ]  ?? '' ),
 					'last'   => sanitize_text_field( $row[ self::COL_LAST ]   ?? '' ),
 					'email'  => $email,
 					'ticket' => sanitize_text_field( $row[ self::COL_TICKET ] ?? '' ),
-					'addons' => $row['_addons'],
+					'addons' => implode( ', ', array_filter( $addon_names ) ) ?: '',
 					'status' => $is_new ? 'new' : 'existing',
 				];
 			}
@@ -127,13 +131,13 @@ class OHA_Attendee_Importer {
 		$skipped = 0;
 		$errors  = [];
 
-		foreach ( $grouped as $email => $row ) {
+		foreach ( $grouped as $email => $data ) {
 			if ( ! is_email( $email ) ) { $skipped++; continue; }
 
+			$row     = $data['ticket_row'];
 			$first   = sanitize_text_field( $row[ self::COL_FIRST ]   ?? '' );
 			$last    = sanitize_text_field( $row[ self::COL_LAST ]    ?? '' );
 			$ticket  = sanitize_text_field( $row[ self::COL_TICKET ]  ?? '' );
-			$addon   = $row['_addons'];  // already sanitized, comma-separated string
 			$amount  = sanitize_text_field( $row[ self::COL_AMOUNT ]  ?? '' );
 			$phone   = sanitize_text_field( $row[ self::COL_PHONE ]   ?? '' );
 			$addr1   = sanitize_text_field( $row[ self::COL_ADDR1 ]   ?? '' );
@@ -143,6 +147,12 @@ class OHA_Attendee_Importer {
 			$zip     = sanitize_text_field( $row[ self::COL_ZIP ]     ?? '' );
 			$country = sanitize_text_field( $row[ self::COL_COUNTRY ] ?? '' );
 			$event   = sanitize_text_field( $row[ self::COL_EVENT ]   ?? '' );
+
+			// Build comma-sep add-on summary for display in the main table
+			$addon_names = array_map( function( $r ) {
+				return sanitize_text_field( $r[ self::COL_ADDON ] ?? '' );
+			}, $data['addon_rows'] );
+			$addon_summary = implode( ', ', array_filter( $addon_names ) );
 
 			$wp_user = get_user_by( 'email', $email );
 			$is_new  = false;
@@ -220,18 +230,18 @@ class OHA_Attendee_Importer {
 
 			// Store per-year ticket data on user meta
 			update_user_meta( $user_id, "oha_convention_{$year}_ticket_level",    $ticket );
-			update_user_meta( $user_id, "oha_convention_{$year}_add_on",          $addon );
+			update_user_meta( $user_id, "oha_convention_{$year}_add_on",          $addon_summary );
 			update_user_meta( $user_id, "oha_convention_{$year}_purchase_amount", $amount );
 
-			// Upsert the attendee record
-			OHA_Attendee_DB::upsert( [
+			// Upsert the main attendee record
+			$attendee_id = OHA_Attendee_DB::upsert( [
 				'year'            => $year,
 				'email'           => $email,
 				'first_name'      => $first,
 				'last_name'       => $last,
 				'event_name'      => $event,
 				'ticket_level'    => $ticket,
-				'add_on_name'     => $addon,
+				'add_on_name'     => $addon_summary,
 				'purchase_amount' => $amount,
 				'phone'           => $phone,
 				'address_1'       => $addr1,
@@ -245,6 +255,22 @@ class OHA_Attendee_Importer {
 				'wp_user_created' => $is_new ? 1 : 0,
 				'welcome_sent'    => 0,
 			] );
+
+			// Replace add-on rows in the addons table (idempotent on re-import)
+			OHA_Attendee_DB::delete_addons_for_attendee( $attendee_id );
+			foreach ( $data['addon_rows'] as $addon_row ) {
+				$addon_name   = sanitize_text_field( $addon_row[ self::COL_ADDON ]  ?? '' );
+				$addon_amount = (float) preg_replace( '/[^0-9.]/', '', $addon_row[ self::COL_AMOUNT ] ?? '0' );
+				if ( $addon_name ) {
+					OHA_Attendee_DB::insert_addon( [
+						'attendee_id' => $attendee_id,
+						'year'        => $year,
+						'email'       => $email,
+						'addon_name'  => $addon_name,
+						'amount'      => $addon_amount,
+					] );
+				}
+			}
 		}
 
 		// Clean up temp file
@@ -260,9 +286,14 @@ class OHA_Attendee_Importer {
 	}
 
 	// ------------------------------------------------------------------
-	// Group raw CSV rows by email, merging add-ons across multiple rows.
-	// Returns [ email => row ] where row is the first CSV row for that
-	// email with an added '_addons' key (comma-separated add-on string).
+	// Group raw CSV rows by email into ticket row + add-on rows.
+	//
+	// Rows with a blank Add-On Name column are treated as the ticket
+	// purchase row. Rows with a non-blank Add-On Name are add-on rows.
+	// If no blank-addon row exists for an email, the first row is used
+	// as the ticket row (handles CSVs where every row has an add-on).
+	//
+	// Returns: [ email => [ 'ticket_row' => array, 'addon_rows' => array[] ] ]
 	// ------------------------------------------------------------------
 	private static function group_by_email( array $rows ) : array {
 		$grouped = [];
@@ -270,20 +301,34 @@ class OHA_Attendee_Importer {
 			$email = sanitize_email( $row[ self::COL_EMAIL ] ?? '' );
 			if ( ! $email ) continue;
 
-			$addon = sanitize_text_field( $row[ self::COL_ADDON ] ?? '' );
+			$addon = trim( $row[ self::COL_ADDON ] ?? '' );
 
 			if ( ! isset( $grouped[ $email ] ) ) {
-				$grouped[ $email ]            = $row;
-				$grouped[ $email ]['_addons'] = $addon ? [ $addon ] : [];
-			} elseif ( $addon && ! in_array( $addon, $grouped[ $email ]['_addons'], true ) ) {
-				$grouped[ $email ]['_addons'][] = $addon;
+				$grouped[ $email ] = [
+					'ticket_row' => null,
+					'addon_rows' => [],
+				];
+			}
+
+			if ( $addon === '' ) {
+				// Ticket purchase row — keep the first one encountered
+				if ( $grouped[ $email ]['ticket_row'] === null ) {
+					$grouped[ $email ]['ticket_row'] = $row;
+				}
+			} else {
+				$grouped[ $email ]['addon_rows'][] = $row;
 			}
 		}
-		// Convert add-ons array to comma-separated string
-		foreach ( $grouped as $email => &$row ) {
-			$row['_addons'] = implode( ', ', $row['_addons'] );
+
+		// If a person has only add-on rows (no blank-addon ticket row),
+		// use the first add-on row as the source of name/address/ticket data.
+		foreach ( $grouped as $email => &$data ) {
+			if ( $data['ticket_row'] === null && ! empty( $data['addon_rows'] ) ) {
+				$data['ticket_row'] = $data['addon_rows'][0];
+			}
 		}
-		unset( $row );
+		unset( $data );
+
 		return $grouped;
 	}
 

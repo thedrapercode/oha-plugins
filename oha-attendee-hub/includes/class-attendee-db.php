@@ -3,7 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class OHA_Attendee_DB {
 
-	const SCHEMA_VERSION = '1.0.0';
+	const SCHEMA_VERSION = '1.1.0';
 	const SCHEMA_OPTION  = 'oha_attendee_schema_version';
 
 	public static function table() : string {
@@ -11,11 +11,18 @@ class OHA_Attendee_DB {
 		return $wpdb->prefix . 'oha_attendees';
 	}
 
+	public static function addons_table() : string {
+		global $wpdb;
+		return $wpdb->prefix . 'oha_attendee_addons';
+	}
+
 	public static function create_table() : void {
 		global $wpdb;
 		$t       = self::table();
+		$ta      = self::addons_table();
 		$charset = $wpdb->get_charset_collate();
-		$sql     = "CREATE TABLE {$t} (
+
+		$sql = "CREATE TABLE {$t} (
 			id               bigint(20)   NOT NULL AUTO_INCREMENT,
 			year             int(4)       NOT NULL DEFAULT 2026,
 			email            varchar(200) NOT NULL DEFAULT '',
@@ -23,7 +30,7 @@ class OHA_Attendee_DB {
 			last_name        varchar(100) NOT NULL DEFAULT '',
 			event_name       varchar(200) NOT NULL DEFAULT '',
 			ticket_level     varchar(200) NOT NULL DEFAULT '',
-			add_on_name      varchar(200) NOT NULL DEFAULT '',
+			add_on_name      varchar(500) NOT NULL DEFAULT '',
 			purchase_amount  varchar(50)  NOT NULL DEFAULT '',
 			phone            varchar(50)  NOT NULL DEFAULT '',
 			address_1        varchar(200) NOT NULL DEFAULT '',
@@ -42,8 +49,23 @@ class OHA_Attendee_DB {
 			KEY year (year),
 			KEY welcome_sent (welcome_sent)
 		) {$charset};";
+
+		$sql_addons = "CREATE TABLE {$ta} (
+			id           bigint(20)   NOT NULL AUTO_INCREMENT,
+			attendee_id  bigint(20)   NOT NULL,
+			year         int(4)       NOT NULL DEFAULT 2026,
+			email        varchar(200) NOT NULL DEFAULT '',
+			addon_name   varchar(200) NOT NULL DEFAULT '',
+			amount       decimal(8,2) NOT NULL DEFAULT 0.00,
+			PRIMARY KEY  (id),
+			KEY attendee_id (attendee_id),
+			KEY year (year),
+			KEY addon_name (addon_name(191))
+		) {$charset};";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
+		dbDelta( $sql_addons );
 		update_option( self::SCHEMA_OPTION, self::SCHEMA_VERSION );
 	}
 
@@ -69,6 +91,51 @@ class OHA_Attendee_DB {
 		}
 		$wpdb->insert( $t, $data );
 		return (int) $wpdb->insert_id;
+	}
+
+	/**
+	 * Delete all add-on rows for an attendee. Called before re-inserting on re-import.
+	 */
+	public static function delete_addons_for_attendee( int $attendee_id ) : void {
+		global $wpdb;
+		$wpdb->delete( self::addons_table(), [ 'attendee_id' => $attendee_id ] );
+	}
+
+	/**
+	 * Insert a single add-on row into wp_oha_attendee_addons.
+	 */
+	public static function insert_addon( array $data ) : void {
+		global $wpdb;
+		$wpdb->insert( self::addons_table(), $data );
+	}
+
+	/**
+	 * Get all add-on rows for a specific attendee record.
+	 */
+	public static function get_addons_for_attendee( int $attendee_id ) : array {
+		global $wpdb;
+		$ta = self::addons_table();
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM {$ta} WHERE attendee_id = %d ORDER BY addon_name ASC",
+			$attendee_id
+		) );
+	}
+
+	/**
+	 * Get all attendees who have a specific add-on in a given year (roster query).
+	 */
+	public static function get_roster_by_addon( string $addon_name, int $year ) : array {
+		global $wpdb;
+		$t  = self::table();
+		$ta = self::addons_table();
+		return $wpdb->get_results( $wpdb->prepare(
+			"SELECT a.first_name, a.last_name, a.email, a.ticket_level, ad.amount
+			 FROM {$ta} ad
+			 INNER JOIN {$t} a ON a.id = ad.attendee_id
+			 WHERE ad.addon_name = %s AND ad.year = %d
+			 ORDER BY a.last_name ASC, a.first_name ASC",
+			$addon_name, $year
+		) );
 	}
 
 	public static function get_attendees( array $args = [] ) : array {
@@ -179,25 +246,34 @@ class OHA_Attendee_DB {
 	}
 
 	/**
-	 * Returns unique individual add-on names across all attendees.
-	 * Add-ons are stored comma-separated so we split them in PHP.
+	 * Returns unique add-on names. Queries the addons table first; falls back to
+	 * comma-sep parsing on the main table for records imported before v1.1.0.
 	 */
 	public static function get_distinct_addons( int $year = 0 ) : array {
 		global $wpdb;
+		$ta = self::addons_table();
+		if ( $year ) {
+			$addons = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT addon_name FROM {$ta} WHERE year = %d AND addon_name != '' ORDER BY addon_name ASC", $year ) );
+		} else {
+			$addons = $wpdb->get_col( "SELECT DISTINCT addon_name FROM {$ta} WHERE addon_name != '' ORDER BY addon_name ASC" );
+		}
+		if ( $addons ) return $addons;
+
+		// Fall back: parse comma-sep from main table (pre-v1.1.0 data)
 		$t = self::table();
 		if ( $year ) {
 			$rows = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT add_on_name FROM {$t} WHERE year = %d AND add_on_name != ''", $year ) );
 		} else {
 			$rows = $wpdb->get_col( "SELECT DISTINCT add_on_name FROM {$t} WHERE add_on_name != ''" );
 		}
-		$addons = [];
+		$result = [];
 		foreach ( $rows as $val ) {
 			foreach ( array_map( 'trim', explode( ',', $val ) ) as $a ) {
-				if ( $a && ! in_array( $a, $addons, true ) ) $addons[] = $a;
+				if ( $a && ! in_array( $a, $result, true ) ) $result[] = $a;
 			}
 		}
-		sort( $addons );
-		return $addons;
+		sort( $result );
+		return $result;
 	}
 
 	/**
@@ -207,5 +283,23 @@ class OHA_Attendee_DB {
 		global $wpdb;
 		$t = self::table();
 		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$t} WHERE year = %d ORDER BY last_name ASC", $year ) );
+	}
+
+	/**
+	 * Returns per-addon counts and revenue from the addons table (v1.1.0+ imports).
+	 * Returns empty array if the addons table has no data for the year.
+	 */
+	public static function get_addon_stats( int $year ) : array {
+		global $wpdb;
+		$ta   = self::addons_table();
+		$rows = $wpdb->get_results( $wpdb->prepare(
+			"SELECT addon_name, COUNT(*) as cnt, SUM(amount) as total FROM {$ta} WHERE year = %d AND addon_name != '' GROUP BY addon_name ORDER BY cnt DESC",
+			$year
+		) );
+		$result = [];
+		foreach ( $rows as $r ) {
+			$result[ $r->addon_name ] = [ 'count' => (int) $r->cnt, 'total' => (float) $r->total ];
+		}
+		return $result;
 	}
 }

@@ -438,18 +438,6 @@ class OHA_Attendee_Admin {
 	}
 
 	// =========================================================================
-	// Settings page
-	// =========================================================================
-	public static function page_settings() : void {
-		if ( isset( $_POST['_oha_att_settings_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['_oha_att_settings_nonce'] ), 'oha_att_settings' ) ) {
-			if ( current_user_can( 'manage_options' ) ) {
-				update_option( 'oha_attendee_default_year',  (int) ( $_POST['default_year']   ?? date( 'Y' ) ) );
-				update_option( 'oha_attendee_uwp_form_id',   (int) ( $_POST['uwp_form_id']    ?? 4 ) );
-				echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
-			}
-		}
-
-	// =========================================================================
 	// Stats page
 	// =========================================================================
 	public static function page_stats() : void {
@@ -494,6 +482,9 @@ class OHA_Attendee_Admin {
 		arsort( $addon_counts );
 		arsort( $state_counts );
 		$existing_accounts = $total - $new_accounts;
+
+		// Use granular addon stats from the addons table if available (v1.1.0+ imports)
+		$addon_stats = $year ? OHA_Attendee_DB::get_addon_stats( $year ) : [];
 		?>
 		<div class="wrap oha-att-wrap">
 			<h1>Convention Stats</h1>
@@ -564,20 +555,41 @@ class OHA_Attendee_Admin {
 					</table>
 				</div>
 
-				<!-- Add-ons -->
-				<?php if ( $addon_counts ) : ?>
+				<!-- Add-ons: use granular addons table if available, else fall back to comma-sep counts -->
+				<?php if ( $addon_stats ) : ?>
 				<div class="oha-stats-section">
 					<h2>Add-Ons</h2>
+					<table class="wp-list-table widefat fixed striped">
+						<thead><tr><th>Add-On</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th><th style="text-align:right">% of Attendees</th></tr></thead>
+						<tbody>
+						<?php foreach ( $addon_stats as $label => $stat ) : ?>
+							<tr>
+								<td>
+									<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-roster', 'year' => $year, 'addon' => $label ], admin_url( 'admin.php' ) ) ); ?>">
+										<?php echo esc_html( $label ); ?>
+									</a>
+								</td>
+								<td style="text-align:right"><?php echo number_format( $stat['count'] ); ?></td>
+								<td style="text-align:right">$<?php echo number_format( $stat['total'], 2 ); ?></td>
+								<td style="text-align:right"><?php echo $total ? round( $stat['count'] / $total * 100, 1 ) : 0; ?>%</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+					<p class="description" style="margin-top:6px">
+						<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-roster', 'year' => $year ], admin_url( 'admin.php' ) ) ); ?>">View full class rosters</a>
+					</p>
+				</div>
+				<?php elseif ( $addon_counts ) : ?>
+				<div class="oha-stats-section">
+					<h2>Add-Ons</h2>
+					<p class="description">Re-import this year's CSV to see per-add-on revenue and enable the Roster page.</p>
 					<table class="wp-list-table widefat fixed striped">
 						<thead><tr><th>Add-On</th><th style="text-align:right">Count</th><th style="text-align:right">% of Attendees</th></tr></thead>
 						<tbody>
 						<?php foreach ( $addon_counts as $label => $count ) : ?>
 							<tr>
-								<td>
-									<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-hub', 'year' => $year, 'addon' => $label ], admin_url( 'admin.php' ) ) ); ?>">
-										<?php echo esc_html( $label ); ?>
-									</a>
-								</td>
+								<td><?php echo esc_html( $label ); ?></td>
 								<td style="text-align:right"><?php echo number_format( $count ); ?></td>
 								<td style="text-align:right"><?php echo $total ? round( $count / $total * 100, 1 ) : 0; ?>%</td>
 							</tr>
@@ -612,9 +624,113 @@ class OHA_Attendee_Admin {
 	}
 
 	// =========================================================================
+	// Roster page — class/add-on attendance list for instructors
+	// =========================================================================
+	public static function page_roster() : void {
+		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
+		$year         = isset( $_GET['year'] )  ? (int) $_GET['year']                                        : $default_year;
+		$filter_addon = isset( $_GET['addon'] ) ? sanitize_text_field( wp_unslash( $_GET['addon'] ) )        : '';
+		$years        = OHA_Attendee_DB::get_years();
+		$addons       = OHA_Attendee_DB::get_distinct_addons( $year );
+		$roster       = [];
+
+		if ( $filter_addon ) {
+			$roster = OHA_Attendee_DB::get_roster_by_addon( $filter_addon, $year );
+		}
+		?>
+		<div class="wrap oha-att-wrap">
+			<h1>Add-On Roster</h1>
+			<p>Select a year and add-on to see the list of attendees who signed up. Use this to give instructors a class attendance list.</p>
+
+			<form method="get" class="oha-att-filter-bar">
+				<input type="hidden" name="page" value="oha-attendee-roster">
+
+				<?php if ( $years ) : ?>
+				<select name="year" onchange="this.form.submit()">
+					<?php foreach ( $years as $y ) : ?>
+						<option value="<?php echo (int) $y; ?>" <?php selected( $y, $year ); ?>><?php echo (int) $y; ?></option>
+					<?php endforeach; ?>
+				</select>
+				<?php endif; ?>
+
+				<?php if ( $addons ) : ?>
+				<select name="addon">
+					<option value="">-- Select an add-on --</option>
+					<?php foreach ( $addons as $a ) : ?>
+						<option value="<?php echo esc_attr( $a ); ?>" <?php selected( $a, $filter_addon ); ?>><?php echo esc_html( $a ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<button type="submit" class="button button-primary">View Roster</button>
+				<?php else : ?>
+				<em>No add-on data found for <?php echo $year; ?>. Import a CSV to populate rosters.</em>
+				<?php endif; ?>
+
+				<?php if ( $filter_addon ) : ?>
+					<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-roster', 'year' => $year ], admin_url( 'admin.php' ) ) ); ?>" class="button">Clear</a>
+				<?php endif; ?>
+			</form>
+
+			<?php if ( $filter_addon ) : ?>
+
+				<h2 style="margin-top:16px">
+					<?php echo esc_html( $filter_addon ); ?>
+					<span style="font-size:14px;font-weight:400;color:#666;margin-left:8px"><?php echo number_format( count( $roster ) ); ?> attendee<?php echo count( $roster ) !== 1 ? 's' : ''; ?></span>
+				</h2>
+
+				<?php if ( empty( $roster ) ) : ?>
+					<p>No roster data found for this add-on. If attendees were imported before v1.1.0, re-import the CSV to populate roster data.</p>
+				<?php else : ?>
+
+					<table class="wp-list-table widefat fixed striped oha-att-table">
+						<thead>
+							<tr>
+								<th class="col-name">Name</th>
+								<th class="col-email">Email</th>
+								<th>Ticket Level</th>
+								<th>Amount Paid</th>
+								<th>Included in Ticket</th>
+							</tr>
+						</thead>
+						<tbody>
+						<?php foreach ( $roster as $r ) : ?>
+							<tr>
+								<td><?php echo esc_html( trim( $r->last_name . ', ' . $r->first_name, ', ' ) ); ?></td>
+								<td><?php echo esc_html( $r->email ); ?></td>
+								<td><?php echo esc_html( $r->ticket_level ); ?></td>
+								<td><?php echo (float) $r->amount > 0 ? '$' . number_format( (float) $r->amount, 2 ) : '-'; ?></td>
+								<td>
+									<?php if ( (float) $r->amount == 0.00 ) : ?>
+										<span class="oha-badge oha-badge-existing">Yes</span>
+									<?php else : ?>
+										<span class="oha-badge oha-badge-none">Paid</span>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+
+				<?php endif; ?>
+
+			<?php elseif ( $addons ) : ?>
+				<p style="color:#666">Select an add-on above to view its roster.</p>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	// =========================================================================
 	// Settings page
 	// =========================================================================
 	public static function page_settings() : void {
+		if ( isset( $_POST['_oha_att_settings_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['_oha_att_settings_nonce'] ), 'oha_att_settings' ) ) {
+			if ( current_user_can( 'manage_options' ) ) {
+				update_option( 'oha_attendee_default_year', (int) ( $_POST['default_year'] ?? date( 'Y' ) ) );
+				update_option( 'oha_attendee_uwp_form_id',  (int) ( $_POST['uwp_form_id']  ?? 4 ) );
+				echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
+			}
+		}
+
 		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
 		$uwp_form_id  = (int) get_option( 'oha_attendee_uwp_form_id', 4 );
 		$current_year = (int) date( 'Y' );
@@ -668,8 +784,8 @@ class OHA_Attendee_Admin {
 				<tbody>
 					<tr><td><code>oha_convention_years</code></td><td>Array of years attended, e.g. [2025, 2026]</td></tr>
 					<tr><td><code>oha_convention_{year}_ticket_level</code></td><td>Ticket level for that year</td></tr>
-					<tr><td><code>oha_convention_{year}_add_on</code></td><td>Add-on name for that year</td></tr>
-					<tr><td><code>oha_convention_{year}_purchase_amount</code></td><td>Purchase amount for that year</td></tr>
+					<tr><td><code>oha_convention_{year}_add_on</code></td><td>Add-on names for that year (comma-separated summary)</td></tr>
+					<tr><td><code>oha_convention_{year}_purchase_amount</code></td><td>Ticket purchase amount for that year</td></tr>
 					<tr><td><code>oha_phone</code></td><td>Phone (filled only if blank)</td></tr>
 					<tr><td><code>oha_address_1</code>, <code>oha_city</code>, <code>oha_state</code>, <code>oha_zip</code>, <code>oha_country</code></td><td>Address fields (filled only if blank)</td></tr>
 				</tbody>
