@@ -19,15 +19,31 @@ class OHA_Convention_Survey {
     const SURVEY_TYPE = 'convention_2026';
 
     private static $page_titles = [
-        1 => 'Ticketing and Pricing',
-        2 => 'Ticket Type and Venue',
-        3 => 'VIP Experience',
-        4 => 'Vendor Floor',
-        5 => 'Education Sessions',
-        6 => 'Costume Ball',
-        7 => 'Blood Prison',
-        8 => '2027 Planning and Overall Feedback',
+        'attendee' => [
+            1 => 'Ticketing and Pricing',
+            2 => 'Ticket Type and Venue',
+            3 => 'VIP Experience',
+            4 => 'Vendor Floor',
+            5 => 'Education Sessions',
+            6 => 'Costume Ball',
+            7 => 'Blood Prison',
+            8 => '2027 Planning and Overall Feedback',
+        ],
+        'vendor' => [
+            1 => 'Setup and Operations',
+            2 => 'Attendee Engagement',
+            3 => 'Education Sessions',
+            4 => 'Costume Ball',
+            5 => 'Communication and Support',
+            6 => 'Looking Ahead to 2027',
+        ],
+        'volunteer' => [],
     ];
+
+    private static function get_page_title($pg, $context = 'attendee') {
+        $map = self::$page_titles[$context] ?? [];
+        return $map[$pg] ?? 'Page ' . $pg;
+    }
 
     private static $context_labels = [
         'attendee'  => 'Attendees',
@@ -277,6 +293,165 @@ class OHA_Convention_Survey {
     }
 
     // -------------------------------------------------------------------------
+    // Vendor question seed
+    // -------------------------------------------------------------------------
+
+    public static function seed_vendor_questions() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'oha_survey_convention_questions';
+        $exists = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE survey_context = %s", 'vendor'
+        ));
+        if ($exists > 0) return;
+        foreach (self::default_vendor_questions() as $q) {
+            $wpdb->insert($table, $q);
+        }
+    }
+
+    private static function qv($sort, $group, $text, $type, $opts, $required, $gate_for = 0, $gate_val = '', $smin = 1, $smax = 5, $slmin = '', $slmax = '') {
+        return [
+            'survey_context'  => 'vendor',
+            'sort_order'      => $sort,
+            'page_group'      => $group,
+            'question_text'   => $text,
+            'question_type'   => $type,
+            'options'         => $opts ? json_encode($opts) : null,
+            'scale_min'       => $smin,
+            'scale_max'       => $smax,
+            'scale_label_min' => $slmin,
+            'scale_label_max' => $slmax,
+            'required'        => $required ? 1 : 0,
+            'hidden'          => 0,
+            'gate_for_group'  => $gate_for,
+            'gate_show_value' => $gate_val,
+        ];
+    }
+
+    private static function default_vendor_questions() {
+        return [
+
+            // ---- Page 1: Setup and Operations (everyone) ----
+            self::qv(10, 1, 'How would you rate the pre-event communication and setup instructions provided by OHA?',
+                'scale', null, true, 0, '', 1, 5, 'Very unclear', 'Very clear'),
+
+            self::qv(20, 1, 'How would you rate the booth setup and load-in process on the day of the event?',
+                'scale', null, true, 0, '', 1, 5, 'Very difficult', 'Very smooth'),
+
+            self::qv(30, 1, 'How would you rate the physical booth space and your assigned location on the vendor floor?',
+                'scale', null, true, 0, '', 1, 5, 'Poor', 'Excellent'),
+
+            self::qv(40, 1, 'Did you experience any issues with your booth setup or assigned location?',
+                'radio', [
+                    'No issues at all',
+                    'Minor issues that were resolved quickly',
+                    'Minor issues that were not fully resolved',
+                    'Significant issues that impacted my participation',
+                ], true),
+
+            self::qv(50, 1, 'How would you rate the load-out process at the end of the event?',
+                'scale', null, true, 0, '', 1, 5, 'Very difficult', 'Very smooth'),
+
+            // ---- Page 2: Attendee Engagement (everyone, contains gate questions) ----
+            self::qv(60, 2, 'How would you rate the attendee foot traffic at your booth throughout the event?',
+                'scale', null, true, 0, '', 1, 5, 'Very low', 'Very high'),
+
+            self::qv(70, 2, 'Compared to your expectations coming in, how did your sales or engagement perform?',
+                'radio', [
+                    'Far exceeded expectations',
+                    'Exceeded expectations',
+                    'Met expectations',
+                    'Fell short of expectations',
+                    'Significantly fell short of expectations',
+                ], true),
+
+            self::qv(80, 2, 'With 37 vendors on the floor this year, how would you rate the overall vendor mix and diversity?',
+                'scale', null, true, 0, '', 1, 5, 'Too similar, needs more variety', 'Excellent variety'),
+
+            self::qv(90, 2, 'How would you rate the overall professionalism and friendliness of the attendees you interacted with?',
+                'scale', null, true, 0, '', 1, 5, 'Poor', 'Excellent'),
+
+            // Gate: Education gates page 3
+            self::qv(100, 2, 'Did you attend any of the Education sessions at the convention?',
+                'radio', ['Yes', 'No'], true, 3, 'Yes'),
+
+            // Gate: Costume Ball gates page 4
+            self::qv(110, 2, 'Did you attend the Costume Ball?',
+                'radio', ['Yes', 'No'], true, 4, 'Yes'),
+
+            // ---- Page 3: Education Sessions (conditional) ----
+            self::qv(120, 3, 'How would you rate the Education sessions you attended overall?',
+                'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
+
+            self::qv(130, 3, 'How relevant were the session topics to your business or craft as a vendor?',
+                'scale', null, true, 0, '', 1, 5, 'Not relevant', 'Very relevant'),
+
+            self::qv(140, 3, 'Did you present or teach an Education session yourself?',
+                'radio', ['Yes', 'No'], true),
+
+            self::qv(150, 3, 'If you presented a session, how would you rate the setup and support provided to presenters?',
+                'scale', null, false, 0, '', 1, 5, 'Poor support', 'Excellent support'),
+
+            self::qv(160, 3, 'Do you have suggestions for Education topics relevant to vendors for future conventions?',
+                'textarea', null, false),
+
+            // ---- Page 4: Costume Ball (conditional) ----
+            self::qv(170, 4, 'How would you rate the Costume Ball overall?',
+                'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
+
+            self::qv(180, 4, 'Would you like Costume Ball access included as a standard benefit for vendors at future conventions?',
+                'radio', ['Yes, definitely', 'Yes, it would be a nice perk', 'Neutral', 'No preference', 'No'], true),
+
+            // ---- Page 5: Communication and Overall Support (everyone) ----
+            self::qv(190, 5, 'How responsive was the OHA team when you had questions or issues before or during the event?',
+                'scale', null, true, 0, '', 1, 5, 'Very unresponsive', 'Very responsive'),
+
+            self::qv(200, 5, 'Were all logistics (booth location, power, access times, rules) clearly communicated before the event?',
+                'radio', [
+                    'Yes, fully communicated with no gaps',
+                    'Mostly yes, with a few minor gaps',
+                    'Somewhat - I had to ask several follow-up questions',
+                    'No, there were significant communication gaps',
+                ], true),
+
+            self::qv(210, 5, 'What was the biggest challenge you faced as a vendor during the convention?',
+                'textarea', null, true),
+
+            self::qv(220, 5, 'Is there anything OHA could have done before or during the event to better support you as a vendor?',
+                'textarea', null, false),
+
+            // ---- Page 6: Looking Ahead to 2027 (everyone) ----
+            self::qv(230, 6, 'Would you apply to be a vendor at OHA Convention 2027?',
+                'radio', ['Definitely yes', 'Probably yes', 'Unsure', 'Probably not', 'Definitely not'], true),
+
+            self::qv(240, 6, 'How likely are you to recommend vending at OHA Convention to other vendors or businesses?',
+                'scale', null, true, 0, '', 1, 5, 'Would not recommend', 'Would strongly recommend'),
+
+            self::qv(250, 6, 'What changes would most improve the vendor experience in 2027? (Select all that apply)',
+                'checkbox', [
+                    'Better foot traffic or event layout',
+                    'Clearer pre-event communication',
+                    'More flexibility in booth size options',
+                    'Earlier setup access',
+                    'Better signage directing attendees to the vendor floor',
+                    'More marketing or promotion of the vendor floor',
+                    'Lower vendor fees',
+                    'More attendees overall',
+                    'Nothing - keep it the same',
+                    'Other',
+                ], true),
+
+            self::qv(260, 6, 'What from this year should we keep exactly the same for 2027?',
+                'textarea', null, false),
+
+            self::qv(270, 6, 'Overall, how would you rate your vendor experience at OHA Convention 2026?',
+                'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
+
+            self::qv(280, 6, 'Any additional comments or feedback for the OHA team?',
+                'textarea', null, false),
+        ];
+    }
+
+    // -------------------------------------------------------------------------
     // Survey definition helper (used by main plugin's ajax_get_response)
     // -------------------------------------------------------------------------
 
@@ -307,7 +482,7 @@ class OHA_Convention_Survey {
         $pages = [];
         foreach ($pages_map as $pg => $qs) {
             $pages[] = [
-                'title'     => isset(self::$page_titles[$pg]) ? self::$page_titles[$pg] : 'Page ' . $pg,
+                'title'     => self::get_page_title($pg, $context),
                 'questions' => $qs,
             ];
         }
@@ -431,7 +606,7 @@ class OHA_Convention_Survey {
                 <?php
                 $page_index = 1;
                 foreach ($pages as $pg => $group_questions):
-                    $page_title = isset(self::$page_titles[$pg]) ? self::$page_titles[$pg] : 'Page ' . $pg;
+                    $page_title = self::get_page_title($pg, $context);
                     // Determine if this page group is a conditional one (gated by another question)
                     $is_gated = false;
                     foreach ($gate_config as $gate) {
@@ -807,7 +982,7 @@ class OHA_Convention_Survey {
                 </thead>
                 <tbody id="oha-conv-questions-body">
                 <?php foreach ($questions as $q):
-                    $page_label  = isset(self::$page_titles[$q->page_group]) ? self::$page_titles[$q->page_group] : 'Group ' . $q->page_group;
+                    $page_label  = self::get_page_title($q->page_group, $active_context);
                     $hidden_row  = $q->hidden ? 'style="opacity:0.5;"' : '';
                     $gate_label  = $q->gate_for_group ? 'Gates p.' . $q->gate_for_group : '';
                 ?>
@@ -899,7 +1074,7 @@ class OHA_Convention_Survey {
                             <th><label for="oha-conv-q-page">Page Group</label></th>
                             <td>
                                 <select id="oha-conv-q-page">
-                                    <?php foreach (self::$page_titles as $num => $ptitle): ?>
+                                    <?php foreach ((self::$page_titles[$active_context] ?? []) as $num => $ptitle): ?>
                                         <option value="<?php echo $num; ?>"><?php echo esc_html($num . ' - ' . $ptitle); ?></option>
                                     <?php endforeach; ?>
                                     <option value="9">9 - (Custom)</option>
@@ -1192,7 +1367,7 @@ class OHA_Convention_Survey {
                             <p>No responses recorded for this survey yet.</p>
                         </div>
                     <?php else: ?>
-                        <?php self::render_results_panel($data); ?>
+                        <?php self::render_results_panel($data, self::type_to_context($type)); ?>
                     <?php endif; ?>
                 </div>
                 <?php $first = false; ?>
@@ -1269,7 +1444,7 @@ class OHA_Convention_Survey {
         return ob_get_clean();
     }
 
-    private static function render_results_panel($data) {
+    private static function render_results_panel($data, $context = 'attendee') {
         $sections = [];
         foreach ($data['questions'] as $qd) {
             $pg = (int) $qd['q']->page_group;
@@ -1293,7 +1468,7 @@ class OHA_Convention_Survey {
         <div class="oha-sr-scorecards">
             <?php foreach ($sections as $pg => $qds): ?>
                 <?php
-                $title  = isset(self::$page_titles[$pg]) ? self::$page_titles[$pg] : 'Section ' . $pg;
+                $title  = self::get_page_title($pg, $context);
                 $score  = $section_scores[$pg];
                 $cls    = $score !== null ? self::score_color_class($score) : 'oha-sr-neutral';
                 $max_n  = max(array_column($qds, 'n'));
@@ -1314,7 +1489,7 @@ class OHA_Convention_Survey {
 
         <?php $first = true; foreach ($sections as $pg => $qds): ?>
             <?php
-            $title = isset(self::$page_titles[$pg]) ? self::$page_titles[$pg] : 'Section ' . $pg;
+            $title = self::get_page_title($pg, $context);
             $score = $section_scores[$pg];
             $cls   = $score !== null ? self::score_color_class($score) : '';
             ?>

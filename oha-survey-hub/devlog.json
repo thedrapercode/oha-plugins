@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.2.6",
+    "version":  "1.3.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -162,6 +162,20 @@
                         "type":  "fix",
                         "summary":  "Rewrote survey-style.css to use Kadence dark palette -- removed white boxes and conflicting !important overrides",
                         "notes":  "Root vars now map to --global-palette* vars; no more white bg on survey-content, scorecards, accordion sections; inputs stay white for usability; radio/checkbox labels use dark card style; all text uses palette3/4/5/6"
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Seeded 26 vendor questions for Convention 2026 survey with 6 page groups and conditional routing",
+                        "notes":  "Vendor context: pages 1=Setup/Ops, 2=Attendee Engagement (gates p3/p4), 3=Education (conditional), 4=Costume Ball (conditional), 5=Comms/Support, 6=Looking Ahead 2027. Separate seed flag: oha_convention_vendor_questions_seeded. Questions added via seed_vendor_questions() called from init()."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.3.0",
+                        "type":  "fix",
+                        "summary":  "Made page_titles array context-aware so vendor/attendee/volunteer page groups show correct names",
+                        "notes":  " changed to 2D array keyed by context. Added get_page_title(, ) helper. All 6 usages updated. render_results_panel() now accepts  param. Admin modal dropdown uses current context page titles."
                     }
                 ]
 }
