@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.11.0",
+    "version":  "2.11.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -554,6 +554,13 @@
                         "type":  "change",
                         "summary":  "Replaced hardcoded finance tab stub with OHA_Financials class delegation",
                         "notes":  "Old render_finance_tab() had hardcoded estimated values and emojis. Now delegates entirely to OHA_Financials::render_tab()."
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "2.11.1",
+                        "type":  "fix",
+                        "summary":  "Fixed duplicate budget categories seeded by race condition on first page load",
+                        "notes":  "Same root cause as survey-hub vendor question dedup (v1.3.1): concurrent requests both passed COUNT \u003e 0 guard before either committed. Fix: dedup_categories() self-join DELETE keeps lowest id per (name, type). Runs once via oha_fin_cat_dedup_done option flag."
                     }
                 ]
 }

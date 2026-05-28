@@ -45,6 +45,18 @@ class OHA_Financials {
         ) $c;");
     }
 
+    public static function dedup_categories() {
+        global $wpdb;
+        $tbl = $wpdb->prefix . 'oha_budget_categories';
+        $wpdb->query("
+            DELETE c1 FROM {$tbl} c1
+            INNER JOIN {$tbl} c2
+                ON c1.name = c2.name
+                AND c1.type = c2.type
+                AND c1.id > c2.id
+        ");
+    }
+
     public static function seed_categories() {
         if (get_option(self::OPT_SEED)) return;
         global $wpdb;
