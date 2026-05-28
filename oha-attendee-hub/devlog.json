@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-attendee-hub",
-    "version":  "1.1.1",
+    "version":  "1.2.0",
     "entries":  [
                     {
                         "date":  "2026-05-27",
@@ -78,6 +78,13 @@
                         "type":  "change",
                         "summary":  "Renamed import preview stat cards to action verbs: Creating new accounts / Updating existing accounts",
                         "notes":  "Was New accounts / Existing accounts -- ambiguous whether existing would be skipped or updated"
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Added per-year gate sales field on Stats page to record walk-up ticket counts not in CSV",
+                        "notes":  "Stored as WP option oha_attendee_gate_sales_{year}; saved via AJAX; Stats page shows Online (CSV) / Gate Sales / Combined Total cards; ticket/addon % columns labeled as % of Online to clarify they exclude gate sales; combined total available for future chart use"
                     }
                 ]
 }

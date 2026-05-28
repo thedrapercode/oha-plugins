@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Attendee Hub
  * Description: Convention attendee CSV import, WP account creation, year-over-year tracking, and welcome email system.
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: OHA
  * License: GPL v2 or later
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_ATTENDEE_HUB_VERSION', '1.1.1' );
+define( 'OHA_ATTENDEE_HUB_VERSION', '1.2.0' );
 define( 'OHA_ATTENDEE_HUB_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OHA_ATTENDEE_HUB_URL', plugin_dir_url( __FILE__ ) );
 
@@ -44,6 +44,7 @@ class OHA_Attendee_Hub {
 		add_action( 'wp_ajax_oha_attendee_preview_email', [ 'OHA_Attendee_Mailer', 'ajax_preview' ] );
 		add_action( 'wp_ajax_oha_attendee_send_welcome',  [ 'OHA_Attendee_Mailer', 'ajax_send_batch' ] );
 		add_action( 'wp_ajax_oha_attendee_unsent_count',  [ 'OHA_Attendee_Mailer', 'ajax_unsent_count' ] );
+		add_action( 'wp_ajax_oha_attendee_save_gate_sales', [ 'OHA_Attendee_Admin', 'ajax_save_gate_sales' ] );
 	}
 
 	public static function register_role() {

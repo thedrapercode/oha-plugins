@@ -483,20 +483,30 @@ class OHA_Attendee_Admin {
 		arsort( $state_counts );
 		$existing_accounts = $total - $new_accounts;
 
+		// Gate sales: manually entered walk-up count stored per year
+		$gate_sales = (int) get_option( "oha_attendee_gate_sales_{$year}", 0 );
+		$combined   = $total + $gate_sales;
+
 		// Use granular addon stats from the addons table if available (v1.1.0+ imports)
 		$addon_stats = $year ? OHA_Attendee_DB::get_addon_stats( $year ) : [];
 		?>
 		<div class="wrap oha-att-wrap">
 			<h1>Convention Stats</h1>
 
-			<form method="get" style="margin-bottom:20px">
-				<input type="hidden" name="page" value="oha-attendee-stats">
-				<select name="year" onchange="this.form.submit()">
-					<?php foreach ( $years as $y ) : ?>
-						<option value="<?php echo (int) $y; ?>" <?php selected( $y, $year ); ?>><?php echo (int) $y; ?></option>
-					<?php endforeach; ?>
-				</select>
-			</form>
+			<div class="oha-att-filter-bar" style="margin-bottom:16px;align-items:center">
+				<form method="get" style="display:contents">
+					<input type="hidden" name="page" value="oha-attendee-stats">
+					<select name="year" onchange="this.form.submit()">
+						<?php foreach ( $years as $y ) : ?>
+							<option value="<?php echo (int) $y; ?>" <?php selected( $y, $year ); ?>><?php echo (int) $y; ?></option>
+						<?php endforeach; ?>
+					</select>
+				</form>
+				<span style="font-size:13px;color:#444;margin-left:8px">Gate sales (walk-up, not in CSV):</span>
+				<input type="number" id="oha-gate-count" value="<?php echo $gate_sales; ?>" min="0" style="width:80px;height:30px">
+				<button id="oha-gate-save" class="button">Save</button>
+				<span id="oha-gate-status" style="font-size:12px;color:#666"></span>
+			</div>
 
 			<?php if ( ! $total ) : ?>
 				<p>No attendees found for <?php echo $year; ?>.</p>
@@ -505,13 +515,21 @@ class OHA_Attendee_Admin {
 
 			<!-- Summary cards -->
 			<div class="oha-stats-cards">
-				<div class="oha-stats-card">
+				<div class="oha-stats-card oha-s-exist">
 					<div class="oha-stats-card-value"><?php echo number_format( $total ); ?></div>
-					<div class="oha-stats-card-label">Total Attendees</div>
+					<div class="oha-stats-card-label">Online Orders (CSV)</div>
+				</div>
+				<div class="oha-stats-card oha-s-skip">
+					<div class="oha-stats-card-value"><?php echo number_format( $gate_sales ); ?></div>
+					<div class="oha-stats-card-label">Gate Sales (walk-up)</div>
+				</div>
+				<div class="oha-stats-card oha-s-new">
+					<div class="oha-stats-card-value"><?php echo number_format( $combined ); ?></div>
+					<div class="oha-stats-card-label">Combined Total</div>
 				</div>
 				<div class="oha-stats-card">
 					<div class="oha-stats-card-value">$<?php echo number_format( $total_revenue, 2 ); ?></div>
-					<div class="oha-stats-card-label">Total Revenue</div>
+					<div class="oha-stats-card-label">Online Revenue</div>
 				</div>
 				<div class="oha-stats-card">
 					<div class="oha-stats-card-value"><?php echo number_format( $new_accounts ); ?></div>
@@ -531,13 +549,31 @@ class OHA_Attendee_Admin {
 				</div>
 			</div>
 
+			<script>
+			jQuery(function($){
+				$('#oha-gate-save').on('click', function(){
+					var $btn = $(this).prop('disabled', true).text('Saving...');
+					$.post(ohaAttendee.ajax_url, {
+						action: 'oha_attendee_save_gate_sales',
+						nonce:  ohaAttendee.nonce,
+						year:   <?php echo (int) $year; ?>,
+						count:  parseInt($('#oha-gate-count').val(), 10) || 0
+					}, function(r) {
+						$btn.prop('disabled', false).text('Save');
+						$('#oha-gate-status').text(r.success ? 'Saved.' : 'Error saving.').css('color', r.success ? '#1a6b1a' : '#a00');
+						setTimeout(function(){ $('#oha-gate-status').text(''); }, 2500);
+					});
+				});
+			});
+			</script>
+
 			<div class="oha-stats-cols">
 
 				<!-- Ticket levels -->
 				<div class="oha-stats-section">
 					<h2>Ticket Types</h2>
 					<table class="wp-list-table widefat fixed striped">
-						<thead><tr><th>Ticket Level</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th><th style="text-align:right">% of Total</th></tr></thead>
+						<thead><tr><th>Ticket Level</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th><th style="text-align:right">% of Online</th></tr></thead>
 						<tbody>
 						<?php foreach ( $ticket_counts as $label => $count ) : ?>
 							<tr>
@@ -621,6 +657,19 @@ class OHA_Attendee_Admin {
 			</div><!-- .oha-stats-cols -->
 		</div>
 		<?php
+	}
+
+	// =========================================================================
+	// AJAX: save gate sales count for a year
+	// =========================================================================
+	public static function ajax_save_gate_sales() : void {
+		check_ajax_referer( 'oha_attendee_nonce', 'nonce' );
+		if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( 'Unauthorized' );
+		$year  = isset( $_POST['year'] )  ? (int) $_POST['year']          : 0;
+		$count = isset( $_POST['count'] ) ? max( 0, (int) $_POST['count'] ) : 0;
+		if ( ! $year ) wp_send_json_error( 'Invalid year.' );
+		update_option( "oha_attendee_gate_sales_{$year}", $count );
+		wp_send_json_success( [ 'year' => $year, 'count' => $count ] );
 	}
 
 	// =========================================================================
