@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.10.2
+ * Version: 2.11.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.10.1');
+define('OHA_BHS_VERSION', '2.11.0');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -270,6 +270,7 @@ require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-vendor-2026-simple.
 require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-board-hub.lib.php';
 require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-haunt-discounts.lib.php';
 require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-sponsor-hub.lib.php';
+require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-financials.lib.php';
 
 /**
  * Main plugin class
@@ -327,6 +328,17 @@ class OHA_Board_Hub_Suite {
         // Initialize settings
         $this->settings = OHA_Settings::instance();
 
+        // Financials tables: create on activation and check on each init (catches update-over-existing)
+        register_activation_hook(OHA_BHS_PLUGIN_FILE, ['OHA_Financials', 'create_tables']);
+        register_activation_hook(OHA_BHS_PLUGIN_FILE, ['OHA_Financials', 'seed_categories']);
+        add_action('init', function() {
+            if (!get_option('oha_fin_tables_checked')) {
+                OHA_Financials::create_tables();
+                OHA_Financials::seed_categories();
+                update_option('oha_fin_tables_checked', '1');
+            }
+        });
+
         // Load text domain for translations
         add_action('plugins_loaded', [$this, 'load_textdomain']);
 
@@ -340,6 +352,11 @@ class OHA_Board_Hub_Suite {
             add_filter('oha_board_hub_membership_columns', [$this, 'mu_membership_add_columns']);
             add_filter('oha_board_hub_membership_query_args', [$this, 'mu_membership_query_args']);
             add_action('wp_ajax_oha_board_hub_mark_card_sent', [$this, 'mu_membership_mark_card_sent']);
+
+            // Financials AJAX (board members + admins only -- server-side cap check inside each handler)
+            add_action('wp_ajax_oha_fin_save_entry',    ['OHA_Financials', 'ajax_save_entry']);
+            add_action('wp_ajax_oha_fin_add_category',  ['OHA_Financials', 'ajax_add_category']);
+            add_action('wp_ajax_oha_fin_toggle_category', ['OHA_Financials', 'ajax_toggle_category']);
             add_action('admin_footer', [$this, 'mu_membership_admin_footer_js']);
 
         }
@@ -399,6 +416,16 @@ add_action('oha_bhs_membership_set_free', [$this, 'handle_membership_set_free'],
             'manage_options',
             OHA_BHS_MENU,
             [$this, 'render_admin_page']
+        );
+
+        // Convention Financials admin page (board + admin access, CSV export only here)
+        add_submenu_page(
+            OHA_BHS_MENU,
+            'Convention Financials',
+            'Financials',
+            OHA_Financials::CAP,
+            'oha-fin-admin',
+            ['OHA_Financials', 'render_admin_page']
         );
     }
 

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.10.2",
+    "version":  "2.11.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -540,6 +540,20 @@
                         "type":  "fix",
                         "summary":  "Sort member table by subscription_starts DESC so upgraded listing owners appear newest first",
                         "notes":  "usort added at end of fetch_members_legacy_raw(); sorts by oha_paid_member_since (stored as subscription_starts) rather than user_registered from DB ORDER BY"
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "2.11.0",
+                        "type":  "feature",
+                        "summary":  "Added Convention Financials module: year-over-year budget tracking with 22 pre-seeded categories",
+                        "notes":  "Two-table schema: wp_oha_budget_categories (master list) + wp_oha_budget_entries (per year). Categories: income, expense, sponsorship, charity types. Frontend tab on Board Hub shortcode. CSV export on WP admin page only. Restricted to oha_board role + admins."
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "2.11.0",
+                        "type":  "change",
+                        "summary":  "Replaced hardcoded finance tab stub with OHA_Financials class delegation",
+                        "notes":  "Old render_finance_tab() had hardcoded estimated values and emojis. Now delegates entirely to OHA_Financials::render_tab()."
                     }
                 ]
 }
