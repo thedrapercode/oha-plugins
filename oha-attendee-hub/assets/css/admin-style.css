@@ -111,6 +111,57 @@
     margin: 0 0 20px;
 }
 
+/* --- Stats page --- */
+.oha-stats-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.oha-stats-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 16px 22px;
+    min-width: 150px;
+    text-align: center;
+}
+.oha-stats-card-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    color: #1d2327;
+    margin-bottom: 4px;
+}
+.oha-stats-card-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.oha-stats-cols {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.oha-stats-section {
+    flex: 1;
+    min-width: 260px;
+    max-width: 480px;
+}
+.oha-stats-section h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #666;
+    margin: 0 0 8px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 6px;
+}
+.oha-stats-section a { text-decoration: none; }
+.oha-stats-section a:hover { text-decoration: underline; }
+
 /* --- Settings page --- */
 .oha-att-warn {
     background: #fff3cd;

@@ -86,6 +86,14 @@ class OHA_Attendee_DB {
 			$where[]  = '(email LIKE %s OR first_name LIKE %s OR last_name LIKE %s)';
 			$values[] = $s; $values[] = $s; $values[] = $s;
 		}
+		if ( ! empty( $args['ticket_level'] ) ) {
+			$where[]  = 'ticket_level = %s';
+			$values[] = $args['ticket_level'];
+		}
+		if ( ! empty( $args['addon'] ) ) {
+			$where[]  = 'add_on_name LIKE %s';
+			$values[] = '%' . $wpdb->esc_like( $args['addon'] ) . '%';
+		}
 		if ( isset( $args['welcome_sent'] ) && $args['welcome_sent'] !== '' ) {
 			$where[]  = 'welcome_sent = %d';
 			$values[] = (int) $args['welcome_sent'];
@@ -115,6 +123,14 @@ class OHA_Attendee_DB {
 			$s        = '%' . $wpdb->esc_like( $args['search'] ) . '%';
 			$where[]  = '(email LIKE %s OR first_name LIKE %s OR last_name LIKE %s)';
 			$values[] = $s; $values[] = $s; $values[] = $s;
+		}
+		if ( ! empty( $args['ticket_level'] ) ) {
+			$where[]  = 'ticket_level = %s';
+			$values[] = $args['ticket_level'];
+		}
+		if ( ! empty( $args['addon'] ) ) {
+			$where[]  = 'add_on_name LIKE %s';
+			$values[] = '%' . $wpdb->esc_like( $args['addon'] ) . '%';
 		}
 		if ( isset( $args['welcome_sent'] ) && $args['welcome_sent'] !== '' ) {
 			$where[]  = 'welcome_sent = %d';
@@ -151,5 +167,45 @@ class OHA_Attendee_DB {
 	public static function mark_welcome_sent( int $id ) : void {
 		global $wpdb;
 		$wpdb->update( self::table(), [ 'welcome_sent' => 1 ], [ 'id' => $id ] );
+	}
+
+	public static function get_distinct_ticket_levels( int $year = 0 ) : array {
+		global $wpdb;
+		$t = self::table();
+		if ( $year ) {
+			return $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT ticket_level FROM {$t} WHERE year = %d AND ticket_level != '' ORDER BY ticket_level ASC", $year ) );
+		}
+		return $wpdb->get_col( "SELECT DISTINCT ticket_level FROM {$t} WHERE ticket_level != '' ORDER BY ticket_level ASC" );
+	}
+
+	/**
+	 * Returns unique individual add-on names across all attendees.
+	 * Add-ons are stored comma-separated so we split them in PHP.
+	 */
+	public static function get_distinct_addons( int $year = 0 ) : array {
+		global $wpdb;
+		$t = self::table();
+		if ( $year ) {
+			$rows = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT add_on_name FROM {$t} WHERE year = %d AND add_on_name != ''", $year ) );
+		} else {
+			$rows = $wpdb->get_col( "SELECT DISTINCT add_on_name FROM {$t} WHERE add_on_name != ''" );
+		}
+		$addons = [];
+		foreach ( $rows as $val ) {
+			foreach ( array_map( 'trim', explode( ',', $val ) ) as $a ) {
+				if ( $a && ! in_array( $a, $addons, true ) ) $addons[] = $a;
+			}
+		}
+		sort( $addons );
+		return $addons;
+	}
+
+	/**
+	 * Returns all rows for a year (no pagination) for stats computation.
+	 */
+	public static function get_all_for_stats( int $year ) : array {
+		global $wpdb;
+		$t = self::table();
+		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$t} WHERE year = %d ORDER BY last_name ASC", $year ) );
 	}
 }

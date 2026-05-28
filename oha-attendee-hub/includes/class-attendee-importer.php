@@ -69,13 +69,13 @@ class OHA_Attendee_Importer {
 		$rows = self::parse_csv( $csv_path );
 		if ( is_wp_error( $rows ) ) wp_send_json_error( $rows->get_error_message() );
 
-		$new_count  = 0;
+		$grouped     = self::group_by_email( $rows );
+		$new_count   = 0;
 		$exist_count = 0;
-		$skipped    = 0;
-		$preview    = [];
+		$skipped     = 0;
+		$preview     = [];
 
-		foreach ( $rows as $i => $row ) {
-			$email = sanitize_email( $row[ self::COL_EMAIL ] ?? '' );
+		foreach ( $grouped as $email => $row ) {
 			if ( ! is_email( $email ) ) { $skipped++; continue; }
 
 			$is_new = ! get_user_by( 'email', $email );
@@ -87,6 +87,7 @@ class OHA_Attendee_Importer {
 					'last'   => sanitize_text_field( $row[ self::COL_LAST ]   ?? '' ),
 					'email'  => $email,
 					'ticket' => sanitize_text_field( $row[ self::COL_TICKET ] ?? '' ),
+					'addons' => $row['_addons'],
 					'status' => $is_new ? 'new' : 'existing',
 				];
 			}
@@ -94,7 +95,8 @@ class OHA_Attendee_Importer {
 
 		wp_send_json_success( [
 			'year'     => $year,
-			'total'    => count( $rows ),
+			'total'    => count( $grouped ),
+			'raw_rows' => count( $rows ),
 			'new'      => $new_count,
 			'existing' => $exist_count,
 			'skipped'  => $skipped,
@@ -119,19 +121,19 @@ class OHA_Attendee_Importer {
 		$rows = self::parse_csv( $csv_path );
 		if ( is_wp_error( $rows ) ) wp_send_json_error( $rows->get_error_message() );
 
+		$grouped = self::group_by_email( $rows );
 		$created = 0;
 		$updated = 0;
 		$skipped = 0;
 		$errors  = [];
 
-		foreach ( $rows as $row ) {
-			$email = sanitize_email( $row[ self::COL_EMAIL ] ?? '' );
+		foreach ( $grouped as $email => $row ) {
 			if ( ! is_email( $email ) ) { $skipped++; continue; }
 
 			$first   = sanitize_text_field( $row[ self::COL_FIRST ]   ?? '' );
 			$last    = sanitize_text_field( $row[ self::COL_LAST ]    ?? '' );
 			$ticket  = sanitize_text_field( $row[ self::COL_TICKET ]  ?? '' );
-			$addon   = sanitize_text_field( $row[ self::COL_ADDON ]   ?? '' );
+			$addon   = $row['_addons'];  // already sanitized, comma-separated string
 			$amount  = sanitize_text_field( $row[ self::COL_AMOUNT ]  ?? '' );
 			$phone   = sanitize_text_field( $row[ self::COL_PHONE ]   ?? '' );
 			$addr1   = sanitize_text_field( $row[ self::COL_ADDR1 ]   ?? '' );
@@ -255,6 +257,34 @@ class OHA_Attendee_Importer {
 			'skipped' => $skipped,
 			'errors'  => $errors,
 		] );
+	}
+
+	// ------------------------------------------------------------------
+	// Group raw CSV rows by email, merging add-ons across multiple rows.
+	// Returns [ email => row ] where row is the first CSV row for that
+	// email with an added '_addons' key (comma-separated add-on string).
+	// ------------------------------------------------------------------
+	private static function group_by_email( array $rows ) : array {
+		$grouped = [];
+		foreach ( $rows as $row ) {
+			$email = sanitize_email( $row[ self::COL_EMAIL ] ?? '' );
+			if ( ! $email ) continue;
+
+			$addon = sanitize_text_field( $row[ self::COL_ADDON ] ?? '' );
+
+			if ( ! isset( $grouped[ $email ] ) ) {
+				$grouped[ $email ]            = $row;
+				$grouped[ $email ]['_addons'] = $addon ? [ $addon ] : [];
+			} elseif ( $addon && ! in_array( $addon, $grouped[ $email ]['_addons'], true ) ) {
+				$grouped[ $email ]['_addons'][] = $addon;
+			}
+		}
+		// Convert add-ons array to comma-separated string
+		foreach ( $grouped as $email => &$row ) {
+			$row['_addons'] = implode( ', ', $row['_addons'] );
+		}
+		unset( $row );
+		return $grouped;
 	}
 
 	// ------------------------------------------------------------------

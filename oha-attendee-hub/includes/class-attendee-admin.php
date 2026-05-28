@@ -7,15 +7,19 @@ class OHA_Attendee_Admin {
 	// All Attendees list page
 	// =========================================================================
 	public static function page_list() : void {
-		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
-		$year   = isset( $_GET['year'] )  ? (int) sanitize_text_field( $_GET['year'] )  : $default_year;
-		$search = isset( $_GET['s'] )     ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : '';
-		$paged  = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
-		$limit  = 50;
-		$offset = ( $paged - 1 ) * $limit;
-		$years  = OHA_Attendee_DB::get_years();
+		$default_year  = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
+		$year          = isset( $_GET['year'] )         ? (int) sanitize_text_field( $_GET['year'] )             : $default_year;
+		$search        = isset( $_GET['s'] )            ? sanitize_text_field( wp_unslash( $_GET['s'] ) )        : '';
+		$filter_ticket = isset( $_GET['ticket_level'] ) ? sanitize_text_field( wp_unslash( $_GET['ticket_level'] ) ) : '';
+		$filter_addon  = isset( $_GET['addon'] )        ? sanitize_text_field( wp_unslash( $_GET['addon'] ) )    : '';
+		$paged         = isset( $_GET['paged'] )        ? max( 1, (int) $_GET['paged'] )                        : 1;
+		$limit         = 50;
+		$offset        = ( $paged - 1 ) * $limit;
+		$years         = OHA_Attendee_DB::get_years();
+		$ticket_levels = OHA_Attendee_DB::get_distinct_ticket_levels( $year );
+		$addons        = OHA_Attendee_DB::get_distinct_addons( $year );
 
-		$args  = [ 'year' => $year, 'search' => $search, 'limit' => $limit, 'offset' => $offset ];
+		$args  = [ 'year' => $year, 'search' => $search, 'ticket_level' => $filter_ticket, 'addon' => $filter_addon, 'limit' => $limit, 'offset' => $offset ];
 		$rows  = OHA_Attendee_DB::get_attendees( $args );
 		$total = OHA_Attendee_DB::count_attendees( $args );
 		$pages = (int) ceil( $total / $limit );
@@ -34,11 +38,31 @@ class OHA_Attendee_Admin {
 						<option value="<?php echo (int) $y; ?>" <?php selected( $y, $year ); ?>><?php echo (int) $y; ?></option>
 					<?php endforeach; ?>
 				</select>
-				<?php else : ?>
-					<em>No attendees imported yet.</em>
 				<?php endif; ?>
+
+				<?php if ( $ticket_levels ) : ?>
+				<select name="ticket_level">
+					<option value="">All ticket types</option>
+					<?php foreach ( $ticket_levels as $tl ) : ?>
+						<option value="<?php echo esc_attr( $tl ); ?>" <?php selected( $tl, $filter_ticket ); ?>><?php echo esc_html( $tl ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<?php endif; ?>
+
+				<?php if ( $addons ) : ?>
+				<select name="addon">
+					<option value="">All add-ons</option>
+					<?php foreach ( $addons as $a ) : ?>
+						<option value="<?php echo esc_attr( $a ); ?>" <?php selected( $a, $filter_addon ); ?>><?php echo esc_html( $a ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<?php endif; ?>
+
 				<input type="search" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="Search name or email">
-				<button type="submit" class="button">Search</button>
+				<button type="submit" class="button">Filter</button>
+				<?php if ( $filter_ticket || $filter_addon || $search ) : ?>
+					<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-hub', 'year' => $year ], admin_url( 'admin.php' ) ) ); ?>" class="button">Clear</a>
+				<?php endif; ?>
 				<span class="oha-att-count"><?php echo number_format( $total ); ?> attendee<?php echo $total !== 1 ? 's' : ''; ?></span>
 			</form>
 
@@ -175,18 +199,19 @@ class OHA_Attendee_Admin {
 							return;
 						}
 						var d = res.data;
+						var mergeNote = (d.raw_rows && d.raw_rows !== d.total) ? '<br><small style="font-size:11px;font-weight:400">' + d.raw_rows + ' CSV rows</small>' : '';
 						var html = '<div class="oha-att-stats">'
-							+ '<div class="oha-att-stat"><span>' + d.total    + '</span>Total rows</div>'
+							+ '<div class="oha-att-stat"><span>' + d.total    + '</span>Attendees' + mergeNote + '</div>'
 							+ '<div class="oha-att-stat oha-s-new"><span>' + d.new      + '</span>New accounts</div>'
 							+ '<div class="oha-att-stat oha-s-exist"><span>' + d.existing + '</span>Existing accounts</div>'
 							+ (d.skipped ? '<div class="oha-att-stat oha-s-skip"><span>' + d.skipped + '</span>Skipped (no email)</div>' : '')
 							+ '</div>';
 
 						if ( d.preview.length ) {
-							html += '<h3>First ' + d.preview.length + ' rows:</h3>';
-							html += '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Name</th><th>Email</th><th>Ticket</th><th>Status</th></tr></thead><tbody>';
+							html += '<h3>First ' + d.preview.length + ' attendees:</h3>';
+							html += '<table class="wp-list-table widefat fixed striped"><thead><tr><th>Name</th><th>Email</th><th>Ticket</th><th>Add-Ons</th><th>Status</th></tr></thead><tbody>';
 							$.each(d.preview, function(i, r){
-								html += '<tr><td>' + escH(r.last + ', ' + r.first) + '</td><td>' + escH(r.email) + '</td><td>' + escH(r.ticket) + '</td><td><span class="oha-badge oha-badge-' + r.status + '">' + r.status + '</span></td></tr>';
+								html += '<tr><td>' + escH(r.last + ', ' + r.first) + '</td><td>' + escH(r.email) + '</td><td>' + escH(r.ticket) + '</td><td>' + escH(r.addons || '-') + '</td><td><span class="oha-badge oha-badge-' + r.status + '">' + r.status + '</span></td></tr>';
 							});
 							html += '</tbody></table>';
 						}
@@ -424,6 +449,172 @@ class OHA_Attendee_Admin {
 			}
 		}
 
+	// =========================================================================
+	// Stats page
+	// =========================================================================
+	public static function page_stats() : void {
+		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
+		$year         = isset( $_GET['year'] ) ? (int) $_GET['year'] : $default_year;
+		$years        = OHA_Attendee_DB::get_years();
+		$rows         = $year ? OHA_Attendee_DB::get_all_for_stats( $year ) : [];
+
+		$total         = count( $rows );
+		$total_revenue = 0.0;
+		$new_accounts  = 0;
+		$ticket_counts = [];
+		$ticket_revenue = [];
+		$addon_counts  = [];
+		$state_counts  = [];
+		$welcome_sent  = 0;
+
+		foreach ( $rows as $r ) {
+			$amount         = (float) preg_replace( '/[^0-9.]/', '', $r->purchase_amount );
+			$total_revenue += $amount;
+
+			if ( $r->ticket_level ) {
+				$ticket_counts[ $r->ticket_level ]  = ( $ticket_counts[ $r->ticket_level ]  ?? 0 ) + 1;
+				$ticket_revenue[ $r->ticket_level ] = ( $ticket_revenue[ $r->ticket_level ] ?? 0.0 ) + $amount;
+			}
+
+			if ( $r->add_on_name ) {
+				foreach ( array_map( 'trim', explode( ',', $r->add_on_name ) ) as $a ) {
+					if ( $a ) $addon_counts[ $a ] = ( $addon_counts[ $a ] ?? 0 ) + 1;
+				}
+			}
+
+			if ( $r->state ) {
+				$state_counts[ $r->state ] = ( $state_counts[ $r->state ] ?? 0 ) + 1;
+			}
+
+			if ( (int) $r->wp_user_created === 1 ) $new_accounts++;
+			if ( (int) $r->welcome_sent    === 1 ) $welcome_sent++;
+		}
+
+		arsort( $ticket_counts );
+		arsort( $addon_counts );
+		arsort( $state_counts );
+		$existing_accounts = $total - $new_accounts;
+		?>
+		<div class="wrap oha-att-wrap">
+			<h1>Convention Stats</h1>
+
+			<form method="get" style="margin-bottom:20px">
+				<input type="hidden" name="page" value="oha-attendee-stats">
+				<select name="year" onchange="this.form.submit()">
+					<?php foreach ( $years as $y ) : ?>
+						<option value="<?php echo (int) $y; ?>" <?php selected( $y, $year ); ?>><?php echo (int) $y; ?></option>
+					<?php endforeach; ?>
+				</select>
+			</form>
+
+			<?php if ( ! $total ) : ?>
+				<p>No attendees found for <?php echo $year; ?>.</p>
+				<?php return; ?>
+			<?php endif; ?>
+
+			<!-- Summary cards -->
+			<div class="oha-stats-cards">
+				<div class="oha-stats-card">
+					<div class="oha-stats-card-value"><?php echo number_format( $total ); ?></div>
+					<div class="oha-stats-card-label">Total Attendees</div>
+				</div>
+				<div class="oha-stats-card">
+					<div class="oha-stats-card-value">$<?php echo number_format( $total_revenue, 2 ); ?></div>
+					<div class="oha-stats-card-label">Total Revenue</div>
+				</div>
+				<div class="oha-stats-card">
+					<div class="oha-stats-card-value"><?php echo number_format( $new_accounts ); ?></div>
+					<div class="oha-stats-card-label">New Accounts Created</div>
+				</div>
+				<div class="oha-stats-card">
+					<div class="oha-stats-card-value"><?php echo number_format( $existing_accounts ); ?></div>
+					<div class="oha-stats-card-label">Matched Existing Accounts</div>
+				</div>
+				<div class="oha-stats-card">
+					<div class="oha-stats-card-value"><?php echo number_format( $welcome_sent ); ?></div>
+					<div class="oha-stats-card-label">Welcome Emails Sent</div>
+				</div>
+				<div class="oha-stats-card">
+					<div class="oha-stats-card-value"><?php echo count( $state_counts ); ?></div>
+					<div class="oha-stats-card-label">States Represented</div>
+				</div>
+			</div>
+
+			<div class="oha-stats-cols">
+
+				<!-- Ticket levels -->
+				<div class="oha-stats-section">
+					<h2>Ticket Types</h2>
+					<table class="wp-list-table widefat fixed striped">
+						<thead><tr><th>Ticket Level</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th><th style="text-align:right">% of Total</th></tr></thead>
+						<tbody>
+						<?php foreach ( $ticket_counts as $label => $count ) : ?>
+							<tr>
+								<td>
+									<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-hub', 'year' => $year, 'ticket_level' => $label ], admin_url( 'admin.php' ) ) ); ?>">
+										<?php echo esc_html( $label ); ?>
+									</a>
+								</td>
+								<td style="text-align:right"><?php echo number_format( $count ); ?></td>
+								<td style="text-align:right">$<?php echo number_format( $ticket_revenue[ $label ] ?? 0, 2 ); ?></td>
+								<td style="text-align:right"><?php echo $total ? round( $count / $total * 100, 1 ) : 0; ?>%</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Add-ons -->
+				<?php if ( $addon_counts ) : ?>
+				<div class="oha-stats-section">
+					<h2>Add-Ons</h2>
+					<table class="wp-list-table widefat fixed striped">
+						<thead><tr><th>Add-On</th><th style="text-align:right">Count</th><th style="text-align:right">% of Attendees</th></tr></thead>
+						<tbody>
+						<?php foreach ( $addon_counts as $label => $count ) : ?>
+							<tr>
+								<td>
+									<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-hub', 'year' => $year, 'addon' => $label ], admin_url( 'admin.php' ) ) ); ?>">
+										<?php echo esc_html( $label ); ?>
+									</a>
+								</td>
+								<td style="text-align:right"><?php echo number_format( $count ); ?></td>
+								<td style="text-align:right"><?php echo $total ? round( $count / $total * 100, 1 ) : 0; ?>%</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+				<?php endif; ?>
+
+				<!-- States -->
+				<?php if ( $state_counts ) : ?>
+				<div class="oha-stats-section">
+					<h2>Attendees by State</h2>
+					<table class="wp-list-table widefat fixed striped">
+						<thead><tr><th>State</th><th style="text-align:right">Count</th><th style="text-align:right">% of Total</th></tr></thead>
+						<tbody>
+						<?php foreach ( $state_counts as $state => $count ) : ?>
+							<tr>
+								<td><?php echo esc_html( $state ); ?></td>
+								<td style="text-align:right"><?php echo number_format( $count ); ?></td>
+								<td style="text-align:right"><?php echo $total ? round( $count / $total * 100, 1 ) : 0; ?>%</td>
+							</tr>
+						<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+				<?php endif; ?>
+
+			</div><!-- .oha-stats-cols -->
+		</div>
+		<?php
+	}
+
+	// =========================================================================
+	// Settings page
+	// =========================================================================
+	public static function page_settings() : void {
 		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
 		$uwp_form_id  = (int) get_option( 'oha_attendee_uwp_form_id', 4 );
 		$current_year = (int) date( 'Y' );

@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-attendee-hub",
-    "version":  "1.0.1",
+    "version":  "1.0.2",
     "entries":  [
                     {
                         "date":  "2026-05-27",
@@ -22,6 +22,27 @@
                         "type":  "feature",
                         "summary":  "Add UsersWP Form ID setting to Settings page so the UWP form assigned on import is configurable",
                         "notes":  "Option: oha_attendee_uwp_form_id. Default 4. Shown in Attendee Hub \u003e Settings with instructions to verify in UsersWP \u003e User Types."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.0.2",
+                        "type":  "feature",
+                        "summary":  "Add ticket type and add-on filter dropdowns to attendee list page with Clear button",
+                        "notes":  "Dropdowns populate dynamically from distinct DB values for the selected year. Add-on filter uses LIKE query since multiple add-ons are stored comma-separated. Filters persist in URL for bookmarking."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.0.2",
+                        "type":  "feature",
+                        "summary":  "Add Stats page with summary cards, ticket type breakdown, add-on breakdown, and state breakdown",
+                        "notes":  "Revenue computed in PHP by stripping non-numeric chars from purchase_amount string. Ticket and add-on rows link directly to filtered attendee list. Stats submenu added between Welcome Email and Settings."
+                    },
+                    {
+                        "date":  "2026-05-27",
+                        "version":  "1.0.2",
+                        "type":  "fix",
+                        "summary":  "Fix import grouping so multiple CSV rows per email merge add-ons into one comma-separated record",
+                        "notes":  "group_by_email() pre-processes raw rows before import/preview. Duplicate add-ons for same email are deduplicated. Preview now shows Add-Ons column and raw row vs attendee count."
                     }
                 ]
 }
