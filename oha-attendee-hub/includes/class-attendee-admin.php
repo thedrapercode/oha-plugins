@@ -202,8 +202,8 @@ class OHA_Attendee_Admin {
 						var mergeNote = (d.raw_rows && d.raw_rows !== d.total) ? '<br><small style="font-size:11px;font-weight:400">' + d.raw_rows + ' CSV rows</small>' : '';
 						var html = '<div class="oha-att-stats">'
 							+ '<div class="oha-att-stat"><span>' + d.total    + '</span>Attendees' + mergeNote + '</div>'
-							+ '<div class="oha-att-stat oha-s-new"><span>' + d.new      + '</span>New accounts</div>'
-							+ '<div class="oha-att-stat oha-s-exist"><span>' + d.existing + '</span>Existing accounts</div>'
+							+ '<div class="oha-att-stat oha-s-new"><span>' + d.new      + '</span>Creating new accounts</div>'
+							+ '<div class="oha-att-stat oha-s-exist"><span>' + d.existing + '</span>Updating existing accounts</div>'
 							+ (d.skipped ? '<div class="oha-att-stat oha-s-skip"><span>' + d.skipped + '</span>Skipped (no email)</div>' : '')
 							+ '</div>';
 

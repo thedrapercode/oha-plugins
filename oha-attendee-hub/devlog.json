@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-attendee-hub",
-    "version":  "1.1.0",
+    "version":  "1.1.1",
     "entries":  [
                     {
                         "date":  "2026-05-27",
@@ -71,6 +71,13 @@
                         "type":  "fix",
                         "summary":  "Fixed fatal PHP parse error where page_stats was declared inside page_settings method body",
                         "notes":  "Previous class-attendee-admin.php had duplicate page_settings and page_stats nested inside another method - both PHP syntax errors; file fully rewritten with correct structure"
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "1.1.1",
+                        "type":  "change",
+                        "summary":  "Renamed import preview stat cards to action verbs: Creating new accounts / Updating existing accounts",
+                        "notes":  "Was New accounts / Existing accounts -- ambiguous whether existing would be skipped or updated"
                     }
                 ]
 }
