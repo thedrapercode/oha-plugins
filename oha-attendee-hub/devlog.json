@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-attendee-hub",
-    "version":  "1.2.0",
+    "version":  "1.3.0",
     "entries":  [
                     {
                         "date":  "2026-05-27",
@@ -85,6 +85,34 @@
                         "type":  "feature",
                         "summary":  "Added per-year gate sales field on Stats page to record walk-up ticket counts not in CSV",
                         "notes":  "Stored as WP option oha_attendee_gate_sales_{year}; saved via AJAX; Stats page shows Online (CSV) / Gate Sales / Combined Total cards; ticket/addon % columns labeled as % of Online to clarify they exclude gate sales; combined total available for future chart use"
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Added Gate Sales input to Stats page for walk-up ticket counts not in CSV",
+                        "notes":  "Saved as WP option oha_attendee_gate_sales_{year}. Stats page shows Online/Gate/Combined Total cards."
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Added Unit Prices settings and Implied Tickets column on Stats page",
+                        "notes":  "Unit prices stored as oha_attendee_unit_prices option (name=\u003efloat). Implied = revenue / unit_price. Matches venue-reported ticket counts."
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "1.3.0",
+                        "type":  "change",
+                        "summary":  "Relabeled ticket/add-on stat columns from Count to Buyers to clarify % of Online excludes gate sales",
+                        "notes":  "Stats table headers updated for clarity."
+                    },
+                    {
+                        "date":  "2026-05-28",
+                        "version":  "1.3.0",
+                        "type":  "change",
+                        "summary":  "Relabeled import preview stat cards to Creating new accounts / Updating existing accounts",
+                        "notes":  "Previous labels New accounts / Existing accounts were ambiguous during re-import."
                     }
                 ]
 }

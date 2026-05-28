@@ -489,6 +489,8 @@ class OHA_Attendee_Admin {
 
 		// Use granular addon stats from the addons table if available (v1.1.0+ imports)
 		$addon_stats = $year ? OHA_Attendee_DB::get_addon_stats( $year ) : [];
+
+		$unit_prices = get_option( 'oha_attendee_unit_prices', [] );
 		?>
 		<div class="wrap oha-att-wrap">
 			<h1>Convention Stats</h1>
@@ -573,9 +575,21 @@ class OHA_Attendee_Admin {
 				<div class="oha-stats-section">
 					<h2>Ticket Types</h2>
 					<table class="wp-list-table widefat fixed striped">
-						<thead><tr><th>Ticket Level</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th><th style="text-align:right">% of Online</th></tr></thead>
+						<thead>
+							<tr>
+								<th>Ticket Level</th>
+								<th style="text-align:right">Buyers</th>
+								<th style="text-align:right">Revenue</th>
+								<th style="text-align:right">Implied Tickets</th>
+								<th style="text-align:right">% of Online</th>
+							</tr>
+						</thead>
 						<tbody>
-						<?php foreach ( $ticket_counts as $label => $count ) : ?>
+						<?php foreach ( $ticket_counts as $label => $count ) :
+							$t_price   = isset( $unit_prices[ $label ] ) ? (float) $unit_prices[ $label ] : 0;
+							$t_rev     = $ticket_revenue[ $label ] ?? 0;
+							$t_implied = ( $t_price > 0 ) ? (int) round( $t_rev / $t_price ) : null;
+						?>
 							<tr>
 								<td>
 									<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-hub', 'year' => $year, 'ticket_level' => $label ], admin_url( 'admin.php' ) ) ); ?>">
@@ -583,12 +597,22 @@ class OHA_Attendee_Admin {
 									</a>
 								</td>
 								<td style="text-align:right"><?php echo number_format( $count ); ?></td>
-								<td style="text-align:right">$<?php echo number_format( $ticket_revenue[ $label ] ?? 0, 2 ); ?></td>
+								<td style="text-align:right">$<?php echo number_format( $t_rev, 2 ); ?></td>
+								<td style="text-align:right">
+									<?php if ( $t_implied !== null ) : ?>
+										<?php echo number_format( $t_implied ); ?>
+									<?php else : ?>
+										<span style="color:#999">-</span>
+									<?php endif; ?>
+								</td>
 								<td style="text-align:right"><?php echo $total ? round( $count / $total * 100, 1 ) : 0; ?>%</td>
 							</tr>
 						<?php endforeach; ?>
 						</tbody>
 					</table>
+					<?php if ( empty( array_filter( $unit_prices ) ) ) : ?>
+					<p class="description" style="margin-top:6px">Set unit prices in <a href="<?php echo esc_url( admin_url( 'admin.php?page=oha-attendee-settings' ) ); ?>">Settings</a> to see implied ticket counts.</p>
+					<?php endif; ?>
 				</div>
 
 				<!-- Add-ons: use granular addons table if available, else fall back to comma-sep counts -->
@@ -596,9 +620,20 @@ class OHA_Attendee_Admin {
 				<div class="oha-stats-section">
 					<h2>Add-Ons</h2>
 					<table class="wp-list-table widefat fixed striped">
-						<thead><tr><th>Add-On</th><th style="text-align:right">Count</th><th style="text-align:right">Revenue</th><th style="text-align:right">% of Attendees</th></tr></thead>
+						<thead>
+							<tr>
+								<th>Add-On</th>
+								<th style="text-align:right">Buyers</th>
+								<th style="text-align:right">Revenue</th>
+								<th style="text-align:right">Implied Tickets</th>
+								<th style="text-align:right">% of Attendees</th>
+							</tr>
+						</thead>
 						<tbody>
-						<?php foreach ( $addon_stats as $label => $stat ) : ?>
+						<?php foreach ( $addon_stats as $label => $stat ) :
+							$a_price   = isset( $unit_prices[ $label ] ) ? (float) $unit_prices[ $label ] : 0;
+							$a_implied = ( $a_price > 0 ) ? (int) round( $stat['total'] / $a_price ) : null;
+						?>
 							<tr>
 								<td>
 									<a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-attendee-roster', 'year' => $year, 'addon' => $label ], admin_url( 'admin.php' ) ) ); ?>">
@@ -607,6 +642,15 @@ class OHA_Attendee_Admin {
 								</td>
 								<td style="text-align:right"><?php echo number_format( $stat['count'] ); ?></td>
 								<td style="text-align:right">$<?php echo number_format( $stat['total'], 2 ); ?></td>
+								<td style="text-align:right">
+									<?php if ( $a_implied !== null ) : ?>
+										<?php echo number_format( $a_implied ); ?>
+									<?php elseif ( $stat['total'] == 0 ) : ?>
+										<span style="color:#999">Included</span>
+									<?php else : ?>
+										<span style="color:#999">-</span>
+									<?php endif; ?>
+								</td>
 								<td style="text-align:right"><?php echo $total ? round( $stat['count'] / $total * 100, 1 ) : 0; ?>%</td>
 							</tr>
 						<?php endforeach; ?>
@@ -776,12 +820,21 @@ class OHA_Attendee_Admin {
 			if ( current_user_can( 'manage_options' ) ) {
 				update_option( 'oha_attendee_default_year', (int) ( $_POST['default_year'] ?? date( 'Y' ) ) );
 				update_option( 'oha_attendee_uwp_form_id',  (int) ( $_POST['uwp_form_id']  ?? 4 ) );
+				if ( isset( $_POST['unit_prices'] ) && is_array( $_POST['unit_prices'] ) ) {
+					$prices = [];
+					foreach ( $_POST['unit_prices'] as $name => $price ) {
+						$name = sanitize_text_field( wp_unslash( $name ) );
+						if ( $name ) $prices[ $name ] = max( 0.0, (float) $price );
+					}
+					update_option( 'oha_attendee_unit_prices', $prices );
+				}
 				echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
 			}
 		}
 
 		$default_year = (int) get_option( 'oha_attendee_default_year', date( 'Y' ) );
 		$uwp_form_id  = (int) get_option( 'oha_attendee_uwp_form_id', 4 );
+		$unit_prices  = get_option( 'oha_attendee_unit_prices', [] );
 		$current_year = (int) date( 'Y' );
 		$role         = get_role( 'oha_convention_attendee' );
 		$role_count   = $role ? count( get_users( [ 'role' => 'oha_convention_attendee', 'fields' => 'ID', 'number' => -1 ] ) ) : 0;
@@ -811,6 +864,49 @@ class OHA_Attendee_Admin {
 						</td>
 					</tr>
 				</table>
+
+				<hr style="margin:20px 0">
+				<h3 style="margin-bottom:4px">Unit Prices</h3>
+				<p class="description" style="margin-bottom:12px">Enter the per-ticket base price for each ticket level and add-on. The Stats page will display an <strong>Implied Tickets</strong> column computed as revenue &divide; unit price, matching the counts your venue reports. Leave blank or 0 for items included at no charge (VIP add-ons, etc.).</p>
+
+				<?php
+				$all_ticket_levels = OHA_Attendee_DB::get_distinct_ticket_levels();
+				$all_addons        = OHA_Attendee_DB::get_distinct_addons();
+				?>
+				<?php if ( $all_ticket_levels ) : ?>
+				<h4 style="margin:0 0 6px">Ticket Levels</h4>
+				<table class="widefat" style="max-width:560px;margin-bottom:16px">
+					<thead><tr><th>Ticket Level</th><th style="width:130px">Unit Price ($)</th></tr></thead>
+					<tbody>
+					<?php foreach ( $all_ticket_levels as $tl ) : ?>
+						<tr>
+							<td><?php echo esc_html( $tl ); ?></td>
+							<td><input type="number" name="unit_prices[<?php echo esc_attr( $tl ); ?>]" value="<?php echo esc_attr( isset( $unit_prices[ $tl ] ) ? $unit_prices[ $tl ] : '' ); ?>" min="0" step="0.01" style="width:90px" placeholder="0.00"></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<?php endif; ?>
+
+				<?php if ( $all_addons ) : ?>
+				<h4 style="margin:0 0 6px">Add-Ons</h4>
+				<table class="widefat" style="max-width:560px;margin-bottom:16px">
+					<thead><tr><th>Add-On</th><th style="width:130px">Unit Price ($)</th></tr></thead>
+					<tbody>
+					<?php foreach ( $all_addons as $a ) : ?>
+						<tr>
+							<td><?php echo esc_html( $a ); ?></td>
+							<td><input type="number" name="unit_prices[<?php echo esc_attr( $a ); ?>]" value="<?php echo esc_attr( isset( $unit_prices[ $a ] ) ? $unit_prices[ $a ] : '' ); ?>" min="0" step="0.01" style="width:90px" placeholder="0.00"></td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+				<?php endif; ?>
+
+				<?php if ( ! $all_ticket_levels && ! $all_addons ) : ?>
+				<p class="description">No ticket levels or add-ons found. Import a CSV first.</p>
+				<?php endif; ?>
+
 				<p class="submit"><button type="submit" class="button button-primary">Save Settings</button></p>
 			</form>
 
