@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.4.0",
+    "version":  "1.4.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -218,6 +218,13 @@
                         "type":  "change",
                         "summary":  "Results page rewritten: WP list table with date, email, answer count columns and inline expand",
                         "notes":  "Replaced card divs with proper table rows. Detail expand groups answers by page section with red section headers and two-column Q/A table."
+                    },
+                    {
+                        "date":  "2026-05-30",
+                        "version":  "1.4.1",
+                        "type":  "change",
+                        "summary":  "Moved Convention 2026 survey cards above hardcoded surveys on the selector page",
+                        "notes":  "Order change only in templates/survey-selector.php"
                     }
                 ]
 }

@@ -68,6 +68,68 @@ if (!function_exists('oha_survey_direct_link')) {
         </div>
     </div>
 
+    <div class="oha-survey-options oha-survey-options-convention">
+        <h3><?php _e('OHA Convention 2026 Feedback', 'oha-survey-hub'); ?></h3>
+        <p class="oha-convention-surveys-intro"><?php _e('Share your experience from OHA Convention 2026. Select the survey that matches your role at the event.', 'oha-survey-hub'); ?></p>
+        <div class="oha-survey-grid">
+
+            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_attendee">
+                <h4><?php _e('Attendee Feedback', 'oha-survey-hub'); ?></h4>
+                <p><?php _e('For general admission and VIP attendees of OHA Convention 2026.', 'oha-survey-hub'); ?></p>
+                <div class="oha-survey-meta">
+                    <span class="oha-survey-time">5 to 10 minutes</span>
+                    <span class="oha-survey-pages">Up to 8 pages</span>
+                </div>
+                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_attendee'); ?>" class="oha-survey-btn">
+                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
+                </a>
+                <div class="oha-card-direct-link">
+                    <span class="oha-direct-link-label">Direct link:</span>
+                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_attendee'); ?>">
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+
+            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_vendor">
+                <h4><?php _e('Vendor Feedback', 'oha-survey-hub'); ?></h4>
+                <p><?php _e('For vendors and exhibitors who participated in the OHA Convention 2026 vendor floor.', 'oha-survey-hub'); ?></p>
+                <div class="oha-survey-meta">
+                    <span class="oha-survey-time">5 to 10 minutes</span>
+                    <span class="oha-survey-pages">Varies</span>
+                </div>
+                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_vendor'); ?>" class="oha-survey-btn">
+                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
+                </a>
+                <div class="oha-card-direct-link">
+                    <span class="oha-direct-link-label">Direct link:</span>
+                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_vendor'); ?>">
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+
+            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_volunteer">
+                <h4><?php _e('Volunteer Feedback', 'oha-survey-hub'); ?></h4>
+                <p><?php _e('For volunteers who helped run OHA Convention 2026.', 'oha-survey-hub'); ?></p>
+                <div class="oha-survey-meta">
+                    <span class="oha-survey-time">5 to 10 minutes</span>
+                    <span class="oha-survey-pages">Varies</span>
+                </div>
+                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_volunteer'); ?>" class="oha-survey-btn">
+                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
+                </a>
+                <div class="oha-card-direct-link">
+                    <span class="oha-direct-link-label">Direct link:</span>
+                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_volunteer'); ?>">
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <div class="oha-survey-options">
         <h3><?php _e('Choose Your Survey', 'oha-survey-hub'); ?></h3>
         <div class="oha-survey-grid">
@@ -157,68 +219,6 @@ if (!function_exists('oha_survey_direct_link')) {
                 <div class="oha-card-direct-link">
                     <span class="oha-direct-link-label">Direct link:</span>
                     <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'industry_deep_dive'); ?>">
-                        Copy Link
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <div class="oha-survey-options oha-survey-options-convention">
-        <h3><?php _e('OHA Convention 2026 Feedback', 'oha-survey-hub'); ?></h3>
-        <p class="oha-convention-surveys-intro"><?php _e('Share your experience from OHA Convention 2026. Select the survey that matches your role at the event.', 'oha-survey-hub'); ?></p>
-        <div class="oha-survey-grid">
-
-            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_attendee">
-                <h4><?php _e('Attendee Feedback', 'oha-survey-hub'); ?></h4>
-                <p><?php _e('For general admission and VIP attendees of OHA Convention 2026.', 'oha-survey-hub'); ?></p>
-                <div class="oha-survey-meta">
-                    <span class="oha-survey-time">5 to 10 minutes</span>
-                    <span class="oha-survey-pages">Up to 8 pages</span>
-                </div>
-                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_attendee'); ?>" class="oha-survey-btn">
-                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
-                </a>
-                <div class="oha-card-direct-link">
-                    <span class="oha-direct-link-label">Direct link:</span>
-                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_attendee'); ?>">
-                        Copy Link
-                    </button>
-                </div>
-            </div>
-
-            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_vendor">
-                <h4><?php _e('Vendor Feedback', 'oha-survey-hub'); ?></h4>
-                <p><?php _e('For vendors and exhibitors who participated in the OHA Convention 2026 vendor floor.', 'oha-survey-hub'); ?></p>
-                <div class="oha-survey-meta">
-                    <span class="oha-survey-time">5 to 10 minutes</span>
-                    <span class="oha-survey-pages">Varies</span>
-                </div>
-                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_vendor'); ?>" class="oha-survey-btn">
-                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
-                </a>
-                <div class="oha-card-direct-link">
-                    <span class="oha-direct-link-label">Direct link:</span>
-                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_vendor'); ?>">
-                        Copy Link
-                    </button>
-                </div>
-            </div>
-
-            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_volunteer">
-                <h4><?php _e('Volunteer Feedback', 'oha-survey-hub'); ?></h4>
-                <p><?php _e('For volunteers who helped run OHA Convention 2026.', 'oha-survey-hub'); ?></p>
-                <div class="oha-survey-meta">
-                    <span class="oha-survey-time">5 to 10 minutes</span>
-                    <span class="oha-survey-pages">Varies</span>
-                </div>
-                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_volunteer'); ?>" class="oha-survey-btn">
-                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
-                </a>
-                <div class="oha-card-direct-link">
-                    <span class="oha-direct-link-label">Direct link:</span>
-                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_volunteer'); ?>">
                         Copy Link
                     </button>
                 </div>
