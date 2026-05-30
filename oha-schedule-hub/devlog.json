@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention Schedule Hub",
-    "version":  "1.6.0",
+    "version":  "1.6.1",
     "entries":  [
                     {
                         "date":  "2026-03-31",
@@ -78,6 +78,13 @@
                         "type":  "feature",
                         "summary":  "Add REST endpoint oha/v1/schedule/events for [oha_happening_now] cross-page data",
                         "notes":  "GET oha/v1/schedule/events?year=2026 returns published oha_class posts (title, start_time, end_time, room, day). Used by PWA happening-now widget when schedule shortcode is not on the same page."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "1.6.1",
+                        "type":  "fix",
+                        "summary":  "Removed setInterval that reloaded the page every 5 minutes on all pages with schedule hub loaded",
+                        "notes":  "Was in frontend.js offline-detection block. The online event listener reload is still in place."
                     }
                 ]
 }

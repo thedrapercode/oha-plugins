@@ -385,10 +385,6 @@
         window.addEventListener('online',   function() { hideOfflineBanner(); location.reload(); });
         if (!navigator.onLine) { showOfflineBanner(); }
 
-        setInterval(function() {
-            if (navigator.onLine) { location.reload(); }
-        }, 5 * 60 * 1000);
-
     });
 
 })(jQuery);
