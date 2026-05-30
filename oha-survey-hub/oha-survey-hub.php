@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.3.1
+ * Version: 1.4.0
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.3.1');
+define('OHA_SURVEY_HUB_VERSION', '1.4.0');
 define('OHA_SURVEY_HUB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_FILE', __FILE__);
@@ -74,6 +74,7 @@ class OHA_Survey_Hub {
         add_action('wp_ajax_oha_convention_save_question',        array($convention, 'ajax_save_question'));
         add_action('wp_ajax_oha_convention_toggle_question',      array($convention, 'ajax_toggle_question'));
         add_action('wp_ajax_oha_convention_delete_question',      array($convention, 'ajax_delete_question'));
+        add_action('wp_ajax_oha_convention_reset_response',       array($convention, 'ajax_reset_response'));
 
         // Async email delivery for convention survey submissions
         add_action('oha_survey_convention_send_emails', array($convention, 'send_emails'), 10, 2);
@@ -250,15 +251,6 @@ class OHA_Survey_Hub {
             'manage_options',
             'oha-survey-results',
             array($this, 'admin_results_page')
-        );
-        
-        add_submenu_page(
-            'oha-survey-hub',
-            __('Analytics', 'oha-survey-hub'),
-            __('Analytics', 'oha-survey-hub'),
-            'manage_options',
-            'oha-survey-analytics',
-            array($this, 'admin_analytics_page')
         );
         
         add_submenu_page(

@@ -240,16 +240,20 @@ class OHA_Survey_Data {
         ));
         
         // By survey type
-        $survey_types = array('member', 'haunt_owner', 'scare_actor', 'behind_scenes', 'home_haunt', 'industry_deep_dive');
+        $survey_types = array('member', 'haunt_owner', 'scare_actor', 'behind_scenes', 'home_haunt', 'industry_deep_dive',
+            'convention_2026', 'convention_2026_vendor', 'convention_2026_volunteer');
         $stats['by_type'] = array();
-        
+
         foreach ($survey_types as $type) {
+            $completed = $this->get_response_count($type);
+            $in_progress = intval($wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->responses_table} WHERE survey_type = %s AND is_completed = 0",
+                $type
+            )));
+            if ($completed === 0 && $in_progress === 0) continue;
             $stats['by_type'][$type] = array(
-                'completed' => $this->get_response_count($type),
-                'in_progress' => intval($wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$this->responses_table} WHERE survey_type = %s AND is_completed = 0",
-                    $type
-                )))
+                'completed'   => $completed,
+                'in_progress' => $in_progress,
             );
         }
         

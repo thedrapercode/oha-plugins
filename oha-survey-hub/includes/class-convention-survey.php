@@ -1042,6 +1042,26 @@ class OHA_Convention_Survey {
                 <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <hr style="margin:32px 0 20px;">
+            <h2>Reset Respondent</h2>
+            <p>Enter the email address of a respondent to delete their survey record. They will be able to start the survey again from scratch.</p>
+            <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:8px;">
+                <div>
+                    <label for="oha-conv-reset-email" style="display:block;margin-bottom:4px;font-weight:600;">Email Address</label>
+                    <input type="email" id="oha-conv-reset-email" style="width:280px;" placeholder="respondent@example.com">
+                </div>
+                <div>
+                    <label for="oha-conv-reset-context" style="display:block;margin-bottom:4px;font-weight:600;">Survey</label>
+                    <select id="oha-conv-reset-context">
+                        <option value="attendee">Attendee</option>
+                        <option value="vendor">Vendor</option>
+                        <option value="volunteer">Volunteer</option>
+                    </select>
+                </div>
+                <button type="button" class="button button-secondary" id="oha-conv-reset-btn">Reset Response</button>
+            </div>
+            <p id="oha-conv-reset-msg" style="display:none;margin-top:8px;"></p>
         </div>
 
         <!-- Modal -->
@@ -1241,6 +1261,27 @@ class OHA_Convention_Survey {
                     else { alert('Delete failed.'); }
                 });
             });
+
+            $('#oha-conv-reset-btn').on('click', function(){
+                var email = $('#oha-conv-reset-email').val().trim();
+                var ctx   = $('#oha-conv-reset-context').val();
+                var msg   = $('#oha-conv-reset-msg');
+                if (!email) { msg.css('color','red').text('Please enter an email address.').show(); return; }
+                if (!confirm('Delete the survey response for ' + email + '? They will be able to re-take the survey.')) return;
+                $.post(ajaxUrl, {
+                    action:  'oha_convention_reset_response',
+                    nonce:   nonce,
+                    email:   email,
+                    context: ctx,
+                }, function(res){
+                    if (res.success) {
+                        msg.css('color','green').text(res.data.message).show();
+                        $('#oha-conv-reset-email').val('');
+                    } else {
+                        msg.css('color','red').text(res.data && res.data.message ? res.data.message : 'Reset failed.').show();
+                    }
+                });
+            });
         })(jQuery);
         </script>
         <?php
@@ -1330,6 +1371,47 @@ class OHA_Convention_Survey {
         $id     = (int) ($_POST['id'] ?? 0);
         $result = $wpdb->delete($table, ['id' => $id]);
         $result !== false ? wp_send_json_success() : wp_send_json_error(['message' => 'Delete failed.']);
+    }
+
+    // -------------------------------------------------------------------------
+    // Admin AJAX: reset respondent
+    // -------------------------------------------------------------------------
+
+    public function ajax_reset_response() {
+        check_ajax_referer('oha_survey_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Insufficient permissions.']);
+        }
+
+        $email   = sanitize_email($_POST['email'] ?? '');
+        $context = sanitize_key($_POST['context'] ?? 'attendee');
+
+        if (!is_email($email)) {
+            wp_send_json_error(['message' => 'Please enter a valid email address.']);
+        }
+        if (!array_key_exists($context, self::$context_labels)) {
+            wp_send_json_error(['message' => 'Invalid survey context.']);
+        }
+
+        global $wpdb;
+        $table       = $wpdb->prefix . 'oha_survey_responses';
+        $survey_type = self::context_to_type($context);
+
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM $table WHERE email = %s AND survey_type = %s",
+            $email, $survey_type
+        ));
+
+        if (!$row) {
+            wp_send_json_error(['message' => 'No response found for ' . $email . ' in the ' . self::$context_labels[$context] . ' survey.']);
+        }
+
+        $deleted = $wpdb->delete($table, ['id' => $row->id], ['%d']);
+        if ($deleted === false) {
+            wp_send_json_error(['message' => 'Database error. Could not delete the response.']);
+        }
+
+        wp_send_json_success(['message' => 'Response deleted for ' . $email . ' (' . self::$context_labels[$context] . '). They can now re-take the survey.']);
     }
 
     // -------------------------------------------------------------------------

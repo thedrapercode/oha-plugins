@@ -47,22 +47,24 @@ class OHA_Survey_Admin {
                 <div class="oha-admin-card oha-survey-types">
                     <h2><?php _e('Survey Response Counts', 'oha-survey-hub'); ?></h2>
                     <div class="oha-survey-list">
-                        <?php foreach ($stats['by_type'] as $type => $counts): ?>
+                        <?php
+                        $convention_titles = [
+                            'convention_2026'           => 'Convention 2026 - Attendee',
+                            'convention_2026_vendor'    => 'Convention 2026 - Vendor',
+                            'convention_2026_volunteer' => 'Convention 2026 - Volunteer',
+                        ];
+                        foreach ($stats['by_type'] as $type => $counts):
+                            $survey = OHA_Survey_Definitions::get_survey($type);
+                            $title  = $survey ? $survey['title'] : ($convention_titles[$type] ?? ucfirst(str_replace('_', ' ', $type)));
+                        ?>
                             <div class="oha-survey-item">
-                                <div class="oha-survey-name">
-                                    <?php 
-                                    $survey = OHA_Survey_Definitions::get_survey($type);
-                                    echo $survey ? esc_html($survey['title']) : esc_html(ucfirst(str_replace('_', ' ', $type)));
-                                    ?>
-                                </div>
+                                <div class="oha-survey-name"><?php echo esc_html($title); ?></div>
                                 <div class="oha-survey-counts">
                                     <span class="oha-completed"><?php echo number_format($counts['completed']); ?> completed</span>
                                     <span class="oha-in-progress"><?php echo number_format($counts['in_progress']); ?> in progress</span>
                                 </div>
                                 <div class="oha-survey-actions">
-                                    <a href="<?php echo admin_url('admin.php?page=oha-survey-results&survey_type=' . $type); ?>" class="button button-small">
-                                        <?php _e('View Responses', 'oha-survey-hub'); ?>
-                                    </a>
+                                    <a href="<?php echo admin_url('admin.php?page=oha-survey-results&survey_type=' . $type); ?>" class="button button-small">View Responses</a>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -250,25 +252,40 @@ class OHA_Survey_Admin {
                 $total_count); ?></p>
             
             <?php if (!empty($responses)): ?>
-                <div class="oha-responses-table">
-                    <?php foreach ($responses as $response): ?>
-                        <div class="oha-response-card" data-response-id="<?php echo esc_attr($response->id); ?>">
-                            <div class="oha-response-header">
-                                <div class="oha-response-meta">
-                                    <span class="oha-response-id">#<?php echo $response->id; ?></span>
-                                    <span class="oha-response-date"><?php echo date('M j, Y g:i A', strtotime($response->completed_at)); ?></span>
-                                    <span class="oha-response-email"><?php echo esc_html($this->mask_email($response->email)); ?></span>
+                <table class="wp-list-table widefat fixed striped" style="margin-top:12px;">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">#</th>
+                            <th style="width:160px;">Date</th>
+                            <th>Email</th>
+                            <th style="width:90px;">Answers</th>
+                            <th style="width:110px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($responses as $response):
+                        $answer_count = is_array($response->response_data) ? count(array_filter($response->response_data, function($v){ return $v !== '' && $v !== null && $v !== []; })) : 0;
+                    ?>
+                        <tr>
+                            <td><?php echo (int) $response->id; ?></td>
+                            <td><?php echo esc_html(date('M j, Y g:i A', strtotime($response->completed_at))); ?></td>
+                            <td><?php echo esc_html($response->email); ?></td>
+                            <td><?php echo $answer_count; ?> answered</td>
+                            <td>
+                                <button type="button" class="button button-small oha-toggle-response"
+                                    data-response-id="<?php echo esc_attr($response->id); ?>">View Details</button>
+                            </td>
+                        </tr>
+                        <tr class="oha-response-detail-row">
+                            <td colspan="5" style="padding:0;">
+                                <div id="oha-response-<?php echo $response->id; ?>" style="display:none;padding:0 12px 12px;">
+                                    <?php $this->render_response_details($response, $survey); ?>
                                 </div>
-                                <button type="button" class="oha-toggle-response" data-response-id="<?php echo esc_attr($response->id); ?>">
-                                    <?php _e('View Details', 'oha-survey-hub'); ?>
-                                </button>
-                            </div>
-                            <div class="oha-response-content" id="oha-response-<?php echo $response->id; ?>" style="display: none;">
-                                <?php $this->render_response_details($response, $survey); ?>
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
-                </div>
+                    </tbody>
+                </table>
                 
                 <?php if ($total_pages > 1): ?>
                     <div class="oha-pagination">
@@ -290,47 +307,55 @@ class OHA_Survey_Admin {
     }
     
     /**
-     * Render response details
+     * Render response details grouped by page/section
      */
     private function render_response_details($response, $survey) {
+        $answers = is_array($response->response_data) ? $response->response_data : [];
+
         if (!$survey || empty($survey['pages'])) {
+            if (empty($answers)) {
+                echo '<p style="padding:8px;color:#666;">No answer data recorded.</p>';
+                return;
+            }
+            echo '<table class="widefat striped" style="margin:8px 0;"><tbody>';
+            foreach ($answers as $key => $val) {
+                $display = is_array($val) ? implode(', ', $val) : $val;
+                echo '<tr><td style="width:50%;padding:6px 10px;font-weight:600;">' . esc_html($key) . '</td>'
+                   . '<td style="padding:6px 10px;">' . esc_html($display) . '</td></tr>';
+            }
+            echo '</tbody></table>';
             return;
         }
-        
-        // Create question map
-        $question_map = array();
+
+        echo '<div style="margin:4px 0 8px;">';
         foreach ($survey['pages'] as $page) {
             if (empty($page['questions'])) continue;
-            foreach ($page['questions'] as $question) {
-                $question_map[$question['id']] = $question;
+
+            $page_rows = [];
+            foreach ($page['questions'] as $q) {
+                if (!isset($answers[$q['id']])) continue;
+                $val     = $answers[$q['id']];
+                $display = is_array($val) ? implode(', ', $val) : $val;
+                if ($display === '') continue;
+                $page_rows[] = ['q' => $q['question'], 'a' => $display];
             }
+            if (empty($page_rows)) continue;
+
+            echo '<div style="margin-bottom:12px;">';
+            echo '<div style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;'
+               . 'color:#fff;background:#ad3119;padding:4px 10px;margin-bottom:0;">'
+               . esc_html($page['title']) . '</div>';
+            echo '<table class="widefat" style="border-top:none;"><tbody>';
+            foreach ($page_rows as $i => $row) {
+                $bg = $i % 2 === 0 ? '#fff' : '#f9f9f9';
+                echo '<tr style="background:' . $bg . ';">'
+                   . '<td style="width:55%;padding:6px 10px;vertical-align:top;">' . esc_html($row['q']) . '</td>'
+                   . '<td style="padding:6px 10px;vertical-align:top;font-weight:600;">' . esc_html($row['a']) . '</td>'
+                   . '</tr>';
+            }
+            echo '</tbody></table></div>';
         }
-        
-        ?>
-        <div class="oha-response-answers">
-            <?php foreach ($response->response_data as $question_id => $answer): ?>
-                <?php if (isset($question_map[$question_id])): ?>
-                    <div class="oha-answer-item">
-                        <div class="oha-answer-question">
-                            <?php echo esc_html($question_map[$question_id]['question']); ?>
-                            <?php if (isset($question_map[$question_id]['priority']) && $question_map[$question_id]['priority'] === 'high'): ?>
-                                <span class="oha-priority-badge">★</span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="oha-answer-value">
-                            <?php
-                            if (is_array($answer)) {
-                                echo esc_html(implode(', ', $answer));
-                            } else {
-                                echo esc_html($answer);
-                            }
-                            ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        </div>
-        <?php
+        echo '</div>';
     }
     
     /**
@@ -338,35 +363,43 @@ class OHA_Survey_Admin {
      */
     private function render_all_surveys_summary() {
         $stats = $this->data_handler->get_survey_stats();
+        $convention_titles = [
+            'convention_2026'           => 'OHA Convention 2026 - Attendee Feedback',
+            'convention_2026_vendor'    => 'OHA Convention 2026 - Vendor Feedback',
+            'convention_2026_volunteer' => 'OHA Convention 2026 - Volunteer Feedback',
+        ];
         ?>
         <div class="oha-all-surveys-summary">
-            <h2><?php _e('All Survey Results', 'oha-survey-hub'); ?></h2>
-            <div class="oha-survey-grid">
-                <?php foreach ($stats['by_type'] as $type => $counts): ?>
-                    <?php $survey = OHA_Survey_Definitions::get_survey($type); ?>
-                    <div class="oha-survey-summary-card">
-                        <h3><?php echo $survey ? esc_html($survey['title']) : esc_html(ucfirst(str_replace('_', ' ', $type))); ?></h3>
-                        <div class="oha-summary-stats">
-                            <div class="oha-stat">
-                                <span class="number"><?php echo number_format($counts['completed']); ?></span>
-                                <span class="label"><?php _e('Completed', 'oha-survey-hub'); ?></span>
-                            </div>
-                            <div class="oha-stat">
-                                <span class="number"><?php echo number_format($counts['in_progress']); ?></span>
-                                <span class="label"><?php _e('In Progress', 'oha-survey-hub'); ?></span>
-                            </div>
-                        </div>
-                        <div class="oha-summary-actions">
-                            <a href="<?php echo admin_url('admin.php?page=oha-survey-results&survey_type=' . $type); ?>" class="button button-primary">
-                                <?php _e('View Responses', 'oha-survey-hub'); ?>
-                            </a>
-                            <a href="<?php echo admin_url('admin.php?page=oha-survey-analytics&survey_type=' . $type); ?>" class="button">
-                                <?php _e('Analytics', 'oha-survey-hub'); ?>
-                            </a>
-                        </div>
-                    </div>
+            <h2>All Survey Results</h2>
+            <?php if (empty($stats['by_type'])): ?>
+                <p>No survey responses yet.</p>
+            <?php else: ?>
+            <table class="wp-list-table widefat fixed striped" style="margin-top:12px;">
+                <thead>
+                    <tr>
+                        <th>Survey</th>
+                        <th style="width:120px;">Completed</th>
+                        <th style="width:120px;">In Progress</th>
+                        <th style="width:140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($stats['by_type'] as $type => $counts):
+                    $survey = OHA_Survey_Definitions::get_survey($type);
+                    $title  = $survey ? $survey['title'] : ($convention_titles[$type] ?? ucfirst(str_replace('_', ' ', $type)));
+                ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($title); ?></strong></td>
+                        <td><?php echo number_format($counts['completed']); ?></td>
+                        <td><?php echo number_format($counts['in_progress']); ?></td>
+                        <td>
+                            <a href="<?php echo admin_url('admin.php?page=oha-survey-results&survey_type=' . $type); ?>" class="button button-small">View Responses</a>
+                        </td>
+                    </tr>
                 <?php endforeach; ?>
-            </div>
+                </tbody>
+            </table>
+            <?php endif; ?>
         </div>
         <?php
     }

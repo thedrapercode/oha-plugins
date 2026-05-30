@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.3.1",
+    "version":  "1.4.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -190,6 +190,34 @@
                         "type":  "fix",
                         "summary":  "Vendor questions seeded multiple times due to concurrent requests during plugin install",
                         "notes":  "Concurrent init requests can both pass the count\u003e0 guard before either commits inserts. Added dedup_vendor_questions() which runs once via oha_vendor_q_dedup_done option flag and removes duplicate rows keeping lowest id per sort_order."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Admin reset respondent tool: enter email + survey type to delete a response so user can re-take",
+                        "notes":  "Found in Convention Survey admin page under each context tab. Deletes row from wp_oha_survey_responses (any is_completed state). AJAX action: oha_convention_reset_response."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "1.4.0",
+                        "type":  "fix",
+                        "summary":  "Convention surveys now appear on Results summary page and Dashboard, not just the dropdown",
+                        "notes":  "get_survey_stats() hardcoded only the 6 legacy survey types. Added convention_2026/vendor/volunteer to the loop. Types with zero responses are skipped."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Removed Analytics admin submenu - redundant with Results; convention surveys not supported in it",
+                        "notes":  "Convention surveys already have [oha_survey_results] shortcode for aggregate charts. Analytics tab only covered legacy hardcoded surveys."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Results page rewritten: WP list table with date, email, answer count columns and inline expand",
+                        "notes":  "Replaced card divs with proper table rows. Detail expand groups answers by page section with red section headers and two-column Q/A table."
                     }
                 ]
 }
