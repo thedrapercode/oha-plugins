@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.4.1",
+    "version":  "1.5.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -225,6 +225,13 @@
                         "type":  "change",
                         "summary":  "Moved Convention 2026 survey cards above hardcoded surveys on the selector page",
                         "notes":  "Order change only in templates/survey-selector.php"
+                    },
+                    {
+                        "date":  "2026-05-30",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Added admin-generated retake links for respondents blocked by the one-email duplicate check",
+                        "notes":  "Admin clicks Retake Link on any Results row; generates a 48-hour single-use token stored as WP transient. Link URL contains only the token, not the email. When user visits the link, their old response is deleted and their email is pre-filled in the survey form. Handler in oha-survey-hub.php: ajax_generate_retake_token(). Token processing in templates/survey-selector.php. Email pre-fill in class-convention-survey.php shortcode()."
                     }
                 ]
 }

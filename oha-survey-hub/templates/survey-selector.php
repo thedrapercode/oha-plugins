@@ -11,6 +11,38 @@ if (!defined('ABSPATH')) {
 // Check if a specific survey is requested via URL parameter
 $requested_survey = isset($_GET['survey']) ? sanitize_text_field($_GET['survey']) : '';
 
+// Process a retake token if present
+$retake_token = isset($_GET['oha_retake']) ? sanitize_text_field($_GET['oha_retake']) : '';
+if ($retake_token) {
+    $retake_data = get_transient('oha_retake_' . $retake_token);
+    if ($retake_data && is_array($retake_data) && !empty($retake_data['email']) && !empty($retake_data['survey_type'])) {
+        delete_transient('oha_retake_' . $retake_token);
+        global $wpdb;
+        $wpdb->delete(
+            $wpdb->prefix . 'oha_survey_responses',
+            ['email' => $retake_data['email'], 'survey_type' => $retake_data['survey_type']],
+            ['%s', '%s']
+        );
+        $type_to_param = [
+            'convention_2026'           => 'convention_attendee',
+            'convention_2026_vendor'    => 'convention_vendor',
+            'convention_2026_volunteer' => 'convention_volunteer',
+        ];
+        $requested_survey = $type_to_param[$retake_data['survey_type']] ?? '';
+        $GLOBALS['oha_survey_retake_email'] = $retake_data['email'];
+    } else {
+        ?>
+        <div class="oha-survey-selector">
+            <div class="oha-selector-header">
+                <h2 class="oha-selector-title">Retake Link Expired</h2>
+                <p class="oha-selector-description">This retake link has already been used or has expired. Please contact the OHA board for a new link.</p>
+            </div>
+        </div>
+        <?php
+        return;
+    }
+}
+
 // Map survey types to shortcodes
 $survey_shortcodes = array(
     'member'                 => '[oha_survey_member direct_link="true"]',

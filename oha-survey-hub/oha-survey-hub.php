@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.4.1
+ * Version: 1.5.0
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.4.1');
+define('OHA_SURVEY_HUB_VERSION', '1.5.0');
 define('OHA_SURVEY_HUB_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OHA_SURVEY_HUB_PLUGIN_FILE', __FILE__);
@@ -66,6 +66,7 @@ class OHA_Survey_Hub {
         add_action('wp_ajax_oha_survey_cleanup_old_responses', array($this, 'ajax_cleanup_old_responses'));
         add_action('wp_ajax_oha_survey_get_stats', array($this, 'ajax_get_stats'));
         add_action('wp_ajax_oha_survey_export', array($this, 'ajax_export_survey'));
+        add_action('wp_ajax_oha_generate_retake_token', array($this, 'ajax_generate_retake_token'));
 
         // Convention survey AJAX handlers
         $convention = new OHA_Convention_Survey();
@@ -761,11 +762,49 @@ class OHA_Survey_Hub {
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Insufficient permissions');
         }
-        
+
         $data_handler = new OHA_Survey_Data();
         $stats = $data_handler->get_survey_stats();
-        
+
         wp_send_json_success($stats);
+    }
+
+    public function ajax_generate_retake_token() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Unauthorized.']);
+        }
+        check_ajax_referer('oha_survey_nonce', 'nonce');
+
+        $email       = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $survey_type = isset($_POST['survey_type']) ? sanitize_key($_POST['survey_type']) : '';
+
+        if (!is_email($email) || !$survey_type) {
+            wp_send_json_error(['message' => 'Invalid data.']);
+        }
+
+        $token = wp_generate_password(32, false, false);
+        set_transient('oha_retake_' . $token, ['email' => $email, 'survey_type' => $survey_type], 48 * HOUR_IN_SECONDS);
+
+        $page_url   = $this->get_survey_selector_url();
+        $retake_url = add_query_arg('oha_retake', $token, $page_url);
+
+        wp_send_json_success(['url' => $retake_url]);
+    }
+
+    private function get_survey_selector_url() {
+        $page_id = (int) get_option('oha_survey_hub_selector_page_id', 0);
+        if ($page_id && get_post_status($page_id) === 'publish') {
+            return get_permalink($page_id);
+        }
+        $page_ids = get_posts(['post_type' => 'page', 'posts_per_page' => -1, 'post_status' => 'publish', 'fields' => 'ids']);
+        foreach ($page_ids as $pid) {
+            $content = get_post_field('post_content', $pid);
+            if (has_shortcode($content, 'oha_survey_selector')) {
+                update_option('oha_survey_hub_selector_page_id', $pid);
+                return get_permalink($pid);
+            }
+        }
+        return home_url('/surveys/');
     }
 }
 

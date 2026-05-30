@@ -550,9 +550,15 @@ class OHA_Convention_Survey {
             OHA_SURVEY_HUB_VERSION,
             true
         );
+        $prefill_email = !empty($GLOBALS['oha_survey_retake_email']) ? $GLOBALS['oha_survey_retake_email'] : '';
+        if ($prefill_email) {
+            unset($GLOBALS['oha_survey_retake_email']);
+        }
+
         wp_localize_script('oha-convention-survey-script', 'oha_conv_ajax', [
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce'    => wp_create_nonce('oha_survey_nonce'),
+            'ajax_url'     => admin_url('admin-ajax.php'),
+            'nonce'        => wp_create_nonce('oha_survey_nonce'),
+            'retake_email' => $prefill_email,
         ]);
 
         global $wpdb;
@@ -611,7 +617,7 @@ class OHA_Convention_Survey {
                             <label for="oha-conv-email" class="oha-field-label">
                                 Email Address <span class="oha-required-indicator">*</span>
                             </label>
-                            <input type="email" id="oha-conv-email" name="survey_email" class="oha-field-input" required>
+                            <input type="email" id="oha-conv-email" name="survey_email" class="oha-field-input" value="<?php echo esc_attr($prefill_email); ?>" required>
                             <div class="oha-field-help">Required to prevent duplicate responses. Your email will not be linked to your individual answers.</div>
                         </div>
                     </div>

@@ -181,6 +181,37 @@ class OHA_Survey_Admin {
         ?>
         <div class="wrap oha-survey-admin">
             <h1><?php _e('Survey Results', 'oha-survey-hub'); ?></h1>
+            <script>
+            var ohaSurveyAdminNonce = <?php echo wp_json_encode(wp_create_nonce('oha_survey_nonce')); ?>;
+            (function($){
+                $(document).on('click', '.oha-gen-retake-link', function(){
+                    var btn = $(this);
+                    var email = btn.data('email');
+                    var surveyType = btn.data('survey-type');
+                    btn.prop('disabled', true).text('Generating...');
+                    $.post(ajaxurl, {
+                        action: 'oha_generate_retake_token',
+                        nonce: ohaSurveyAdminNonce,
+                        email: email,
+                        survey_type: surveyType
+                    }, function(resp){
+                        btn.prop('disabled', false).text('Retake Link');
+                        btn.closest('tr').next('.oha-retake-url-row').remove();
+                        if (resp.success) {
+                            var urlRow = $('<tr class="oha-retake-url-row"><td colspan="5" style="background:#f0f6fc;padding:8px 12px;border-left:3px solid #2271b1;">' +
+                                '<strong>Retake Link</strong> <span style="color:#666;font-weight:normal;">(single-use, expires in 48 hours)</span><br>' +
+                                '<input type="text" readonly value="' + $('<span>').text(resp.data.url).html() + '" ' +
+                                'style="width:100%;margin-top:6px;font-family:monospace;font-size:12px;" onclick="this.select();">' +
+                                '</td></tr>');
+                            btn.closest('tr').after(urlRow);
+                            urlRow.find('input').trigger('click');
+                        } else {
+                            alert('Error: ' + (resp.data && resp.data.message ? resp.data.message : 'Unknown error'));
+                        }
+                    });
+                });
+            }(jQuery));
+            </script>
             
             <div class="oha-survey-filter">
                 <form method="get" action="">
@@ -274,6 +305,10 @@ class OHA_Survey_Admin {
                             <td>
                                 <button type="button" class="button button-small oha-toggle-response"
                                     data-response-id="<?php echo esc_attr($response->id); ?>">View Details</button>
+                                <button type="button" class="button button-small oha-gen-retake-link"
+                                    data-email="<?php echo esc_attr($response->email); ?>"
+                                    data-survey-type="<?php echo esc_attr($survey_type); ?>"
+                                    style="margin-left:4px;">Retake Link</button>
                             </td>
                         </tr>
                         <tr class="oha-response-detail-row">
