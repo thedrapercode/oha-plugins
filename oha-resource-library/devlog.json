@@ -1,0 +1,62 @@
+{
+    "plugin":  "OHA Resource Library",
+    "version":  "0.5.0",
+    "entries":  [
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "fix",
+                        "summary":  "Fixed membership check to use oha_member_id usermeta instead of oha_member WP role",
+                        "notes":  "Board Hub does not assign oha_member WP role. Canonical gate is oha_member_id usermeta (non-empty) plus membership_trial_end not expired. Previous check blocked all real members from accessing resources."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added resource_type taxonomy with Document, Tutorial, Video, Meeting Recording, Template terms",
+                        "notes":  "Registered alongside existing audience taxonomy. Default terms seeded on init via wp_insert_term with term_exists guard. show_in_rest=true for future app REST API."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added video embed URL meta field; members see embedded player for video resource types",
+                        "notes":  "Admin meta box accepts YouTube or Vimeo URL stored as _oha_embed_url. wp_oembed_get() renders embed on single resource page. Card in grid shows Watch button and play overlay when embed URL is set."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added resource type badge and video play overlay on grid cards",
+                        "notes":  "Each card shows resource_type term as pill badge in card meta-top row. Video and Meeting Recording cards show play icon placeholder thumbnail and red hover overlay."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "feature",
+                        "summary":  "Added non-member notice banner on resource grid with join/login link",
+                        "notes":  "Banner appears above grid for logged-out or non-member users. Cards still visible but CTA button shows Members Only and points to oha_rl_join_url setting."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "change",
+                        "summary":  "Replaced raw text filter inputs with populated audience and resource_type select dropdowns",
+                        "notes":  "Previous inputs required manually typed comma-separated slugs. Dropdowns now populate from get_terms() with hide_empty=true. Clear link shown when any filter active. Single slug per filter (no multi-select needed yet)."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "change",
+                        "summary":  "Full CSS rewrite to OHA dark theme using Kadence global palette tokens",
+                        "notes":  "Replaced white/blue light theme. Local token map on .oha-rl-wrap uses --global-palette* vars with fallbacks. Black cards on maroon background, red borders, red buttons. Matches pattern used by contact-router, job-board, passport-hub."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "0.5.0",
+                        "type":  "change",
+                        "summary":  "Moved settings page from Settings menu to Resources CPT submenu",
+                        "notes":  "Changed add_options_page to add_submenu_page under edit.php?post_type=oha_resource. Settings now accessible at Resources > Settings in WP admin sidebar."
+                    }
+                ]
+}
