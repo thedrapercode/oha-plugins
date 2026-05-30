@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.12.3",
+    "version":  "2.13.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -848,6 +848,55 @@
                         "type":  "change",
                         "summary":  "Revert booth layers to original circle pins; remove booth-vendor-box label layer",
                         "notes":  "Removed booth-vendor-box symbol layer and all vendor-specific layer filters. Restored booth-bg, booth-icon, booth-label, and click handlers to original state (no vendor filtering). Vendor type color stays at #e0f908 and auto-floor-for-type feature stays. Vendor name label on pin (zoom 12+) restored via original booth-label step expression."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "change",
+                        "summary":  "Retheme CSS to Kadence site palette: maroon/black cards, OHA red accents, scoped CSS vars",
+                        "notes":  "Moved CSS vars from :root to .oha-map-wrapper. All blue-navy hardcoded values replaced with global-palette vars."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "feature",
+                        "summary":  "Replace Ohio state outline with accurate 55-point polygon tracing real state borders",
+                        "notes":  "Previous outline was 27 rectangular points. New coords trace Lake Erie (Sandusky Bay dip), Ohio River curves (Gallipolis, Portsmouth, Cincinnati), PA/Indiana straight borders."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "feature",
+                        "summary":  "Region divider lines and fills fade out when zoomed past county level (zoom 9-10)",
+                        "notes":  "Uses MapLibre interpolate expressions on line-opacity and fill-opacity. State outline stays visible at all zooms."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "change",
+                        "summary":  "Ohio state outline color changed from orange #ff6b35 to Kadence red #ad3119",
+                        "notes":  "Line width and opacity also interpolated by zoom level."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "change",
+                        "summary":  "Clicking a blank region on the map now zooms into that region instead of opening info panel",
+                        "notes":  "Removed showRegionInfoPanel call from region-fills click handler. Now calls selectRegion() directly."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "change",
+                        "summary":  "Cluster circle colors updated from hardcoded orange to Kadence red palette",
+                        "notes":  "Cluster colors: #ad3119 / #8a2514 / #680400. Stroke updated to match."
+                    },
+                    {
+                        "date":  "2026-05-29",
+                        "version":  "2.13.0",
+                        "type":  "fix",
+                        "summary":  "All Ohio fitBounds north bound corrected to 42.40 to include Lake Erie / PA corner",
+                        "notes":  "Previous bound was 41.98 which cut off the NE corner of Ohio at the PA border."
                     }
                 ]
 }

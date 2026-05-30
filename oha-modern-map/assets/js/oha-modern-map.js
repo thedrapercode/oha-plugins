@@ -208,18 +208,22 @@
                 data: data,
             });
 
-            // Subtle always-on fill (unselected state)
+            // Subtle always-on fill (unselected state) — fades out when zoomed in
             map.addLayer({
                 id:     'region-fills',
                 type:   'fill',
                 source: 'ohio-regions',
                 paint: {
                     'fill-color':   ['get', 'fillColor'],
-                    'fill-opacity': 0.04,
+                    'fill-opacity': ['interpolate', ['linear'], ['zoom'],
+                        7, 0.06,
+                        9, 0.03,
+                        10, 0,
+                    ],
                 },
             });
 
-            // Highlighted fill when a region is selected (separate layer, toggled by filter)
+            // Highlighted fill when a region is selected — fades later than base fill
             map.addLayer({
                 id:     'region-fills-selected',
                 type:   'fill',
@@ -227,11 +231,15 @@
                 filter: ['==', ['get', 'slug'], ''],
                 paint: {
                     'fill-color':   ['get', 'fillColor'],
-                    'fill-opacity': 0.22,
+                    'fill-opacity': ['interpolate', ['linear'], ['zoom'],
+                        8,  0.22,
+                        10, 0.10,
+                        11, 0,
+                    ],
                 },
             });
 
-            // Hover highlight
+            // Hover highlight — fades with fills
             map.addLayer({
                 id:     'region-fills-hover',
                 type:   'fill',
@@ -239,44 +247,56 @@
                 filter: ['==', ['get', 'slug'], ''],
                 paint: {
                     'fill-color':   ['get', 'fillColor'],
-                    'fill-opacity': 0.12,
+                    'fill-opacity': ['interpolate', ['linear'], ['zoom'],
+                        7, 0.12,
+                        10, 0,
+                    ],
                 },
             });
 
-            // Outlines — always visible
+            // Region divider outlines — fade out when zoomed past county level
             map.addLayer({
-                id:   'region-outlines',
-                type: 'line',
+                id:     'region-outlines',
+                type:   'line',
                 source: 'ohio-regions',
                 paint: {
                     'line-color':   ['get', 'outlineColor'],
-                    'line-width':   2,
-                    'line-opacity': 0.65,
+                    'line-width':   1.5,
+                    'line-opacity': ['interpolate', ['linear'], ['zoom'],
+                        7,  0.70,
+                        9,  0.35,
+                        10, 0,
+                    ],
                 },
             });
 
-            // Region name labels — visible at low zoom only
+            // Region name labels — visible only when zoomed out
             map.addLayer({
                 id:   'region-labels',
                 type: 'symbol',
                 source: 'ohio-regions',
                 layout: {
-                    'text-field':             ['get', 'name'],
-                    'text-font':              ['Open Sans Bold', 'Arial Unicode MS Bold'],
-                    'text-size':              13,
-                    'text-letter-spacing':    0.05,
-                    'text-transform':         'uppercase',
-                    'symbol-placement':       'point',
-                    'text-allow-overlap':     false,
-                    'text-ignore-placement':  false,
+                    'text-field':            ['get', 'name'],
+                    'text-font':             ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size':             13,
+                    'text-letter-spacing':   0.05,
+                    'text-transform':        'uppercase',
+                    'symbol-placement':      'point',
+                    'text-allow-overlap':    false,
+                    'text-ignore-placement': false,
                 },
                 paint: {
                     'text-color':      '#ffffff',
-                    'text-opacity':    0.7,
+                    'text-opacity':    ['interpolate', ['linear'], ['zoom'],
+                        6, 0.0,
+                        7, 0.7,
+                        9, 0.5,
+                        10, 0,
+                    ],
                     'text-halo-color': 'rgba(0,0,0,0.6)',
                     'text-halo-width': 2,
                 },
-                maxzoom: 9,
+                maxzoom: 10,
             });
 
             // Region hover events
@@ -297,14 +317,14 @@
                 map.getCanvas().style.cursor = '';
             });
 
-            // Click on region fill (not on a haunt marker) -> show region info panel
+            // Click on region fill (not on a haunt marker) -> zoom into that region
             map.on('click', 'region-fills', (e) => {
                 if (!e.features || !e.features.length) return;
                 const slug = e.features[0].properties.slug;
                 const hauntHits = map.queryRenderedFeatures(e.point, { layers: ['haunts-unclustered'] });
                 if (!hauntHits.length) {
-                    // Derive $wrapper from mapId since addRegionLayers has no $wrapper param
-                    this.showRegionInfoPanel($('#' + mapId), slug);
+                    const $wrapper = $('#' + mapId);
+                    this.selectRegion(mapId, slug, $wrapper);
                 }
             });
 
@@ -321,9 +341,17 @@
                         type:   'line',
                         source: 'ohio-outline',
                         paint: {
-                            'line-color':   '#ff6b35',
-                            'line-width':   2.5,
-                            'line-opacity': 0.8,
+                            'line-color':   '#ad3119',
+                            'line-width':   ['interpolate', ['linear'], ['zoom'],
+                                5, 1.5,
+                                8, 2.5,
+                                12, 1.5,
+                            ],
+                            'line-opacity': ['interpolate', ['linear'], ['zoom'],
+                                5,  0.6,
+                                8,  0.9,
+                                14, 0.4,
+                            ],
                         },
                     });
                 } catch (e) {
@@ -356,8 +384,8 @@
                     });
                 }
             } else {
-                // Reset to all Ohio
-                map.fitBounds([[-84.82, 38.38], [-80.52, 41.98]], { padding: pad, speed: 1.2 });
+                // Reset to all Ohio — bounds match the state outline extent
+                map.fitBounds([[-84.82, 38.40], [-80.52, 42.40]], { padding: pad, speed: 1.2 });
             }
 
             // Sync pill UI (both desktop and mobile sheet)
@@ -397,13 +425,13 @@
                     paint: {
                         'circle-color': [
                             'step', ['get', 'point_count'],
-                            '#ff6b35', 10, '#e55a2b', 50, '#c0392b',
+                            '#ad3119', 10, '#8a2514', 50, '#680400',
                         ],
                         'circle-radius': [
                             'step', ['get', 'point_count'],
                             18, 10, 24, 50, 32,
                         ],
-                        'circle-stroke-color': 'rgba(255,107,53,0.4)',
+                        'circle-stroke-color': 'rgba(173,49,25,0.4)',
                         'circle-stroke-width': 4,
                     },
                 });

@@ -330,42 +330,64 @@ class OHA_Map_Regions {
      */
     public static function get_ohio_outline_geojson() {
         $coords = [
-            // Start at SW corner (Indiana/Ohio/Kentucky area)
-            [-84.820, 38.403],
-            // Indiana border -- north
-            [-84.820, 40.360],
-            [-84.820, 41.760],
-            // Michigan border (jogs at Williams/Fulton)
-            [-84.437, 41.760],
-            [-84.437, 41.970],
-            // Lake Erie coastline east (simplified straight line to PA border area)
-            [-83.120, 41.970],
-            [-82.520, 41.500],
-            [-82.180, 41.650],
-            [-81.480, 41.970],
-            [-80.520, 41.970],
-            // Pennsylvania border south
-            [-80.520, 40.640],
-            [-80.520, 39.720],
-            // West Virginia / Ohio River (simplified waypoints)
-            [-80.520, 39.400],
-            [-80.860, 39.090],
-            [-81.090, 38.720],
-            [-81.350, 38.590],
-            [-81.650, 38.610],
-            [-82.000, 38.700],
-            [-82.200, 38.620],
-            [-82.580, 38.420],
-            [-82.850, 38.380],
-            // Continue Ohio River west
-            [-83.270, 38.620],
-            [-83.500, 38.690],
-            [-83.860, 38.760],
-            [-84.240, 38.800],
-            [-84.550, 38.990],
-            [-84.820, 38.790],
-            // Indiana border south back to start
-            [-84.820, 38.403],
+            // SW – Indiana / Ohio River (near Harrison OH / Lawrenceburg IN)
+            [-84.820, 38.770],
+            // Indiana border north (nearly straight ~84.82°W)
+            [-84.820, 39.100],
+            [-84.820, 39.500],
+            [-84.820, 40.000],
+            [-84.820, 40.369],
+            [-84.820, 40.800],
+            [-84.820, 41.250],
+            [-84.806, 41.696],  // Indiana/Ohio corner (meets Michigan border)
+            // Michigan–Ohio border going east (rises toward Lake Erie)
+            [-84.437, 41.696],  // jog east at Williams/Fulton county line
+            [-83.880, 41.720],  // approaching Toledo
+            [-83.454, 41.726],  // Toledo / Maumee Bay area
+            // Lake Erie coast heading east-northeast
+            [-83.200, 41.700],
+            [-82.900, 41.710],
+            [-82.710, 41.440],  // Sandusky Bay dip (Sandusky/Cedar Point area)
+            [-82.500, 41.440],  // south shore of Sandusky Bay
+            [-82.390, 41.550],  // east end of Sandusky Bay
+            [-82.200, 41.530],  // near Lorain
+            [-81.900, 41.510],  // near Rocky River / Cleveland west
+            [-81.700, 41.490],  // Cleveland
+            [-81.400, 41.570],  // east of Cleveland
+            [-81.100, 41.720],  // Mentor / Painesville area
+            [-80.860, 41.860],  // Ashtabula area
+            [-80.700, 42.020],
+            [-80.565, 42.200],
+            [-80.519, 42.327],  // NE – Pennsylvania / Lake Erie
+            // Pennsylvania border south (straight line ~80.519°W)
+            [-80.519, 41.977],
+            [-80.519, 41.500],
+            [-80.519, 41.000],
+            [-80.519, 40.638],  // PA / WV / OH tripoint at Ohio River
+            // Ohio River heading SW – WV border
+            [-80.600, 40.420],
+            [-80.730, 40.200],
+            [-80.870, 40.010],
+            [-81.020, 39.760],
+            [-81.200, 39.550],
+            [-81.430, 39.380],
+            [-81.640, 39.240],
+            [-81.900, 39.040],  // near Gallipolis OH
+            [-82.060, 38.870],
+            [-82.190, 38.760],
+            [-82.390, 38.560],  // near Point Pleasant WV
+            [-82.590, 38.420],  // OH / WV / KY tripoint (Huntington WV / Ironton OH)
+            // Ohio River heading west – KY border
+            [-82.720, 38.510],
+            [-82.960, 38.680],
+            [-83.080, 38.730],  // near Portsmouth OH
+            [-83.380, 38.710],
+            [-83.680, 38.730],
+            [-83.990, 38.830],
+            [-84.290, 39.000],
+            [-84.530, 39.090],  // near Cincinnati
+            [-84.700, 38.980],
+            [-84.820, 38.770],  // back to SW corner
         ];
         $coords[] = $coords[0]; // close ring
         return wp_json_encode([
