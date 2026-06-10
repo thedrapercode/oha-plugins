@@ -2,6 +2,23 @@
 if (!defined('ABSPATH')) exit;
 
 /**
+ * Returns the correct Stripe payment link based on booth count and mode.
+ * Uses the 2-booth link when booths >= 2 and one is configured; falls back to the standard link.
+ */
+function oha_vh_get_stripe_payment_link( $booths, $stripe_mode ) {
+    $booths = max( 1, intval( $booths ) );
+    if ( $booths >= 2 ) {
+        $link = $stripe_mode === 'test'
+            ? get_option( 'oha_vhcpt_stripe_link_test_2booth', '' )
+            : get_option( 'oha_vhcpt_stripe_link_live_2booth', '' );
+        if ( ! empty( $link ) ) return $link;
+    }
+    return $stripe_mode === 'test'
+        ? get_option( 'oha_vhcpt_stripe_link_test', '' )
+        : get_option( 'oha_vhcpt_stripe_link_live', '' );
+}
+
+/**
  * Append entry to vendor application history
  * 
  * CRITICAL: Safe parsing - handles array, JSON, or serialized formats
@@ -572,16 +589,13 @@ add_action('wp_ajax_oha_send_vendor_email', function() {
         ], $base_url);
     }
     
-    // Build payment link
+    // Build payment link — select 1-booth or 2-booth Stripe link based on quantity.
     $stripe_mode = get_option('oha_vhcpt_stripe_mode', 'test');
-    $payment_link_base = $stripe_mode === 'test' 
-        ? get_option('oha_vhcpt_stripe_link_test', '') 
-        : get_option('oha_vhcpt_stripe_link_live', '');
-    
+    $payment_link_base = oha_vh_get_stripe_payment_link( $booths, $stripe_mode );
+
     $payment_link = add_query_arg([
-        'prefilled_email' => $vendor_email,
+        'prefilled_email'     => $vendor_email,
         'client_reference_id' => $app_id,
-        'quantity' => $booths,
     ], $payment_link_base);
     
     // Get email template based on option
@@ -858,10 +872,11 @@ add_action('wp_ajax_oha_get_vendor_details', function() {
         'phone' => get_post_meta($app_id, 'phone', true),
         'website' => get_post_meta($app_id, 'website', true),
         'product_type' => get_post_meta($app_id, 'product_type', true),
-        'booths' => get_post_meta($app_id, 'booths', true) ?: 1,
+        'booths'        => get_post_meta($app_id, 'booths', true) ?: 1,
+        'tables_needed' => get_post_meta($app_id, 'tables_needed', true) ?: 0,
         'need_electric' => get_post_meta($app_id, 'need_electric', true) ? true : false,
-        'need_air' => get_post_meta($app_id, 'need_air', true) ? true : false,
-        'need_table' => get_post_meta($app_id, 'need_table', true) ? true : false,
+        'need_air'      => get_post_meta($app_id, 'need_air', true) ? true : false,
+        'need_table'    => get_post_meta($app_id, 'need_table', true) ? true : false,
         'sponsor' => get_post_meta($app_id, 'sponsor', true) ? true : false,
         'vendor_private_notes' => get_post_meta($app_id, 'vendor_private_notes', true) ?: '',
         'returning_vendor'     => (bool) get_post_meta($app_id, 'returning_vendor', true),

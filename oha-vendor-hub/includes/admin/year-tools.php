@@ -403,7 +403,9 @@ add_action('wp_ajax_oha_vh_return_invite_send', function() {
         // Copy core fields from prior-year application.
         $copy_keys = ['first_name','last_name','company_name','email','phone',
                       'address_street','address_city','address_state','address_zip',
-                      'website','product_type','booths','sponsor','need_electric','need_air','need_table'];
+                      'website','product_type','booths','tables_needed','sponsor',
+                      'need_electric','need_air','need_table','booth_preference',
+                      '_company_logo_id','_company_logo_url'];
 
         $company   = get_post_meta($old_post_id, 'company_name', true);
         $first     = get_post_meta($old_post_id, 'first_name', true);

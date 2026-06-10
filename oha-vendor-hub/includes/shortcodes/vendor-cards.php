@@ -35,6 +35,8 @@ function oha_vendor_cards_shortcode( $atts ) {
         $ph_url = get_option( 'oha_vhcpt_cards_placeholder_url', '' );
     }
 
+    $active_year = intval( get_option( 'oha_vhcpt_active_year', date('Y') ) );
+
     $vendors = get_posts( [
         'post_type'      => 'vendor_application',
         'posts_per_page' => -1,
@@ -48,6 +50,12 @@ function oha_vendor_cards_shortcode( $atts ) {
             [
                 'key'     => 'company_name',
                 'compare' => 'EXISTS',
+            ],
+            [
+                'key'     => '_convention_year',
+                'value'   => $active_year,
+                'compare' => '=',
+                'type'    => 'NUMERIC',
             ],
         ],
         'orderby'  => 'meta_value',

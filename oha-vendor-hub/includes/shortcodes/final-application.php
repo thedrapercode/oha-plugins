@@ -990,19 +990,13 @@ function oha_vhcpt_build_stripe_url($args) {
     ];
     
     $args = wp_parse_args($args, $defaults);
-    
-    $payment_link_test = get_option('oha_vhcpt_stripe_link_test', '');
-    $payment_link_live = get_option('oha_vhcpt_stripe_link_live', '');
-    
-    // Debug logging
-    if (current_user_can('manage_options')) {
-        error_log('OHA Stripe URL Builder:');
-        error_log('Mode: ' . $args['mode']);
-        error_log('Test Link: ' . ($payment_link_test ? 'SET' : 'EMPTY'));
-        error_log('Live Link: ' . ($payment_link_live ? 'SET' : 'EMPTY'));
-    }
-    
-    $base_url = ($args['mode'] === 'live') ? $payment_link_live : $payment_link_test;
+
+    // Select 1-booth or 2-booth Stripe link based on quantity.
+    $base_url = function_exists('oha_vh_get_stripe_payment_link')
+        ? oha_vh_get_stripe_payment_link( $args['booths'], $args['mode'] )
+        : ( $args['mode'] === 'live'
+            ? get_option('oha_vhcpt_stripe_link_live', '')
+            : get_option('oha_vhcpt_stripe_link_test', '') );
     
     if (empty($base_url)) {
         if (current_user_can('manage_options')) {

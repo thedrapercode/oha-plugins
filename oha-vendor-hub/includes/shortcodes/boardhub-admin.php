@@ -1091,10 +1091,11 @@ add_shortcode('oha_vendor_boardhub', function() {
                     $conv_year  = get_post_meta($app_id, '_convention_year', true);
                     $perm_id    = get_post_meta($app_id, '_vendor_permanent_id', true) ?: $app_id;
                     
-                    // Checkboxes
+                    // Booth requirements
+                    $tables_needed = get_post_meta($app_id, 'tables_needed', true);
                     $need_electric = get_post_meta($app_id, 'need_electric', true);
-                    $need_air = get_post_meta($app_id, 'need_air', true);
-                    $need_table = get_post_meta($app_id, 'need_table', true);
+                    $need_air      = get_post_meta($app_id, 'need_air', true);
+                    $need_table    = get_post_meta($app_id, 'need_table', true);
                     
                     // Logo
                     $logo_id = get_post_meta($app_id, '_company_logo_id', true);
@@ -1159,6 +1160,10 @@ add_shortcode('oha_vendor_boardhub', function() {
                                     <div class="oha-info-row">
                                         <span class="oha-info-label">Booths:</span>
                                         <span class="oha-info-value"><?php echo esc_html($booths); ?></span>
+                                    </div>
+                                    <div class="oha-info-row">
+                                        <span class="oha-info-label">Tables:</span>
+                                        <span class="oha-info-value"><?php echo $tables_needed !== '' ? esc_html($tables_needed) : '—'; ?></span>
                                     </div>
                                     <div class="oha-info-row">
                                         <span class="oha-info-label">Electric:</span>
@@ -1584,6 +1589,7 @@ add_shortcode('oha_vendor_boardhub', function() {
             + (v.vendor_private_notes ? '<div class="oha-full-width" style="background:#fffbe6;border:1px solid #e6c200;border-left:4px solid #e6c200;border-radius:4px;padding:0.75em 1em;margin-top:0.5em"><h3 style="margin:0 0 0.4em;font-size:0.9em;text-transform:uppercase;letter-spacing:0.05em;color:#7a6000">Note from Vendor (Board Only)</h3><p style="margin:0;white-space:pre-wrap">' + escHtml(v.vendor_private_notes) + '</p></div>' : '')
             + '<div><h3>\uD83C\uDFEA Booth</h3>'
             + '<p><strong>Booths:</strong> ' + escHtml(v.booths) + '</p>'
+            + '<p><strong>Tables Needed:</strong> ' + (v.tables_needed !== undefined && v.tables_needed !== '' ? escHtml(String(v.tables_needed)) : '&mdash;') + '</p>'
             + '<p><strong>Returning Vendor:</strong> ' + (v.returning_vendor ? 'Yes' : 'No') + '</p>'
             + '<p><strong>Electric:</strong> ' + (v.need_electric ? '\u2705' : '\u274C') + '</p>'
             + '<p><strong>Air:</strong> ' + (v.need_air ? '\u2705' : '\u274C') + '</p>'

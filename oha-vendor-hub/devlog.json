@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.10.3",
+    "version":  "3.12.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -316,6 +316,48 @@
                         "type":  "change",
                         "summary":  "Removed hardcoded oha_vendor_board_hub convention_2026 tab hooks from Board Hub integration",
                         "notes":  "Tab is now added manually via Board Hub Settings tab manager. Use shortcode [oha_vendor_boardhub]."
+                    },
+                    {
+                        "date":  "2026-06-10",
+                        "version":  "3.12.0",
+                        "type":  "feature",
+                        "summary":  "tables_needed and need_electric required fields added to public intake form",
+                        "notes":  "Both fields validated server-side. need_electric is yes/no radio. tables_needed is integer input."
+                    },
+                    {
+                        "date":  "2026-06-10",
+                        "version":  "3.12.0",
+                        "type":  "feature",
+                        "summary":  "Logo upload moved into initial intake form with live preview and public badge",
+                        "notes":  "Reuses oha_vh_handle_logo_upload from vendor-edit.php. Removed deferred logo notice callout."
+                    },
+                    {
+                        "date":  "2026-06-10",
+                        "version":  "3.12.0",
+                        "type":  "feature",
+                        "summary":  "Vendor card grid filtered by active convention year only",
+                        "notes":  "Reads oha_vhcpt_active_year option. Prevents 2026 paid vendors showing in 2027 grid."
+                    },
+                    {
+                        "date":  "2026-06-10",
+                        "version":  "3.12.0",
+                        "type":  "feature",
+                        "summary":  "Separate 2-booth Stripe payment link support via oha_vh_get_stripe_payment_link() helper",
+                        "notes":  "New options: oha_vhcpt_stripe_link_test_2booth and oha_vhcpt_stripe_link_live_2booth. Falls back to 1-booth link if unset."
+                    },
+                    {
+                        "date":  "2026-06-10",
+                        "version":  "3.12.0",
+                        "type":  "feature",
+                        "summary":  "year attribute added to [oha_vendor_status_table] for year-specific filtering",
+                        "notes":  "Usage: [oha_vendor_status_table year=2027]. Heading updates to show year when filtered."
+                    },
+                    {
+                        "date":  "2026-06-10",
+                        "version":  "3.12.0",
+                        "type":  "fix",
+                        "summary":  "Return Invite tool now copies logo, tables_needed, and booth_preference from prior year",
+                        "notes":  "Added _company_logo_id, _company_logo_url, tables_needed, and booth_preference to copy_keys array."
                     }
                 ]
 }

@@ -107,6 +107,12 @@ function oha_vhcpt_settings_page(){
         if (isset($_POST['stripe_link_live'])) {
             update_option('oha_vhcpt_stripe_link_live', esc_url_raw($_POST['stripe_link_live']));
         }
+        if (isset($_POST['stripe_link_test_2booth'])) {
+            update_option('oha_vhcpt_stripe_link_test_2booth', esc_url_raw($_POST['stripe_link_test_2booth']));
+        }
+        if (isset($_POST['stripe_link_live_2booth'])) {
+            update_option('oha_vhcpt_stripe_link_live_2booth', esc_url_raw($_POST['stripe_link_live_2booth']));
+        }
         if (isset($_POST['stripe_mode'])) {
             update_option('oha_vhcpt_stripe_mode', sanitize_text_field($_POST['stripe_mode']));
         }

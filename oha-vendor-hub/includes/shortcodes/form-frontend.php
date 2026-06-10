@@ -112,6 +112,17 @@ add_shortcode('oha_vendor_form', function(){
         $returning_vendor = isset($_POST['returning_vendor']) ? 1 : 0;
         $booth_preference = sanitize_textarea_field(wp_unslash($_POST['booth_preference'] ?? ''));
 
+        // Tables needed and electrical access — required, not in $fields loop.
+        $tables_needed = max(0, intval(wp_unslash($_POST['tables_needed'] ?? -1)));
+        $need_electric = sanitize_text_field(wp_unslash($_POST['need_electric'] ?? ''));
+
+        if (!isset($_POST['tables_needed'])) {
+            $errors[] = 'The field "Number of tables needed" is required.';
+        }
+        if (!in_array($need_electric, ['yes', 'no'], true)) {
+            $errors[] = 'Please indicate whether you need electrical access at your booth.';
+        }
+
         if (!empty($errors)) {
             $msg = '<div class="oha-vh-error">Please correct the following errors:<ul>';
             foreach ($errors as $err) {
@@ -157,6 +168,13 @@ add_shortcode('oha_vendor_form', function(){
                     update_post_meta($post_id, 'returning_vendor', $returning_vendor);
                     if (!empty($booth_preference)) {
                         update_post_meta($post_id, 'booth_preference', $booth_preference);
+                    }
+                    update_post_meta($post_id, 'tables_needed', $tables_needed);
+                    update_post_meta($post_id, 'need_electric', $need_electric === 'yes' ? 1 : 0);
+
+                    // Handle optional logo upload.
+                    if (!empty($_FILES['vendor_logo']['name']) && function_exists('oha_vh_handle_logo_upload')) {
+                        oha_vh_handle_logo_upload($post_id);
                     }
 
                     update_post_meta($post_id, '_oha_status', 'Submitted');
@@ -232,10 +250,6 @@ add_shortcode('oha_vendor_form', function(){
     .oha-vh-badge-public { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #1a7a3a; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
     .oha-vh-badge-private { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #555; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
     .oha-vh-hint { display: block; font-size: 0.8em; color: #666; margin-top: 4px; line-height: 1.4; }
-    .oha-vh-logo-notice { background: #f0f6ff; border: 1px solid #b8d4f5; border-left: 4px solid #1159af; border-radius: 4px; padding: 1em 1.25em; margin-bottom: 2em; }
-    .oha-vh-logo-notice p { margin: 0 0 0.5em; font-size: 0.9em; line-height: 1.5; }
-    .oha-vh-logo-notice p:last-child { margin-bottom: 0; }
-    .oha-vh-logo-notice strong { color: #1159af; }
     .oha-vh-req { color: #b32020; }
     .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
     .oha-vh-booth-notice { background: #fff8f0; border: 1px solid #f0c070; border-left: 4px solid #c87000; border-radius: 4px; padding: 1em 1.25em; margin-bottom: 1.25em; }
@@ -243,7 +257,7 @@ add_shortcode('oha_vendor_form', function(){
     .oha-vh-booth-notice p:last-child { margin-bottom: 0; }
     </style>
 
-    <form class="oha-vh-form" method="post">
+    <form class="oha-vh-form" method="post" enctype="multipart/form-data">
         <?php wp_nonce_field('oha_vhcpt_submit', 'oha_vhcpt_nonce'); ?>
 
         <!-- Honeypot -->
@@ -262,6 +276,12 @@ add_shortcode('oha_vendor_form', function(){
             <?php $render_field('company_name', 'Your business or brand name as it will appear publicly. Use your vendor name here - not your personal name.'); ?>
             <?php $render_field('website', 'Your business website or Facebook page. Enter the full address including https:// -- for example: https://www.yourbusiness.com or https://www.facebook.com/yourpage. Leave blank if you do not have one.'); ?>
             <?php $render_field('product_type', 'Describe what you will be selling at the convention. This description appears on your public vendor card - be specific so attendees can find you.'); ?>
+            <div class="oha-vh-row">
+                <label for="vendor_logo">Company Logo <span class="oha-vh-badge-public">Shown Publicly</span></label>
+                <input type="file" id="vendor_logo" name="vendor_logo" accept="image/jpeg,image/png,image/gif">
+                <span class="oha-vh-hint">Your logo appears on your vendor card, the convention map, and in the convention app. JPG or PNG recommended, max 5MB. Optional now - you can update it at any time via the edit link sent after your application is reviewed.</span>
+                <img id="oha-intake-logo-preview" src="" alt="" style="max-width:160px;max-height:160px;display:none;margin-top:0.75em;border:1px solid #ddd;border-radius:4px;object-fit:contain;">
+            </div>
         </div>
 
         <?php /* ── SECTION 2: CONTACT INFORMATION ── */ ?>
@@ -286,6 +306,19 @@ add_shortcode('oha_vendor_form', function(){
                 <p class="oha-vh-section-title">Convention Details</p>
             </div>
             <?php $render_field('booths', 'Each booth space is 10x10. Contact us if you need clarification before submitting.'); ?>
+            <div class="oha-vh-row">
+                <label for="tables_needed">Number of tables needed <span class="oha-vh-req">*</span></label>
+                <input type="number" id="tables_needed" name="tables_needed" value="0" min="0" max="10" required>
+                <span class="oha-vh-hint">Enter the number of tables you need at your booth. Enter 0 if you are bringing your own or do not need any.</span>
+            </div>
+            <div class="oha-vh-row">
+                <label for="need_electric">Do you need electrical access at your booth? <span class="oha-vh-req">*</span></label>
+                <select id="need_electric" name="need_electric" required>
+                    <option value="">Select...</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
             <?php $render_field('sponsor'); ?>
         </div>
 
@@ -310,13 +343,6 @@ add_shortcode('oha_vendor_form', function(){
             </div>
         </div>
 
-        <?php /* ── LOGO NOTICE ── */ ?>
-        <div class="oha-vh-logo-notice">
-            <p><strong>A company logo is strongly preferred.</strong></p>
-            <p>Your logo appears next to your business name on the vendor listing, the convention map, and in the convention app. Vendors with a logo receive significantly more visibility than those without one.</p>
-            <p>You do not need to upload a logo now. After your application is reviewed and approved, you will receive a secure link by email to update your profile and upload your logo at any time.</p>
-        </div>
-
         <?php /* ── SECTION 5: PRIVATE NOTES ── */ ?>
         <div class="oha-vh-section">
             <div class="oha-vh-section-head">
@@ -333,6 +359,25 @@ add_shortcode('oha_vendor_form', function(){
     </form>
 
     <script>
+    (function(){
+        var logoInput   = document.getElementById('vendor_logo');
+        var logoPreview = document.getElementById('oha-intake-logo-preview');
+        if (logoInput && logoPreview) {
+            logoInput.addEventListener('change', function(){
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        logoPreview.src = e.target.result;
+                        logoPreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    logoPreview.src = '';
+                    logoPreview.style.display = 'none';
+                }
+            });
+        }
+    })();
     (function(){
         var form = document.querySelector('.oha-vh-form');
         var btn  = document.getElementById('oha-submit-btn');

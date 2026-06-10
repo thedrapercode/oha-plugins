@@ -74,17 +74,28 @@ function oha_vhcpt_vendor_status_table_shortcode( $atts = [] ) {
         return '<p style="color:#666;font-style:italic;">You do not have permission to view this content.</p>';
     }
 
-    $atts     = shortcode_atts( [ 'per_page' => 20 ], $atts, 'oha_vendor_status_table' );
-    $per_page = max( 1, (int) $atts['per_page'] );
+    $atts     = shortcode_atts( [ 'per_page' => 20, 'year' => '' ], $atts, 'oha_vendor_status_table' );
+    $per_page   = max( 1, (int) $atts['per_page'] );
+    $year_filter = $atts['year'] !== '' ? intval( $atts['year'] ) : 0;
 
-    // Fetch all vendor applications.
-    $vendors = get_posts( [
+    $query_args = [
         'post_type'      => 'vendor_application',
         'posts_per_page' => -1,
         'post_status'    => 'any',
         'orderby'        => 'date',
         'order'          => 'DESC',
-    ] );
+    ];
+
+    if ( $year_filter ) {
+        $query_args['meta_query'] = [ [
+            'key'     => '_convention_year',
+            'value'   => $year_filter,
+            'compare' => '=',
+            'type'    => 'NUMERIC',
+        ] ];
+    }
+
+    $vendors = get_posts( $query_args );
 
     // Status badge colour map.
     $status_colours = [
@@ -290,7 +301,7 @@ function oha_vhcpt_vendor_status_table_shortcode( $atts = [] ) {
 
     <div class="oha-vst-wrap">
         <div class="oha-vst-header">
-            <h3>🏪 Vendor Status Overview</h3>
+            <h3>Vendor Status<?php echo $year_filter ? ' - ' . esc_html( $year_filter ) : ''; ?></h3>
             <div>
                 <div class="oha-vst-search-wrap">
                     <svg class="oha-vst-search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

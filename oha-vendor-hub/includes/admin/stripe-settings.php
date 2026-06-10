@@ -8,12 +8,18 @@ if (!defined('ABSPATH')) exit;
 
 function oha_vhcpt_save_stripe_settings() {
     if (!current_user_can('manage_options')) return;
-    
+
     if (isset($_POST['stripe_link_test'])) {
         update_option('oha_vhcpt_stripe_link_test', esc_url_raw($_POST['stripe_link_test']));
     }
     if (isset($_POST['stripe_link_live'])) {
         update_option('oha_vhcpt_stripe_link_live', esc_url_raw($_POST['stripe_link_live']));
+    }
+    if (isset($_POST['stripe_link_test_2booth'])) {
+        update_option('oha_vhcpt_stripe_link_test_2booth', esc_url_raw($_POST['stripe_link_test_2booth']));
+    }
+    if (isset($_POST['stripe_link_live_2booth'])) {
+        update_option('oha_vhcpt_stripe_link_live_2booth', esc_url_raw($_POST['stripe_link_live_2booth']));
     }
     if (isset($_POST['stripe_mode'])) {
         update_option('oha_vhcpt_stripe_mode', sanitize_text_field($_POST['stripe_mode']));
@@ -21,8 +27,10 @@ function oha_vhcpt_save_stripe_settings() {
 }
 
 function oha_vhcpt_render_stripe_settings() {
-    $stripe_link_test = get_option('oha_vhcpt_stripe_link_test', '');
-    $stripe_link_live = get_option('oha_vhcpt_stripe_link_live', '');
+    $stripe_link_test       = get_option('oha_vhcpt_stripe_link_test', '');
+    $stripe_link_live       = get_option('oha_vhcpt_stripe_link_live', '');
+    $stripe_link_test_2booth = get_option('oha_vhcpt_stripe_link_test_2booth', '');
+    $stripe_link_live_2booth = get_option('oha_vhcpt_stripe_link_live_2booth', '');
     $stripe_mode = get_option('oha_vhcpt_stripe_mode', 'test');
     ?>
     
@@ -64,6 +72,35 @@ function oha_vhcpt_render_stripe_settings() {
                 <input type="url" name="stripe_link_live" id="stripe_link_live" value="<?php echo esc_attr($stripe_link_live); ?>" class="large-text">
                 <p class="description">
                     Your Stripe LIVE mode Payment Link URL.<br>
+                    Example: <code>https://buy.stripe.com/live_...</code>
+                </p>
+            </td>
+        </tr>
+
+        <tr>
+            <th scope="row" colspan="2"><h3 style="margin:0.5em 0 0.25em;">2-Booth Payment Links (Optional)</h3>
+            <p style="font-weight:normal;color:#555;margin:0 0 0.5em;">If a vendor requests 2 booths, the plugin will use these links instead of the single-booth links above. Leave blank to fall back to the standard link.</p></th>
+        </tr>
+        <tr>
+            <th scope="row">
+                <label for="stripe_link_test_2booth">Test Payment Link (2 Booths)</label>
+            </th>
+            <td>
+                <input type="url" name="stripe_link_test_2booth" id="stripe_link_test_2booth" value="<?php echo esc_attr($stripe_link_test_2booth); ?>" class="large-text">
+                <p class="description">
+                    Stripe TEST link for vendors requesting 2 booth spaces. Create a separate Stripe product priced at 2x the single booth price.<br>
+                    Example: <code>https://buy.stripe.com/test_...</code>
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">
+                <label for="stripe_link_live_2booth">Live Payment Link (2 Booths)</label>
+            </th>
+            <td>
+                <input type="url" name="stripe_link_live_2booth" id="stripe_link_live_2booth" value="<?php echo esc_attr($stripe_link_live_2booth); ?>" class="large-text">
+                <p class="description">
+                    Stripe LIVE link for vendors requesting 2 booth spaces.<br>
                     Example: <code>https://buy.stripe.com/live_...</code>
                 </p>
             </td>
