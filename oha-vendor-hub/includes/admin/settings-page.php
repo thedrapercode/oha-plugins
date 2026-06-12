@@ -683,6 +683,112 @@ function oha_vhcpt_settings_page(){
 
             <p><button class="button button-primary">Save Settings</button></p>
         </form>
+
+        <hr style="margin:40px 0 30px;">
+        <h2>Shortcode Reference</h2>
+        <p style="color:#666;margin-bottom:20px;">All shortcodes provided by this plugin. None require a logged-in user unless noted.</p>
+        <style>
+        .oha-sc-table { border-collapse:collapse; width:100%; margin-bottom:30px; }
+        .oha-sc-table th { background:#f1f1f1; padding:10px 12px; text-align:left; border:1px solid #ddd; font-size:13px; }
+        .oha-sc-table td { padding:9px 12px; border:1px solid #ddd; font-size:13px; vertical-align:top; }
+        .oha-sc-table tr:nth-child(even) td { background:#fafafa; }
+        .oha-sc-tag { font-family:monospace; background:#e8f0fe; color:#1a56db; padding:2px 6px; border-radius:3px; font-size:12px; white-space:nowrap; }
+        .oha-sc-meta { font-family:monospace; font-size:11px; color:#555; }
+        .oha-sc-badge { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; font-weight:600; }
+        .oha-sc-badge-pub { background:#d1fae5; color:#065f46; }
+        .oha-sc-badge-admin { background:#fee2e2; color:#991b1b; }
+        .oha-sc-badge-restricted { background:#fef3c7; color:#92400e; }
+        </style>
+
+        <table class="oha-sc-table">
+            <thead>
+                <tr>
+                    <th>Shortcode</th>
+                    <th>Access</th>
+                    <th>Description</th>
+                    <th>Key Meta Used</th>
+                    <th>Attributes</th>
+                    <th>Dependencies</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_form]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public</span></td>
+                    <td>Initial vendor application intake form. Creates a new <code>vendor_application</code> post on submission. Respects the "Close Applications" toggle. Includes logo upload.</td>
+                    <td class="oha-sc-meta">first_name, last_name, company_name, email, phone, address_*, website, product_type, booths, tables_needed, need_electric, booth_preference, sponsor, _company_logo_id, _company_logo_url, _convention_year, _oha_status</td>
+                    <td>None</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_edit]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public<br>(token or login)</span></td>
+                    <td>Vendor self-service edit form. Accessible via magic link (<code>?edit_token=</code>) sent by admin, or when the vendor is logged in and owns the application. Tokens expire after 24 hours.</td>
+                    <td class="oha-sc-meta">All intake fields + _edit_token, _edit_token_expires, _company_logo_id, _company_logo_url</td>
+                    <td>None</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_final_form]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public<br>(token required)</span></td>
+                    <td>Final application step: displays agreement, captures e-signature (canvas), then redirects to Stripe for payment. Requires a valid <code>?app_id=&amp;token=</code> in the URL (sent by admin via "Send Final App" button).</td>
+                    <td class="oha-sc-meta">_signature_name, _signature_date, _signature_ip, _signature_data, _agree_terms, _oha_status, _payment_url, _stripe_session_id</td>
+                    <td>None</td>
+                    <td>Stripe Payment Links (configured in Settings)</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_final_form_no_payment]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public<br>(token required)</span></td>
+                    <td>Same as final form but skips the Stripe payment step. Used for vendors who are pre-paid or comped. Sets <code>_is_pre_paid = 1</code> on the application.</td>
+                    <td class="oha-sc-meta">Same as final form; adds _is_pre_paid</td>
+                    <td>None</td>
+                    <td>None (no Stripe)</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_cards]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public</span></td>
+                    <td>Public vendor card grid showing all Paid vendors for the active convention year. Searchable. Displays logo, company name, product type, and optionally website. Year filter uses the "Active Convention Year" setting.</td>
+                    <td class="oha-sc-meta">_oha_status (Paid), _convention_year, company_name, product_type, website, _company_logo_id, _company_logo_url</td>
+                    <td><code>title=""</code> - grid heading text</td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_status_table year="2027"]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-restricted">Restricted<br>(specific user IDs + admins)</span></td>
+                    <td>Read-only paginated status table showing all vendor applications. Allowed user IDs are configured in Settings (default: 183). The <code>year</code> attribute filters by convention year; omit to show all years.</td>
+                    <td class="oha-sc-meta">_oha_status, _convention_year, company_name, first_name, last_name, email, booths</td>
+                    <td><code>year=""</code> - filter by year (e.g. 2027)<br><code>per_page=""</code> - rows per page (default 20)</td>
+                    <td>None (optionally integrates with UsersWP account tab)</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_boardhub]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-admin">Admin only<br>(manage_options)</span></td>
+                    <td>Full vendor management dashboard for board members. Card-based UI with search, status filters, bulk actions, email sending, agreement generation, Stripe payment links, and vendor detail modal. Requires admin login.</td>
+                    <td class="oha-sc-meta">All meta keys (reads and writes full application data)</td>
+                    <td>None</td>
+                    <td>None (Stripe links are pre-configured URLs)</td>
+                </tr>
+                <tr>
+                    <td><span class="oha-sc-tag">[oha_vendor_dashboard]</span></td>
+                    <td><span class="oha-sc-badge oha-sc-badge-restricted">Logged-in users</span></td>
+                    <td>Shows the logged-in user's own vendor application submissions. Displays status and a link to edit. Requires the vendor to have a WordPress account that matches their application.</td>
+                    <td class="oha-sc-meta">_oha_status, company_name, _convention_year (read only)</td>
+                    <td>None</td>
+                    <td>Requires vendor WP account</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin-top:0;">Legacy / Alias Shortcodes</h3>
+        <p style="color:#666;font-size:13px;">These are registered for backward compatibility. Do not place them on new pages - use <code>[oha_vendor_boardhub]</code> instead.</p>
+        <table class="oha-sc-table" style="max-width:500px;">
+            <thead><tr><th>Shortcode</th><th>Resolves To</th></tr></thead>
+            <tbody>
+                <tr><td><span class="oha-sc-tag">vendor_dashboard</span></td><td><code>[oha_vendor_boardhub]</code></td></tr>
+                <tr><td><span class="oha-sc-tag">admin_vendor_list</span></td><td><code>[oha_vendor_boardhub]</code></td></tr>
+            </tbody>
+        </table>
+
     </div>
     <?php
 }

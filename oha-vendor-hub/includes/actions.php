@@ -400,12 +400,20 @@ add_action('wp_ajax_oha_send_final_app_email', function(){
         wp_send_json_error('Invalid nonce');
         return;
     }
-    
+
     // Check permissions
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Insufficient permissions');
         return;
     }
+
+    // Rate limit: one send per 3 seconds per admin user
+    $throttle_key = 'oha_vh_email_throttle_' . get_current_user_id();
+    if (get_transient($throttle_key)) {
+        wp_send_json_error('Please wait a moment before sending another email.');
+        return;
+    }
+    set_transient($throttle_key, 1, 3);
     
     // Get application ID
     $app_id = isset($_POST['app_id']) ? intval($_POST['app_id']) : 0;
@@ -521,11 +529,19 @@ add_action('wp_ajax_oha_send_final_app_email', function(){
  */
 add_action('wp_ajax_oha_send_vendor_email', function() {
     check_ajax_referer('oha_send_vendor_email', 'nonce');
-    
+
     if (!current_user_can('manage_options')) {
         wp_send_json_error('Unauthorized');
     }
-    
+
+    // Rate limit: one send per 3 seconds per admin user
+    $throttle_key = 'oha_vh_email_throttle_' . get_current_user_id();
+    if (get_transient($throttle_key)) {
+        wp_send_json_error('Please wait a moment before sending another email.');
+        return;
+    }
+    set_transient($throttle_key, 1, 3);
+
     $app_id = intval($_POST['app_id'] ?? 0);
     $option = sanitize_text_field($_POST['option'] ?? '');
     

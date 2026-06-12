@@ -956,25 +956,6 @@ add_shortcode('oha_vendor_final_form', function($atts){
     return $output;
 });
 
-/**
- * Simple test shortcode to diagnose rendering issues
- * Usage: [oha_test]
- */
-add_shortcode('oha_test', function(){
-    $output = '<div style="background:#ff0000;color:#ffffff;padding:30px;border:5px solid #000;margin:20px;font-size:20px;font-weight:bold;">
-        ✅ OHA VENDOR HUB PLUGIN IS ACTIVE AND WORKING!<br>
-        Time: ' . current_time('mysql') . '<br>
-        PHP: ' . PHP_VERSION . '<br>
-        WordPress: ' . get_bloginfo('version') . '
-    </div>';
-    
-    // Echo AND return for maximum visibility
-    if (!wp_doing_ajax()) {
-        echo $output;
-    }
-    
-    return $output;
-});
 
 /**
  * Build Stripe payment URL

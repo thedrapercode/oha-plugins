@@ -2,7 +2,7 @@
 /*
 Plugin Name: OHA Vendor Hub
 Description: Complete vendor management system with applications, e-signatures, Stripe payments, Board Hub admin dashboard, and vendor status table for Ohio Haunters Convention.
-Version: 3.12.0
+Version: 3.12.1
 Author: OHA Dev Team
 Author URI: https://ohiohaunters.com
 Text Domain: oha-vendor-hub
@@ -82,7 +82,7 @@ add_action('template_redirect', function() {
 }, 1);
 
 // Plugin version and paths
-define('OHA_VHCPT_VER', '3.12.0');
+define('OHA_VHCPT_VER', '3.12.1');
 define('OHA_VHCPT_PATH', plugin_dir_path(__FILE__));
 define('OHA_VHCPT_URL', plugin_dir_url(__FILE__));
 
@@ -338,14 +338,16 @@ add_action('init', function() {
             wp_die('<h1 style="color:red;">❌ Function Missing!</h1><p>PDF email function not loaded. Check plugin activation.</p>');
         }
         
-        // CRITICAL: Temporarily override vendor email with admin email
-        update_post_meta($app_id, 'email', $admin_email);
-        
-        // Generate and send PDF (will go to admin)
-        $result = oha_vhcpt_email_vendor_pdf($app_id);
-        
-        // CRITICAL: Restore original vendor email immediately
-        update_post_meta($app_id, 'email', $vendor_email);
+        // Intercept email meta read for this post so the PDF function sends to admin without touching the DB.
+        $email_override = function( $value, $object_id, $meta_key, $single ) use ( $app_id, $admin_email ) {
+            if ( $object_id === $app_id && $meta_key === 'email' && $single ) {
+                return $admin_email;
+            }
+            return $value;
+        };
+        add_filter( 'get_post_metadata', $email_override, 10, 4 );
+        $result = oha_vhcpt_email_vendor_pdf( $app_id );
+        remove_filter( 'get_post_metadata', $email_override, 10 );
         
         if ($result) {
             wp_die('<h1 style="color:green;">✅ PDF Test Email Sent to ADMIN!</h1>

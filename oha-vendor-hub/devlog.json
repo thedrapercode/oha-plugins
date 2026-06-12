@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.12.0",
+    "version":  "3.12.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -358,6 +358,34 @@
                         "type":  "fix",
                         "summary":  "Return Invite tool now copies logo, tables_needed, and booth_preference from prior year",
                         "notes":  "Added _company_logo_id, _company_logo_url, tables_needed, and booth_preference to copy_keys array."
+                    },
+                    {
+                        "date":  "2026-06-11",
+                        "version":  "3.12.1",
+                        "type":  "fix",
+                        "summary":  "Replace dangerous email meta overwrite in PDF test handler with get_post_metadata filter",
+                        "notes":  "Old code used update_post_meta to swap email then restore - risky if exception thrown mid-call. New code uses a closure filter on get_post_metadata to intercept the read without touching DB."
+                    },
+                    {
+                        "date":  "2026-06-11",
+                        "version":  "3.12.1",
+                        "type":  "fix",
+                        "summary":  "Remove dead [oha_test] debug shortcode (no cap check, public-facing)",
+                        "notes":  "Was registered in final-application.php with no capability check. Removed entirely. See memory/project_vendor_hub_removed_code.md for rollback."
+                    },
+                    {
+                        "date":  "2026-06-11",
+                        "version":  "3.12.1",
+                        "type":  "fix",
+                        "summary":  "Add 3-second transient rate limit to oha_send_vendor_email and oha_send_final_app_email AJAX handlers",
+                        "notes":  "Prevents accidental email floods from rapid admin clicks. Per-user transient key: oha_vh_email_throttle_{user_id}."
+                    },
+                    {
+                        "date":  "2026-06-11",
+                        "version":  "3.12.1",
+                        "type":  "feature",
+                        "summary":  "Add shortcode reference panel to Vendor Hub Settings page",
+                        "notes":  "Lists all 8 shortcodes with access level, description, meta keys used, attributes, and dependencies. Includes legacy alias table."
                     }
                 ]
 }
