@@ -39,16 +39,22 @@ add_shortcode('oha_vendor_boardhub', function() {
     // Preserve the active Board Hub tab (e.g. ?tab=vendors) across filter form submissions.
     $current_tab = sanitize_text_field(get_query_var('tab', $_GET['tab'] ?? ''));
 
+    // Always treat the active convention year as a valid filter option, even if no applications
+    // exist for it yet. This ensures the dropdown shows 2027 from day one of a new cycle.
+    $active_year = strval(get_option('oha_vhcpt_active_year', date('Y')));
+    if (!in_array($active_year, $year_rows, true)) {
+        array_unshift($year_rows, $active_year);
+    }
+
     // Read year filter — use get_query_var (respects WP canonical) with $_GET fallback.
-    // 'all' means show every year. Default to active year so current-year vendors show first.
-    $active_year  = strval(get_option('oha_vhcpt_active_year', date('Y')));
-    $raw_year     = get_query_var('vh_year', null);
+    // 'all' means show every year. Default to active year.
+    $raw_year = get_query_var('vh_year', null);
     if ($raw_year === null) {
         $raw_year = isset($_GET['vh_year']) ? $_GET['vh_year'] : null;
     }
     if ($raw_year === null) {
-        // No explicit selection — default to active year if year data exists, otherwise show all.
-        $filter_year = !empty($year_rows) ? $active_year : '';
+        // No explicit selection — always default to the active year.
+        $filter_year = $active_year;
     } elseif ($raw_year === 'all') {
         $filter_year = '';
     } else {
@@ -1073,8 +1079,14 @@ add_shortcode('oha_vendor_boardhub', function() {
         <!-- Vendor Cards -->
         <div class="oha-vendor-cards">
             <?php if (empty($vendors)): ?>
-                <div style="text-align:center;padding:40px;background:#fff;border-radius:8px;">
-                    <p style="font-size:18px;color:#64748b;">No vendors found.</p>
+                <div style="text-align:center;padding:48px 40px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;">
+                    <?php if ($filter_year !== '' && $filter_year === $active_year): ?>
+                        <p style="font-size:20px;margin:0 0 8px;">No <?php echo esc_html($active_year); ?> vendor applications yet.</p>
+                        <p style="color:#64748b;margin:0 0 16px;">To pre-populate returning vendors from the prior year, go to<br><strong>Vendor Applications &rarr; Year Tools &rarr; Return Vendor Invites</strong> in WP Admin.</p>
+                        <p style="color:#94a3b8;font-size:13px;margin:0;">Or switch the Year filter above to view prior-year data.</p>
+                    <?php else: ?>
+                        <p style="font-size:18px;color:#64748b;margin:0;">No vendors found for this filter.</p>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <?php foreach ($vendors as $vendor): 

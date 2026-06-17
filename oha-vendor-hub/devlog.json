@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.12.2",
+    "version":  "3.12.3",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -393,6 +393,20 @@
                         "type":  "fix",
                         "summary":  "Email subject placeholder in bulk email panel now reads from oha_vhcpt_convention_name option",
                         "notes":  "Previously hardcoded OHA Convention 2026 in the placeholder text."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "3.12.3",
+                        "type":  "fix",
+                        "summary":  "Year dropdown always shows active convention year even when no applications exist yet",
+                        "notes":  "Active year injected into year_rows via array_unshift if not already present. Default filter now always uses active_year unconditionally (removed the empty year_rows check)."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "3.12.3",
+                        "type":  "fix",
+                        "summary":  "Empty state message for active year is now actionable with next-step instructions",
+                        "notes":  "When viewing the active year with no vendors, shows guidance to run Return Vendor Invites in WP Admin instead of generic no vendors found."
                     }
                 ]
 }
