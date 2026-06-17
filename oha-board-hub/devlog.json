@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.11.2",
+    "version":  "2.11.3",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -575,6 +575,13 @@
                         "type":  "fix",
                         "summary":  "Admin vendor tab stats now filter by active convention year instead of all-time totals",
                         "notes":  "All 5 queries in render_vendor_tab() now JOIN on _convention_year = oha_vhcpt_active_year. Previously showed cumulative counts across all years."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "2.11.3",
+                        "type":  "fix",
+                        "summary":  "Overview tab vendor stat cards now filter by active convention year only",
+                        "notes":  "All 6 queries in render_overview_tab() (total, paid, pending, booths, recent, recent_payments) now JOIN on _convention_year = oha_vhcpt_active_year. Previously showed all-time totals across every year."
                     }
                 ]
 }

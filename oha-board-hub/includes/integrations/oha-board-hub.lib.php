@@ -671,54 +671,58 @@ private function render_overview_tab($range = '30d') {
         $pending_claims = $this->count_pending_claims();
         
         // Phase 2A: Get comprehensive statistics
-        // Vendor statistics
-        $total_vendors = $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->posts} 
-             WHERE post_type = 'vendor_application' AND post_status <> 'trash'"
-        );
-        
-        $paid_vendors = $wpdb->get_var(
+        // Vendor statistics — scoped to the active convention year only
+        $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+
+        $total_vendors = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application' AND p.post_status <> 'trash'",
+            $active_year
+        ));
+
+        $paid_vendors = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id AND m.meta_key = '_oha_status' AND m.meta_value = 'Paid'
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application' AND p.post_status <> 'trash'",
+            $active_year
+        ));
+
+        $pending_vendors = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id AND m.meta_key = '_oha_status'
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
              WHERE p.post_type = 'vendor_application'
              AND p.post_status <> 'trash'
-             AND m.meta_key = '_oha_status'
-             AND m.meta_value = 'Paid'"
-        );
-        
-        $pending_vendors = $wpdb->get_var(
-            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id
-             WHERE p.post_type = 'vendor_application'
-             AND p.post_status <> 'trash'
-             AND m.meta_key = '_oha_status'
              AND (m.meta_value = 'Agreement Sent' OR m.meta_value = 'Agreement Signed')
              AND NOT EXISTS (
                  SELECT 1 FROM {$wpdb->postmeta} m2
-                 WHERE m2.post_id = p.ID
-                 AND m2.meta_key = '_oha_status'
-                 AND m2.meta_value = 'Paid'
-             )"
-        );
-        
-        $total_booths = $wpdb->get_var(
+                 WHERE m2.post_id = p.ID AND m2.meta_key = '_oha_status' AND m2.meta_value = 'Paid'
+             )",
+            $active_year
+        ));
+
+        $total_booths = $wpdb->get_var($wpdb->prepare(
             "SELECT SUM(CAST(m.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} m
              INNER JOIN {$wpdb->posts} p ON m.post_id = p.ID
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
              WHERE p.post_type = 'vendor_application'
              AND p.post_status <> 'trash'
              AND m.meta_key = 'booths'
              AND EXISTS (
                  SELECT 1 FROM {$wpdb->postmeta} m2
-                 WHERE m2.post_id = p.ID
-                 AND m2.meta_key = '_oha_status'
-                 AND m2.meta_value = 'Paid'
-             )"
-        );
-        
+                 WHERE m2.post_id = p.ID AND m2.meta_key = '_oha_status' AND m2.meta_value = 'Paid'
+             )",
+            $active_year
+        ));
+
         $recent_vendors = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->posts}
-             WHERE post_type = 'vendor_application' AND post_status <> 'trash'
-             AND post_date >= %s",
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application' AND p.post_status <> 'trash'
+             AND p.post_date >= %s",
+            $active_year,
             date('Y-m-d H:i:s', strtotime('-30 days'))
         ));
         
@@ -750,20 +754,18 @@ private function render_overview_tab($range = '30d') {
              AND post_status = 'publish'"
         );
         
-        // Recent payments
-        $recent_payments = $wpdb->get_results(
+        // Recent payments — active year only
+        $recent_payments = $wpdb->get_results($wpdb->prepare(
             "SELECT p.ID, p.post_modified, m.meta_value as company_name
              FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id
-             INNER JOIN {$wpdb->postmeta} m2 ON p.ID = m2.post_id
-             WHERE p.post_type = 'vendor_application'
-             AND p.post_status <> 'trash'
-             AND m.meta_key = 'company_name'
-             AND m2.meta_key = '_oha_status'
-             AND m2.meta_value = 'Paid'
+             INNER JOIN {$wpdb->postmeta} m  ON p.ID = m.post_id  AND m.meta_key  = 'company_name'
+             INNER JOIN {$wpdb->postmeta} m2 ON p.ID = m2.post_id AND m2.meta_key = '_oha_status' AND m2.meta_value = 'Paid'
+             INNER JOIN {$wpdb->postmeta} y  ON p.ID = y.post_id  AND y.meta_key  = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application' AND p.post_status <> 'trash'
              ORDER BY p.post_modified DESC
-             LIMIT 5"
-        );
+             LIMIT 5",
+            $active_year
+        ));
         
         ob_start(); ?>
         <h2 class="oha-overview-title">Board Dashboard</h2>
