@@ -39,7 +39,7 @@ public function __construct() {
             'membership' => __('Membership', 'oha-board-hub'),
             'boardhub' => __('Board Hub Settings', 'oha-board-hub'),
             'stripe' => __('Stripe Settings', 'oha-board-hub'),
-            'vendor' => __('Convention 2026', 'oha-board-hub'),
+            'vendor' => get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y'))),
             'webhooks' => __('Webhooks', 'oha-board-hub'),
             'notifications' => __('Board Notifications', 'oha-board-hub'),
             'shortcodes' => __('Shortcode Reference', 'oha-board-hub'),
@@ -1151,31 +1151,36 @@ public function __construct() {
     private function render_vendor_tab() {
         global $wpdb;
         
-        // Get vendor statistics
-        $total_vendors = $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->posts} 
-             WHERE post_type = 'vendor_application'"
-        );
-        
-        $paid_vendors = $wpdb->get_var(
+        // Get vendor statistics — scoped to the active convention year
+        $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+
+        $total_vendors = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id
-             WHERE p.post_type = 'vendor_application'
-             AND m.meta_key = '_oha_status'
-             AND m.meta_value = 'Paid'"
-        );
-        
-        $pending_vendors = $wpdb->get_var(
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application'",
+            $active_year
+        ));
+
+        $paid_vendors = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
-             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id
-             WHERE p.post_type = 'vendor_application'
-             AND m.meta_key = '_oha_status'
-             AND m.meta_value IN ('Submitted', 'In Review', 'Approved')"
-        );
-        
-        $total_booths = $wpdb->get_var(
+             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id AND m.meta_key = '_oha_status' AND m.meta_value = 'Paid'
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application'",
+            $active_year
+        ));
+
+        $pending_vendors = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id AND m.meta_key = '_oha_status' AND m.meta_value IN ('Submitted', 'In Review', 'Approved')
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application'",
+            $active_year
+        ));
+
+        $total_booths = $wpdb->get_var($wpdb->prepare(
             "SELECT SUM(CAST(m.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} m
              INNER JOIN {$wpdb->posts} p ON m.post_id = p.ID
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
              WHERE p.post_type = 'vendor_application'
              AND m.meta_key = 'booths'
              AND EXISTS (
@@ -1183,18 +1188,21 @@ public function __construct() {
                  WHERE m2.post_id = p.ID
                  AND m2.meta_key = '_oha_status'
                  AND m2.meta_value = 'Paid'
-             )"
-        );
-        
+             )",
+            $active_year
+        ));
+
         $recent_vendors = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->posts}
-             WHERE post_type = 'vendor_application'
-             AND post_date >= %s",
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application'
+             AND p.post_date >= %s",
+            $active_year,
             date('Y-m-d H:i:s', strtotime('-30 days'))
         ));
         
         ?>
-        <h2><?php esc_html_e('Convention 2026 - Vendor Management', 'oha-board-hub'); ?></h2>
+        <h2><?php echo esc_html(get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y'))) . ' - Vendor Management'); ?></h2>
         
         <!-- Vendor Statistics -->
         <div class="oha-vendor-stats-grid">

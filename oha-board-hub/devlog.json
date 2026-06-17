@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.11.1",
+    "version":  "2.11.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -561,6 +561,20 @@
                         "type":  "fix",
                         "summary":  "Fixed duplicate budget categories seeded by race condition on first page load",
                         "notes":  "Same root cause as survey-hub vendor question dedup (v1.3.1): concurrent requests both passed COUNT \u003e 0 guard before either committed. Fix: dedup_categories() self-join DELETE keeps lowest id per (name, type). Runs once via oha_fin_cat_dedup_done option flag."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "2.11.2",
+                        "type":  "fix",
+                        "summary":  "Convention tab label and heading now read from oha_vhcpt_convention_name option instead of hardcoded 2026",
+                        "notes":  "Affects oha-board-hub.lib.php (tab title, overview card, fallback message) and class-oha-admin-page.php (WP admin tab label and heading). Falls back to Convention + active year if option is empty."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "2.11.2",
+                        "type":  "fix",
+                        "summary":  "Admin vendor tab stats now filter by active convention year instead of all-time totals",
+                        "notes":  "All 5 queries in render_vendor_tab() now JOIN on _convention_year = oha_vhcpt_active_year. Previously showed cumulative counts across all years."
                     }
                 ]
 }

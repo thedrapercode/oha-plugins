@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.12.1",
+    "version":  "3.12.2",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -386,6 +386,13 @@
                         "type":  "feature",
                         "summary":  "Add shortcode reference panel to Vendor Hub Settings page",
                         "notes":  "Lists all 8 shortcodes with access level, description, meta keys used, attributes, and dependencies. Includes legacy alias table."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "3.12.2",
+                        "type":  "fix",
+                        "summary":  "Email subject placeholder in bulk email panel now reads from oha_vhcpt_convention_name option",
+                        "notes":  "Previously hardcoded OHA Convention 2026 in the placeholder text."
                     }
                 ]
 }

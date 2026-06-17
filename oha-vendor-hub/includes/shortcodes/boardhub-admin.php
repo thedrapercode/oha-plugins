@@ -996,7 +996,7 @@ add_shortcode('oha_vendor_boardhub', function() {
                 <!-- Subject line -->
                 <div class="oha-be-field">
                     <label>Subject Line</label>
-                    <input type="text" id="oha-be-subject" class="oha-be-subject-input" placeholder="e.g. Important update about OHA Convention 2026" />
+                    <input type="text" id="oha-be-subject" class="oha-be-subject-input" placeholder="e.g. Important update about <?php echo esc_attr(get_option('oha_vhcpt_convention_name', 'OHA Convention ' . get_option('oha_vhcpt_active_year', date('Y')))); ?>" />
                 </div>
 
                 <!-- Body (TinyMCE rich editor) -->

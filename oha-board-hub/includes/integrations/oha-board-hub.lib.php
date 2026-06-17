@@ -306,7 +306,7 @@ const CAP = 'read_oha_board_hub';
             'overview' => ['title' => 'Overview', 'order' => 10, 'enabled' => true],
             'members'  => ['title' => 'Members', 'order' => 20, 'enabled' => true],
             'gd'       => ['title' => 'Listings & Events', 'order' => 30, 'enabled' => true],
-            'con'      => ['title' => 'Convention 2026', 'order' => 40, 'enabled' => true],
+            'con'      => ['title' => get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y'))), 'order' => 40, 'enabled' => true],
             'sponsors' => ['title' => 'Sponsors', 'order' => 45, 'enabled' => true],
             'finance'  => ['title' => 'Finance', 'order' => 50, 'enabled' => true],
             'activity' => ['title' => 'Site Activity', 'order' => 60, 'enabled' => true],
@@ -920,7 +920,7 @@ private function render_overview_tab($range = '30d') {
             </div>
 
             <div class="oha-card">
-                <h3>Convention 2026</h3>
+                <h3><?php echo esc_html(get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y')))); ?></h3>
                 <?php if ($this->is_convention_enabled()): ?>
                     <p>Convention tools are enabled. Open the tab to manage vendors, sponsors, and guests.</p>
                     <p><a class="button" href="<?php echo esc_url( add_query_arg(['tab'=>'con']) ); ?>">Open Convention Tools</a></p>
@@ -1889,7 +1889,7 @@ private function render_convention_tab() {
     if (function_exists('shortcode_exists') && shortcode_exists('oha_vendor_board_hub')) {
         return do_shortcode('[oha_vendor_board_hub]');
     }
-    return '<div class="oha-card"><h3>Convention 2026</h3><p><em>Vendor dashboard shortcode not found.</em> Please ensure the Vendor module is included in the Suite.</p></div>';
+    return '<div class="oha-card"><h3>' . esc_html(get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y')))) . '</h3><p><em>Vendor dashboard shortcode not found.</em> Please ensure the Vendor module is included in the Suite.</p></div>';
 }
 
 private function render_sponsors_tab() {
