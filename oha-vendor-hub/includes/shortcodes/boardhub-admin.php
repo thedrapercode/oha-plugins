@@ -89,9 +89,7 @@ add_shortcode('oha_vendor_boardhub', function() {
     }
 
     if (!empty($meta_clauses)) {
-        $args['meta_query'] = count($meta_clauses) === 1
-            ? $meta_clauses[0]
-            : array_merge(['relation' => 'AND'], $meta_clauses);
+        $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_clauses);
     }
 
     $vendors = get_posts($args);

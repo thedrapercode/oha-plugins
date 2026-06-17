@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.12.3",
+    "version":  "3.12.4",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -407,6 +407,13 @@
                         "type":  "fix",
                         "summary":  "Empty state message for active year is now actionable with next-step instructions",
                         "notes":  "When viewing the active year with no vendors, shows guidance to run Return Vendor Invites in WP Admin instead of generic no vendors found."
+                    },
+                    {
+                        "date":  "2026-06-16",
+                        "version":  "3.12.4",
+                        "type":  "fix",
+                        "summary":  "Fix meta_query structure so year filter actually applies to the vendor query",
+                        "notes":  "Single-clause meta_query was passed as a bare condition array which WordPress silently ignores. Changed to always use array_merge with relation AND so the outer wrapper is always present regardless of clause count. This was the root cause of 2026 vendors showing when active year is 2027."
                     }
                 ]
 }
