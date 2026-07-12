@@ -396,12 +396,15 @@
         const events = Object.values(favorites.events || {});
         
         if (events.length === 0) {
+            var _schedBase = (typeof ohaNavConfig !== 'undefined' && ohaNavConfig.convention_base_url)
+                ? ohaNavConfig.convention_base_url
+                : '/convention';
             container.innerHTML = `
                 <div style="text-align:center;padding:28px 20px 32px;">
                     <div style="font-size:2em;opacity:.4;margin-bottom:10px;">&#9733;</div>
                     <p style="margin:0 0 6px;font-weight:700;font-size:15px;color:#eee;">No saved sessions yet.</p>
                     <p style="margin:0 0 18px;font-size:13px;color:rgba(255,255,255,.55);line-height:1.5;">Browse the schedule and tap the star on any session to save it here for quick access during the convention.</p>
-                    <a href="/convention/2026-convention/schedule/" style="display:inline-block;padding:10px 20px;background:rgba(173,49,25,.85);color:#fff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:.02em;">Browse Schedule</a>
+                    <a href="${_schedBase}/schedule/" style="display:inline-block;padding:10px 20px;background:rgba(173,49,25,.85);color:#fff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:.02em;">Browse Schedule</a>
                 </div>
             `;
             return;

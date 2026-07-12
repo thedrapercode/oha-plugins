@@ -57,14 +57,18 @@
     'use strict';
     
     window.OHAAppNav = window.OHAAppNav || {};
-    
+
+    var _convBase = (typeof ohaNavConfig !== 'undefined' && ohaNavConfig.convention_base_url)
+        ? ohaNavConfig.convention_base_url
+        : '/convention';
+
     const APP_CONFIG = {
         tabs: [
-            {id: 'schedule', icon: '📅', label: 'Schedule', url: '/convention/2026-convention/schedule/'},
-            {id: 'map',      icon: '🗺️', label: 'Map',      url: '/convention/2026-convention/map/'},
-            {id: 'myohc',   icon: '⭐',  label: 'My OHC',   url: '/convention/2026-convention/my-ohc/'},
-            {id: 'vendors',  icon: '🛍️', label: 'Vendors',  url: '/convention/2026-convention/vendors/'},
-            {id: 'info',    icon: 'ℹ️',  label: 'Info',     url: '/convention/2026-convention/info/'}
+            {id: 'schedule', icon: '📅', label: 'Schedule', url: _convBase + '/schedule/'},
+            {id: 'map',      icon: '🗺️', label: 'Map',      url: _convBase + '/map/'},
+            {id: 'myohc',   icon: '⭐',  label: 'My OHC',   url: _convBase + '/my-ohc/'},
+            {id: 'vendors',  icon: '🛍️', label: 'Vendors',  url: _convBase + '/vendors/'},
+            {id: 'info',    icon: 'ℹ️',  label: 'Info',     url: _convBase + '/info/'}
         ],
         mobileBreakpoint: 768
     };
@@ -156,7 +160,7 @@
 
         var passportUrl = (typeof ohaNavConfig !== 'undefined' && ohaNavConfig.passport_url)
             ? ohaNavConfig.passport_url
-            : '/convention/2026-convention/passport/';
+            : _convBase + '/passport/';
         var scannerUrl = (typeof ohaNavConfig !== 'undefined' && ohaNavConfig.scanner_url)
             ? ohaNavConfig.scanner_url
             : passportUrl;

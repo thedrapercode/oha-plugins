@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.25.1",
+    "version":  "3.25.2",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -680,6 +680,13 @@
                         "type":  "change",
                         "summary":  "De-year app name and tagline defaults in download shortcode and settings",
                         "notes":  "OHC 2026 Convention App -\u003e OHC Convention App. Tagline default updated. Only affects installs where these were never saved -- existing saved options are unchanged."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.25.2",
+                        "type":  "fix",
+                        "summary":  "Fix hardcoded 2026-convention URLs in JS files - tab nav, passport fallback, Browse Schedule link",
+                        "notes":  "Added convention_base_url to ohaNavConfig PHP localization. app-navigation.js now builds all 5 tab URLs from ohaNavConfig.convention_base_url with /convention fallback. pwa-favorites.js Browse Schedule link reads ohaNavConfig.convention_base_url. Passport fallback in app-navigation.js uses _convBase variable."
                     }
                 ]
 }
