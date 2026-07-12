@@ -258,6 +258,8 @@ add_shortcode('oha_vendor_boardhub', function() {
     }
     
     .status-pending { background: #fef3c7; color: #92400e; }
+    .status-submitted { background: #fef9c3; color: #713f12; }
+    .status-invited { background: #f5f3ff; color: #6b21a8; }
     .status-agreement-sent { background: #dbeafe; color: #1e40af; }
     .status-agreement-signed { background: #e0e7ff; color: #4338ca; }
     .status-paid { background: #d1fae5; color: #065f46; }
@@ -1284,7 +1286,7 @@ add_shortcode('oha_vendor_boardhub', function() {
                                                     data-app-id="<?php echo $app_id; ?>"
                                                     data-current-status="<?php echo esc_attr($status); ?>">
                                                 <option value="">— Select new status —</option>
-                                                <?php foreach (['Submitted','Approved','Agreement Sent','Agreement Signed','Paid'] as $opt): ?>
+                                                <?php foreach (['Invited','Submitted','Approved','Agreement Sent','Agreement Signed','Paid'] as $opt): ?>
                                                 <option value="<?php echo esc_attr($opt); ?>"><?php echo esc_html($opt); ?></option>
                                                 <?php endforeach; ?>
                                             </select>

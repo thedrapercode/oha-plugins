@@ -7,70 +7,53 @@ if (!defined('ABSPATH')) exit;
  * Shortcode: [oha_vendor_edit]
  *
  * Access flow:
- *  - Logged-in user: finds app by post_author or email meta, shows form directly
- *  - Non-logged-in: shows email form -> sends magic link -> token validates access
+ *   Step 1 — Vendor enters email address + Vendor ID number (from invite email)
+ *   Step 2 — Application data loads in an edit form on the same page
+ *   Step 3 — Vendor saves; if status was "Invited" it promotes to "Submitted"
  *
- * Editable fields: contact info + marketing fields (not booth count or sponsor)
- * Status lock: product_type is read-only once status is Agreement Signed or Paid
+ * No magic links or tokens required. Vendor can return to this page any time.
+ *
+ * Vendor ID = the _vendor_permanent_id meta value (integer).
+ * In emails this appears as "VID-{number}" — vendors enter with or without the prefix.
+ *
+ * oha_vh_send_edit_link() is kept below for backward compatibility — not currently called.
  */
 
-/**
- * Generate and store a 32-char edit token on the vendor application post.
- * Overwrites any existing token.
- */
-function oha_vh_generate_edit_token($app_id) {
-    $token = wp_generate_password(32, false);
-    update_post_meta($app_id, '_edit_token', $token);
-    update_post_meta($app_id, '_edit_token_expires', date('Y-m-d H:i:s', strtotime('+24 hours')));
-    return $token;
+function oha_vh_sandbox_banner() {
+    if (!get_option('oha_vhcpt_sandbox_mode')) return '';
+    $to = esc_html(get_option('oha_vhcpt_sandbox_email', 'not configured'));
+    return '<div style="background:#fef08a;border:2px solid #ca8a04;color:#78350f;padding:.75em 1em;margin-bottom:1.25em;border-radius:6px;font-weight:600;">'
+        . 'SANDBOX MODE - This form is in test mode. All emails are being sent to: ' . $to
+        . '</div>';
 }
 
 /**
- * Find vendor application by _edit_token + expiry check.
+ * Find a vendor application matching both email AND Vendor ID.
+ * Prioritises the active convention year; falls back to most recent application.
  * Returns post ID or 0.
  */
-function oha_vh_get_app_by_token($token) {
-    if (empty($token) || strlen($token) !== 32) {
-        return 0;
-    }
-    $token = sanitize_text_field($token);
+function oha_vh_find_app_by_email_and_vid($email, $vid) {
+    if (!$email || !$vid) return 0;
+
+    $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+
+    // Try active convention year first.
     $apps = get_posts([
         'post_type'      => 'vendor_application',
         'post_status'    => 'any',
         'posts_per_page' => 1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
         'meta_query'     => [
             'relation' => 'AND',
-            ['key' => '_edit_token',         'value' => $token,                    'compare' => '='],
-            ['key' => '_edit_token_expires',  'value' => current_time('mysql'),    'compare' => '>'],
+            ['key' => 'email',                'value' => $email,       'compare' => '='],
+            ['key' => '_vendor_permanent_id', 'value' => $vid,         'compare' => '=', 'type' => 'NUMERIC'],
+            ['key' => '_convention_year',     'value' => $active_year, 'compare' => '='],
         ],
     ]);
-    return !empty($apps) ? $apps[0]->ID : 0;
-}
+    if (!empty($apps)) return $apps[0]->ID;
 
-/**
- * Find vendor application for a logged-in user.
- * Prefers post_author match; falls back to email meta match.
- */
-function oha_vh_get_app_for_user() {
-    $user = wp_get_current_user();
-    if (!$user || !$user->ID) {
-        return 0;
-    }
-
-    // Try post_author first
-    $apps = get_posts([
-        'post_type'      => 'vendor_application',
-        'post_status'    => 'any',
-        'author'         => $user->ID,
-        'posts_per_page' => 1,
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-    ]);
-    if (!empty($apps)) {
-        return $apps[0]->ID;
-    }
-
-    // Fall back to email meta match
+    // Fall back: any year (catches vendors not yet tagged with a year).
     $apps = get_posts([
         'post_type'      => 'vendor_application',
         'post_status'    => 'any',
@@ -78,36 +61,12 @@ function oha_vh_get_app_for_user() {
         'orderby'        => 'date',
         'order'          => 'DESC',
         'meta_query'     => [
-            ['key' => 'email', 'value' => $user->user_email, 'compare' => '='],
+            'relation' => 'AND',
+            ['key' => 'email',                'value' => $email, 'compare' => '='],
+            ['key' => '_vendor_permanent_id', 'value' => $vid,   'compare' => '=', 'type' => 'NUMERIC'],
         ],
     ]);
     return !empty($apps) ? $apps[0]->ID : 0;
-}
-
-/**
- * Send magic link email to vendor.
- *
- * Subject and body are read from WP options (editable in Vendor Hub Settings).
- * Placeholders: {first_name}, {link}
- *
- * @param string $email         Recipient email address.
- * @param string $token         32-char edit token.
- * @param string $edit_page_url URL of the page containing [oha_vendor_edit].
- * @param string $first_name    Optional vendor first name for {first_name} placeholder.
- */
-function oha_vh_send_edit_link($email, $token, $edit_page_url, $first_name = '') {
-    $link = add_query_arg('edit_token', $token, $edit_page_url);
-
-    $default_subject = 'Update Your Vendor Information - Ohio Haunters Convention';
-    $default_body    = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
-
-    $subject = get_option('oha_vhcpt_edit_link_subject', $default_subject);
-    $body    = get_option('oha_vhcpt_edit_link_body',    $default_body);
-
-    $subject = str_replace(['{first_name}', '{link}'], [$first_name, $link], $subject);
-    $body    = str_replace(['{first_name}', '{link}'], [$first_name, $link], $body);
-
-    wp_mail($email, $subject, $body);
 }
 
 /**
@@ -115,19 +74,14 @@ function oha_vh_send_edit_link($email, $token, $edit_page_url, $first_name = '')
  * Returns error string or empty string on success.
  */
 function oha_vh_handle_logo_upload($app_id) {
-    if (empty($_FILES['vendor_logo']['name'])) {
-        return '';
-    }
+    if (empty($_FILES['vendor_logo']['name'])) return '';
 
     require_once ABSPATH . 'wp-admin/includes/file.php';
     require_once ABSPATH . 'wp-admin/includes/image.php';
     require_once ABSPATH . 'wp-admin/includes/media.php';
 
     $upload = wp_handle_upload($_FILES['vendor_logo'], ['test_form' => false]);
-
-    if (!empty($upload['error'])) {
-        return $upload['error'];
-    }
+    if (!empty($upload['error'])) return $upload['error'];
 
     $attach_id = wp_insert_attachment([
         'post_mime_type' => $upload['type'],
@@ -136,283 +90,452 @@ function oha_vh_handle_logo_upload($app_id) {
         'post_status'    => 'inherit',
     ], $upload['file']);
 
-    if (is_wp_error($attach_id)) {
-        return $attach_id->get_error_message();
-    }
+    if (is_wp_error($attach_id)) return $attach_id->get_error_message();
 
-    $metadata = wp_generate_attachment_metadata($attach_id, $upload['file']);
-    wp_update_attachment_metadata($attach_id, $metadata);
-
-    update_post_meta($app_id, '_company_logo_id', $attach_id);
+    wp_update_attachment_metadata($attach_id, wp_generate_attachment_metadata($attach_id, $upload['file']));
+    update_post_meta($app_id, '_company_logo_id',  $attach_id);
     update_post_meta($app_id, '_company_logo_url', $upload['url']);
 
     return '';
+}
+
+/**
+ * Kept for backward compatibility — not currently called by actions.php.
+ * Placeholders: {first_name}, {link}, {vendor_id}
+ */
+function oha_vh_send_edit_link($email, $token, $edit_page_url, $first_name = '') {
+    $default_subject = 'Update Your Vendor Information - Ohio Haunters Convention';
+    $default_body    = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nIf you have any questions, contact us at info@ohiohaunters.com\n\n-- The OHA Team";
+
+    $subject = get_option('oha_vhcpt_edit_link_subject', $default_subject);
+    $body    = get_option('oha_vhcpt_edit_link_body',    $default_body);
+
+    $subject = str_replace(['{first_name}', '{link}'], [$first_name, $edit_page_url], $subject);
+    $body    = str_replace(['{first_name}', '{link}'], [$first_name, $edit_page_url], $body);
+
+    wp_mail($email, $subject, $body);
+}
+
+/**
+ * Render the lookup form (Step 1).
+ */
+function oha_vh_render_lookup_form($page_url, $email_val = '', $vid_val = '') {
+    echo oha_vh_sandbox_banner();
+    ?>
+    <div class="oha-vh-edit-email-wrap">
+        <h3>Update Your Vendor Information</h3>
+        <p>Enter the email address and Vendor ID number from your invitation email to access your application.</p>
+        <form class="oha-vh-form" method="post" action="<?php echo esc_url($page_url); ?>">
+            <?php wp_nonce_field('oha_vh_lookup', 'oha_vh_lookup_nonce'); ?>
+            <div class="oha-vh-row">
+                <label for="lookup_email">Email Address *</label>
+                <input type="email" id="lookup_email" name="lookup_email" required
+                    placeholder="you@example.com"
+                    value="<?php echo esc_attr($email_val); ?>">
+            </div>
+            <div class="oha-vh-row">
+                <label for="lookup_vid">Vendor ID Number *</label>
+                <input type="text" id="lookup_vid" name="lookup_vid" required
+                    placeholder="e.g. 123 or VID-123"
+                    value="<?php echo esc_attr($vid_val); ?>">
+                <p style="margin:.25em 0 0;font-size:.85em;color:#bbb;">Your Vendor ID was included in your invitation email (e.g. "Your Vendor ID is: VID-123"). Enter just the number or the full VID-123.</p>
+            </div>
+            <div style="margin-top:1em;">
+                <button type="submit" class="oha-vh-btn">Find My Application</button>
+            </div>
+        </form>
+    </div>
+    <?php
 }
 
 add_shortcode('oha_vendor_edit', function() {
     wp_enqueue_style('oha-vhcpt');
 
     $current_url = get_permalink() ?: home_url(add_query_arg(null, null));
+    $notice      = '';
+    $app_id      = 0;
 
-    // ── Determine access path ────────────────────────────────────────────────
+    // ── POST: Lookup form submitted ──────────────────────────────────────────
 
-    $app_id    = 0;
-    $auth_mode = ''; // 'token' | 'user'
-    $token_val = isset($_GET['edit_token']) ? sanitize_text_field($_GET['edit_token']) : '';
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['oha_vh_lookup_nonce'])) {
 
-    if ($token_val) {
-        $app_id    = oha_vh_get_app_by_token($token_val);
-        $auth_mode = $app_id ? 'token' : '';
-    } elseif (is_user_logged_in()) {
-        $app_id    = oha_vh_get_app_for_user();
-        $auth_mode = $app_id ? 'user' : '';
-    }
-
-    // ── POST: handle email request (magic link send) ─────────────────────────
-
-    $notice = '';
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['oha_vh_edit_email_nonce'])) {
-        if (!wp_verify_nonce($_POST['oha_vh_edit_email_nonce'], 'oha_vh_edit_email_request')) {
+        if (!wp_verify_nonce($_POST['oha_vh_lookup_nonce'], 'oha_vh_lookup')) {
             $notice = '<div class="oha-vh-error">Security check failed. Please try again.</div>';
         } else {
-            $submitted_email = sanitize_email(wp_unslash($_POST['vendor_lookup_email'] ?? ''));
-            $rate_key        = 'oha_vh_edit_req_' . md5($submitted_email);
+            $lookup_email = sanitize_email(wp_unslash($_POST['lookup_email'] ?? ''));
+            $lookup_vid   = intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['lookup_vid'] ?? '')));
 
-            if (get_transient($rate_key)) {
-                $notice = '<div class="oha-vh-success">An email was recently sent to that address. Please check your inbox (and spam folder). You can request a new link in a few minutes.</div>';
+            if (!$lookup_email || !$lookup_vid) {
+                $notice = '<div class="oha-vh-error">Please enter both your email address and Vendor ID number.</div>';
             } else {
-                // Always show the same message regardless of whether the email was found
-                $notice = '<div class="oha-vh-success">If an application was found for that email address, we\'ve sent a link to update your vendor information. Please check your inbox (and spam folder).</div>';
-
-                $apps = get_posts([
-                    'post_type'      => 'vendor_application',
-                    'post_status'    => 'any',
-                    'posts_per_page' => 1,
-                    'orderby'        => 'date',
-                    'order'          => 'DESC',
-                    'meta_query'     => [
-                        ['key' => 'email', 'value' => $submitted_email, 'compare' => '='],
-                    ],
-                ]);
-
-                if (!empty($apps)) {
-                    $found_id   = $apps[0]->ID;
-                    $new_token  = oha_vh_generate_edit_token($found_id);
-                    $edit_url   = trailingslashit(get_permalink() ?: home_url('/'));
-                    $first_name = get_post_meta($found_id, 'first_name', true);
-                    oha_vh_send_edit_link($submitted_email, $new_token, $edit_url, $first_name);
+                $app_id = oha_vh_find_app_by_email_and_vid($lookup_email, $lookup_vid);
+                if (!$app_id) {
+                    $notice = '<div class="oha-vh-error">No application was found matching that email address and Vendor ID. Please double-check both and try again. Your Vendor ID appears in your invitation email as "VID-" followed by a number.</div>';
                 }
-
-                set_transient($rate_key, 1, 5 * MINUTE_IN_SECONDS);
             }
         }
 
-        // After email request POST, always show the email form (no redirect to avoid re-send on refresh)
-        ob_start();
-        echo $notice;
-        oha_vh_render_email_form($current_url);
-        return ob_get_clean();
+        if (!$app_id) {
+            $email_prefill = sanitize_email(wp_unslash($_POST['lookup_email'] ?? ''));
+            $vid_prefill   = sanitize_text_field(wp_unslash($_POST['lookup_vid'] ?? ''));
+            ob_start();
+            echo $notice;
+            oha_vh_render_lookup_form($current_url, $email_prefill, $vid_prefill);
+            return ob_get_clean();
+        }
+
+        // Fall through — app_id found, render edit form below
     }
 
-    // ── POST: handle edit form save ──────────────────────────────────────────
+    // ── POST: Edit form submitted ────────────────────────────────────────────
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['oha_vh_edit_nonce']) && $app_id) {
-        $posted_nonce = $_POST['oha_vh_edit_nonce'];
-        $posted_token = sanitize_text_field($_POST['edit_token'] ?? '');
+    elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['oha_vh_edit_nonce'])) {
 
-        // Re-validate access
-        $access_ok = false;
-        if (wp_verify_nonce($posted_nonce, 'oha_vhcpt_vendor_edit_' . $app_id)) {
-            if ($auth_mode === 'user') {
-                $access_ok = true;
-            } elseif ($auth_mode === 'token' && $posted_token) {
-                // Re-check token is still valid
-                $access_ok = (oha_vh_get_app_by_token($posted_token) === $app_id);
-            }
-        }
+        $posted_app_id = intval($_POST['app_id'] ?? 0);
+        $re_email      = sanitize_email(wp_unslash($_POST['lookup_email'] ?? ''));
+        $re_vid        = intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['lookup_vid'] ?? '')));
+
+        $nonce_ok    = $posted_app_id && wp_verify_nonce($_POST['oha_vh_edit_nonce'], 'oha_vhcpt_vendor_edit_' . $posted_app_id);
+        $verified_id = oha_vh_find_app_by_email_and_vid($re_email, $re_vid);
+        $access_ok   = $nonce_ok && ($verified_id === $posted_app_id);
 
         if (!$access_ok) {
-            $notice = '<div class="oha-vh-error">Session expired or invalid. Please use your email link again.</div>';
-            $app_id = 0;
+            $notice = '<div class="oha-vh-error">Verification failed or your session expired. Please start over.</div>';
+            ob_start();
+            echo $notice;
+            oha_vh_render_lookup_form($current_url);
+            return ob_get_clean();
+        }
+
+        $app_id = $posted_app_id;
+        $status = get_post_meta($app_id, '_oha_status', true);
+        $errors = [];
+
+        $fields_to_save = [
+            'first_name'           => sanitize_text_field(wp_unslash($_POST['first_name'] ?? '')),
+            'last_name'            => sanitize_text_field(wp_unslash($_POST['last_name'] ?? '')),
+            'company_name'         => sanitize_text_field(wp_unslash($_POST['company_name'] ?? '')),
+            'email'                => sanitize_email(wp_unslash($_POST['email'] ?? '')),
+            'phone'                => sanitize_text_field(wp_unslash($_POST['phone'] ?? '')),
+            'address_street'       => sanitize_text_field(wp_unslash($_POST['address_street'] ?? '')),
+            'address_city'         => sanitize_text_field(wp_unslash($_POST['address_city'] ?? '')),
+            'address_state'        => sanitize_text_field(wp_unslash($_POST['address_state'] ?? '')),
+            'address_zip'          => sanitize_text_field(wp_unslash($_POST['address_zip'] ?? '')),
+            'website'              => sanitize_text_field(wp_unslash($_POST['website'] ?? '')),
+            'product_type'         => sanitize_textarea_field(wp_unslash($_POST['product_type'] ?? '')),
+            'booths'               => max(1, intval(wp_unslash($_POST['booths'] ?? 1))),
+            'sponsor'              => isset($_POST['sponsor']) ? 1 : 0,
+            'booth_preference'     => sanitize_textarea_field(wp_unslash($_POST['booth_preference'] ?? '')),
+            'vendor_private_notes' => sanitize_textarea_field(wp_unslash($_POST['vendor_private_notes'] ?? '')),
+        ];
+        $tables_needed = max(0, intval(wp_unslash($_POST['tables_needed'] ?? 0)));
+        $need_electric = sanitize_text_field(wp_unslash($_POST['need_electric'] ?? ''));
+
+        // Normalize website URL — add https:// if protocol is missing.
+        if (!empty($fields_to_save['website'])) {
+            $url = trim($fields_to_save['website']);
+            $url = preg_replace('/[\x{00AD}\x{200B}\x{FEFF}]/u', '', $url);
+            $url = trim($url, " \t\n\r\0\x0B\"'\u{201C}\u{201D}\u{2018}\u{2019}");
+            if ($url !== '' && !preg_match('#^https?://#i', $url)) {
+                $url = 'https://' . $url;
+            }
+            $fields_to_save['website'] = $url !== '' ? esc_url_raw($url) : '';
+        }
+
+        foreach (['first_name', 'last_name', 'company_name', 'email', 'phone', 'product_type'] as $req) {
+            if (empty($fields_to_save[$req])) {
+                $errors[] = ucwords(str_replace('_', ' ', $req)) . ' is required.';
+            }
+        }
+        if (empty($fields_to_save['booths'])) {
+            $errors[] = 'Number of booth spaces is required.';
+        }
+        if (!isset($_POST['tables_needed'])) {
+            $errors[] = 'Number of tables needed is required.';
+        }
+        if (!in_array($need_electric, ['yes', 'no'], true)) {
+            $errors[] = 'Please indicate whether you need electrical access at your booth.';
+        }
+
+        if (!empty($errors)) {
+            $notice = '<div class="oha-vh-error">Please correct the following:<ul><li>'
+                . implode('</li><li>', array_map('esc_html', $errors))
+                . '</li></ul></div>';
+            // app_id stays set — fall through to re-render edit form with errors
         } else {
-            $status        = get_post_meta($app_id, '_oha_status', true);
-            $locked        = in_array($status, ['Agreement Signed', 'Paid'], true);
-            $errors        = [];
+            foreach ($fields_to_save as $key => $val) {
+                update_post_meta($app_id, $key, $val);
+            }
+            update_post_meta($app_id, 'tables_needed', $tables_needed);
+            update_post_meta($app_id, 'need_electric', $need_electric === 'yes' ? 1 : 0);
+            wp_update_post(['ID' => $app_id, 'post_title' => $fields_to_save['company_name']]);
 
-            // Sanitize and validate fields
-            $fields_to_save = [
-                'first_name'     => sanitize_text_field(wp_unslash($_POST['first_name'] ?? '')),
-                'last_name'      => sanitize_text_field(wp_unslash($_POST['last_name'] ?? '')),
-                'company_name'   => sanitize_text_field(wp_unslash($_POST['company_name'] ?? '')),
-                'email'          => sanitize_email(wp_unslash($_POST['email'] ?? '')),
-                'phone'          => sanitize_text_field(wp_unslash($_POST['phone'] ?? '')),
-                'address_street' => sanitize_text_field(wp_unslash($_POST['address_street'] ?? '')),
-                'address_city'   => sanitize_text_field(wp_unslash($_POST['address_city'] ?? '')),
-                'address_state'  => sanitize_text_field(wp_unslash($_POST['address_state'] ?? '')),
-                'address_zip'    => sanitize_text_field(wp_unslash($_POST['address_zip'] ?? '')),
-                'website'        => sanitize_text_field(wp_unslash($_POST['website'] ?? '')),
-            ];
+            $logo_error = '';
+            if (!empty($_FILES['vendor_logo']['name'])) {
+                $logo_error = oha_vh_handle_logo_upload($app_id);
+            } elseif (!empty($_POST['remove_logo'])) {
+                delete_post_meta($app_id, '_company_logo_id');
+                delete_post_meta($app_id, '_company_logo_url');
+            }
 
-            $fields_to_save['product_type'] = sanitize_textarea_field(wp_unslash($_POST['product_type'] ?? ''));
-
-            // Required field check
-            foreach (['first_name', 'last_name', 'company_name', 'email', 'phone'] as $req) {
-                if (empty($fields_to_save[$req])) {
-                    $errors[] = ucwords(str_replace('_', ' ', $req)) . ' is required.';
+            // Promote Invited → Submitted on first vendor save.
+            if ($status === 'Invited') {
+                update_post_meta($app_id, '_oha_status', 'Submitted');
+                if (function_exists('oha_vhcpt_append_history')) {
+                    oha_vhcpt_append_history($app_id, [
+                        'type'        => 'application_submitted',
+                        'description' => 'Vendor completed and submitted their return invite application.',
+                    ]);
                 }
             }
 
-            if (!empty($errors)) {
-                $notice = '<div class="oha-vh-error">Please correct the following:<ul><li>' . implode('</li><li>', array_map('esc_html', $errors)) . '</li></ul></div>';
+            // Send confirmation email to returning vendor.
+            $vendor_email = $fields_to_save['email'];
+            if ($vendor_email) {
+                $conv_name = get_option('oha_vhcpt_convention_name', 'the Ohio Haunters Convention');
+                $default_subject = 'Your Vendor Information Has Been Updated - {convention_name}';
+                $default_body    = "Hello {first_name},\n\nThank you for updating your vendor information for {convention_name}. We have received your submission and will be in touch soon with next steps.\n\nIf you need to make any changes, you can return to the vendor update page at any time and log in with your email address and Vendor ID.\n\n-- The OHA Team";
+
+                $conf_subject = get_option('oha_vhcpt_return_confirm_subject', $default_subject);
+                $conf_body    = get_option('oha_vhcpt_return_confirm_body',    $default_body);
+
+                $replacements = [
+                    '{first_name}'      => $fields_to_save['first_name'],
+                    '{company_name}'    => $fields_to_save['company_name'],
+                    '{convention_name}' => $conv_name,
+                ];
+                $conf_subject = str_replace(array_keys($replacements), array_values($replacements), $conf_subject);
+                $conf_body    = str_replace(array_keys($replacements), array_values($replacements), $conf_body);
+
+                wp_mail($vendor_email, $conf_subject, $conf_body);
+            }
+
+            if ($logo_error) {
+                $notice = '<div class="oha-vh-success">Your vendor information has been updated successfully. Logo upload failed: ' . esc_html($logo_error) . '</div>';
             } else {
-                // Save text fields
-                foreach ($fields_to_save as $key => $val) {
-                    update_post_meta($app_id, $key, $val);
-                }
-
-                // Update post title if company name changed
-                wp_update_post(['ID' => $app_id, 'post_title' => $fields_to_save['company_name']]);
-
-                // Handle logo
-                $logo_error = '';
-                if (!empty($_FILES['vendor_logo']['name'])) {
-                    $logo_error = oha_vh_handle_logo_upload($app_id);
-                } elseif (!empty($_POST['remove_logo'])) {
-                    delete_post_meta($app_id, '_company_logo_id');
-                    delete_post_meta($app_id, '_company_logo_url');
-                }
-
-                if ($logo_error) {
-                    $notice = '<div class="oha-vh-error">Info saved, but logo upload failed: ' . esc_html($logo_error) . '</div>';
-                } else {
-                    $notice = '<div class="oha-vh-success">Your vendor information has been updated successfully.</div>';
-                }
+                $notice = '<div class="oha-vh-success">Your vendor information has been updated successfully. You will receive a confirmation email shortly.</div>';
             }
         }
     }
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // ── No POST → show lookup form ───────────────────────────────────────────
 
-    ob_start();
-    echo $notice;
-
-    if (!$app_id) {
-        // Token was in URL but invalid/expired
-        if ($token_val && !$app_id) {
-            echo '<div class="oha-vh-error"><strong>This link has expired or is invalid.</strong> Please request a new link below.</div>';
-        }
-        oha_vh_render_email_form($current_url);
+    else {
+        ob_start();
+        oha_vh_render_lookup_form($current_url);
         return ob_get_clean();
     }
 
-    // Show edit form
-    $status  = get_post_meta($app_id, '_oha_status', true);
-    $locked  = in_array($status, ['Agreement Signed', 'Paid'], true);
+    // ── Render edit form ─────────────────────────────────────────────────────
 
-    // Read current values (use POST values if there were validation errors)
+    $lookup_email = sanitize_email(wp_unslash($_POST['lookup_email'] ?? ''));
+    $lookup_vid   = intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['lookup_vid'] ?? '')));
+    $status       = get_post_meta($app_id, '_oha_status', true) ?: 'Invited';
+
+    $using_post = (isset($_POST['oha_vh_edit_nonce']) && $_SERVER['REQUEST_METHOD'] === 'POST');
+
+    // Text/select fields — esc_attr for use in input value attributes.
     $v = [];
-    $text_fields = ['first_name','last_name','company_name','email','phone',
-                    'address_street','address_city','address_state','address_zip','website','product_type'];
-    foreach ($text_fields as $f) {
-        $v[$f] = (isset($_POST[$f]) && $_SERVER['REQUEST_METHOD'] === 'POST')
-            ? esc_attr(wp_unslash($_POST[$f]))
+    foreach (['first_name','last_name','company_name','email','phone',
+              'address_street','address_city','address_state','address_zip',
+              'website','booths','sponsor'] as $f) {
+        $v[$f] = $using_post
+            ? esc_attr(wp_unslash($_POST[$f] ?? ''))
             : esc_attr(get_post_meta($app_id, $f, true));
     }
 
-    $logo_id  = get_post_meta($app_id, '_company_logo_id', true);
-    $logo_url = get_post_meta($app_id, '_company_logo_url', true);
-    $logo_img = $logo_id ? wp_get_attachment_image_src((int)$logo_id, [150, 150]) : null;
-    ?>
-    <div class="oha-vh-edit-wrap">
-        <h3>Update Your Vendor Information</h3>
+    // Textarea fields — esc_textarea for use inside <textarea>.
+    foreach (['product_type', 'booth_preference', 'vendor_private_notes'] as $f) {
+        $v[$f] = $using_post
+            ? esc_textarea(wp_unslash($_POST[$f] ?? ''))
+            : esc_textarea(get_post_meta($app_id, $f, true));
+    }
 
+    // tables_needed and need_electric — stored as int/bool in DB, need conversion for form.
+    if ($using_post) {
+        $v['tables_needed'] = intval(wp_unslash($_POST['tables_needed'] ?? 0));
+        $v['need_electric'] = sanitize_text_field(wp_unslash($_POST['need_electric'] ?? ''));
+    } else {
+        $v['tables_needed'] = intval(get_post_meta($app_id, 'tables_needed', true));
+        $v['need_electric'] = get_post_meta($app_id, 'need_electric', true) ? 'yes' : 'no';
+    }
+
+    $logo_id  = get_post_meta($app_id, '_company_logo_id', true);
+    $logo_img = $logo_id ? wp_get_attachment_image_src((int)$logo_id, [150, 150]) : null;
+
+    ob_start();
+    echo oha_vh_sandbox_banner();
+    echo $notice;
+    ?>
+    <style>
+    .oha-vh-section { margin-bottom: 2em; }
+    .oha-vh-section-head { margin-bottom: 1em; padding-bottom: 0.5em; border-bottom: 1px solid #333; }
+    .oha-vh-section-title { font-size: 1.05em; font-weight: 700; margin: 0 0 0.25em; color: var(--global-palette3, #fff); }
+    .oha-vh-section-desc { font-size: 0.875em; margin: 0; color: var(--global-palette6, #cbd2d9); }
+    .oha-vh-badge-public { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #1a7a3a; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+    .oha-vh-badge-private { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #555; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+    .oha-vh-hint { display: block; font-size: 0.8em; color: var(--global-palette6, #cbd2d9); margin-top: 4px; line-height: 1.4; }
+    .oha-vh-req { color: #ef4444; }
+    .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
+    .oha-vh-logo-wrap { display: flex; flex-direction: column; gap: .25em; }
+    .oha-vh-edit-wrap .oha-vh-row label { color: var(--global-palette3, #fff); }
+    </style>
+
+    <div class="oha-vh-edit-wrap">
         <form class="oha-vh-form" method="post" enctype="multipart/form-data">
             <?php wp_nonce_field('oha_vhcpt_vendor_edit_' . $app_id, 'oha_vh_edit_nonce'); ?>
-            <input type="hidden" name="edit_token" value="<?php echo esc_attr($token_val); ?>">
+            <input type="hidden" name="app_id"       value="<?php echo esc_attr($app_id); ?>">
+            <input type="hidden" name="lookup_email" value="<?php echo esc_attr($lookup_email); ?>">
+            <input type="hidden" name="lookup_vid"   value="<?php echo esc_attr($lookup_vid); ?>">
 
-            <h4 style="margin:1.5em 0 0.5em;">Contact Information</h4>
+            <?php /* ── SECTION 1: PUBLIC BUSINESS INFORMATION ── */ ?>
+            <div class="oha-vh-section">
+                <div class="oha-vh-section-head">
+                    <p class="oha-vh-section-title">Business Information <span class="oha-vh-badge-public">Shown Publicly</span></p>
+                    <p class="oha-vh-section-desc">This information appears on the OHA website vendor listing, the convention map, and in the convention app. Make sure it represents your business accurately.</p>
+                </div>
 
-            <div class="oha-vh-row">
-                <label for="ve_first_name">First Name *</label>
-                <input type="text" id="ve_first_name" name="first_name" value="<?php echo $v['first_name']; ?>" required>
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_last_name">Last Name *</label>
-                <input type="text" id="ve_last_name" name="last_name" value="<?php echo $v['last_name']; ?>" required>
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_company_name">Company Name *</label>
-                <input type="text" id="ve_company_name" name="company_name" value="<?php echo $v['company_name']; ?>" required>
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_email">Email *</label>
-                <input type="email" id="ve_email" name="email" value="<?php echo $v['email']; ?>" required>
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_phone">Phone *</label>
-                <input type="text" id="ve_phone" name="phone" value="<?php echo $v['phone']; ?>">
-            </div>
+                <div class="oha-vh-row">
+                    <label for="ve_company_name">Company Name <span class="oha-vh-req">*</span></label>
+                    <input type="text" id="ve_company_name" name="company_name" value="<?php echo $v['company_name']; ?>" required>
+                    <span class="oha-vh-hint">Your business or brand name as it will appear publicly.</span>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_website">Company Website</label>
+                    <input type="text" id="ve_website" name="website" value="<?php echo $v['website']; ?>" placeholder="https://...">
+                    <span class="oha-vh-hint">Enter your website address with or without https:// - we will add it automatically. Leave blank if you do not have one.</span>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_product_type">Products / Description <span class="oha-vh-req">*</span></label>
+                    <textarea id="ve_product_type" name="product_type" rows="4" required><?php echo $v['product_type']; ?></textarea>
+                    <span class="oha-vh-hint">Describe what you will be selling. This appears on your public vendor card - be specific so attendees can find you.</span>
+                </div>
 
-            <h4 style="margin:1.5em 0 0.5em;">Address</h4>
-
-            <div class="oha-vh-row">
-                <label for="ve_address_street">Street Address</label>
-                <input type="text" id="ve_address_street" name="address_street" value="<?php echo $v['address_street']; ?>">
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_address_city">City</label>
-                <input type="text" id="ve_address_city" name="address_city" value="<?php echo $v['address_city']; ?>">
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_address_state">State</label>
-                <select id="ve_address_state" name="address_state">
-                    <option value="">Select&hellip;</option>
-                    <?php
-                    $states_html = oha_vhcpt_render_states();
-                    if ($v['address_state']) {
-                        $states_html = str_replace(
-                            'value="' . esc_attr($v['address_state']) . '"',
-                            'value="' . esc_attr($v['address_state']) . '" selected',
-                            $states_html
-                        );
-                    }
-                    echo $states_html;
-                    ?>
-                </select>
-            </div>
-            <div class="oha-vh-row">
-                <label for="ve_address_zip">Zip Code</label>
-                <input type="text" id="ve_address_zip" name="address_zip" value="<?php echo $v['address_zip']; ?>">
+                <div class="oha-vh-row">
+                    <label>Company Logo / Photo <span class="oha-vh-badge-public">Shown Publicly</span></label>
+                    <div class="oha-vh-logo-wrap">
+                        <?php if ($logo_img): ?>
+                            <img id="oha-ve-logo-preview" src="<?php echo esc_url($logo_img[0]); ?>" alt="Current logo"
+                                style="max-width:150px;max-height:150px;display:block;margin-bottom:.5em;border:1px solid #444;border-radius:4px;">
+                            <label style="display:flex;align-items:center;gap:.4em;margin-bottom:.5em;font-weight:normal;cursor:pointer;">
+                                <input type="checkbox" name="remove_logo" value="1"> Remove current logo
+                            </label>
+                        <?php else: ?>
+                            <img id="oha-ve-logo-preview" src="" alt=""
+                                style="max-width:150px;max-height:150px;display:none;margin-bottom:.5em;border:1px solid #444;border-radius:4px;">
+                        <?php endif; ?>
+                        <input type="file" id="oha-ve-logo-file" name="vendor_logo" accept="image/jpeg,image/png,image/gif">
+                        <span class="oha-vh-hint">Your logo appears on your vendor card, the convention map, and in the convention app. JPG or PNG recommended, max 5 MB.</span>
+                    </div>
+                </div>
             </div>
 
-            <h4 style="margin:1.5em 0 0.5em;">Vendor Profile</h4>
-
-            <div class="oha-vh-row">
-                <label for="ve_website">Company Website</label>
-                <input type="text" id="ve_website" name="website" value="<?php echo $v['website']; ?>" placeholder="https://...">
+            <?php /* ── SECTION 2: CONTACT INFORMATION ── */ ?>
+            <div class="oha-vh-section">
+                <div class="oha-vh-section-head">
+                    <p class="oha-vh-section-title">Your Contact Information <span class="oha-vh-badge-private">Board Only</span></p>
+                    <p class="oha-vh-section-desc">This information is seen only by the OHA board. It is never displayed publicly and is used for communication and agreement purposes only.</p>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_first_name">First Name <span class="oha-vh-req">*</span></label>
+                    <input type="text" id="ve_first_name" name="first_name" value="<?php echo $v['first_name']; ?>" required>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_last_name">Last Name <span class="oha-vh-req">*</span></label>
+                    <input type="text" id="ve_last_name" name="last_name" value="<?php echo $v['last_name']; ?>" required>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_email">Email <span class="oha-vh-req">*</span></label>
+                    <input type="email" id="ve_email" name="email" value="<?php echo $v['email']; ?>" required>
+                    <span class="oha-vh-hint">We will send your confirmation and any agreements to this address.</span>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_phone">Phone <span class="oha-vh-req">*</span></label>
+                    <input type="text" id="ve_phone" name="phone" value="<?php echo $v['phone']; ?>" required>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_address_street">Street Address</label>
+                    <input type="text" id="ve_address_street" name="address_street" value="<?php echo $v['address_street']; ?>">
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_address_city">City</label>
+                    <input type="text" id="ve_address_city" name="address_city" value="<?php echo $v['address_city']; ?>">
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_address_state">State</label>
+                    <select id="ve_address_state" name="address_state">
+                        <option value="">Select...</option>
+                        <?php
+                        $states_html = oha_vhcpt_render_states();
+                        if ($v['address_state']) {
+                            $states_html = str_replace(
+                                'value="' . esc_attr(get_post_meta($app_id, 'address_state', true)) . '"',
+                                'value="' . esc_attr(get_post_meta($app_id, 'address_state', true)) . '" selected',
+                                $states_html
+                            );
+                        }
+                        echo $states_html;
+                        ?>
+                    </select>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_address_zip">Zip Code</label>
+                    <input type="text" id="ve_address_zip" name="address_zip" value="<?php echo $v['address_zip']; ?>">
+                </div>
             </div>
 
-            <div class="oha-vh-row">
-                <label>Products / Description *</label>
-                <textarea id="ve_product_type" name="product_type" rows="4" required><?php echo esc_textarea(get_post_meta($app_id, 'product_type', true)); ?></textarea>
+            <?php /* ── SECTION 3: CONVENTION DETAILS ── */ ?>
+            <div class="oha-vh-section">
+                <div class="oha-vh-section-head">
+                    <p class="oha-vh-section-title">Convention Details</p>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_booths">Number of booth spaces requested <span class="oha-vh-req">*</span></label>
+                    <input type="number" id="ve_booths" name="booths" value="<?php echo esc_attr($v['booths'] ?: 1); ?>" min="1" max="10" required>
+                    <span class="oha-vh-hint">Each booth space is 10x10. Contact us if you need clarification before submitting.</span>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_tables_needed">Number of tables needed <span class="oha-vh-req">*</span></label>
+                    <input type="number" id="ve_tables_needed" name="tables_needed" value="<?php echo esc_attr($v['tables_needed']); ?>" min="0" max="10" required>
+                    <span class="oha-vh-hint">Enter 0 if you are bringing your own or do not need any.</span>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_need_electric">Do you need electrical access at your booth? <span class="oha-vh-req">*</span></label>
+                    <select id="ve_need_electric" name="need_electric" required>
+                        <option value="">Select...</option>
+                        <option value="yes" <?php selected($v['need_electric'], 'yes'); ?>>Yes</option>
+                        <option value="no"  <?php selected($v['need_electric'], 'no'); ?>>No</option>
+                    </select>
+                </div>
+                <div class="oha-vh-row">
+                    <label class="oha-vh-checkbox-label">
+                        <input type="checkbox" name="sponsor" value="1" <?php checked($v['sponsor'], '1'); ?>>
+                        I am interested in being a sponsor
+                    </label>
+                </div>
             </div>
 
-            <div class="oha-vh-row">
-                <label>Company Logo / Photo</label>
-                <div class="oha-vh-logo-wrap">
-                    <?php if ($logo_img): ?>
-                        <div class="oha-vh-logo-current">
-                            <img id="oha-ve-logo-preview" src="<?php echo esc_url($logo_img[0]); ?>" alt="Current logo" style="max-width:150px;max-height:150px;display:block;margin-bottom:0.5em;border:1px solid #ddd;border-radius:4px;">
-                        </div>
-                        <label style="display:flex;align-items:center;gap:0.4em;margin-bottom:0.5em;font-weight:normal;cursor:pointer;">
-                            <input type="checkbox" name="remove_logo" value="1"> Remove current logo
-                        </label>
-                    <?php else: ?>
-                        <img id="oha-ve-logo-preview" src="" alt="" style="max-width:150px;max-height:150px;display:none;margin-bottom:0.5em;border:1px solid #ddd;border-radius:4px;">
-                    <?php endif; ?>
-                    <input type="file" id="oha-ve-logo-file" name="vendor_logo" accept="image/jpeg,image/png,image/gif">
-                    <p style="margin:0.25em 0 0;font-size:.85em;color:#666;">JPG, PNG, or GIF. Max 5 MB.</p>
+            <?php /* ── SECTION 4: BOOTH PREFERENCE ── */ ?>
+            <div class="oha-vh-section">
+                <div class="oha-vh-section-head">
+                    <p class="oha-vh-section-title">Booth Preference <span class="oha-vh-badge-private">Board Only</span></p>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_booth_preference">Booth preference or location notes (optional)</label>
+                    <textarea id="ve_booth_preference" name="booth_preference" rows="3"
+                        placeholder="Example: I would like to keep my booth from last year. Or: I would prefer to be near the main entrance."><?php echo $v['booth_preference']; ?></textarea>
+                </div>
+            </div>
+
+            <?php /* ── SECTION 5: NOTE TO BOARD ── */ ?>
+            <div class="oha-vh-section">
+                <div class="oha-vh-section-head">
+                    <p class="oha-vh-section-title">Note to the OHA Board <span class="oha-vh-badge-private">Board Only</span></p>
+                    <p class="oha-vh-section-desc">Share anything the board should know - accessibility needs, questions, or special requests. This is seen only by the board and is never shared publicly.</p>
+                </div>
+                <div class="oha-vh-row">
+                    <label for="ve_vendor_private_notes">Notes (optional)</label>
+                    <textarea id="ve_vendor_private_notes" name="vendor_private_notes" rows="4"><?php echo $v['vendor_private_notes']; ?></textarea>
                 </div>
             </div>
 
@@ -420,14 +543,11 @@ add_shortcode('oha_vendor_edit', function() {
                 <button type="submit" class="oha-vh-btn">Save Changes</button>
             </div>
         </form>
-    </div>
 
-    <style>
-    .oha-vh-edit-wrap h4 { border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
-    .oha-vh-logo-wrap { display:flex; flex-direction:column; gap:0.25em; }
-    .oha-vh-status-note { background:#fff8e1; border-left:3px solid #f59e0b; padding:0.6em 0.9em; margin-bottom:1em; border-radius:0 4px 4px 0; color:#000; }
-    .oha-vh-edit-wrap .oha-vh-row label { color:#fff; }
-    </style>
+        <p style="margin-top:1.5em;font-size:.9em;">
+            <a href="<?php echo esc_url($current_url); ?>">Start over / look up a different application</a>
+        </p>
+    </div>
 
     <script>
     (function(){
@@ -450,25 +570,3 @@ add_shortcode('oha_vendor_edit', function() {
     <?php
     return ob_get_clean();
 });
-
-/**
- * Render the email request form (State 1 / expired token state).
- */
-function oha_vh_render_email_form($page_url) {
-    ?>
-    <div class="oha-vh-edit-email-wrap">
-        <h3>Update Your Vendor Information</h3>
-        <p>Enter the email address you used when you applied to be a vendor. We will send you a secure link to update your information.</p>
-        <form class="oha-vh-form" method="post" action="<?php echo esc_url($page_url); ?>">
-            <?php wp_nonce_field('oha_vh_edit_email_request', 'oha_vh_edit_email_nonce'); ?>
-            <div class="oha-vh-row">
-                <label for="vendor_lookup_email">Email Address *</label>
-                <input type="email" id="vendor_lookup_email" name="vendor_lookup_email" required placeholder="you@example.com">
-            </div>
-            <div style="margin-top:1em;">
-                <button type="submit" class="oha-vh-btn">Send Me a Link</button>
-            </div>
-        </form>
-    </div>
-    <?php
-}

@@ -1283,8 +1283,8 @@ add_action('wp_ajax_oha_vh_admin_override_status', function() {
    ========================================================================== */
 
 /**
- * Helper: Get vendors matching given statuses with post ID and first name.
- * Returns array of ['app_id', 'email', 'first_name', 'company'].
+ * Helper: Get vendors matching given statuses with post ID, first name, and permanent vendor ID.
+ * Returns array of ['app_id', 'email', 'first_name', 'company', 'vendor_id'].
  * Deduplicates by email address.
  *
  * @param array $statuses Status strings to match against _oha_status meta.
@@ -1303,12 +1303,14 @@ function oha_vh_get_vendors_for_edit_links(array $statuses) {
         "SELECT p.ID,
                 pm_email.meta_value  AS email,
                 pm_fn.meta_value     AS first_name,
-                pm_cn.meta_value     AS company_name
+                pm_cn.meta_value     AS company_name,
+                pm_vid.meta_value    AS vendor_permanent_id
          FROM {$wpdb->posts} p
          LEFT JOIN {$wpdb->postmeta} pm_status ON pm_status.post_id = p.ID AND pm_status.meta_key = '_oha_status'
          LEFT JOIN {$wpdb->postmeta} pm_email   ON pm_email.post_id  = p.ID AND pm_email.meta_key  = 'email'
          LEFT JOIN {$wpdb->postmeta} pm_fn      ON pm_fn.post_id     = p.ID AND pm_fn.meta_key     = 'first_name'
          LEFT JOIN {$wpdb->postmeta} pm_cn      ON pm_cn.post_id     = p.ID AND pm_cn.meta_key     = 'company_name'
+         LEFT JOIN {$wpdb->postmeta} pm_vid     ON pm_vid.post_id    = p.ID AND pm_vid.meta_key    = '_vendor_permanent_id'
          WHERE p.post_type   = 'vendor_application'
            AND p.post_status != 'trash'
            AND COALESCE(pm_status.meta_value, 'Submitted') IN ({$placeholders})",
@@ -1328,11 +1330,14 @@ function oha_vh_get_vendors_for_edit_links(array $statuses) {
         }
         $seen[$email] = true;
 
+        $vid = intval($row->vendor_permanent_id ?? $row->ID);
+
         $result[] = [
             'app_id'     => (int) $row->ID,
             'email'      => $email,
             'first_name' => sanitize_text_field($row->first_name ?? ''),
             'company'    => sanitize_text_field($row->company_name ?? ''),
+            'vendor_id'  => $vid ?: (int) $row->ID,
         ];
     }
 
@@ -1362,7 +1367,8 @@ add_action('wp_ajax_oha_vh_edit_links_count', function() {
 });
 
 /**
- * AJAX: Generate tokens and send edit-link emails to vendors by status.
+ * AJAX: Send vendor update reminder emails by status.
+ * Emails include the vendor's ID number and the edit page URL — no tokens needed.
  * Sends individually via wp_mail — no JEmail dependency needed.
  */
 add_action('wp_ajax_oha_vh_edit_links_send', function() {
@@ -1398,27 +1404,32 @@ add_action('wp_ajax_oha_vh_edit_links_send', function() {
         return;
     }
 
+    $default_subject = 'Update Your Vendor Information - Ohio Haunters Convention';
+    $default_body    = "Hello {first_name},\n\nPlease visit the link below and enter your email address and Vendor ID number to update your vendor information.\n\nVendor Update Page:\n{link}\n\nYour Vendor ID: VID-{vendor_id}\n(Enter just the number, e.g. {vendor_id}, or the full VID-{vendor_id}.)\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
+
+    $subject_tpl = get_option('oha_vhcpt_edit_link_subject', $default_subject);
+    $body_tpl    = get_option('oha_vhcpt_edit_link_body',    $default_body);
+
     $sent_count  = 0;
     $error_count = 0;
 
     foreach ($vendors as $v) {
-        if (!function_exists('oha_vh_generate_edit_token') || !function_exists('oha_vh_send_edit_link')) {
-            $error_count++;
-            continue;
-        }
+        $subject = str_replace(
+            ['{first_name}', '{link}', '{vendor_id}'],
+            [$v['first_name'], $edit_page_url, $v['vendor_id']],
+            $subject_tpl
+        );
+        $body = str_replace(
+            ['{first_name}', '{link}', '{vendor_id}'],
+            [$v['first_name'], $edit_page_url, $v['vendor_id']],
+            $body_tpl
+        );
 
-        $token = oha_vh_generate_edit_token($v['app_id']);
-        $sent  = oha_vh_send_edit_link($v['email'], $token, $edit_page_url, $v['first_name']);
-
-        // wp_mail returns true on success
-        if ($sent !== false) {
-            $sent_count++;
-        } else {
-            $error_count++;
-        }
+        $sent = wp_mail($v['email'], $subject, $body);
+        if ($sent) { $sent_count++; } else { $error_count++; }
     }
 
-    $message = $sent_count . ' edit link' . ($sent_count === 1 ? '' : 's') . ' sent successfully.';
+    $message = $sent_count . ' email' . ($sent_count === 1 ? '' : 's') . ' sent successfully.';
     if ($error_count > 0) {
         $message .= ' ' . $error_count . ' failed — check server email settings.';
     }
@@ -1427,10 +1438,10 @@ add_action('wp_ajax_oha_vh_edit_links_send', function() {
 });
 
 /**
- * AJAX: Send a test edit-link email to the current admin.
- * Uses the first vendor_application on file to generate a real token so the
- * admin can click through and verify the form works end-to-end.
- * Subject is prefixed with [TEST] so it is easy to identify in the inbox.
+ * AJAX: Send a test vendor-update email to the current admin.
+ * Uses the most recent vendor_application on file as sample data.
+ * Shows the vendor's real VID and the edit page URL so the admin can
+ * verify the lookup form works end-to-end. Subject is prefixed [TEST].
  */
 add_action('wp_ajax_oha_vh_test_edit_link', function() {
     check_ajax_referer('oha_vh_send_edit_links', 'nonce');
@@ -1446,7 +1457,7 @@ add_action('wp_ajax_oha_vh_test_edit_link', function() {
 
     $edit_page_url = trailingslashit(get_permalink($edit_page_id));
 
-    // Find the first vendor application to use as test data
+    // Find the most recent vendor application to use as test data.
     $apps = get_posts([
         'post_type'      => 'vendor_application',
         'post_status'    => 'any',
@@ -1456,13 +1467,14 @@ add_action('wp_ajax_oha_vh_test_edit_link', function() {
     ]);
 
     if (empty($apps)) {
-        wp_send_json_error('No vendor applications exist yet. Create one first so the test link resolves to a real record.');
+        wp_send_json_error('No vendor applications exist yet. Create one first.');
         return;
     }
 
     $app_id     = $apps[0]->ID;
     $first_name = get_post_meta($app_id, 'first_name', true) ?: 'Vendor';
     $company    = get_post_meta($app_id, 'company_name', true) ?: 'Test Company';
+    $vendor_id  = intval(get_post_meta($app_id, '_vendor_permanent_id', true) ?: $app_id);
 
     $admin_email = wp_get_current_user()->user_email;
     if (!is_email($admin_email)) {
@@ -1470,27 +1482,18 @@ add_action('wp_ajax_oha_vh_test_edit_link', function() {
         return;
     }
 
-    if (!function_exists('oha_vh_generate_edit_token') || !function_exists('oha_vh_send_edit_link')) {
-        wp_send_json_error('Edit link functions not loaded. Make sure vendor-edit.php is included.');
-        return;
-    }
-
-    $token = oha_vh_generate_edit_token($app_id);
-    $link  = add_query_arg('edit_token', $token, $edit_page_url);
-
-    // Build email using the saved template but override subject with [TEST] prefix
     $default_subject = 'Update Your Vendor Information - Ohio Haunters Convention';
-    $default_body    = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
+    $default_body    = "Hello {first_name},\n\nPlease visit the link below and enter your email address and Vendor ID number to update your vendor information.\n\nVendor Update Page:\n{link}\n\nYour Vendor ID: VID-{vendor_id}\n(Enter just the number, e.g. {vendor_id}, or the full VID-{vendor_id}.)\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
 
     $subject = '[TEST] ' . get_option('oha_vhcpt_edit_link_subject', $default_subject);
     $body    = get_option('oha_vhcpt_edit_link_body', $default_body);
 
-    $subject = str_replace(['{first_name}', '{link}'], [$first_name, $link], $subject);
-    $body    = str_replace(['{first_name}', '{link}'], [$first_name, $link], $body);
+    $subject = str_replace(['{first_name}', '{link}', '{vendor_id}'], [$first_name, $edit_page_url, $vendor_id], $subject);
+    $body    = str_replace(['{first_name}', '{link}', '{vendor_id}'], [$first_name, $edit_page_url, $vendor_id], $body);
 
-    $body = "[TEST EMAIL — sent to admin, not the vendor]\n"
-          . "Vendor record used: #{$app_id} ({$company})\n"
-          . "This link is real and will open the edit form for that vendor.\n\n"
+    $body = "[TEST EMAIL - sent to admin, not the vendor]\n"
+          . "Vendor record used: #{$app_id} ({$company}) | VID-{$vendor_id}\n"
+          . "Go to the page and enter the vendor's email + VID-{$vendor_id} to test the lookup form.\n\n"
           . $body;
 
     $sent = wp_mail($admin_email, $subject, $body);
@@ -1498,8 +1501,8 @@ add_action('wp_ajax_oha_vh_test_edit_link', function() {
     if ($sent) {
         wp_send_json_success(
             'Test email sent to ' . $admin_email . '. '
-            . 'It uses vendor record #' . $app_id . ' (' . esc_html($company) . '). '
-            . 'Click the link in the email to verify the edit form opens correctly.'
+            . 'It uses vendor record #' . $app_id . ' (' . esc_html($company) . ', VID-' . $vendor_id . '). '
+            . 'Visit the edit page and enter that vendor\'s email + VID-' . $vendor_id . ' to verify the lookup form works.'
         );
     } else {
         wp_send_json_error('wp_mail() returned false. Check server email settings (FluentSMTP, etc.).');

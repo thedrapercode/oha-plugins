@@ -184,6 +184,20 @@ function oha_vhcpt_settings_page(){
         if ( $active_year < 2020 || $active_year > 2100 ) $active_year = intval( date('Y') );
         update_option( 'oha_vhcpt_active_year', $active_year );
 
+        // Sandbox / test mode.
+        update_option('oha_vhcpt_sandbox_mode', !empty($_POST['sandbox_mode']) ? 1 : 0);
+        if (isset($_POST['sandbox_email'])) {
+            update_option('oha_vhcpt_sandbox_email', sanitize_email(wp_unslash($_POST['sandbox_email'])));
+        }
+
+        // Returning vendor confirmation email.
+        if (isset($_POST['return_confirm_subject'])) {
+            update_option('oha_vhcpt_return_confirm_subject', sanitize_text_field(wp_unslash($_POST['return_confirm_subject'])));
+        }
+        if (isset($_POST['return_confirm_body'])) {
+            update_option('oha_vhcpt_return_confirm_body', sanitize_textarea_field(wp_unslash($_POST['return_confirm_body'])));
+        }
+
         echo '<div class="updated"><p>Settings saved.</p></div>';
     }
 
@@ -311,6 +325,37 @@ function oha_vhcpt_settings_page(){
                 </tr>
             </table>
 
+            <h2 class="title">Sandbox / Test Mode</h2>
+            <?php
+            $sandbox_on    = get_option('oha_vhcpt_sandbox_mode', 0);
+            $sandbox_email = get_option('oha_vhcpt_sandbox_email', '');
+            if ($sandbox_on): ?>
+            <div class="notice notice-warning inline" style="margin:0 0 12px;padding:8px 12px;">
+                <strong>Sandbox mode is ON.</strong> All plugin emails are being redirected to <strong><?php echo esc_html($sandbox_email ?: '(not set)'); ?></strong>. A yellow banner is shown on the vendor edit page. Turn this off before going live.
+            </div>
+            <?php endif; ?>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Enable Sandbox Mode</th>
+                    <td>
+                        <label>
+                            <input type="checkbox" name="sandbox_mode" value="1" <?php checked($sandbox_on, 1); ?>>
+                            <strong>Enable sandbox / test mode</strong>
+                        </label>
+                        <p class="description">When enabled: all plugin emails are redirected to the address below (original recipient is shown in the subject line), and a yellow "SANDBOX MODE" banner appears on the vendor edit page so you can verify the flow without contacting real vendors.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="sandbox_email">Test Email Address</label></th>
+                    <td>
+                        <input type="email" id="sandbox_email" name="sandbox_email" class="regular-text"
+                            value="<?php echo esc_attr($sandbox_email); ?>"
+                            placeholder="you@example.com">
+                        <p class="description">All vendor hub emails will be sent here instead of the real recipient. Use your own email so you can verify content and links. The subject line will show who the email would normally have gone to.</p>
+                    </td>
+                </tr>
+            </table>
+
             <h2 class="title">Application Status</h2>
             <?php
             $apps_closed     = get_option('oha_vhcpt_apps_closed', 0);
@@ -348,7 +393,7 @@ function oha_vhcpt_settings_page(){
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="description">Select the page that contains the <code>[oha_vendor_edit]</code> shortcode. When set, the magic link email sent to vendors will point to this page.</p>
+                        <p class="description">Select the page that contains the <code>[oha_vendor_edit]</code> shortcode. This URL is inserted into return invite emails as <code>{edit_page_url}</code> so vendors know where to go to update their application.</p>
                         <?php if ($vendor_edit_page_id): ?>
                             <p class="description"><strong>Current page:</strong> <a href="<?php echo esc_url(get_permalink($vendor_edit_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($vendor_edit_page_id)); ?></a></p>
                         <?php endif; ?>
@@ -369,7 +414,24 @@ function oha_vhcpt_settings_page(){
                         $edit_link_body_default = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
                         ?>
                         <textarea id="edit_link_body" name="edit_link_body" rows="10" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_edit_link_body', $edit_link_body_default)); ?></textarea>
-                        <p class="description">Body of the vendor edit link email. Placeholders: <code>{first_name}</code> (vendor first name), <code>{link}</code> (the secure edit link — required).</p>
+                        <p class="description">Body of the vendor reminder email. Placeholders: <code>{first_name}</code> (vendor first name), <code>{link}</code> (the vendor edit page URL), <code>{vendor_id}</code> (the vendor's permanent ID number — vendors need this to log in to the edit form).</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="return_confirm_subject">Returning Vendor Confirmation Email Subject</label></th>
+                    <td>
+                        <?php $rc_subject_default = 'Your Vendor Information Has Been Updated - {convention_name}'; ?>
+                        <input type="text" id="return_confirm_subject" name="return_confirm_subject" class="large-text"
+                            value="<?php echo esc_attr(get_option('oha_vhcpt_return_confirm_subject', $rc_subject_default)); ?>">
+                        <p class="description">Sent to a returning vendor after they save the edit form. Placeholders: <code>{first_name}</code>, <code>{company_name}</code>, <code>{convention_name}</code></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="return_confirm_body">Returning Vendor Confirmation Email Body</label></th>
+                    <td>
+                        <?php $rc_body_default = "Hello {first_name},\n\nThank you for updating your vendor information for {convention_name}. We have received your submission and will be in touch soon with next steps.\n\nIf you need to make any changes, you can return to the vendor update page at any time and log in with your email address and Vendor ID.\n\n-- The OHA Team"; ?>
+                        <textarea id="return_confirm_body" name="return_confirm_body" rows="8" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_return_confirm_body', $rc_body_default)); ?></textarea>
+                        <p class="description">Confirmation email body sent to returning vendors after they update their information. Placeholders: <code>{first_name}</code>, <code>{company_name}</code>, <code>{convention_name}</code></p>
                     </td>
                 </tr>
             </table>
@@ -510,14 +572,14 @@ function oha_vhcpt_settings_page(){
                 <tr>
                     <td style="padding-left:30px;">
                         <label><strong>Subject:</strong><br>
-                            <input type="text" name="vendor_send_with_payment_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_with_payment_subject', 'Complete Your OHA Convention 2026 Vendor Application')); ?>">
+                            <input type="text" name="vendor_send_with_payment_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_with_payment_subject', 'Complete Your Vendor Application - {convention_name}')); ?>">
                         </label>
                     </td>
                 </tr>
                 <tr>
                     <td style="padding-left:30px;">
                         <label><strong>Body:</strong><br>
-                            <textarea name="vendor_send_with_payment_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_with_payment_body', "Hi {first_name},\n\nThank you for your interest in being a vendor at the Ohio Haunters Convention 2026!\n\nYour initial application has been approved. Please complete your final application and payment using the link below:\n\n{final_app_link}\n\nImportant Details:\n- Venue: Mansfield Reformatory, Mansfield Ohio\n- Dates: May 9-10, 2026\n- Booth Price: \$250 per space\n- Load-in: Friday May 8th, 4pm-9pm\n\nPlease complete your application and payment as soon as possible to secure your booth space.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
+                            <textarea name="vendor_send_with_payment_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_with_payment_body', "Hi {first_name},\n\nYour vendor application has been approved for {convention_name}. Please complete your final application and payment using the link below:\n\n{final_app_link}\n\nPlease complete your application and payment as soon as possible to secure your booth space.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
                         </label>
                         <p class="description">Available placeholders: {first_name}, {last_name}, {company_name}, {email}, {booths}, {final_app_link}</p>
                     </td>
@@ -532,14 +594,14 @@ function oha_vhcpt_settings_page(){
                 <tr>
                     <td style="padding-left:30px;">
                         <label><strong>Subject:</strong><br>
-                            <input type="text" name="vendor_send_no_payment_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_no_payment_subject', 'Complete Your OHA Convention 2026 Vendor Application (Pre-Paid)')); ?>">
+                            <input type="text" name="vendor_send_no_payment_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_no_payment_subject', 'Complete Your Vendor Application - {convention_name} (Pre-Paid)')); ?>">
                         </label>
                     </td>
                 </tr>
                 <tr>
                     <td style="padding-left:30px;">
                         <label><strong>Body:</strong><br>
-                            <textarea name="vendor_send_no_payment_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_no_payment_body', "Hi {first_name},\n\nThank you for your interest in being a vendor at the Ohio Haunters Convention 2026!\n\nWe have received your payment. Please complete your final application using the link below:\n\n{final_app_link_no_payment}\n\nImportant Details:\n- Venue: Mansfield Reformatory, Mansfield Ohio\n- Dates: May 9-10, 2026\n- Payment Status: Already Received - Thank You!\n- Load-in: Friday May 8th, 4pm-9pm\n\nPlease complete your application to finalize your vendor registration.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
+                            <textarea name="vendor_send_no_payment_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_no_payment_body', "Hi {first_name},\n\nWe have received your payment for {convention_name}. Please complete your final application using the link below:\n\n{final_app_link_no_payment}\n\nPayment Status: Already Received - Thank you!\n\nPlease complete your application to finalize your vendor registration.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
                         </label>
                         <p class="description">Available placeholders: {first_name}, {last_name}, {company_name}, {email}, {booths}, {final_app_link_no_payment}</p>
                     </td>
@@ -554,14 +616,14 @@ function oha_vhcpt_settings_page(){
                 <tr>
                     <td style="padding-left:30px;">
                         <label><strong>Subject:</strong><br>
-                            <input type="text" name="vendor_send_payment_only_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_payment_only_subject', 'Complete Payment for OHA Convention 2026 Vendor Booth')); ?>">
+                            <input type="text" name="vendor_send_payment_only_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_payment_only_subject', 'Complete Payment for Your Vendor Booth - {convention_name}')); ?>">
                         </label>
                     </td>
                 </tr>
                 <tr>
                     <td style="padding-left:30px;">
                         <label><strong>Body:</strong><br>
-                            <textarea name="vendor_send_payment_only_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_payment_only_body', "Hi {first_name},\n\nThank you for completing your vendor application for the Ohio Haunters Convention 2026!\n\nTo secure your booth space, please complete payment using the link below:\n\n{payment_link}\n\nBooth Details:\n- Quantity: {booths} booth(s)\n- Price: \$250 per booth\n- Total: \${total}\n\nOnce payment is received, you will receive your signed vendor agreement via email.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
+                            <textarea name="vendor_send_payment_only_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_payment_only_body', "Hi {first_name},\n\nThank you for completing your vendor application for {convention_name}!\n\nTo secure your booth space, please complete payment using the link below:\n\n{payment_link}\n\nBooth Details:\n- Quantity: {booths} booth(s)\n- Total: \${total}\n\nOnce payment is received, you will receive your signed vendor agreement via email.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
                         </label>
                         <p class="description">Available placeholders: {first_name}, {last_name}, {company_name}, {email}, {booths}, {total}, {payment_link}</p>
                     </td>
@@ -722,11 +784,11 @@ function oha_vhcpt_settings_page(){
                 </tr>
                 <tr>
                     <td><span class="oha-sc-tag">[oha_vendor_edit]</span></td>
-                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public<br>(token or login)</span></td>
-                    <td>Vendor self-service edit form. Accessible via magic link (<code>?edit_token=</code>) sent by admin, or when the vendor is logged in and owns the application. Tokens expire after 24 hours.</td>
-                    <td class="oha-sc-meta">All intake fields + _edit_token, _edit_token_expires, _company_logo_id, _company_logo_url</td>
+                    <td><span class="oha-sc-badge oha-sc-badge-pub">Public</span></td>
+                    <td>Vendor self-service edit form. Step 1: vendor enters their email address and Vendor ID number (from their invite email, e.g. VID-123). Step 2: their application loads pre-filled for editing. On save, status promotes from <em>Invited</em> to <em>Submitted</em> automatically. No login or magic link required — works on any device. Place this shortcode on the page configured in "Vendor Edit Page" above. Enable Sandbox Mode to test without affecting real vendors.</td>
+                    <td class="oha-sc-meta">All intake fields + _oha_status, _vendor_permanent_id, _company_logo_id, _company_logo_url</td>
                     <td>None</td>
-                    <td>None</td>
+                    <td>Vendor Edit Page must be set in Settings. Active Convention Year must be set for correct year matching.</td>
                 </tr>
                 <tr>
                     <td><span class="oha-sc-tag">[oha_vendor_final_form]</span></td>
@@ -753,7 +815,7 @@ function oha_vhcpt_settings_page(){
                     <td>None</td>
                 </tr>
                 <tr>
-                    <td><span class="oha-sc-tag">[oha_vendor_status_table year="2027"]</span></td>
+                    <td><span class="oha-sc-tag">[oha_vendor_status_table year="2028"]</span></td>
                     <td><span class="oha-sc-badge oha-sc-badge-restricted">Restricted<br>(specific user IDs + admins)</span></td>
                     <td>Read-only paginated status table showing all vendor applications. Allowed user IDs are configured in Settings (default: 183). The <code>year</code> attribute filters by convention year; omit to show all years.</td>
                     <td class="oha-sc-meta">_oha_status, _convention_year, company_name, first_name, last_name, email, booths</td>

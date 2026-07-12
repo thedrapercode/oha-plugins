@@ -118,17 +118,21 @@ $default_body  = "Hi {first_name},\n\n";
 $default_body .= "As one of our valued vendors from last year, we wanted to give you first access to secure your spot at {convention_name}.\n\n";
 if ($conv_dates) $default_body .= "Dates: {convention_dates}\n";
 if ($conv_venue) $default_body .= "Venue: {convention_venue}\n";
-$default_body .= "\nYour application has been pre-filled with your information from last year. Simply review, make any updates, and submit.\n\n";
-$default_body .= "Your personalized link:\n{edit_link}\n\n";
-$default_body .= "This link is unique to you and expires in 7 days.\n\n";
-$default_body .= "Your Vendor ID is: VID-{vendor_id}\n\n";
+$default_body .= "\nYour application has been pre-filled with your information from last year. To review and submit it, visit the link below and enter your email address and Vendor ID number when prompted.\n\n";
+$default_body .= "Application page:\n{edit_page_url}\n\n";
+$default_body .= "Your Vendor ID: VID-{vendor_id}\n";
+$default_body .= "(Enter the number only, e.g. {vendor_id}, or the full VID-{vendor_id}.)\n\n";
 $default_body .= "We hope to see you again this year!\n\n-- Ohio Haunters Association";
 echo esc_textarea($default_body);
                     ?></textarea>
                     <p class="description">
                         Available tags: <code>{first_name}</code> <code>{last_name}</code> <code>{company_name}</code>
-                        <code>{vendor_id}</code> <code>{edit_link}</code> <code>{convention_name}</code>
+                        <code>{vendor_id}</code> <code>{edit_page_url}</code> <code>{convention_name}</code>
                         <code>{convention_dates}</code> <code>{convention_venue}</code>
+                    </p>
+                    <p class="description" style="color:#b32d2e;margin-top:4px;">
+                        <strong>Important:</strong> Include both <code>{vendor_id}</code> and <code>{edit_page_url}</code>
+                        in every invite — vendors need their Vendor ID to access the application form.
                     </p>
                 </td>
             </tr>
@@ -433,7 +437,7 @@ add_action('wp_ajax_oha_vh_return_invite_send', function() {
         update_post_meta($new_id, '_convention_year',    $active_year);
         update_post_meta($new_id, '_vendor_permanent_id', $perm_id);
         update_post_meta($new_id, 'returning_vendor',    1);
-        update_post_meta($new_id, '_oha_status',         'Submitted');
+        update_post_meta($new_id, '_oha_status',         'Invited');
 
         if (function_exists('oha_vhcpt_append_history')) {
             oha_vhcpt_append_history($new_id, [
@@ -442,21 +446,13 @@ add_action('wp_ajax_oha_vh_return_invite_send', function() {
             ]);
         }
 
-        // Generate a magic edit token (7-day expiry).
-        $token   = wp_generate_password(32, false);
-        $expires = time() + (7 * DAY_IN_SECONDS);
-        update_post_meta($new_id, '_edit_token',         $token);
-        update_post_meta($new_id, '_edit_token_expires', $expires);
-
-        $edit_url = add_query_arg(['vid' => $new_id, 'token' => $token], get_permalink($edit_page_id));
-
         // Build email from template.
         $replacements = [
             '{first_name}'       => $first,
             '{last_name}'        => get_post_meta($old_post_id, 'last_name', true),
             '{company_name}'     => $company,
             '{vendor_id}'        => $perm_id,
-            '{edit_link}'        => $edit_url,
+            '{edit_page_url}'    => get_permalink($edit_page_id),
             '{convention_name}'  => $conv_name,
             '{convention_dates}' => $conv_dates,
             '{convention_venue}' => $conv_venue,

@@ -2,7 +2,7 @@
 /*
 Plugin Name: OHA Vendor Hub
 Description: Complete vendor management system with applications, e-signatures, Stripe payments, Board Hub admin dashboard, and vendor status table for Ohio Haunters Convention.
-Version: 3.12.4
+Version: 3.14.0
 Author: OHA Dev Team
 Author URI: https://ohiohaunters.com
 Text Domain: oha-vendor-hub
@@ -82,9 +82,27 @@ add_action('template_redirect', function() {
 }, 1);
 
 // Plugin version and paths
-define('OHA_VHCPT_VER', '3.12.4');
+define('OHA_VHCPT_VER', '3.14.0');
 define('OHA_VHCPT_PATH', plugin_dir_path(__FILE__));
 define('OHA_VHCPT_URL', plugin_dir_url(__FILE__));
+
+/**
+ * Sandbox mode: redirect all plugin emails to the configured test address.
+ * When enabled, the To: address is replaced and the original recipient is
+ * prepended to the subject so the tester knows who would have received it.
+ */
+add_filter('wp_mail', function($args) {
+    if (!get_option('oha_vhcpt_sandbox_mode')) return $args;
+
+    $sandbox_email = sanitize_email(get_option('oha_vhcpt_sandbox_email', ''));
+    if (!$sandbox_email) return $args;
+
+    $original_to   = is_array($args['to']) ? implode(', ', $args['to']) : $args['to'];
+    $args['to']    = $sandbox_email;
+    $args['subject'] = '[SANDBOX - would go to: ' . $original_to . '] ' . $args['subject'];
+
+    return $args;
+}, 10, 1);
 
 /**
  * Register Custom Post Type for vendor applications

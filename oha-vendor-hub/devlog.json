@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.12.4",
+    "version":  "3.14.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -414,6 +414,69 @@
                         "type":  "fix",
                         "summary":  "Fix meta_query structure so year filter actually applies to the vendor query",
                         "notes":  "Single-clause meta_query was passed as a bare condition array which WordPress silently ignores. Changed to always use array_merge with relation AND so the outer wrapper is always present regardless of clause count. This was the root cause of 2026 vendors showing when active year is 2027."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "feature",
+                        "summary":  "Replaced magic-link token system with email+VID stateless lookup on vendor edit form",
+                        "notes":  "Vendor enters email + VID number (from invite email) to access their application. No tokens, no expiry, no unique links. oha_vh_find_app_by_email_and_vid() handles lookup. Accepts VID-123 or 123 format."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "fix",
+                        "summary":  "Return invite tool now sets status to Invited instead of Submitted",
+                        "notes":  "Fixes board hub showing pre-submitted vendors. Status promotes from Invited to Submitted only when vendor saves the edit form for the first time."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "feature",
+                        "summary":  "Added sandbox/test mode for testing all email flows before going live",
+                        "notes":  "Options: oha_vhcpt_sandbox_mode and oha_vhcpt_sandbox_email. Intercepts all wp_mail calls, redirects to test address, prepends original recipient to subject. Yellow banner shown on vendor edit page in sandbox mode."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "feature",
+                        "summary":  "Added Invited status - CSS badge and override dropdown in board hub admin",
+                        "notes":  "Purple badge for Invited status. Added to status override dropdown so board can manually set or clear it."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "change",
+                        "summary":  "Send Edit Links admin tool rewritten to use VID approach - no tokens",
+                        "notes":  "oha_vh_get_vendors_for_edit_links() now JOINs _vendor_permanent_id. Send/test AJAX handlers send email with {first_name}, {link}, {vendor_id} placeholders."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "change",
+                        "summary":  "Removed all hardcoded year strings from email template defaults and shortcode examples",
+                        "notes":  "Email defaults now use {convention_name} placeholder. Shortcode reference example updated from year=2027 to year=2028. Return invite email uses {edit_page_url} not a token URL."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "feature",
+                        "summary":  "Vendor edit form now includes all fields from the intake form",
+                        "notes":  "Added booths, tables_needed, need_electric, sponsor, booth_preference, vendor_private_notes. Required validation on booths, tables_needed, need_electric, product_type. Website URL normalization added (adds https:// if missing)."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "feature",
+                        "summary":  "Vendor edit form sections with Public/Private visibility badges",
+                        "notes":  "Matches intake form section structure. Section 1: Business Info (public), Section 2: Contact Info (board only), Section 3: Convention Details, Section 4: Booth Preference (board only), Section 5: Note to Board (board only)."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.0",
+                        "type":  "feature",
+                        "summary":  "Returning vendor confirmation email sent on save with dedicated admin template",
+                        "notes":  "Options: oha_vhcpt_return_confirm_subject and oha_vhcpt_return_confirm_body. Configurable in Settings under Application Status. Placeholders: {first_name}, {company_name}, {convention_name}."
                     }
                 ]
 }
