@@ -643,7 +643,7 @@
         displayScanSuccess: function(data) {
             var passportUrl = (typeof ohaPassportHub !== 'undefined' && ohaPassportHub.passport_page_url)
                 ? ohaPassportHub.passport_page_url
-                : '/convention/2026-convention/passport/';
+                : '/convention/passport/';
             var html = `
                 <div class="scan-result success">
                     <div class="result-icon">&#10003;</div>

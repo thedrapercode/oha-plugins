@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Passport Hub",
-    "version":  "2.1.1",
+    "version":  "2.1.2",
     "entries":  [
                     {
                         "date":  "2026-03-17",
@@ -50,6 +50,13 @@
                         "type":  "fix",
                         "summary":  "Replace hardcoded /convention/2026-convention/passport/ fallback with oha_convention_base_url dynamic default",
                         "notes":  "Fixed in oha-passport-hub.php (passport_page_url localize) and class-passport-shortcodes.php (oha_qr_scanner and oha_smart_scanner shortcode_atts). Fallback now derives from oha_convention_base_url option so no plugin edits needed when convention year changes."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "2.1.2",
+                        "type":  "fix",
+                        "summary":  "Fix hardcoded 2026-convention/passport/ JS fallbacks in passport-hub.js",
+                        "notes":  "Two JS safety-net fallbacks in passport-hub.js (displayScanSuccess and processActorScan) changed from /convention/2026-convention/passport/ to /convention/passport/. These only fire if ohaPassportHub.passport_page_url is not set by PHP, which should not happen in production."
                     }
                 ]
 }

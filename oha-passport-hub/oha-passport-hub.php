@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Passport Hub
  * Description: Actor Passport, QR Badge Trading, Vendor Check-in, Scavenger Hunt, and Event Gamification for Ohio Haunters Association events. Works standalone or alongside the OHA Convention PWA.
- * Version: 2.1.1
+ * Version: 2.1.2
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-passport-hub
@@ -62,7 +62,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PH_VERSION', '2.1.1' );
+define( 'OHA_PH_VERSION', '2.1.2' );
 define( 'OHA_PH_DB_VERSION', '2.0.0' );
 define( 'OHA_PH_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'OHA_PH_URL',     plugin_dir_url( __FILE__ ) );
