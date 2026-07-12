@@ -35,7 +35,7 @@ function oha_pwa_dl_get_embed_url( $url ) {
 function oha_pwa_download_shortcode( $atts ) {
 
     // ── Existing options ─────────────────────────────────────────────────────
-    $app_name      = esc_html( get_option( 'oha_pwa_dl_app_name',      'OHC 2026 Convention App' ) );
+    $app_name      = esc_html( get_option( 'oha_pwa_dl_app_name',      'OHC Convention App' ) );
     $tagline       = esc_html( get_option( 'oha_pwa_dl_tagline',       'Your Official Convention Companion' ) );
     $description   = esc_html( get_option( 'oha_pwa_dl_description',   '' ) );
     $conv_url      = esc_url(  get_option( 'oha_pwa_dl_convention_url', home_url( '/convention/' ) ) );

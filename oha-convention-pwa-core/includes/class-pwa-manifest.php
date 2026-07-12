@@ -14,7 +14,8 @@ class OHA_PWA_Manifest {
      */
     public static function generate() {
         $site_name = get_bloginfo('name');
-        $icon_url = OHA_PWA_URL . 'assets/icons/';
+        $icon_url  = OHA_PWA_URL . 'assets/icons/';
+        $_base     = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' );
         
         $manifest = [
             'id'          => '/convention/',
@@ -58,7 +59,7 @@ class OHA_PWA_Manifest {
                     'name' => 'My Schedule',
                     'short_name' => 'Favorites',
                     'description' => 'View your favorited events',
-                    'url' => '/convention/2026-convention/my-schedule/',
+                    'url' => $_base . '/my-schedule/',
                     'icons' => [
                         [
                             'src' => $icon_url . 'icon-192.png',
@@ -71,7 +72,7 @@ class OHA_PWA_Manifest {
                     'name' => 'Event Schedule',
                     'short_name' => 'Schedule',
                     'description' => 'Full event schedule',
-                    'url' => '/convention/2026-convention/schedule/',
+                    'url' => $_base . '/schedule/',
                     'icons' => [
                         [
                             'src' => $icon_url . 'icon-192.png',
@@ -84,7 +85,7 @@ class OHA_PWA_Manifest {
                     'name' => 'Vendors',
                     'short_name' => 'Vendors',
                     'description' => 'Browse vendor directory',
-                    'url' => '/convention/2026-convention/vendors/',
+                    'url' => $_base . '/vendors/',
                     'icons' => [
                         [
                             'src' => $icon_url . 'icon-192.png',
@@ -97,7 +98,7 @@ class OHA_PWA_Manifest {
                     'name' => 'Venue Map',
                     'short_name' => 'Map',
                     'description' => 'Interactive venue map',
-                    'url' => '/convention/2026-convention/map/',
+                    'url' => $_base . '/map/',
                     'icons' => [
                         [
                             'src' => $icon_url . 'icon-192.png',

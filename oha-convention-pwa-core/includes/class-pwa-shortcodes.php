@@ -527,7 +527,8 @@ function ohaVolHandbookToggle(btn) {
     // map deep-link (tap card → map tab at vendor booth), remove button.
     // ─────────────────────────────────────────────────────────────────────
     public function favorite_vendors( $atts ) {
-        $convention_map_url = get_option( 'oha_pwa_convention_map_url', '/convention/2026-convention/map/' );
+        $_conv_base = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' );
+        $convention_map_url = get_option( 'oha_pwa_convention_map_url', $_conv_base . '/map/' );
 
         // Build a server-side lookup of all paid vendors so the renderer
         // always shows fresh name/logo/website regardless of what was saved
@@ -1386,12 +1387,13 @@ function ohaVolHandbookToggle(btn) {
                     <label for="notification-url" style="display:block;margin-bottom:8px;font-weight:600;color:#111;">Tap opens URL <span style="font-weight:400;color:#666;">(optional)</span></label>
                     <div style="margin-bottom:8px;display:flex;flex-wrap:wrap;gap:6px;">
                         <?php
+                        $_conv_base = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' );
                         $convention_pages = [
-                            '⭐ My OHC'       => home_url( '/convention/2026-convention/my-ohc/' ),
-                            '📅 Schedule'     => home_url( '/convention/2026-convention/schedule/' ),
-                            '🗓 My Schedule'  => home_url( '/convention/2026-convention/my-schedule/' ),
-                            '🛒 Vendors'      => home_url( '/convention/2026-convention/vendors/' ),
-                            '🗺 Map'          => home_url( '/convention/2026-convention/map/' ),
+                            '⭐ My OHC'       => home_url( $_conv_base . '/my-ohc/' ),
+                            '📅 Schedule'     => home_url( $_conv_base . '/schedule/' ),
+                            '🗓 My Schedule'  => home_url( $_conv_base . '/my-schedule/' ),
+                            '🛒 Vendors'      => home_url( $_conv_base . '/vendors/' ),
+                            '🗺 Map'          => home_url( $_conv_base . '/map/' ),
                             '🏠 Home'         => home_url( '/convention/' ),
                         ];
                         foreach ( $convention_pages as $chip_label => $chip_url ) : ?>
@@ -1403,7 +1405,7 @@ function ohaVolHandbookToggle(btn) {
                         <?php endforeach; ?>
                     </div>
                     <input type="url" id="notification-url" class="regular-text"
-                        value="<?php echo esc_attr( home_url( '/convention/2026-convention/my-ohc/' ) ); ?>"
+                        value="<?php echo esc_attr( home_url( rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/my-ohc/' ) ); ?>"
                         style="width:100%;padding:8px;box-sizing:border-box;">
                     <p style="font-size:12px;color:#777;margin-top:4px;">Tap a page above to pre-fill, or type a custom URL.</p>
                 </div>
@@ -2161,12 +2163,13 @@ function ohaVolHandbookToggle(btn) {
         $perfecty_ok = class_exists( 'Perfecty_Push_Lib_Push_Server' );
 
         // Convention page chips
+        $_conv_base = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' );
         $convention_pages = [
-            '⭐ My OHC'      => home_url( '/convention/2026-convention/my-ohc/' ),
-            '📅 Schedule'    => home_url( '/convention/2026-convention/schedule/' ),
-            '🗓 My Schedule' => home_url( '/convention/2026-convention/my-schedule/' ),
-            '🛒 Vendors'     => home_url( '/convention/2026-convention/vendors/' ),
-            '🗺 Map'         => home_url( '/convention/2026-convention/map/' ),
+            '⭐ My OHC'      => home_url( $_conv_base . '/my-ohc/' ),
+            '📅 Schedule'    => home_url( $_conv_base . '/schedule/' ),
+            '🗓 My Schedule' => home_url( $_conv_base . '/my-schedule/' ),
+            '🛒 Vendors'     => home_url( $_conv_base . '/vendors/' ),
+            '🗺 Map'         => home_url( $_conv_base . '/map/' ),
             '🏠 Home'        => home_url( '/convention/' ),
         ];
 
@@ -2337,7 +2340,7 @@ function ohaVolHandbookToggle(btn) {
                     </button>
                     <?php endforeach; ?>
                 </div>
-                <input type="url" id="oha-bd-notif-url" value="<?php echo esc_attr( home_url( '/convention/2026-convention/my-ohc/' ) ); ?>">
+                <input type="url" id="oha-bd-notif-url" value="<?php echo esc_attr( home_url( rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/my-ohc/' ) ); ?>">
                 <p class="oha-bd-hint">Tap a page above to pre-fill, or type a custom URL.</p>
             </div>
             <button type="submit" id="oha-bd-notif-btn" class="oha-bd-send-btn">📤 Send to All Devices</button>
@@ -2433,15 +2436,16 @@ function ohaVolHandbookToggle(btn) {
     <div id="oha-bd-tab-links" class="oha-bd-tab-content" style="display:none;">
         <h3 style="margin-top:0;">⚡ Quick Links</h3>
         <div class="oha-bd-links-grid">
-            <a class="oha-bd-link-card" href="<?php echo esc_url( home_url( '/convention/2026-convention/my-ohc/' ) ); ?>">
+            <?php $_conv_base = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ); ?>
+            <a class="oha-bd-link-card" href="<?php echo esc_url( home_url( $_conv_base . '/my-ohc/' ) ); ?>">
                 <span class="oha-bd-link-icon">⭐</span>
                 <span class="oha-bd-link-label">My OHC</span>
             </a>
-            <a class="oha-bd-link-card" href="<?php echo esc_url( home_url( '/convention/2026-convention/schedule/' ) ); ?>">
+            <a class="oha-bd-link-card" href="<?php echo esc_url( home_url( $_conv_base . '/schedule/' ) ); ?>">
                 <span class="oha-bd-link-icon">📅</span>
                 <span class="oha-bd-link-label">Schedule</span>
             </a>
-            <a class="oha-bd-link-card" href="<?php echo esc_url( home_url( '/convention/2026-convention/vendors/' ) ); ?>">
+            <a class="oha-bd-link-card" href="<?php echo esc_url( home_url( $_conv_base . '/vendors/' ) ); ?>">
                 <span class="oha-bd-link-icon">🛒</span>
                 <span class="oha-bd-link-label">Vendors</span>
             </a>
@@ -2984,7 +2988,8 @@ function ohaVolHandbookToggle(btn) {
 
         $nonce      = $passport_active ? wp_create_nonce( 'oha_passport_hub_nonce' ) : '';
         $ajax_url   = admin_url( 'admin-ajax.php' );
-        $scanner_url = get_option( 'oha_pwa_scanner_url', '/convention/2026-convention/passport/' );
+        $_conv_base  = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' );
+        $scanner_url = get_option( 'oha_pwa_scanner_url', $_conv_base . '/passport/' );
 
         ob_start();
         ?>

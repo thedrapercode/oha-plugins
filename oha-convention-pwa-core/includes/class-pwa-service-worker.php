@@ -267,7 +267,6 @@ function isConventionScope(pathname) {
         // which are NOT convention pages and should not be cached by this SW.
         '/rooms',
         '/room',
-        '2026-convention' // Specific to your site
     ];
     
     return conventionPaths.some(path => pathname.includes(path));

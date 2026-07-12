@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Convention PWA Core
  * Description: PWA for OHA Convention 2026 — Schedule, Push Notifications, Offline Support. Actor Passport and Badge Trading require the OHA Passport Hub plugin.
- * Version: 3.25.0
+ * Version: 3.25.1
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-convention-pwa
@@ -202,7 +202,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants — all names used by every included class must be defined here
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PWA_VERSION',    '3.25.0' );
+define( 'OHA_PWA_VERSION',    '3.25.1' );
 define( 'OHA_PWA_DIR',        plugin_dir_path( __FILE__ ) );   // used by stable includes
 define( 'OHA_PWA_URL',        plugin_dir_url( __FILE__ ) );    // used by stable includes
 define( 'OHA_PWA_SCOPE',      '/convention/' );                // used by service worker & manifest
@@ -344,9 +344,10 @@ class OHA_Convention_PWA_Core {
 		wp_enqueue_script( 'oha-pwa-reminders', OHA_PWA_URL . 'assets/js/pwa-reminders.js', [],                              OHA_PWA_VERSION, true );
 		wp_enqueue_script( 'oha-pwa-favorites', OHA_PWA_URL . 'assets/js/pwa-favorites.js', [ 'jquery', 'oha-pwa-reminders' ], OHA_PWA_VERSION, true );
 		wp_enqueue_script( 'oha-app-navigation',OHA_PWA_URL . 'assets/js/app-navigation.js',[ 'jquery' ],                    OHA_PWA_VERSION, true );
+		$_conv_base = rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' );
 		wp_localize_script( 'oha-app-navigation', 'ohaNavConfig', [
-			'passport_url'   => get_option( 'oha_pwa_passport_url', '/convention/2026-convention/passport/' ),
-			'scanner_url'    => get_option( 'oha_pwa_scanner_url',  '/convention/2026-convention/passport/' ),
+			'passport_url'   => get_option( 'oha_pwa_passport_url', $_conv_base . '/passport/' ),
+			'scanner_url'    => get_option( 'oha_pwa_scanner_url',  $_conv_base . '/passport/' ),
 			'show_scan_fab'  => get_option( 'oha_pwa_show_scan_fab', '1' ),
 		] );
 

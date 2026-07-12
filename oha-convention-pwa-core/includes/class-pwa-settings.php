@@ -155,6 +155,7 @@ class OHA_PWA_Settings {
         register_setting('oha_pwa_settings', 'oha_pwa_lost_found_items');
         register_setting('oha_pwa_settings', 'oha_pwa_lost_found_map_url');
         register_setting('oha_pwa_settings', 'oha_pwa_vendor_card_fields');
+        register_setting('oha_pwa_settings', 'oha_convention_base_url');
         register_setting('oha_pwa_settings', 'oha_pwa_passport_url');
         register_setting('oha_pwa_settings', 'oha_pwa_scanner_url');
         register_setting('oha_pwa_settings', 'oha_pwa_convention_map_url');
@@ -224,9 +225,11 @@ class OHA_PWA_Settings {
         $happenings     = get_option('oha_pwa_happenings', '');
         $lost_found_items   = get_option('oha_pwa_lost_found_items', '');
         $lost_found_map_url = get_option('oha_pwa_lost_found_map_url', '');
-        $passport_url      = get_option('oha_pwa_passport_url', '/convention/2026-convention/passport/');
-        $scanner_url       = get_option('oha_pwa_scanner_url',  '/convention/2026-convention/passport/');
-        $convention_map_url = get_option('oha_pwa_convention_map_url', '/convention/2026-convention/map/');
+        $convention_base_url = get_option('oha_convention_base_url', '/convention');
+        $_base = rtrim( $convention_base_url, '/' );
+        $passport_url      = get_option('oha_pwa_passport_url', $_base . '/passport/');
+        $scanner_url       = get_option('oha_pwa_scanner_url',  $_base . '/passport/');
+        $convention_map_url = get_option('oha_pwa_convention_map_url', $_base . '/map/');
         $show_scan_fab  = get_option('oha_pwa_show_scan_fab', '1');
         $vendor_fields  = get_option('oha_pwa_vendor_card_fields', [
             'website'  => true,
@@ -236,7 +239,7 @@ class OHA_PWA_Settings {
 
         // App Download Page options
         $dl_app_name       = get_option('oha_pwa_dl_app_name', 'OHA Convention App');
-        $dl_tagline        = get_option('oha_pwa_dl_tagline', 'Your all-in-one guide to Ohio Haunters Convention 2026');
+        $dl_tagline        = get_option('oha_pwa_dl_tagline', 'Your all-in-one guide to the Ohio Haunters Convention');
         $dl_description    = get_option('oha_pwa_dl_description', '');
         $dl_convention_url = get_option('oha_pwa_dl_convention_url', '/convention/');
         $dl_schedule_url   = get_option('oha_pwa_dl_schedule_url', '/convention/schedule/');
@@ -750,11 +753,20 @@ class OHA_PWA_Settings {
                         </tr>
                         <tr>
                             <th scope="row">
+                                <label for="oha_convention_base_url">Convention Base URL</label>
+                            </th>
+                            <td>
+                                <input type="text" id="oha_convention_base_url" name="oha_convention_base_url" value="<?php echo esc_attr($convention_base_url); ?>" class="regular-text" placeholder="/convention">
+                                <p class="description">The base path for all convention pages, without a trailing slash (e.g. <code>/convention</code>). Used by all OHA plugins as the root for subpage links. Update this once each year if you use year-specific URLs.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
                                 <label for="oha_pwa_passport_url">Passport Page URL</label>
                             </th>
                             <td>
-                                <input type="text" id="oha_pwa_passport_url" name="oha_pwa_passport_url" value="<?php echo esc_attr($passport_url); ?>" class="regular-text" placeholder="/convention/2026-convention/passport/">
-                                <p class="description">URL of the page using <code>[oha_convention_passport]</code>. Used as the Passport link from the scan button on the nav.</p>
+                                <input type="text" id="oha_pwa_passport_url" name="oha_pwa_passport_url" value="<?php echo esc_attr($passport_url); ?>" class="regular-text" placeholder="/convention/passport/">
+                                <p class="description">URL of the page using <code>[oha_convention_passport]</code>. Used as the Passport link from the scan button on the nav. Leave blank to derive from Convention Base URL.</p>
                             </td>
                         </tr>
                         <tr>
@@ -762,8 +774,8 @@ class OHA_PWA_Settings {
                                 <label for="oha_pwa_scanner_url">Scanner Page URL</label>
                             </th>
                             <td>
-                                <input type="text" id="oha_pwa_scanner_url" name="oha_pwa_scanner_url" value="<?php echo esc_attr($scanner_url); ?>" class="regular-text" placeholder="/convention/2026-convention/passport/">
-                                <p class="description">URL of the page with the QR scanner shortcode (<code>[oha_smart_scanner]</code>). The Scan button in the app nav links here.</p>
+                                <input type="text" id="oha_pwa_scanner_url" name="oha_pwa_scanner_url" value="<?php echo esc_attr($scanner_url); ?>" class="regular-text" placeholder="/convention/passport/">
+                                <p class="description">URL of the page with the QR scanner shortcode (<code>[oha_smart_scanner]</code>). The Scan button in the app nav links here. Leave blank to derive from Convention Base URL.</p>
                             </td>
                         </tr>
                         <tr>
@@ -771,8 +783,8 @@ class OHA_PWA_Settings {
                                 <label for="oha_pwa_convention_map_url">Convention Map URL</label>
                             </th>
                             <td>
-                                <input type="text" id="oha_pwa_convention_map_url" name="oha_pwa_convention_map_url" value="<?php echo esc_attr($convention_map_url); ?>" class="regular-text" placeholder="/convention/2026-convention/map/">
-                                <p class="description">URL of the page using <code>[oha_convention_map]</code>. Used by vendor cards to generate the "Find Booth" locate link.</p>
+                                <input type="text" id="oha_pwa_convention_map_url" name="oha_pwa_convention_map_url" value="<?php echo esc_attr($convention_map_url); ?>" class="regular-text" placeholder="/convention/map/">
+                                <p class="description">URL of the page using <code>[oha_convention_map]</code>. Used by vendor cards to generate the "Find Booth" locate link. Leave blank to derive from Convention Base URL.</p>
                             </td>
                         </tr>
                         <tr>
@@ -812,7 +824,7 @@ class OHA_PWA_Settings {
                                 <label for="oha_pwa_lost_found_map_url">Lost and Found Location URL</label>
                             </th>
                             <td>
-                                <input type="text" id="oha_pwa_lost_found_map_url" name="oha_pwa_lost_found_map_url" value="<?php echo esc_attr($lost_found_map_url); ?>" class="regular-text" placeholder="/convention/2026-convention/map/?oha_vendor=lost-found">
+                                <input type="text" id="oha_pwa_lost_found_map_url" name="oha_pwa_lost_found_map_url" value="<?php echo esc_attr($lost_found_map_url); ?>" class="regular-text" placeholder="/convention/map/?oha_vendor=lost-found">
                                 <p class="description">Optional deep link to the map showing the Lost and Found table location. Leave empty to hide the link.</p>
                             </td>
                         </tr>
@@ -1051,6 +1063,7 @@ class OHA_PWA_Settings {
         update_option('oha_pwa_happenings', sanitize_textarea_field(wp_unslash($_POST['oha_pwa_happenings'] ?? '')));
         update_option('oha_pwa_lost_found_items',   sanitize_textarea_field(wp_unslash($_POST['oha_pwa_lost_found_items']   ?? '')));
         update_option('oha_pwa_lost_found_map_url', esc_url_raw($_POST['oha_pwa_lost_found_map_url'] ?? ''));
+        update_option('oha_convention_base_url',    sanitize_text_field(wp_unslash($_POST['oha_convention_base_url'] ?? '/convention')));
         update_option('oha_pwa_passport_url',       esc_url_raw($_POST['oha_pwa_passport_url']       ?? ''));
         update_option('oha_pwa_scanner_url',        esc_url_raw($_POST['oha_pwa_scanner_url']        ?? ''));
         update_option('oha_pwa_convention_map_url', esc_url_raw($_POST['oha_pwa_convention_map_url'] ?? ''));

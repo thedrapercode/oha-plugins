@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Convention PWA Core",
-    "version":  "3.25.0",
+    "version":  "3.25.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -652,6 +652,34 @@
                         "type":  "feature",
                         "summary":  "[oha_happening_now] now works on pages without [oha_convention_schedule] via REST fallback",
                         "notes":  "HappeningNow.fetchEvents() calls GET oha/v1/schedule/events?year=2026 on init and re-fetches every 5 min. getCurrentEvents() checks DOM [data-event-time] elements first; falls back to REST cache if none found. ohaHappeningConfig localized with eventsEndpoint, conventionYear, and dayDates map derived from oha_pwa_convention_start/end options. Pages with [oha_convention_schedule] are completely unchanged - DOM path takes priority."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.25.1",
+                        "type":  "feature",
+                        "summary":  "Add oha_convention_base_url setting as single source of truth for all convention sub-page URLs",
+                        "notes":  "New field in PWA Settings \u003e General tab. Default is /convention (no trailing slash). All plugins will read from this option. Moving to Vendor Hub Convention Details in a future session."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.25.1",
+                        "type":  "change",
+                        "summary":  "Replace all hardcoded /convention/2026-convention/ URLs with oha_convention_base_url-derived values",
+                        "notes":  "5 files updated: oha-convention-pwa-core.php, class-pwa-shortcodes.php (9 refs), class-pwa-manifest.php (4 shortcut URLs), class-pwa-settings.php (defaults + placeholders), shortcode-pwa-download.php. Pattern: rtrim(get_option(oha_convention_base_url, /convention), /) . /subpath/. Per-URL options (oha_pwa_passport_url etc.) still override when set."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.25.1",
+                        "type":  "fix",
+                        "summary":  "Remove 2026-convention from service worker isConventionScope() path list",
+                        "notes":  "Entry was redundant -- /convention at the top of the array already matches /convention/2026-convention/anything/ via includes(). Safe removal, no behavior change."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.25.1",
+                        "type":  "change",
+                        "summary":  "De-year app name and tagline defaults in download shortcode and settings",
+                        "notes":  "OHC 2026 Convention App -\u003e OHC Convention App. Tagline default updated. Only affects installs where these were never saved -- existing saved options are unchanged."
                     }
                 ]
 }
