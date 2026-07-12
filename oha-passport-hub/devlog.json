@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Passport Hub",
-    "version":  "2.1.0",
+    "version":  "2.1.1",
     "entries":  [
                     {
                         "date":  "2026-03-17",
@@ -43,6 +43,13 @@
                         "type":  "change",
                         "summary":  "passport_page_url added to wp_localize_script so JS can link back to passport page",
                         "notes":  "Reads oha_pwa_passport_url WP option (shared with PWA Core). Falls back to /convention/2026-convention/passport/."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "2.1.1",
+                        "type":  "fix",
+                        "summary":  "Replace hardcoded /convention/2026-convention/passport/ fallback with oha_convention_base_url dynamic default",
+                        "notes":  "Fixed in oha-passport-hub.php (passport_page_url localize) and class-passport-shortcodes.php (oha_qr_scanner and oha_smart_scanner shortcode_atts). Fallback now derives from oha_convention_base_url option so no plugin edits needed when convention year changes."
                     }
                 ]
 }

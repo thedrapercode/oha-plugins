@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Passport Hub
  * Description: Actor Passport, QR Badge Trading, Vendor Check-in, Scavenger Hunt, and Event Gamification for Ohio Haunters Association events. Works standalone or alongside the OHA Convention PWA.
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: OHA Technical Team
  * Requires PHP: 8.0
  * Text Domain: oha-passport-hub
@@ -62,7 +62,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
-define( 'OHA_PH_VERSION', '2.1.0' );
+define( 'OHA_PH_VERSION', '2.1.1' );
 define( 'OHA_PH_DB_VERSION', '2.0.0' );
 define( 'OHA_PH_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'OHA_PH_URL',     plugin_dir_url( __FILE__ ) );
@@ -157,7 +157,7 @@ class OHA_Passport_Hub {
             'is_event_active' => OHA_Passport_Events::get_instance()->is_any_event_active(),
             'is_logged_in'      => is_user_logged_in(),
             'jsqr_url'          => OHA_PH_URL . 'assets/js/jsqr.min.js',
-            'passport_page_url' => get_option( 'oha_pwa_passport_url', '/convention/2026-convention/passport/' ),
+            'passport_page_url' => get_option( 'oha_pwa_passport_url', rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/passport/' ),
         ];
         wp_localize_script( 'oha-passport-hub', 'ohaPassportHub', $localize_data );
         wp_localize_script( 'oha-passport-hub', 'ohaActorPassport', $localize_data ); // legacy compat

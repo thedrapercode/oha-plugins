@@ -139,7 +139,7 @@ class OHA_Passport_Shortcodes {
             'auto_start'        => 'false',
             'show_instructions' => 'true',
             'event'             => '',
-            'passport_url'      => get_option( 'oha_pwa_passport_url', '/convention/2026-convention/passport/' ),
+            'passport_url'      => get_option( 'oha_pwa_passport_url', rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/passport/' ),
         ], $atts );
 
         if ( ! is_user_logged_in() ) {
@@ -519,7 +519,7 @@ class OHA_Passport_Shortcodes {
     public function display_smart_scanner( $atts = [] ) {
         $atts = shortcode_atts( [
             'show_instructions' => 'true',
-            'passport_url'      => get_option( 'oha_pwa_passport_url', '/convention/2026-convention/passport/' ),
+            'passport_url'      => get_option( 'oha_pwa_passport_url', rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/passport/' ),
         ], $atts );
 
         if ( ! is_user_logged_in() ) {
