@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Volunteer Hub",
-    "version":  "4.12.0",
+    "version":  "4.12.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -281,6 +281,13 @@
                         "type":  "fix",
                         "summary":  "Fixed board hub modals appearing behind site header and not centering correctly",
                         "notes":  "Root causes: z-index 999999 beaten by theme header; align-items/justify-content only on .oha-modal.show class not on .oha-modal. Fix: z-index 2147483647 on .oha-modal, flex alignment on .oha-modal directly, padding-top 80px to clear fixed header. Updated oha-vh.css, board-hub-tabbed.php inline CSS, and stripped redundant inline styles from modal divs in volunteers-tab.php and assign-tab.php."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "4.12.1",
+                        "type":  "fix",
+                        "summary":  "Replace hardcoded /convention/2026-convention/volunteers/volunteer-handbook/ with oha_convention_base_url-derived URL",
+                        "notes":  "Two locations updated: class-oha-vh-signup-form.php (perks section of signup form) and class-oha-vh-portal.php (Important Resources box in portal). Both now read rtrim(get_option(oha_convention_base_url, /convention), /) . /volunteers/volunteer-handbook/. No other 2026-convention references exist in this plugin."
                     }
                 ]
 }

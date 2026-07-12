@@ -277,7 +277,7 @@ class SignupForm {
                         
                         <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 4px; text-align: center;">
                             <small style="color: #856404;">
-                                📋 <a href="/convention/2026-convention/volunteers/volunteer-handbook/" target="_blank" style="color: #d63031; font-weight: 600;">Review the Volunteer Handbook</a> for complete details
+                                📋 <a href="<?php echo esc_url( rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/volunteers/volunteer-handbook/' ); ?>" target="_blank" style="color: #d63031; font-weight: 600;">Review the Volunteer Handbook</a> for complete details
                             </small>
                         </div>
                     </div>

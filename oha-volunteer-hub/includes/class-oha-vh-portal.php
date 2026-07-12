@@ -810,7 +810,7 @@ class Portal {
                 </ul>
                 <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; text-align: center; border: 2px dashed #e74c3c;">
                     <strong style="display: block; margin-bottom: 8px; color: #000 !important;">Important Resources</strong>
-                    <a href="/convention/2026-convention/volunteers/volunteer-handbook/" target="_blank" class="button button-primary" style="background: #e74c3c !important; border-color: #e74c3c !important; text-decoration: none;">
+                    <a href="<?php echo esc_url( rtrim( get_option( 'oha_convention_base_url', '/convention' ), '/' ) . '/volunteers/volunteer-handbook/' ); ?>" target="_blank" class="button button-primary" style="background: #e74c3c !important; border-color: #e74c3c !important; text-decoration: none;">
                         View Volunteer Handbook
                     </a>
                     <p style="margin: 10px 0 0 0; font-size: 13px; color: #666 !important;">Review policies, procedures, and important information</p>
