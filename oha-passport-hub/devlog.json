@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Passport Hub",
-    "version":  "2.1.2",
+    "version":  "2.1.3",
     "entries":  [
                     {
                         "date":  "2026-03-17",
@@ -57,6 +57,13 @@
                         "type":  "fix",
                         "summary":  "Fix hardcoded 2026-convention/passport/ JS fallbacks in passport-hub.js",
                         "notes":  "Two JS safety-net fallbacks in passport-hub.js (displayScanSuccess and processActorScan) changed from /convention/2026-convention/passport/ to /convention/passport/. These only fire if ohaPassportHub.passport_page_url is not set by PHP, which should not happen in production."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "2.1.3",
+                        "type":  "fix",
+                        "summary":  "Fix missed 2026-convention JS fallback in processActorScan() in passport-hub.js",
+                        "notes":  "replace_all edit in v2.1.2 matched the 16-space indent at line 646 but missed the 12-space indent at line 1161 (processActorScan). Corrected to /convention/passport/."
                     }
                 ]
 }

@@ -1158,7 +1158,7 @@
         scanner.showResult('Processing badge trade…', 'info');
         var passportUrl = (typeof ohaPassportHub !== 'undefined' && ohaPassportHub.passport_page_url)
             ? ohaPassportHub.passport_page_url
-            : '/convention/2026-convention/passport/';
+            : '/convention/passport/';
         $.ajax({
             url:  ohaPassportHub.ajax_url,
             type: 'POST',
