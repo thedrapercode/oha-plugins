@@ -8,12 +8,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * Light theme, no favorites button. Client-side search included.
  *
  * Atts:
- *   title="Our 2026 Convention Vendors"  — section heading (empty string to hide)
+ *   title="Our Convention Vendors"  — section heading (empty string to hide)
  *   search="yes"                          — show/hide search bar (default: yes)
  */
 function oha_vendor_cards_shortcode( $atts ) {
     $atts = shortcode_atts( [
-        'title'  => 'Our 2026 Convention Vendors',
+        'title'  => 'Our Convention Vendors',
         'search' => 'yes',
     ], $atts, 'oha_vendor_cards' );
 

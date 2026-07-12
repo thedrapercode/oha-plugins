@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.14.0",
+    "version":  "3.14.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -477,6 +477,13 @@
                         "type":  "feature",
                         "summary":  "Returning vendor confirmation email sent on save with dedicated admin template",
                         "notes":  "Options: oha_vhcpt_return_confirm_subject and oha_vhcpt_return_confirm_body. Configurable in Settings under Application Status. Placeholders: {first_name}, {company_name}, {convention_name}."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "3.14.1",
+                        "type":  "change",
+                        "summary":  "Remove year from [oha_vendor_cards] default title attribute - changed to Our Convention Vendors",
+                        "notes":  "Default shortcode_atts title was hardcoded to Our 2026 Convention Vendors. Overridable via title attribute so no page content changes needed."
                     }
                 ]
 }

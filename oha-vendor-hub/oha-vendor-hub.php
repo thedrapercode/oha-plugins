@@ -2,7 +2,7 @@
 /*
 Plugin Name: OHA Vendor Hub
 Description: Complete vendor management system with applications, e-signatures, Stripe payments, Board Hub admin dashboard, and vendor status table for Ohio Haunters Convention.
-Version: 3.14.0
+Version: 3.14.1
 Author: OHA Dev Team
 Author URI: https://ohiohaunters.com
 Text Domain: oha-vendor-hub
