@@ -1,18 +1,18 @@
 /* OHA Education Hub - Frontend Styles
-   Version: 1.0.0
+   Version: 1.0.1
    Scoped to .oha-education-wrap to prevent theme collisions. */
 
 .oha-education-wrap {
-    --oha-bg:          #0d0808;
-    --oha-bg-card:     #1a0f0f;
-    --oha-bg-accent:   #221515;
-    --oha-orange:      #e07820;
-    --oha-orange-dark: #b85e10;
-    --oha-gold:        #f0b429;
-    --oha-text:        #e8ddd0;
-    --oha-text-muted:  #9a8878;
-    --oha-border:      #3a2020;
-    --oha-radius:      8px;
+    --oha-bg:         transparent;
+    --oha-bg-card:    var(--global-palette9, #000000);
+    --oha-bg-accent:  rgba(0, 0, 0, 0.35);
+    --oha-primary:    var(--global-palette1, #ad3119);
+    --oha-primary-hv: var(--global-palette2, #ff0000);
+    --oha-accent:     var(--global-palette7, #e76653);
+    --oha-text:       var(--global-palette4, #f7fafc);
+    --oha-text-muted: var(--global-palette6, #cbd2d9);
+    --oha-border:     rgba(173, 49, 25, 0.45);
+    --oha-radius:     8px;
 
     background: var(--oha-bg);
     color: var(--oha-text);
@@ -42,7 +42,7 @@
 
 .oha-edu-section-title {
     font-size: clamp(1.6rem, 3vw, 2.2rem);
-    color: var(--oha-gold);
+    color: var(--oha-accent);
     margin: 0 0 12px;
     font-weight: 700;
     line-height: 1.2;
@@ -68,12 +68,12 @@
 }
 
 .oha-edu-btn-primary {
-    background: var(--oha-orange);
+    background: var(--oha-primary);
     color: #fff;
 }
 
 .oha-edu-btn-primary:hover {
-    background: var(--oha-orange-dark);
+    background: var(--oha-primary-hv);
     color: #fff;
     text-decoration: none;
     transform: translateY(-2px);
@@ -82,8 +82,8 @@
 /* ── Hero ─────────────────────────────────────────────────────── */
 
 .oha-edu-hero {
-    background: linear-gradient(135deg, #0d0808 0%, #1a0808 50%, #0d0808 100%);
-    border-bottom: 2px solid var(--oha-orange);
+    background: linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(104,4,0,0.45) 50%, rgba(0,0,0,0.55) 100%);
+    border-bottom: 2px solid var(--oha-primary);
     padding: 80px 24px;
     text-align: center;
     position: relative;
@@ -98,7 +98,7 @@
     transform: translateX(-50%);
     width: 700px;
     height: 700px;
-    background: radial-gradient(circle, rgba(224,120,32,0.11) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(173,49,25,0.15) 0%, transparent 65%);
     pointer-events: none;
 }
 
@@ -110,15 +110,15 @@
 
 .oha-edu-hero-eyebrow {
     display: inline-block;
-    background: rgba(224,120,32,0.12);
-    color: var(--oha-orange);
+    background: rgba(173,49,25,0.12);
+    color: var(--oha-primary);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     padding: 5px 14px;
     border-radius: 20px;
-    border: 1px solid rgba(224,120,32,0.28);
+    border: 1px solid rgba(173,49,25,0.35);
     margin-bottom: 20px;
 }
 
@@ -164,9 +164,9 @@
 }
 
 .oha-edu-value-card:hover {
-    border-color: var(--oha-orange);
+    border-color: var(--oha-primary);
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(224,120,32,0.12);
+    box-shadow: 0 8px 24px rgba(173,49,25,0.2);
 }
 
 .oha-edu-value-icon {
@@ -177,7 +177,7 @@
 
 .oha-edu-value-title {
     font-size: 1.15rem;
-    color: var(--oha-gold);
+    color: var(--oha-accent);
     margin: 0 0 10px;
     font-weight: 700;
 }
@@ -203,7 +203,7 @@
 .oha-edu-day-label {
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--oha-orange);
+    color: var(--oha-primary);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin: 0 0 20px;
@@ -230,25 +230,25 @@
 }
 
 .oha-edu-session-card:hover {
-    border-color: var(--oha-orange);
-    box-shadow: 0 4px 20px rgba(224,120,32,0.14);
+    border-color: var(--oha-primary);
+    box-shadow: 0 4px 20px rgba(173,49,25,0.2);
 }
 
 .oha-edu-promoted {
-    border-color: rgba(240,180,41,0.5);
+    border-color: rgba(231,102,83,0.5);
 }
 
 .oha-edu-promoted:hover {
-    border-color: var(--oha-gold);
-    box-shadow: 0 4px 20px rgba(240,180,41,0.18);
+    border-color: var(--oha-accent);
+    box-shadow: 0 4px 20px rgba(231,102,83,0.2);
 }
 
 .oha-edu-promoted-badge {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: var(--oha-gold);
-    color: #0d0808;
+    background: var(--oha-accent);
+    color: #000;
     font-size: 0.68rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -288,7 +288,7 @@
 .oha-edu-headshot-placeholder span {
     font-size: 1.35rem;
     font-weight: 700;
-    color: var(--oha-orange);
+    color: var(--oha-primary);
     line-height: 1;
 }
 
@@ -299,7 +299,7 @@
 
 .oha-edu-session-time {
     font-size: 0.78rem;
-    color: var(--oha-orange);
+    color: var(--oha-primary);
     font-weight: 700;
     letter-spacing: 0.03em;
     margin-bottom: 3px;
@@ -356,8 +356,8 @@
 }
 
 .oha-edu-level-beginner     { color: #4ade80; border-color: #4ade80; background: rgba(74,222,128,0.08); }
-.oha-edu-level-intermediate { color: var(--oha-gold); border-color: var(--oha-gold); background: rgba(240,180,41,0.08); }
-.oha-edu-level-advanced     { color: var(--oha-orange); border-color: var(--oha-orange); background: rgba(224,120,32,0.08); }
+.oha-edu-level-intermediate { color: var(--oha-accent); border-color: var(--oha-accent); background: rgba(231,102,83,0.1); }
+.oha-edu-level-advanced     { color: var(--oha-primary); border-color: var(--oha-primary); background: rgba(173,49,25,0.1); }
 .oha-edu-level-all          { color: var(--oha-text-muted); border-color: var(--oha-border); background: transparent; }
 .oha-edu-room-badge         { color: var(--oha-text-muted); border-color: var(--oha-border); background: transparent; }
 
@@ -368,8 +368,8 @@
 .oha-edu-details-btn {
     width: 100%;
     background: transparent;
-    border: 1px solid var(--oha-orange);
-    color: var(--oha-orange);
+    border: 1px solid var(--oha-primary);
+    color: var(--oha-primary);
     padding: 8px 16px;
     border-radius: var(--oha-radius);
     font-size: 0.85rem;
@@ -380,7 +380,7 @@
 }
 
 .oha-edu-details-btn:hover {
-    background: var(--oha-orange);
+    background: var(--oha-primary);
     color: #fff;
 }
 
@@ -425,13 +425,13 @@
 
 .oha-edu-faq-q:hover,
 .oha-edu-faq-q[aria-expanded="true"] {
-    color: var(--oha-gold);
+    color: var(--oha-accent);
 }
 
 .oha-edu-faq-icon {
     flex-shrink: 0;
     font-size: 1.5rem;
-    color: var(--oha-orange);
+    color: var(--oha-primary);
     transition: transform 0.25s;
     line-height: 1;
 }
@@ -453,8 +453,8 @@
 
 .oha-edu-cta {
     padding: 80px 0;
-    background: linear-gradient(135deg, #1a0808 0%, #251515 100%);
-    border-top: 2px solid var(--oha-orange);
+    background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 100%);
+    border-top: 2px solid var(--oha-primary);
     text-align: center;
 }
 
@@ -524,7 +524,7 @@
 
 .oha-edu-modal-close:hover {
     color: var(--oha-text);
-    border-color: var(--oha-orange);
+    border-color: var(--oha-primary);
 }
 
 .oha-edu-modal-body {
@@ -550,7 +550,7 @@
 
 .oha-edu-modal-headshot {
     object-fit: cover;
-    border: 2px solid var(--oha-orange);
+    border: 2px solid var(--oha-primary);
     display: block;
 }
 
@@ -569,7 +569,7 @@
 .oha-edu-modal-initials {
     font-size: 1.9rem;
     font-weight: 700;
-    color: var(--oha-orange);
+    color: var(--oha-primary);
     line-height: 1;
 }
 
@@ -577,7 +577,7 @@
 
 .oha-edu-modal-instructor {
     font-size: 0.82rem;
-    color: var(--oha-orange);
+    color: var(--oha-primary);
     font-weight: 700;
     letter-spacing: 0.04em;
     margin-bottom: 5px;
@@ -626,7 +626,7 @@
 .oha-edu-modal-materials-label {
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--oha-gold);
+    color: var(--oha-accent);
     text-transform: uppercase;
     letter-spacing: 0.09em;
     margin: 0 0 6px;
@@ -649,9 +649,9 @@
 }
 
 .oha-edu-error {
-    background: rgba(120,20,20,0.3);
-    border: 1px solid #7a2020;
-    color: #e8a0a0;
+    background: rgba(173,49,25,0.15);
+    border: 1px solid var(--oha-primary);
+    color: var(--oha-text);
     padding: 16px 20px;
     border-radius: var(--oha-radius);
     font-size: 0.95rem;

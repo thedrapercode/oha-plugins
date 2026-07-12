@@ -36,6 +36,13 @@
             <p class="description">The <code>class_track</code> taxonomy slug to display. Default: <code>education</code>. Override per-shortcode with <code>track="slug"</code>.</p>
         </td>
     </tr>
+    <tr>
+        <th><label for="active_year_override">Active Convention Year Override</label></th>
+        <td>
+            <input type="text" id="active_year_override" name="active_year_override" value="<?php echo esc_attr( $s['active_year_override'] ); ?>" class="small-text" placeholder="auto">
+            <p class="description">Leave blank to auto-detect: Jan&ndash;May shows the current year; June+ advances to next year. Enter a year (e.g. <code>2027</code>) to pin all <code>[oha_education]</code> shortcodes to that year. A <code>year=""</code> attribute on the shortcode always takes priority over this setting.</p>
+        </td>
+    </tr>
     </table>
 </div>
 

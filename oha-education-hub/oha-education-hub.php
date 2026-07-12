@@ -3,14 +3,14 @@
  * Plugin Name: OHA Education Hub
  * Plugin URI:  https://ohiohaunters.org
  * Description: Education page shortcode that displays live class data from OHA Schedule Hub.
- * Version:     1.0.0
+ * Version:     1.1.0
  * Author:      OHA Web Team
  * Text Domain: oha-education-hub
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_EDUCATION_VERSION', '1.0.0' );
+define( 'OHA_EDUCATION_VERSION', '1.1.0' );
 define( 'OHA_EDUCATION_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_EDUCATION_URL',  plugin_dir_url( __FILE__ ) );
 
@@ -18,6 +18,8 @@ define( 'OHA_EDUCATION_URL',  plugin_dir_url( __FILE__ ) );
 
 add_action( 'wp_enqueue_scripts', 'oha_education_enqueue' );
 function oha_education_enqueue() {
+    global $post;
+    if ( ! is_a( $post, 'WP_Post' ) || ! has_shortcode( $post->post_content, 'oha_education' ) ) return;
     wp_enqueue_style(
         'oha-education-hub',
         OHA_EDUCATION_URL . 'assets/css/frontend.css',
@@ -117,9 +119,10 @@ function oha_education_defaults() {
         'value_3_icon'        => '&#128202;',
         'value_3_title'       => 'All Skill Levels',
         'value_3_desc'        => 'Classes range from first-time haunter basics to advanced techniques for seasoned pros.',
-        'sessions_heading'    => 'Convention Classes',
-        'sessions_subheading' => 'All classes are included with your convention admission. Seating is first-come, first-served.',
-        'default_track'       => 'education',
+        'sessions_heading'      => 'Convention Classes',
+        'sessions_subheading'   => 'All classes are included with your convention admission. Seating is first-come, first-served.',
+        'default_track'         => 'education',
+        'active_year_override'  => '',
         'faq_heading'         => 'Frequently Asked Questions',
         'faq_items'           => '[{"q":"Do I need to pre-register for classes?","a":"No pre-registration is required. All classes are first-come, first-served and included with your convention admission."},{"q":"What should I bring to classes?","a":"Each class listing notes any required materials. Beyond that, just bring yourself and a willingness to learn."},{"q":"Are classes included with my convention ticket?","a":"Yes! All education sessions are included free with convention admission."}]',
         'cta_heading'         => 'Ready to Learn?',
@@ -172,7 +175,18 @@ function oha_education_shortcode( $atts ) {
 
     $settings = oha_education_get_settings();
     $track    = ! empty( $atts['track'] ) ? sanitize_key( $atts['track'] ) : sanitize_key( $settings['default_track'] );
-    $year     = ! empty( $atts['year'] )  ? sanitize_key( $atts['year'] )  : '';
+
+    // Priority: shortcode attr > admin override > auto-detect (June 1 cutoff)
+    $year = ! empty( $atts['year'] )
+        ? sanitize_key( $atts['year'] )
+        : sanitize_key( $settings['active_year_override'] ?? '' );
+
+    if ( empty( $year ) ) {
+        $now   = current_time( 'timestamp' );
+        $month = (int) date( 'n', $now );
+        $cal   = (int) date( 'Y', $now );
+        $year  = (string) ( $month >= 6 ? $cal + 1 : $cal );
+    }
 
     // Build tax query
     if ( $year ) {

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Education Hub",
-    "version":  "1.0.0",
+    "version":  "1.1.0",
     "entries":  [
                     {
                         "date":  "2026-04-01",
@@ -8,6 +8,34 @@
                         "type":  "feature",
                         "summary":  "Initial release: [oha_education] shortcode pulls live class data from Schedule Hub.",
                         "notes":  "Hero, value cards, sessions grid with instructor headshots and modal, FAQ accordion, CTA strip. All text editable via Settings \u003e Education Hub. Depends on oha-schedule-hub for oha_class CPT."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Auto convention-year detection: Jan-May shows current year, June+ advances to next year",
+                        "notes":  "Uses current_time() with June 1 cutoff. Explicit year= attr on shortcode always overrides."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Admin year override setting in Settings \u003e Education Hub lets admin pin a specific convention year",
+                        "notes":  "Priority chain: shortcode year= attr \u003e active_year_override setting \u003e auto-detect. Leave blank for auto."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "1.1.0",
+                        "type":  "change",
+                        "summary":  "CSS palette aligned to Kadence global palette vars; removed all hardcoded hex colors",
+                        "notes":  "Tokens now map to --global-palette1/2/4/6/7/9. Wrapper bg is transparent. Old --oha-orange/--oha-gold renamed to --oha-primary/--oha-accent."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "1.1.0",
+                        "type":  "fix",
+                        "summary":  "CSS and JS now only load on pages that contain the [oha_education] shortcode",
+                        "notes":  "Uses has_shortcode() check in wp_enqueue_scripts hook. Previously loaded unconditionally on all pages."
                     }
                 ]
 }
