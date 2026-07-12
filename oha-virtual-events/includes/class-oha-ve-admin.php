@@ -386,6 +386,29 @@ class OHA_VE_Admin {
                 <code style="font-size:12px;background:#f0f0f0;padding:2px 6px;border-radius:3px;"><?php echo esc_html( $zoom_uuid ); ?></code>
             </div>
             <?php endif; ?>
+            <?php
+            $synced_at = get_post_meta( $post->ID, 'oha_ve_zoom_synced_at', true );
+            if ( ! empty( $zoom_id ) && OHA_VE_Settings::is_api_configured() ) :
+            ?>
+            <div class="oha-ve-field" style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;">
+                <button type="button"
+                        class="button button-small oha-ve-sync-time-btn"
+                        data-event-id="<?php echo (int) $post->ID; ?>"
+                        data-nonce="<?php echo esc_attr( wp_create_nonce( 'oha_ve_admin_nonce' ) ); ?>">
+                    Sync Date/Time to Zoom
+                </button>
+                <span class="oha-ve-sync-time-result" style="margin-left:8px;font-style:italic;font-size:12px;color:#666;"></span>
+                <?php if ( $synced_at ) : ?>
+                    <p style="font-size:12px;color:#888;margin:4px 0 0;">
+                        Last synced: <strong><?php echo esc_html( date_i18n( 'M j, Y g:i A', strtotime( $synced_at ) ) ); ?></strong>
+                    </p>
+                <?php else : ?>
+                    <p style="font-size:12px;color:#888;margin:4px 0 0;">
+                        Not yet synced. Click to push the current event date/time to Zoom.
+                    </p>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Section 5: YouTube -->
@@ -423,6 +446,23 @@ class OHA_VE_Admin {
                 and change the Status (above) to <strong>Replay / On Demand</strong>. The recording will appear
                 in the member On Demand library immediately.
             </p>
+            <?php if ( ! empty( $zoom_id ) && OHA_VE_Settings::is_api_configured() ) : ?>
+            <div class="oha-ve-field oha-ve-recording-fetch-wrap" style="background:#f0f5fa;border:1px solid #c3d9ee;border-radius:4px;padding:10px 14px;margin-bottom:12px;">
+                <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#2271b1;">Fetch Recording from Zoom</p>
+                <p style="margin:0 0 8px;font-size:12px;color:#555;">
+                    Zoom cloud recordings take 15-60 minutes to process after a session ends.
+                    Click below to pull the recording files directly from Zoom.
+                </p>
+                <button type="button"
+                        class="button button-small oha-ve-fetch-recording-btn"
+                        data-event-id="<?php echo (int) $post->ID; ?>"
+                        data-nonce="<?php echo esc_attr( wp_create_nonce( 'oha_ve_admin_nonce' ) ); ?>">
+                    Fetch Recording from Zoom
+                </button>
+                <span class="oha-ve-fetch-recording-spinner" style="display:none;margin-left:8px;font-style:italic;font-size:12px;color:#666;">Fetching&hellip;</span>
+                <div class="oha-ve-recording-results" style="display:none;margin-top:12px;"></div>
+            </div>
+            <?php endif; ?>
             <div class="oha-ve-field">
                 <label>
                     <input type="checkbox" name="oha_ve_replay_available" value="1" <?php checked( $replay_available, '1' ); ?> />
@@ -464,6 +504,97 @@ class OHA_VE_Admin {
                 updateInstructorNotes();
                 $('#oha_ve_platform').on('change', updatePlatformSections);
                 $('#oha_ve_instructor_user_id').on('change', updateInstructorNotes);
+
+                // --- Sync Date/Time to Zoom ---
+                $(document).on('click', '.oha-ve-sync-time-btn', function() {
+                    var btn     = $(this);
+                    var result  = btn.siblings('.oha-ve-sync-time-result');
+                    var eventId = btn.data('event-id');
+                    var nonce   = btn.data('nonce');
+                    btn.prop('disabled', true);
+                    result.css('color', '#666').text('Syncing…');
+                    $.post(ajaxurl, {
+                        action:   'oha_ve_sync_meeting_time',
+                        nonce:    nonce,
+                        event_id: eventId
+                    }, function(resp) {
+                        if ( resp.success ) {
+                            result.css('color', 'green').text(resp.data.message);
+                            if ( resp.data.synced_at ) {
+                                btn.closest('.oha-ve-field').find('p').text('Last synced: ' + resp.data.synced_at);
+                            }
+                        } else {
+                            result.css('color', '#d63638').text(resp.data ? resp.data.message : 'Error.');
+                        }
+                    }).fail(function() {
+                        result.css('color', '#d63638').text('Request failed.');
+                    }).always(function() {
+                        btn.prop('disabled', false);
+                    });
+                });
+
+                // --- Fetch Recording from Zoom ---
+                $(document).on('click', '.oha-ve-fetch-recording-btn', function() {
+                    var btn      = $(this);
+                    var wrap     = btn.closest('.oha-ve-recording-fetch-wrap');
+                    var spinner  = wrap.find('.oha-ve-fetch-recording-spinner');
+                    var results  = wrap.find('.oha-ve-recording-results');
+                    var eventId  = btn.data('event-id');
+                    var nonce    = btn.data('nonce');
+                    btn.prop('disabled', true);
+                    spinner.show();
+                    results.hide().empty();
+                    $.post(ajaxurl, {
+                        action:   'oha_ve_fetch_recording',
+                        nonce:    nonce,
+                        event_id: eventId
+                    }, function(resp) {
+                        spinner.hide();
+                        if ( ! resp.success ) {
+                            results.html('<p style="color:#d63638;margin:0;">' + (resp.data ? resp.data.message : 'Error fetching recording.') + '</p>').show();
+                            return;
+                        }
+                        var d   = resp.data;
+                        var out = '';
+                        if ( d.share_url ) {
+                            out += '<p style="margin:0 0 8px;"><strong>Share URL:</strong> '
+                                 + '<a href="' + d.share_url + '" target="_blank" rel="noopener">' + d.share_url + '</a>';
+                            if ( d.password ) {
+                                out += ' &nbsp; <strong>Password:</strong> <code>' + d.password + '</code>';
+                            }
+                            out += '</p>';
+                        }
+                        if ( d.files && d.files.length ) {
+                            out += '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+                                 + '<thead><tr style="background:#e8f0f8;">'
+                                 + '<th style="padding:5px 8px;text-align:left;">File</th>'
+                                 + '<th style="padding:5px 8px;text-align:left;">Size</th>'
+                                 + '<th style="padding:5px 8px;text-align:left;">Links</th>'
+                                 + '</tr></thead><tbody>';
+                            $.each(d.files, function(i, f) {
+                                var size = f.size_mb ? f.size_mb + ' MB' : '-';
+                                var links = '';
+                                if ( f.play_url )     links += '<a href="' + f.play_url + '" target="_blank" rel="noopener">Play</a>';
+                                if ( f.download_url ) links += (links ? ' &nbsp; ' : '') + '<a href="' + f.download_url + '" target="_blank" rel="noopener">Download</a>';
+                                out += '<tr style="border-bottom:1px solid #ddd;">'
+                                     + '<td style="padding:5px 8px;">' + f.label + '</td>'
+                                     + '<td style="padding:5px 8px;">' + size + '</td>'
+                                     + '<td style="padding:5px 8px;">' + (links || '-') + '</td>'
+                                     + '</tr>';
+                            });
+                            out += '</tbody></table>';
+                        }
+                        if ( ! out ) {
+                            out = '<p style="margin:0;color:#666;">No completed recording files found yet.</p>';
+                        }
+                        results.html(out).show();
+                    }).fail(function() {
+                        spinner.hide();
+                        results.html('<p style="color:#d63638;margin:0;">Request failed.</p>').show();
+                    }).always(function() {
+                        btn.prop('disabled', false);
+                    });
+                });
             });
         })(jQuery);
         </script>

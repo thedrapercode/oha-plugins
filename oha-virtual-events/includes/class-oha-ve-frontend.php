@@ -39,8 +39,10 @@ class OHA_VE_Frontend {
 
     // =========================================================
     // PROTECTED ZOOM JOIN REDIRECT
-    // Attendees are sent to /wp-json/oha-ve/v1/zoom-join/{id}?_wpnonce=...
-    // The actual Zoom URL is never exposed in page source.
+    // Attendees are sent to /wp-json/oha-ve/v1/zoom-join/{id}?_token=...
+    // First request renders a meeting rules acknowledgment page.
+    // After agreeing (?agreed=1), the actual Zoom redirect fires.
+    // The Zoom URL is never exposed in page source.
     // =========================================================
 
     public function register_rest_routes() {
@@ -54,6 +56,10 @@ class OHA_VE_Frontend {
                     'validate_callback' => function ( $v ) { return is_numeric( $v ) && (int) $v > 0; },
                     'sanitize_callback' => 'absint',
                 ],
+                'agreed' => [
+                    'required'          => false,
+                    'sanitize_callback' => function ( $v ) { return '1' === (string) $v; },
+                ],
             ],
         ] );
     }
@@ -61,6 +67,7 @@ class OHA_VE_Frontend {
     public function zoom_join_redirect( \WP_REST_Request $request ) {
         $event_id = absint( $request->get_param( 'event_id' ) );
         $nonce    = sanitize_text_field( (string) $request->get_param( '_token' ) );
+        $agreed   = (bool) $request->get_param( 'agreed' );
 
         // Verify time-limited nonce.
         if ( ! wp_verify_nonce( $nonce, 'oha_ve_zoom_join_' . $event_id ) ) {
@@ -78,9 +85,9 @@ class OHA_VE_Frontend {
         }
 
         // Check access: board/admin and assigned instructor always pass.
-        $access_level  = get_post_meta( $event_id, 'oha_ve_access_level', true );
-        $instructor_id = (int) get_post_meta( $event_id, 'oha_ve_instructor_user_id', true );
-        $user          = wp_get_current_user();
+        $access_level   = get_post_meta( $event_id, 'oha_ve_access_level', true );
+        $instructor_id  = (int) get_post_meta( $event_id, 'oha_ve_instructor_user_id', true );
+        $user           = wp_get_current_user();
         $is_board_admin = current_user_can( 'manage_options' )
                        || in_array( 'oha_board', (array) $user->roles, true );
         $is_instructor  = $instructor_id && (int) get_current_user_id() === $instructor_id;
@@ -93,7 +100,7 @@ class OHA_VE_Frontend {
             );
         }
 
-        // Fetch and redirect to the Zoom join URL.
+        // Fetch the Zoom join URL.
         $zoom_join = get_post_meta( $event_id, 'oha_ve_zoom_join_url', true );
 
         if ( empty( $zoom_join ) ) {
@@ -105,8 +112,6 @@ class OHA_VE_Frontend {
         }
 
         // Security: enforce HTTPS scheme and zoom.us domain before redirecting.
-        // Prevents an open redirect to arbitrary external sites if a stored URL
-        // were ever malformed or tampered with at the database level.
         $parsed_scheme = wp_parse_url( $zoom_join, PHP_URL_SCHEME );
         $parsed_host   = wp_parse_url( $zoom_join, PHP_URL_HOST );
         if ( 'https' !== strtolower( (string) $parsed_scheme )
@@ -119,8 +124,102 @@ class OHA_VE_Frontend {
             );
         }
 
+        // Show acknowledgment page on first visit - redirect to Zoom after agreement.
+        if ( ! $agreed ) {
+            $agree_url = add_query_arg(
+                [ '_token' => $nonce, 'agreed' => '1' ],
+                rest_url( 'oha-ve/v1/zoom-join/' . $event_id )
+            );
+            $is_board = ( 'board_only' === $access_level );
+            $this->render_acknowledgment_page( get_the_title( $event_id ), $agree_url, $is_board );
+            exit;
+        }
+
         wp_redirect( esc_url_raw( $zoom_join ) );
         exit;
+    }
+
+    /**
+     * Render the meeting rules acknowledgment page.
+     * Outputs a full HTML document and exits - bypasses normal REST JSON response.
+     *
+     * @param string $event_title  Title of the event being joined.
+     * @param string $agree_url    URL to redirect to after agreement (includes agreed=1).
+     * @param bool   $is_board     True for board_only events - shows board-specific rules.
+     */
+    private function render_acknowledgment_page( $event_title, $agree_url, $is_board ) {
+
+        $rules_member = [
+            'Treat all participants with respect. Personal attacks, harassment, or bullying of any kind will result in removal from the session.',
+            'Degrading or disrespectful comments about race, religion, culture, sexual orientation, gender, or identity are not tolerated.',
+            'Keep discussion relevant and constructive. Public criticism of specific haunts or individuals is not appropriate in this setting.',
+            'Do not share, record, screenshot, or redistribute session content, participant names, or private information without consent.',
+            'Violations may result in immediate removal. Ongoing concerns should be directed to OHA leadership through official channels.',
+        ];
+
+        $rules_board = [
+            'This is an official OHA Board meeting. Attendance is limited to board members and invited guests.',
+            'Conduct yourself professionally at all times. Personal disputes, outside grievances, or disruptive behavior will not be permitted.',
+            'Meeting content and discussions are confidential. Do not independently record or redistribute any portion of this session without board authorization.',
+            'Violations may result in removal from the session.',
+        ];
+
+        $recording_member = 'This session is recorded for internal security purposes only. Recordings are not posted publicly or shared outside of OHA leadership. By joining you acknowledge and consent to this recording.';
+        $recording_board  = 'This meeting is recorded for internal record-keeping purposes only. Recordings remain confidential and are accessible only to authorized OHA board members. They are not posted publicly or distributed outside the board. By joining you acknowledge and consent to this recording.';
+
+        $rules     = $is_board ? $rules_board : $rules_member;
+        $recording = $is_board ? $recording_board : $recording_member;
+        $heading   = $is_board ? 'OHA Board Meeting' : 'OHA Virtual Event';
+
+        $rules_html = '';
+        foreach ( $rules as $rule ) {
+            $rules_html .= '<li>' . esc_html( $rule ) . '</li>' . "\n";
+        }
+
+        $logo_url  = get_site_icon_url( 80 );
+        $logo_html = $logo_url
+            ? '<img src="' . esc_url( $logo_url ) . '" alt="OHA" style="max-height:56px;width:auto;margin-bottom:20px;">'
+            : '';
+
+        nocache_headers();
+        header( 'Content-Type: text/html; charset=UTF-8' );
+
+        echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Before You Join - OHA Virtual Event</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{background:#000000;border:1px solid rgba(173,49,25,0.45);border-radius:8px;max-width:680px;width:100%;padding:40px}
+.logo{text-align:center;margin-bottom:4px}
+.heading{font-size:13px;font-weight:700;color:#e76653;text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.event-title{font-size:20px;font-weight:700;color:#ffffff;text-align:center;margin-bottom:28px;line-height:1.3}
+.intro{font-size:14px;color:#f7fafc;margin-bottom:20px;line-height:1.6}
+.rules{list-style:none;margin-bottom:20px;border-top:1px solid rgba(173,49,25,0.2)}
+.rules li{color:#f7fafc;font-size:14px;line-height:1.6;padding:11px 0 11px 18px;border-bottom:1px solid rgba(173,49,25,0.2);position:relative}
+.rules li::before{content:"";position:absolute;left:0;top:18px;width:6px;height:6px;background:#ad3119;border-radius:50%}
+.recording{background:rgba(173,49,25,0.12);border:1px solid rgba(173,49,25,0.35);border-radius:6px;padding:12px 16px;font-size:13px;color:#cbd2d9;margin-bottom:28px;line-height:1.6}
+.btn{display:block;width:100%;background:#ad3119;color:#ffffff;font-size:16px;font-weight:700;text-align:center;padding:15px 24px;border-radius:6px;text-decoration:none;cursor:pointer}
+.btn:hover{background:#ff0000;color:#ffffff}
+.note{text-align:center;font-size:12px;color:#cbd2d9;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">' . $logo_html . '</div>
+  <div class="heading">' . esc_html( $heading ) . '</div>
+  <div class="event-title">' . esc_html( $event_title ) . '</div>
+  <p class="intro">Please review the following before entering this session. By clicking the button below you agree to these terms.</p>
+  <ul class="rules">' . $rules_html . '</ul>
+  <div class="recording">' . esc_html( $recording ) . '</div>
+  <a href="' . esc_url( $agree_url ) . '" class="btn">I Agree - Join Meeting</a>
+  <p class="note">Clicking the button will open Zoom in this tab.</p>
+</div>
+</body>
+</html>';
     }
 
     /**

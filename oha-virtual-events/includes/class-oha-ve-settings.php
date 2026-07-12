@@ -38,9 +38,13 @@ class OHA_VE_Settings {
     const OPT_JOIN_BEFORE_HOST  = 'oha_zoom_join_before_host';
     const OPT_HOST_VIDEO        = 'oha_zoom_host_video';
     const OPT_DURATION          = 'oha_zoom_default_duration';
-    const OPT_HOST_KEY          = 'oha_zoom_host_key';
-    const OPT_INSTRUCTOR_WINDOW = 'oha_ve_instructor_window';
-    const OPT_MEMBER_WINDOW     = 'oha_ve_member_window';
+    const OPT_HOST_KEY           = 'oha_zoom_host_key';
+    const OPT_HOST_KEY_SYNCED    = 'oha_zoom_host_key_synced';   // timestamp, written by AJAX sync, not a settings field
+    const OPT_INSTRUCTOR_WINDOW  = 'oha_ve_instructor_window';
+    const OPT_MEMBER_WINDOW      = 'oha_ve_member_window';
+    const OPT_AUTO_RESCHEDULE    = 'oha_zoom_auto_reschedule';
+    const OPT_AUTO_CANCEL_DELETE = 'oha_zoom_auto_cancel_delete';
+    const OPT_AUTO_TRASH_DELETE  = 'oha_zoom_auto_trash_delete';
 
     public function __construct() {
         add_action( 'admin_menu',    [ $this, 'add_settings_page' ] );
@@ -89,7 +93,8 @@ class OHA_VE_Settings {
         }
 
         // Checkbox fields (value '1' or '0')
-        foreach ( [ self::OPT_AUTO_CREATE, self::OPT_AUTO_RECORD, self::OPT_WAITING_ROOM, self::OPT_JOIN_BEFORE_HOST, self::OPT_HOST_VIDEO ] as $opt ) {
+        foreach ( [ self::OPT_AUTO_CREATE, self::OPT_AUTO_RECORD, self::OPT_WAITING_ROOM, self::OPT_JOIN_BEFORE_HOST, self::OPT_HOST_VIDEO,
+                    self::OPT_AUTO_RESCHEDULE, self::OPT_AUTO_CANCEL_DELETE, self::OPT_AUTO_TRASH_DELETE ] as $opt ) {
             register_setting( 'oha_ve_settings_group', $opt, [
                 'sanitize_callback' => function ( $val ) {
                     return ( '1' === $val ) ? '1' : '0';
@@ -202,8 +207,8 @@ class OHA_VE_Settings {
 
         add_settings_field(
             self::OPT_HOST_KEY, 'Zoom Host Key',
-            [ $this, 'render_password_field' ], 'oha-virtual-events', 'oha_ve_host_timing',
-            [ 'option' => self::OPT_HOST_KEY, 'desc' => 'Your 6-digit Zoom host key. Found in your Zoom profile at zoom.us/profile. Shown only to the assigned instructor on the event page so they can claim host.' ]
+            [ $this, 'render_host_key_field' ], 'oha-virtual-events', 'oha_ve_host_timing',
+            [ 'option' => self::OPT_HOST_KEY ]
         );
         add_settings_field(
             self::OPT_INSTRUCTOR_WINDOW, 'Instructor Button Opens (minutes before)',
@@ -229,6 +234,32 @@ class OHA_VE_Settings {
             [ $this, 'render_checkbox_field' ], 'oha-virtual-events', 'oha_ve_automation',
             [ 'option' => self::OPT_AUTO_CREATE, 'label' => 'Automatically create a Zoom meeting when a virtual event with platform "Zoom" or "Both" is published (requires credentials above to be filled in)' ]
         );
+
+        // --- Section: Zoom API Sync ---
+        add_settings_section(
+            'oha_ve_api_sync',
+            'Zoom API Sync',
+            [ $this, 'render_api_sync_intro' ],
+            'oha-virtual-events'
+        );
+
+        add_settings_field(
+            self::OPT_AUTO_RESCHEDULE, 'Auto-Sync Date/Time on Reschedule',
+            [ $this, 'render_checkbox_field' ], 'oha-virtual-events', 'oha_ve_api_sync',
+            [ 'option' => self::OPT_AUTO_RESCHEDULE, 'label' => 'When an event is saved with a changed date or time, automatically update the Zoom meeting to match (recommended - keep ON)' ]
+        );
+
+        add_settings_field(
+            self::OPT_AUTO_CANCEL_DELETE, 'Delete Zoom Meeting When Event is Cancelled',
+            [ $this, 'render_checkbox_field' ], 'oha-virtual-events', 'oha_ve_api_sync',
+            [ 'option' => self::OPT_AUTO_CANCEL_DELETE, 'label' => 'When an event status is set to Cancelled and saved, automatically delete the Zoom meeting so attendees cannot join an empty room' ]
+        );
+
+        add_settings_field(
+            self::OPT_AUTO_TRASH_DELETE, 'Delete Zoom Meeting When Event is Trashed',
+            [ $this, 'render_checkbox_field' ], 'oha-virtual-events', 'oha_ve_api_sync',
+            [ 'option' => self::OPT_AUTO_TRASH_DELETE, 'label' => 'When an event is moved to the WordPress trash, automatically delete the Zoom meeting' ]
+        );
     }
 
     // =========================================================
@@ -239,7 +270,10 @@ class OHA_VE_Settings {
         $webhook_url = rest_url( 'oha-ve/v1/zoom-webhook' );
         echo '<p>Enter your Zoom Server-to-Server OAuth app credentials. '
            . 'Create the app at <strong>marketplace.zoom.us &rarr; Develop &rarr; Build App &rarr; Server-to-Server OAuth</strong>.</p>'
-           . '<p>Required scopes: <code>meeting:write:admin</code>, <code>meeting:read:admin</code>, <code>recording:read:admin</code>.</p>'
+           . '<p>Required scopes: <code>meeting:write:admin</code>, <code>meeting:read:admin</code>, <code>recording:read:admin</code>, <code>user:read:admin</code>.</p>'
+           . '<p style="background:#fff3cd;border:1px solid #ffc107;border-radius:4px;padding:8px 12px;font-size:13px;">'
+           . '&#9888; <strong>user:read:admin</strong> is required for the Host Key Sync feature. If you added this scope after initial setup, '
+           . 'open your Zoom app at marketplace.zoom.us, go to Scopes, add it, and re-activate the app.</p>'
            . '<p><strong>Webhook URL</strong> (paste this into your Zoom app webhook subscription):<br>'
            . '<code style="user-select:all;background:#f0f0f0;padding:4px 10px;border-radius:3px;font-size:13px;">'
            . esc_url( $webhook_url )
@@ -254,6 +288,12 @@ class OHA_VE_Settings {
         echo '<p>The host key is shown only to the assigned instructor on the event page. '
            . 'Timing windows control when buttons appear relative to the event start time. '
            . 'Set both to 0 to always show buttons.</p>';
+    }
+
+    public function render_api_sync_intro() {
+        echo '<p>These settings control automatic Zoom API actions when events are saved, cancelled, or trashed. '
+           . 'All require Zoom API credentials to be configured above. '
+           . 'Manual sync buttons are also available on each event edit screen.</p>';
     }
 
     // =========================================================
@@ -286,6 +326,76 @@ class OHA_VE_Settings {
         if ( $desc ) {
             echo '<p class="description">' . esc_html( $desc ) . '</p>';
         }
+    }
+
+    /**
+     * Host key field with inline "Sync from Zoom" button.
+     * Shows last-synced timestamp when available.
+     */
+    public function render_host_key_field( $args ) {
+        $option      = $args['option'];
+        $existing    = get_option( $option, '' );
+        $placeholder = $existing ? '-- saved (enter new value to change) --' : '';
+        $synced      = get_option( self::OPT_HOST_KEY_SYNCED, '' );
+        $nonce       = wp_create_nonce( 'oha_ve_admin_nonce' );
+        $api_ok      = self::is_api_configured();
+        ?>
+        <input type="password"
+               name="<?php echo esc_attr( $option ); ?>"
+               id="<?php echo esc_attr( $option ); ?>"
+               value=""
+               placeholder="<?php echo esc_attr( $placeholder ); ?>"
+               class="regular-text"
+               autocomplete="new-password" />
+        <?php if ( $api_ok ) : ?>
+        <button type="button" id="oha-ve-sync-host-key" class="button button-small" style="margin-left:8px;">
+            Sync from Zoom
+        </button>
+        <span id="oha-ve-sync-host-key-result" style="margin-left:8px;font-style:italic;font-size:13px;"></span>
+        <?php endif; ?>
+        <?php if ( $synced ) : ?>
+            <p class="description">
+                Last synced from Zoom: <strong><?php echo esc_html( date_i18n( 'M j, Y g:i A', strtotime( $synced ) ) ); ?></strong>
+            </p>
+        <?php endif; ?>
+        <p class="description">
+            6-digit Zoom host key. Found in your Zoom profile at zoom.us/profile.
+            Shown to the assigned instructor on the event page so they can claim host.
+            <?php if ( ! $api_ok ) : ?>
+                Configure Zoom API credentials above to enable the Sync button.
+            <?php endif; ?>
+        </p>
+        <?php if ( $api_ok ) : ?>
+        <script>
+        (function () {
+            var btn    = document.getElementById('oha-ve-sync-host-key');
+            var result = document.getElementById('oha-ve-sync-host-key-result');
+            if ( ! btn ) return;
+            btn.addEventListener('click', function () {
+                btn.disabled = true;
+                result.style.color = '#666';
+                result.textContent = 'Syncing…';
+                var fd = new FormData();
+                fd.append('action', 'oha_ve_sync_host_key');
+                fd.append('nonce',  '<?php echo esc_js( $nonce ); ?>');
+                fetch(ajaxurl, { method: 'POST', body: fd })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        result.style.color = data.success ? 'green' : '#d63638';
+                        result.textContent = data.data ? data.data.message : (data.success ? 'Synced.' : 'Error.');
+                        if ( data.success ) {
+                            document.getElementById('<?php echo esc_js( $option ); ?>').placeholder = '-- saved (enter new value to change) --';
+                        }
+                    })
+                    .catch(function () {
+                        result.style.color = '#d63638';
+                        result.textContent = 'Request failed.';
+                    })
+                    .finally(function () { btn.disabled = false; });
+            });
+        }());
+        </script>
+        <?php endif;
     }
 
     public function render_checkbox_field( $args ) {

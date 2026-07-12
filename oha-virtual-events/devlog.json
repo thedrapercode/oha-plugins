@@ -1,7 +1,27 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.5.1",
+    "version":  "1.6.0",
     "entries":  [
+                    {
+                        "version":  "1.6.0",
+                        "date":  "2026-07-12",
+                        "summary":  "Zoom API sync features: host key sync button, reschedule sync, cancel/trash delete sync, recording fetch",
+                        "changes":  [
+                                        "class-oha-ve-zoom-api.php: added get_user(), update_meeting(), delete_meeting(), get_recordings() API methods",
+                                        "class-oha-ve-zoom-api.php: maybe_sync_on_save() hook at priority 999 - auto-delete on cancel + auto reschedule sync",
+                                        "class-oha-ve-zoom-api.php: maybe_delete_on_trash() hook - auto-delete Zoom meeting when event is trashed",
+                                        "class-oha-ve-zoom-api.php: maybe_sync_meeting_time() helper - compares GD schedule to last synced baseline, PATCHes only on change",
+                                        "class-oha-ve-zoom-api.php: create_meeting() now stores oha_ve_zoom_synced_start baseline so reschedule sync skips the initial create",
+                                        "class-oha-ve-zoom-api.php: AJAX handlers ajax_sync_host_key, ajax_sync_meeting_time, ajax_fetch_recording",
+                                        "class-oha-ve-settings.php: new constants OPT_HOST_KEY_SYNCED, OPT_AUTO_RESCHEDULE, OPT_AUTO_CANCEL_DELETE, OPT_AUTO_TRASH_DELETE",
+                                        "class-oha-ve-settings.php: new Zoom API Sync settings section with 3 toggles (reschedule, cancel-delete, trash-delete)",
+                                        "class-oha-ve-settings.php: host key field replaced with render_host_key_field() - adds Sync from Zoom button + last-synced timestamp",
+                                        "class-oha-ve-settings.php: credentials section now mentions user:read:admin scope requirement with setup note",
+                                        "class-oha-ve-admin.php: Section 4 (Zoom) - Sync Date/Time to Zoom manual button with last-synced label",
+                                        "class-oha-ve-admin.php: Section 6 (Replay) - Fetch Recording from Zoom button with results table (share URL, file list, download links)",
+                                        "class-oha-ve-admin.php: JS for both new buttons using $.post AJAX"
+                                    ]
+                    },
                     {
                         "date":  "2026-03-31",
                         "version":  "1.3.3",
@@ -337,6 +357,13 @@
                         "type":  "fix",
                         "summary":  "Fixed 403 cookie check failed error on Zoom join redirect - renamed _wpnonce param to _token",
                         "notes":  "WordPress REST API intercepts _wpnonce and verifies it as wp_rest nonce, which fails for our custom oha_ve_zoom_join_{id} nonce. Renamed to _token in get_protected_join_url() and zoom_join_redirect() to avoid the collision."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "1.6.0",
+                        "type":  "feature",
+                        "summary":  "Zoom API sync suite: host key sync, reschedule sync, cancel/trash delete, recording fetch",
+                        "notes":  "Requires user:read:admin scope on Zoom app for host key sync. New settings toggles for auto-reschedule, auto-cancel-delete, auto-trash-delete. New post meta: oha_ve_zoom_synced_start, oha_ve_zoom_synced_at."
                     }
                 ]
 }

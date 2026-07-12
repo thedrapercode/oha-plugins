@@ -62,14 +62,23 @@ class OHA_VE_Zoom_API {
 
     /** Private constructor - use get_instance(). */
     private function __construct() {
-        add_action( 'publish_gd_event',                     [ $this, 'maybe_create_meeting_on_publish' ], 20, 2 );
-        add_action( 'geodir_event_handle_past_event_after', [ $this, 'mark_ended_on_expire' ],            10, 3 );
+        add_action( 'publish_gd_event',                     [ $this, 'maybe_create_meeting_on_publish' ], 20,  2 );
+        add_action( 'geodir_event_handle_past_event_after', [ $this, 'mark_ended_on_expire' ],            10,  3 );
         add_action( 'admin_notices',                        [ $this, 'show_api_error_notice' ] );
         add_filter( 'cron_schedules',                       [ $this, 'add_cron_interval' ] );
         add_action( 'oha_ve_auto_flip_statuses',            [ $this, 'auto_flip_statuses' ] );
         if ( ! wp_next_scheduled( 'oha_ve_auto_flip_statuses' ) ) {
             wp_schedule_event( time(), 'oha_ve_5min', 'oha_ve_auto_flip_statuses' );
         }
+
+        // API automation hooks
+        add_action( 'save_post_gd_event', [ $this, 'maybe_sync_on_save' ],      999, 2 );
+        add_action( 'trashed_post',       [ $this, 'maybe_delete_on_trash' ],    10     );
+
+        // AJAX handlers
+        add_action( 'wp_ajax_oha_ve_sync_host_key',     [ $this, 'ajax_sync_host_key'     ] );
+        add_action( 'wp_ajax_oha_ve_sync_meeting_time', [ $this, 'ajax_sync_meeting_time' ] );
+        add_action( 'wp_ajax_oha_ve_fetch_recording',   [ $this, 'ajax_fetch_recording'   ] );
     }
 
     // =========================================================
@@ -400,7 +409,490 @@ class OHA_VE_Zoom_API {
             update_post_meta( $event_id, 'oha_ve_zoom_start_url', esc_url_raw( $data['start_url'] ) );
         }
 
+        // Store the start time we sent so reschedule-sync can detect future changes.
+        global $wpdb;
+        $sched_table = defined( 'GEODIR_EVENT_SCHEDULES_TABLE' )
+            ? GEODIR_EVENT_SCHEDULES_TABLE
+            : $wpdb->prefix . 'geodir_event_schedule';
+        $sched = $wpdb->get_row( $wpdb->prepare(
+            "SELECT start_date, start_time FROM {$sched_table} WHERE event_id = %d ORDER BY start_date ASC LIMIT 1",
+            $event_id
+        ) );
+        if ( $sched && $sched->start_date ) {
+            $t = $sched->start_time ?: '00:00:00';
+            update_post_meta( $event_id, 'oha_ve_zoom_synced_start', $sched->start_date . 'T' . $t );
+            update_post_meta( $event_id, 'oha_ve_zoom_synced_at', current_time( 'mysql' ) );
+        }
+
         return $data;
+    }
+
+    // =========================================================
+    // GET USER (host key sync)
+    // =========================================================
+
+    /**
+     * Fetch the authenticated Zoom user's profile.
+     * Used to pull the host_key field for the host-key sync feature.
+     * Requires scope: user:read:admin
+     *
+     * @return array|WP_Error  User data array on success, WP_Error on failure.
+     */
+    public function get_user() {
+        $token = $this->get_access_token();
+        if ( is_wp_error( $token ) ) {
+            return $token;
+        }
+
+        $response = wp_remote_get(
+            'https://api.zoom.us/v2/users/me',
+            [
+                'headers' => [ 'Authorization' => 'Bearer ' . $token ],
+                'timeout' => 15,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'oha_ve_http_error', 'HTTP request to Zoom failed: ' . $response->get_error_message() );
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( 200 !== (int) $status ) {
+            $msg = $data['message'] ?? ( 'HTTP ' . $status );
+            return new WP_Error( 'oha_ve_user_error', 'Zoom user fetch failed: ' . $msg );
+        }
+
+        return $data;
+    }
+
+    // =========================================================
+    // UPDATE MEETING (reschedule sync)
+    // =========================================================
+
+    /**
+     * Update an existing Zoom meeting's details.
+     * Used to sync date/time changes from WordPress to Zoom.
+     * Requires scope: meeting:write:admin
+     *
+     * @param string $meeting_id  Zoom meeting ID (digits only, spaces stripped).
+     * @param array  $data        Fields to update: start_time, duration, timezone, topic, etc.
+     * @return true|WP_Error
+     */
+    public function update_meeting( $meeting_id, $data ) {
+        $token = $this->get_access_token();
+        if ( is_wp_error( $token ) ) {
+            return $token;
+        }
+
+        $clean_id = preg_replace( '/\D/', '', $meeting_id );
+
+        $response = wp_remote_request(
+            'https://api.zoom.us/v2/meetings/' . rawurlencode( $clean_id ),
+            [
+                'method'  => 'PATCH',
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                    'Content-Type'  => 'application/json',
+                ],
+                'body'    => wp_json_encode( $data ),
+                'timeout' => 15,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'oha_ve_http_error', 'HTTP request to Zoom failed: ' . $response->get_error_message() );
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        // Zoom returns 204 No Content on success.
+        if ( 204 !== (int) $status && 200 !== (int) $status ) {
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
+            $msg  = $body['message'] ?? ( 'HTTP ' . $status );
+            return new WP_Error( 'oha_ve_update_meeting_error', 'Zoom meeting update failed: ' . $msg );
+        }
+
+        return true;
+    }
+
+    // =========================================================
+    // DELETE MEETING (cancel / trash sync)
+    // =========================================================
+
+    /**
+     * Delete a Zoom meeting.
+     * Used when an event is cancelled or trashed in WordPress.
+     * Requires scope: meeting:write:admin
+     *
+     * @param string $meeting_id  Zoom meeting ID.
+     * @return true|WP_Error
+     */
+    public function delete_meeting( $meeting_id ) {
+        $token = $this->get_access_token();
+        if ( is_wp_error( $token ) ) {
+            return $token;
+        }
+
+        $clean_id = preg_replace( '/\D/', '', $meeting_id );
+
+        $response = wp_remote_request(
+            'https://api.zoom.us/v2/meetings/' . rawurlencode( $clean_id ),
+            [
+                'method'  => 'DELETE',
+                'headers' => [ 'Authorization' => 'Bearer ' . $token ],
+                'timeout' => 15,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'oha_ve_http_error', 'HTTP request to Zoom failed: ' . $response->get_error_message() );
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        // 204 = deleted successfully; 404 = already gone — both are fine.
+        if ( ! in_array( (int) $status, [ 204, 404 ], true ) ) {
+            $body = json_decode( wp_remote_retrieve_body( $response ), true );
+            $msg  = $body['message'] ?? ( 'HTTP ' . $status );
+            return new WP_Error( 'oha_ve_delete_meeting_error', 'Zoom meeting delete failed: ' . $msg );
+        }
+
+        return true;
+    }
+
+    // =========================================================
+    // GET RECORDINGS (post-event fetch)
+    // =========================================================
+
+    /**
+     * Fetch cloud recording files for a completed Zoom meeting.
+     * Requires scope: recording:read:admin
+     *
+     * @param string $meeting_id  Zoom meeting ID.
+     * @return array|WP_Error  Recording data array (share_url, recording_files) or WP_Error.
+     */
+    public function get_recordings( $meeting_id ) {
+        $token = $this->get_access_token();
+        if ( is_wp_error( $token ) ) {
+            return $token;
+        }
+
+        $clean_id = preg_replace( '/\D/', '', $meeting_id );
+
+        $response = wp_remote_get(
+            'https://api.zoom.us/v2/meetings/' . rawurlencode( $clean_id ) . '/recordings',
+            [
+                'headers' => [ 'Authorization' => 'Bearer ' . $token ],
+                'timeout' => 15,
+            ]
+        );
+
+        if ( is_wp_error( $response ) ) {
+            return new WP_Error( 'oha_ve_http_error', 'HTTP request to Zoom failed: ' . $response->get_error_message() );
+        }
+
+        $status = wp_remote_retrieve_response_code( $response );
+        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( 200 !== (int) $status ) {
+            $msg = $data['message'] ?? ( 'HTTP ' . $status );
+            if ( 404 === (int) $status ) {
+                $msg = 'No recording found for this meeting. Zoom cloud recordings can take 15-60 minutes to process after a session ends.';
+            }
+            return new WP_Error( 'oha_ve_recordings_error', $msg );
+        }
+
+        return $data;
+    }
+
+    // =========================================================
+    // AUTOMATION HOOKS
+    // =========================================================
+
+    /**
+     * Fires late on gd_event save (priority 999, after GD saves its schedule table).
+     * Handles two automations if API is configured:
+     *   1. Cancel delete  - if status just became 'cancelled' and setting is on.
+     *   2. Reschedule sync - if event date/time changed since last Zoom sync and setting is on.
+     *
+     * @param int     $post_id
+     * @param WP_Post $post
+     */
+    public function maybe_sync_on_save( $post_id, $post ) {
+
+        if ( wp_is_post_revision( $post_id ) ) {
+            return;
+        }
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            return;
+        }
+        if ( '1' !== get_post_meta( $post_id, 'oha_ve_enabled', true ) ) {
+            return;
+        }
+        if ( ! OHA_VE_Settings::is_api_configured() ) {
+            return;
+        }
+
+        $zoom_id = get_post_meta( $post_id, 'oha_ve_zoom_id', true );
+        if ( empty( $zoom_id ) ) {
+            return;
+        }
+
+        $event_status = get_post_meta( $post_id, 'oha_ve_event_status', true );
+
+        // 1. Cancel delete
+        if ( 'cancelled' === $event_status
+            && '1' === get_option( OHA_VE_Settings::OPT_AUTO_CANCEL_DELETE, '0' )
+        ) {
+            $this->delete_meeting( $zoom_id );
+            return; // No point syncing time for a cancelled event
+        }
+
+        // 2. Reschedule sync (only when auto-sync is enabled)
+        if ( '1' === get_option( OHA_VE_Settings::OPT_AUTO_RESCHEDULE, '1' ) ) {
+            $this->maybe_sync_meeting_time( $post_id, $zoom_id );
+        }
+    }
+
+    /**
+     * Fires when a post is trashed. Deletes the Zoom meeting if:
+     *   - post type is gd_event
+     *   - event is a virtual event
+     *   - auto-trash-delete setting is on
+     *
+     * @param int $post_id
+     */
+    public function maybe_delete_on_trash( $post_id ) {
+        if ( 'gd_event' !== get_post_type( $post_id ) ) {
+            return;
+        }
+        if ( '1' !== get_post_meta( $post_id, 'oha_ve_enabled', true ) ) {
+            return;
+        }
+        if ( ! OHA_VE_Settings::is_api_configured() ) {
+            return;
+        }
+        if ( '1' !== get_option( OHA_VE_Settings::OPT_AUTO_TRASH_DELETE, '0' ) ) {
+            return;
+        }
+
+        $zoom_id = get_post_meta( $post_id, 'oha_ve_zoom_id', true );
+        if ( ! empty( $zoom_id ) ) {
+            $this->delete_meeting( $zoom_id );
+        }
+    }
+
+    /**
+     * Compare current GD event schedule to what was last sent to Zoom.
+     * If different, call PATCH /meetings/{id} and store the new baseline.
+     *
+     * @param int    $post_id
+     * @param string $zoom_id   Zoom meeting ID.
+     * @param bool   $force     If true, sync even if time appears unchanged (manual sync button).
+     * @return bool  True if a sync was attempted, false if skipped.
+     */
+    public function maybe_sync_meeting_time( $post_id, $zoom_id, $force = false ) {
+        global $wpdb;
+
+        $table = defined( 'GEODIR_EVENT_SCHEDULES_TABLE' )
+            ? GEODIR_EVENT_SCHEDULES_TABLE
+            : $wpdb->prefix . 'geodir_event_schedule';
+
+        $schedule = $wpdb->get_row( $wpdb->prepare(
+            "SELECT start_date, start_time, end_date, end_time FROM {$table} WHERE event_id = %d ORDER BY start_date ASC LIMIT 1",
+            $post_id
+        ) );
+
+        if ( ! $schedule || ! $schedule->start_date ) {
+            return false;
+        }
+
+        $t         = $schedule->start_time ?: '00:00:00';
+        $new_start = $schedule->start_date . 'T' . $t;
+        $last_sync = get_post_meta( $post_id, 'oha_ve_zoom_synced_start', true );
+
+        if ( ! $force && $last_sync === $new_start ) {
+            return false; // Nothing changed since last sync
+        }
+
+        // Calculate duration in minutes from start to end if available.
+        $duration = (int) get_option( OHA_VE_Settings::OPT_DURATION, 60 );
+        if ( ! empty( $schedule->end_date ) && ! empty( $schedule->end_time ) ) {
+            $utc      = new DateTimeZone( 'UTC' );
+            $dt_start = new DateTime( $schedule->start_date . ' ' . $t, $utc );
+            $dt_end   = new DateTime( $schedule->end_date . ' ' . $schedule->end_time, $utc );
+            $diff     = $dt_end->getTimestamp() - $dt_start->getTimestamp();
+            if ( $diff > 0 ) {
+                $duration = (int) ceil( $diff / 60 );
+            }
+        }
+
+        $wp_timezone = get_option( 'timezone_string', 'America/New_York' ) ?: 'America/New_York';
+
+        $result = $this->update_meeting( $zoom_id, [
+            'start_time' => $new_start,
+            'timezone'   => $wp_timezone,
+            'duration'   => $duration,
+        ] );
+
+        if ( ! is_wp_error( $result ) ) {
+            update_post_meta( $post_id, 'oha_ve_zoom_synced_start', $new_start );
+            update_post_meta( $post_id, 'oha_ve_zoom_synced_at', current_time( 'mysql' ) );
+        }
+
+        return true;
+    }
+
+    // =========================================================
+    // AJAX: SYNC HOST KEY
+    // =========================================================
+
+    public function ajax_sync_host_key() {
+        check_ajax_referer( 'oha_ve_admin_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Unauthorized.' ] );
+        }
+
+        if ( ! OHA_VE_Settings::is_api_configured() ) {
+            wp_send_json_error( [ 'message' => 'Zoom API credentials are not configured.' ] );
+        }
+
+        $user = $this->get_user();
+        if ( is_wp_error( $user ) ) {
+            wp_send_json_error( [ 'message' => $user->get_error_message() ] );
+        }
+
+        $host_key = sanitize_text_field( $user['host_key'] ?? '' );
+        if ( empty( $host_key ) ) {
+            wp_send_json_error( [ 'message' => 'No host key found in Zoom account. Verify the user:read:admin scope is added to your Zoom app.' ] );
+        }
+
+        update_option( OHA_VE_Settings::OPT_HOST_KEY,        $host_key );
+        update_option( OHA_VE_Settings::OPT_HOST_KEY_SYNCED, current_time( 'mysql' ) );
+
+        wp_send_json_success( [
+            'message'  => 'Host key synced from Zoom.',
+            'host_key' => $host_key,
+        ] );
+    }
+
+    // =========================================================
+    // AJAX: MANUAL MEETING TIME SYNC
+    // =========================================================
+
+    public function ajax_sync_meeting_time() {
+        check_ajax_referer( 'oha_ve_admin_nonce', 'nonce' );
+
+        if ( ! $this->current_user_can_manage_ve() ) {
+            wp_send_json_error( [ 'message' => 'Unauthorized.' ] );
+        }
+
+        $event_id = absint( $_POST['event_id'] ?? 0 );
+        if ( ! $event_id ) {
+            wp_send_json_error( [ 'message' => 'No event ID provided.' ] );
+        }
+
+        if ( ! OHA_VE_Settings::is_api_configured() ) {
+            wp_send_json_error( [ 'message' => 'Zoom API not configured.' ] );
+        }
+
+        $zoom_id = get_post_meta( $event_id, 'oha_ve_zoom_id', true );
+        if ( empty( $zoom_id ) ) {
+            wp_send_json_error( [ 'message' => 'No Zoom Meeting ID set on this event.' ] );
+        }
+
+        $this->maybe_sync_meeting_time( $event_id, $zoom_id, true ); // force=true
+
+        $synced_at = get_post_meta( $event_id, 'oha_ve_zoom_synced_at', true );
+        $label     = $synced_at ? date_i18n( 'M j, Y g:i A', strtotime( $synced_at ) ) : '';
+
+        wp_send_json_success( [
+            'message'   => 'Meeting date/time synced to Zoom.',
+            'synced_at' => $label,
+        ] );
+    }
+
+    // =========================================================
+    // AJAX: FETCH RECORDING
+    // =========================================================
+
+    public function ajax_fetch_recording() {
+        check_ajax_referer( 'oha_ve_admin_nonce', 'nonce' );
+
+        if ( ! $this->current_user_can_manage_ve() ) {
+            wp_send_json_error( [ 'message' => 'Unauthorized.' ] );
+        }
+
+        $event_id = absint( $_POST['event_id'] ?? 0 );
+        if ( ! $event_id ) {
+            wp_send_json_error( [ 'message' => 'No event ID provided.' ] );
+        }
+
+        if ( ! OHA_VE_Settings::is_api_configured() ) {
+            wp_send_json_error( [ 'message' => 'Zoom API not configured.' ] );
+        }
+
+        $zoom_id = get_post_meta( $event_id, 'oha_ve_zoom_id', true );
+        if ( empty( $zoom_id ) ) {
+            wp_send_json_error( [ 'message' => 'No Zoom Meeting ID set on this event.' ] );
+        }
+
+        $data = $this->get_recordings( $zoom_id );
+        if ( is_wp_error( $data ) ) {
+            wp_send_json_error( [ 'message' => $data->get_error_message() ] );
+        }
+
+        // Map recording_type to human-readable labels.
+        $type_labels = [
+            'shared_screen_with_speaker_view' => 'Screen + Speaker (MP4)',
+            'shared_screen_with_gallery_view' => 'Screen + Gallery (MP4)',
+            'shared_screen'                   => 'Screen Only (MP4)',
+            'speaker_view'                    => 'Speaker View (MP4)',
+            'gallery_view'                    => 'Gallery View (MP4)',
+            'audio_only'                      => 'Audio Only (M4A)',
+            'chat_file'                       => 'Chat Log',
+            'TRANSCRIPT'                      => 'Transcript',
+        ];
+
+        $files = [];
+        foreach ( $data['recording_files'] ?? [] as $file ) {
+            if ( 'completed' !== ( $file['status'] ?? '' ) ) {
+                continue;
+            }
+            $type    = $file['recording_type'] ?? $file['file_type'] ?? 'unknown';
+            $label   = $type_labels[ $type ] ?? ucwords( str_replace( '_', ' ', $type ) );
+            $size_mb = isset( $file['file_size'] ) ? round( $file['file_size'] / 1048576, 1 ) : null;
+            $files[] = [
+                'label'        => $label,
+                'file_type'    => $file['file_type'] ?? '',
+                'download_url' => $file['download_url'] ?? '',
+                'play_url'     => $file['play_url'] ?? '',
+                'size_mb'      => $size_mb,
+            ];
+        }
+
+        wp_send_json_success( [
+            'share_url' => $data['share_url'] ?? '',
+            'password'  => $data['password']  ?? '',
+            'files'     => $files,
+        ] );
+    }
+
+    // =========================================================
+    // ROLE HELPER
+    // =========================================================
+
+    /**
+     * True if the current user is an admin or oha_board member.
+     * Used by AJAX handlers that board members also need access to.
+     */
+    private function current_user_can_manage_ve() {
+        if ( current_user_can( 'manage_options' ) ) {
+            return true;
+        }
+        $user = wp_get_current_user();
+        return in_array( 'oha_board', (array) $user->roles, true );
     }
 
     // =========================================================
