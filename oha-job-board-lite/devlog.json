@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-job-board-lite",
-    "version":  "0.5.0",
+    "version":  "0.6.0",
     "entries":  [
                     {
                         "date":  "2026-05-18",
@@ -29,6 +29,34 @@
                         "type":  "change",
                         "summary":  "Rewrote frontend CSS to match OHA Kadence theme using global palette CSS variables",
                         "notes":  "All colors now reference --global-palette1/2/4/6/7/8/9. Dark card bg on maroon page bg pattern matches contact-router and site design language."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "0.6.0",
+                        "type":  "feature",
+                        "summary":  "Auto-publish toggle: settings checkbox to make job posts go live immediately or require review",
+                        "notes":  "Setting key: auto_publish_jobs. When enabled, wp_insert_post uses publish status instead of pending. notify_admin_new_job now accepts  param and adjusts email wording accordingly."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "0.6.0",
+                        "type":  "feature",
+                        "summary":  "Applicant confirmation email: applicants now receive an automated receipt on submit",
+                        "notes":  "Sends to applicant email immediately after successful submission. Subject and body are editable in settings under Messages and Email Templates section. Placeholders: {name}, {job_title}."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "0.6.0",
+                        "type":  "fix",
+                        "summary":  "Owner notification email now includes all applicant profile fields in the body",
+                        "notes":  "Previously only sent name, email, and message. Now includes phone, age range, experience, availability, and casting video URL. Fields are captured into variables before saving so they are available for email template processing."
+                    },
+                    {
+                        "date":  "2026-07-12",
+                        "version":  "0.6.0",
+                        "type":  "feature",
+                        "summary":  "Six editable message and email template fields added to settings",
+                        "notes":  "New settings section: Messages and Email Templates. Fields: apply_success_msg, submit_success_msg, applicant_email_subject, applicant_email_body, owner_email_subject, owner_email_body. All use {placeholder} syntax via fill_template() helper. Blank fields fall back to hardcoded defaults."
                     }
                 ]
 }

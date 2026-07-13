@@ -2,14 +2,14 @@
 /*
 Plugin Name: OHA Job Board Lite
 Description: Modern job board for Ohio Haunters Association. Haunt listing owners and OHA members post jobs. GeoDirectory integration, Board Hub moderation panel, email apply, and external link apply.
-Version: 0.5.0
+Version: 0.6.0
 Author: OHA
 Requires Plugins: geodirectory
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OJB_VERSION', '0.5.0' );
+define( 'OJB_VERSION', '0.6.0' );
 define( 'OJB_URL',     plugin_dir_url( __FILE__ ) );
 define( 'OJB_PATH',    plugin_dir_path( __FILE__ ) );
 
@@ -337,6 +337,7 @@ class OHA_Job_Board_Lite {
 		$fields = [
 			'membership_required'     => [ 'Require OHA membership to submit jobs', 'checkbox' ],
 			'listing_owners_can_post' => [ 'Listing owners can always post (overrides membership gate)', 'checkbox' ],
+			'auto_publish_jobs'       => [ 'Job postings go live immediately (no review required)', 'checkbox' ],
 			'contact_visibility'      => [ 'Show contact/apply details to', 'select_vis' ],
 			'join_url'                => [ 'Join / Login URL', 'url', '/membership/' ],
 			'add_haunt_url'           => [ 'Add Haunt URL', 'url', '/add-listing/' ],
@@ -357,17 +358,80 @@ class OHA_Job_Board_Lite {
 				}
 			}, 'oha_job_board', 'main' );
 		}
+
+		add_settings_section( 'messages', 'Messages &amp; Email Templates', function () {
+			echo '<p>Customize messages shown to users and emails sent on applications and job submissions. Leave any field blank to use the default text. Use <code>{placeholders}</code> in email fields where noted.</p>';
+		}, 'oha_job_board' );
+
+		$msg_fields = [
+			'apply_success_msg'       => [
+				'label'       => 'Application success message',
+				'type'        => 'textarea',
+				'placeholder' => 'Leave blank to use default.',
+				'desc'        => 'Shown to the applicant after they submit. Default: "Your application has been submitted. The venue will review it and contact you if you are a good fit."',
+			],
+			'submit_success_msg'      => [
+				'label'       => 'Job submission success message',
+				'type'        => 'textarea',
+				'placeholder' => 'Leave blank to use default.',
+				'desc'        => 'Shown to the job poster after submitting. Default depends on whether auto-publish is enabled above.',
+			],
+			'applicant_email_subject' => [
+				'label'       => 'Applicant confirmation: subject',
+				'type'        => 'text',
+				'placeholder' => 'Your application has been received',
+				'desc'        => 'Placeholders: {name}, {job_title}',
+			],
+			'applicant_email_body'    => [
+				'label'       => 'Applicant confirmation: body',
+				'type'        => 'textarea',
+				'placeholder' => 'Leave blank to use default.',
+				'desc'        => 'Placeholders: {name}, {job_title}',
+			],
+			'owner_email_subject'     => [
+				'label'       => 'Owner notification: subject',
+				'type'        => 'text',
+				'placeholder' => 'New application for {job_title}',
+				'desc'        => 'Placeholders: {name}, {job_title}',
+			],
+			'owner_email_body'        => [
+				'label'       => 'Owner notification: body',
+				'type'        => 'textarea',
+				'placeholder' => 'Leave blank to use default.',
+				'desc'        => 'Placeholders: {name}, {email}, {job_title}, {message}, {phone}, {age_range}, {experience}, {availability}, {video_url}',
+			],
+		];
+
+		foreach ( $msg_fields as $key => $def ) {
+			add_settings_field( $key, $def['label'], function () use ( $key, $def ) {
+				$o   = get_option( self::OPTION, [] );
+				$val = $o[ $key ] ?? '';
+				if ( $def['type'] === 'textarea' ) {
+					echo '<textarea name="' . self::OPTION . '[' . $key . ']" class="large-text" rows="4" placeholder="' . esc_attr( $def['placeholder'] ) . '">' . esc_textarea( $val ) . '</textarea>';
+				} else {
+					printf( '<input type="text" name="%s[%s]" class="regular-text" value="%s" placeholder="%s" />', self::OPTION, $key, esc_attr( $val ), esc_attr( $def['placeholder'] ) );
+				}
+				echo '<p class="description">' . esc_html( $def['desc'] ) . '</p>';
+			}, 'oha_job_board', 'messages' );
+		}
 	}
 
 	public function sanitize_settings( $opts ) {
 		return [
 			'membership_required'     => ! empty( $opts['membership_required'] ) ? 1 : 0,
 			'listing_owners_can_post' => ! empty( $opts['listing_owners_can_post'] ) ? 1 : 0,
+			'auto_publish_jobs'       => ! empty( $opts['auto_publish_jobs'] ) ? 1 : 0,
 			'contact_visibility'      => in_array( $opts['contact_visibility'] ?? 'members', [ 'public', 'members' ], true ) ? $opts['contact_visibility'] : 'members',
 			'join_url'                => esc_url_raw( $opts['join_url'] ?? '' ),
 			'add_haunt_url'           => esc_url_raw( $opts['add_haunt_url'] ?? '' ),
 			'admin_notify_email'      => sanitize_email( $opts['admin_notify_email'] ?? '' ),
 			'submit_success_url'      => esc_url_raw( $opts['submit_success_url'] ?? '' ),
+			'apply_success_msg'       => sanitize_textarea_field( $opts['apply_success_msg'] ?? '' ),
+			'submit_success_msg'      => sanitize_textarea_field( $opts['submit_success_msg'] ?? '' ),
+			'applicant_email_subject' => sanitize_text_field( $opts['applicant_email_subject'] ?? '' ),
+			'applicant_email_body'    => sanitize_textarea_field( $opts['applicant_email_body'] ?? '' ),
+			'owner_email_subject'     => sanitize_text_field( $opts['owner_email_subject'] ?? '' ),
+			'owner_email_body'        => sanitize_textarea_field( $opts['owner_email_body'] ?? '' ),
 		];
 	}
 
@@ -429,19 +493,20 @@ class OHA_Job_Board_Lite {
 		return (int) $q->found_posts;
 	}
 
-	private function notify_admin_new_job( $job_id ) {
+	private function notify_admin_new_job( $job_id, $auto_published = false ) {
 		$o     = get_option( self::OPTION, [] );
 		$email = ! empty( $o['admin_notify_email'] ) ? $o['admin_notify_email'] : get_option( 'admin_email' );
 		if ( ! $email ) return;
-		$title  = get_the_title( $job_id );
-		$author = get_userdata( get_post_field( 'post_author', $job_id ) );
-		$link   = admin_url( 'post.php?post=' . $job_id . '&action=edit' );
+		$title       = get_the_title( $job_id );
+		$author      = get_userdata( get_post_field( 'post_author', $job_id ) );
+		$link        = admin_url( 'post.php?post=' . $job_id . '&action=edit' );
+		$status_note = $auto_published ? 'This job is now live.' : 'This job is pending review and requires approval before going live.';
 		wp_mail(
 			$email,
-			'[OHA Job Board] New job pending review: ' . $title,
-			"A new job has been submitted for review.\n\nTitle: $title\nSubmitted by: " .
+			'[OHA Job Board] New job submitted: ' . $title,
+			"A new job has been submitted.\n\nTitle: $title\nSubmitted by: " .
 			( $author ? $author->display_name . ' <' . $author->user_email . '>' : 'Unknown' ) .
-			"\n\nReview it here: $link"
+			"\n\n$status_note\n\nView or edit: $link"
 		);
 	}
 
@@ -457,6 +522,13 @@ class OHA_Job_Board_Lite {
 		if ( ! isset( $msgs[ $action ] ) ) return;
 		[ $subject, $body ] = $msgs[ $action ];
 		wp_mail( $author->user_email, '[OHA] ' . $subject, $body . "\n\nThis is an automated message from the OHA Job Board." );
+	}
+
+	private function fill_template( $template, $vars ) {
+		foreach ( $vars as $key => $val ) {
+			$template = str_replace( '{' . $key . '}', $val ?: '', $template );
+		}
+		return $template;
 	}
 
 	/* =========================================================
@@ -758,9 +830,10 @@ class OHA_Job_Board_Lite {
 			$title = sanitize_text_field( $_POST['title'] ?? '' );
 			$desc  = wp_kses_post( $_POST['description'] ?? '' );
 			if ( $title ) {
-				$post_id = wp_insert_post( [
+				$auto_pub = ! empty( $o['auto_publish_jobs'] );
+				$post_id  = wp_insert_post( [
 					'post_type'    => self::CPT,
-					'post_status'  => 'pending',
+					'post_status'  => $auto_pub ? 'publish' : 'pending',
 					'post_title'   => $title,
 					'post_content' => $desc,
 					'post_author'  => get_current_user_id(),
@@ -769,12 +842,16 @@ class OHA_Job_Board_Lite {
 					foreach ( $this->fields_def() as $key => $def ) {
 						$this->save_field( $post_id, $key, $def );
 					}
-					$this->notify_admin_new_job( $post_id );
+					$this->notify_admin_new_job( $post_id, $auto_pub );
 					if ( ! empty( $o['submit_success_url'] ) ) {
 						wp_safe_redirect( esc_url_raw( $o['submit_success_url'] ) );
 						exit;
 					}
-					$message = '<div class="ojb-msg ojb-msg--success">Your job has been submitted for review! We\'ll notify you by email once it\'s approved.</div>';
+					$default_msg  = $auto_pub
+						? 'Your job posting is now live on the OHA Job Board.'
+						: 'Your job has been submitted for review. You will be notified by email once it is approved.';
+					$success_text = ! empty( $o['submit_success_msg'] ) ? $o['submit_success_msg'] : $default_msg;
+					$message = '<div class="ojb-msg ojb-msg--success">' . esc_html( $success_text ) . '</div>';
 				} else {
 					$message = '<div class="ojb-msg ojb-msg--error">There was a problem submitting your job. Please try again.</div>';
 				}
@@ -857,6 +934,7 @@ class OHA_Job_Board_Lite {
 		$job_id = intval( $a['job_id'] );
 		if ( ! $job_id || get_post_type( $job_id ) !== self::CPT ) return '';
 
+		$o             = get_option( self::OPTION, [] );
 		$contact_email = get_post_meta( $job_id, '_oha_contact_email', true );
 		$contact_url   = get_post_meta( $job_id, '_oha_contact_url',   true );
 		[ $show_email, $show_url ] = $this->gate_contact( $contact_email, $contact_url );
@@ -866,9 +944,14 @@ class OHA_Job_Board_Lite {
 			&& intval( $_POST['job_id'] ) === $job_id
 			&& wp_verify_nonce( $_POST['oha_job_apply_nonce'], 'oha_job_apply_' . $job_id )
 		) {
-			$name  = sanitize_text_field( $_POST['name']    ?? '' );
-			$email = sanitize_email( $_POST['email']        ?? '' );
-			$note  = wp_kses_post( $_POST['message']        ?? '' );
+			$name         = sanitize_text_field( $_POST['name']             ?? '' );
+			$email        = sanitize_email( $_POST['email']                 ?? '' );
+			$note         = wp_kses_post( $_POST['message']                 ?? '' );
+			$phone        = sanitize_text_field( $_POST['app_phone']        ?? '' );
+			$age_range    = sanitize_text_field( $_POST['app_age_range']    ?? '' );
+			$experience   = sanitize_text_field( $_POST['app_experience']   ?? '' );
+			$availability = sanitize_text_field( $_POST['app_availability'] ?? '' );
+			$video_url    = esc_url_raw( $_POST['app_video_url']            ?? '' );
 
 			if ( $name && $email && is_email( $email ) ) {
 				$app_id = wp_insert_post( [
@@ -883,20 +966,42 @@ class OHA_Job_Board_Lite {
 					update_post_meta( $app_id, '_oha_app_name',         $name );
 					update_post_meta( $app_id, '_oha_app_email',        $email );
 					update_post_meta( $app_id, '_oha_app_message',      wp_strip_all_tags( $note ) );
-					update_post_meta( $app_id, '_oha_app_phone',        sanitize_text_field( $_POST['app_phone']        ?? '' ) );
-					update_post_meta( $app_id, '_oha_app_age_range',    sanitize_text_field( $_POST['app_age_range']    ?? '' ) );
-					update_post_meta( $app_id, '_oha_app_experience',   sanitize_text_field( $_POST['app_experience']   ?? '' ) );
-					update_post_meta( $app_id, '_oha_app_availability', sanitize_text_field( $_POST['app_availability'] ?? '' ) );
-					update_post_meta( $app_id, '_oha_app_video_url',    esc_url_raw( $_POST['app_video_url']            ?? '' ) );
+					update_post_meta( $app_id, '_oha_app_phone',        $phone );
+					update_post_meta( $app_id, '_oha_app_age_range',    $age_range );
+					update_post_meta( $app_id, '_oha_app_experience',   $experience );
+					update_post_meta( $app_id, '_oha_app_availability', $availability );
+					update_post_meta( $app_id, '_oha_app_video_url',    $video_url );
 				}
+
+				$job_title = get_the_title( $job_id );
+				$tpl_vars  = [
+					'name'         => $name,
+					'email'        => $email,
+					'job_title'    => $job_title,
+					'message'      => wp_strip_all_tags( $note ),
+					'phone'        => $phone,
+					'age_range'    => $age_range,
+					'experience'   => $experience,
+					'availability' => $availability,
+					'video_url'    => $video_url,
+				];
+
 				if ( $show_email && $show_email !== '(members only)' ) {
-					@wp_mail(
-						$show_email,
-						'Job Application: ' . get_the_title( $job_id ),
-						"From: $name <$email>\n\n" . wp_strip_all_tags( $note )
-					);
+					$default_owner_subj = 'New application for {job_title}';
+					$default_owner_body = "Name: {name}\nEmail: {email}\nPhone: {phone}\nAge Range: {age_range}\nExperience: {experience}\nAvailability: {availability}\n\nMessage:\n{message}\n\nCasting Video: {video_url}\n\nLog in to your dashboard to manage this application.";
+					$owner_subj = ! empty( $o['owner_email_subject'] ) ? $o['owner_email_subject'] : $default_owner_subj;
+					$owner_body = ! empty( $o['owner_email_body'] )    ? $o['owner_email_body']    : $default_owner_body;
+					@wp_mail( $show_email, $this->fill_template( $owner_subj, $tpl_vars ), $this->fill_template( $owner_body, $tpl_vars ) );
 				}
-				$msg = '<div class="ojb-msg ojb-msg--success">Application sent! Good luck!</div>';
+
+				$default_conf_subj = 'Your application has been received';
+				$default_conf_body = "Hi {name},\n\nYour application for {job_title} has been received. The venue will review it and contact you if you are a good fit.\n\nThis is an automated message from the OHA Job Board.";
+				$conf_subj = ! empty( $o['applicant_email_subject'] ) ? $o['applicant_email_subject'] : $default_conf_subj;
+				$conf_body = ! empty( $o['applicant_email_body'] )    ? $o['applicant_email_body']    : $default_conf_body;
+				@wp_mail( $email, $this->fill_template( $conf_subj, $tpl_vars ), $this->fill_template( $conf_body, $tpl_vars ) );
+
+				$success_text = ! empty( $o['apply_success_msg'] ) ? $o['apply_success_msg'] : 'Your application has been submitted. The venue will review it and contact you if you are a good fit.';
+				$msg = '<div class="ojb-msg ojb-msg--success">' . esc_html( $success_text ) . '</div>';
 			} else {
 				$msg = '<div class="ojb-msg ojb-msg--error">Please fill in your name and a valid email address.</div>';
 			}
