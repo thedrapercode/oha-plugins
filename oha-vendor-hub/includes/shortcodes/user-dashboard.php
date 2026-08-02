@@ -5,13 +5,16 @@ add_shortcode('oha_vendor_dashboard', function(){
     if (!is_user_logged_in()) return '<p>Please log in to view your submissions.</p>';
     wp_enqueue_style('oha-vhcpt');
 
+    $current_user_email = wp_get_current_user()->user_email;
     $q = new WP_Query([
-        'post_type' => 'vendor_application',
-        'post_status' => 'any',
-        'author' => get_current_user_id(),
+        'post_type'      => 'vendor_application',
+        'post_status'    => 'any',
         'posts_per_page' => -1,
-        'orderby' => 'date',
-        'order' => 'DESC'
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [
+            ['key' => 'email', 'value' => $current_user_email, 'compare' => '='],
+        ],
     ]);
 
     $edit_page_id  = (int) get_option('oha_vhcpt_vendor_edit_page_id', 0);

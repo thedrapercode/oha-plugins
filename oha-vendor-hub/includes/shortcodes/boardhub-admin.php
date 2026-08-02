@@ -88,6 +88,8 @@ add_shortcode('oha_vendor_boardhub', function() {
         $meta_clauses[] = ['key' => '_convention_year', 'value' => $filter_year, 'compare' => '='];
     }
 
+    $meta_clauses[] = ['key' => '_oha_status', 'value' => 'Declined', 'compare' => '!='];
+
     if (!empty($meta_clauses)) {
         $args['meta_query'] = array_merge(['relation' => 'AND'], $meta_clauses);
     }
@@ -258,11 +260,13 @@ add_shortcode('oha_vendor_boardhub', function() {
     }
     
     .status-pending { background: #fef3c7; color: #92400e; }
-    .status-submitted { background: #fef9c3; color: #713f12; }
     .status-invited { background: #f5f3ff; color: #6b21a8; }
+    .status-submitted { background: #fef9c3; color: #713f12; }
+    .status-approved { background: #dcfce7; color: #14532d; }
     .status-agreement-sent { background: #dbeafe; color: #1e40af; }
     .status-agreement-signed { background: #e0e7ff; color: #4338ca; }
     .status-paid { background: #d1fae5; color: #065f46; }
+    .status-declined { background: #fee2e2; color: #991b1b; }
     .status-cancelled { background: #fee2e2; color: #991b1b; }
     
     .oha-card-actions {
@@ -983,7 +987,7 @@ add_shortcode('oha_vendor_boardhub', function() {
                     <label>Send to vendors with these statuses</label>
                     <div class="oha-be-status-checks">
                         <?php
-                        $be_statuses = ['Submitted','Approved','Agreement Sent','Agreement Signed','Paid'];
+                        $be_statuses = ['Invited','Submitted','Approved','Agreement Sent','Agreement Signed','Paid'];
                         foreach ($be_statuses as $be_s):
                         ?>
                         <label>
@@ -1286,7 +1290,7 @@ add_shortcode('oha_vendor_boardhub', function() {
                                                     data-app-id="<?php echo $app_id; ?>"
                                                     data-current-status="<?php echo esc_attr($status); ?>">
                                                 <option value="">— Select new status —</option>
-                                                <?php foreach (['Invited','Submitted','Approved','Agreement Sent','Agreement Signed','Paid'] as $opt): ?>
+                                                <?php foreach (['Invited','Submitted','Approved','Agreement Sent','Agreement Signed','Paid','Declined'] as $opt): ?>
                                                 <option value="<?php echo esc_attr($opt); ?>"><?php echo esc_html($opt); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -1301,16 +1305,20 @@ add_shortcode('oha_vendor_boardhub', function() {
                             </div>
                             
                             <!-- History -->
-                            <?php 
-                            $history = get_post_meta($app_id, '_oha_history', true);
-                            if ($history && is_array($history) && !empty($history)): 
+                            <?php
+                            $history_raw = get_post_meta($app_id, '_oha_history', true);
+                            $history = is_array($history_raw) ? $history_raw : (is_string($history_raw) && $history_raw !== '' ? json_decode($history_raw, true) : []);
+                            if (!empty($history) && is_array($history)):
                             ?>
                             <div class="oha-card-section" style="margin-top:20px;">
                                 <div class="oha-card-section-title">📜 History</div>
                                 <?php foreach (array_reverse($history) as $entry): ?>
                                 <div class="oha-history-item">
                                     <div class="oha-history-date">
-                                        <?php echo date('M j, Y g:i A', $entry['timestamp']); ?>
+                                        <?php
+                                        $ts_unix = !empty($entry['ts']) ? strtotime($entry['ts']) : (!empty($entry['timestamp']) ? intval($entry['timestamp']) : 0);
+                                        echo $ts_unix ? esc_html(date('M j, Y g:i A', $ts_unix)) : '';
+                                        ?>
                                     </div>
                                     <div class="oha-history-action">
                                         <?php 

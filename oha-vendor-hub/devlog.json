@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.14.1",
+    "version":  "3.15.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -484,6 +484,69 @@
                         "type":  "change",
                         "summary":  "Remove year from [oha_vendor_cards] default title attribute - changed to Our Convention Vendors",
                         "notes":  "Default shortcode_atts title was hardcoded to Our 2026 Convention Vendors. Overridable via title attribute so no page content changes needed."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "fix",
+                        "summary":  "Invited status missing from bulk email tools in Send Edit Links and Board Hub bulk email panel",
+                        "notes":  "Both the Send Edit Links page and Bulk Email panel had hardcoded status lists that excluded Invited. Vendors in Invited status could not be reached with either tool. Added Invited as the first option in both lists."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "fix",
+                        "summary":  "Admin override backend silently rejected Invited status - returned Invalid parameters",
+                        "notes":  "Override dropdown in boardhub-admin.php listed Invited but the AJAX handler in actions.php validated against a list that did not include it. Fixed by adding Invited and Declined to valid_statuses."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "fix",
+                        "summary":  "Vendor history never rendered - is_array() check always false on JSON string",
+                        "notes":  "oha_vhcpt_append_history() stores history as a JSON string. Both the card body history section and the View All Details modal checked is_array(history) which is always false. Fixed with JSON decode in both locations."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "fix",
+                        "summary":  "History timestamps showed 1970 - wrong key read (timestamp vs ts)",
+                        "notes":  "History entries store time under key ts as MySQL datetime string. Both display locations read entry[timestamp] (nonexistent key), so date() received null and rendered Jan 1 1970. Fixed by reading ts with strtotime() fallback. Backward-compatible with any entries using timestamp key."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "fix",
+                        "summary":  ".status-approved CSS missing - Approved badge rendered unstyled",
+                        "notes":  "Added background:#dcfce7; color:#14532d for .status-approved in boardhub-admin.php inline styles."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "fix",
+                        "summary":  "[oha_vendor_dashboard] blind to return-invite applications owned by admin",
+                        "notes":  "Shortcode queried by author = current user ID. Return-invite applications are created by admin so post_author is admin\u0027s ID. Fixed by querying on email meta matching the current WP user\u0027s email instead."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "change",
+                        "summary":  "Stale copy in Send Edit Links UI updated to describe VID-based flow",
+                        "notes":  "Notice banner, confirm dialog, and file docblock still referenced unique 24-hour link from the old token system. Updated to describe VID-based flow accurately."
+                    },
+                    {
+                        "date":  "2026-08-01",
+                        "version":  "3.15.0",
+                        "type":  "feature",
+                        "summary":  "Added Declined status for marking vendors who will not return for next year",
+                        "notes":  "Declined added throughout: override dropdown in Board Hub cards, backend override handler accepts it, .status-declined CSS added (red badge, same shade as cancelled). Reversible - keeps audit record. To remove a vendor from the pipeline: Override Status to Declined."
+                    },
+                    {
+                        "date":  "2026-08-02",
+                        "version":  "3.15.1",
+                        "type":  "change",
+                        "summary":  "Declined vendors excluded from [oha_vendor_boardhub] front-end query",
+                        "notes":  "Added meta_clause to always filter out _oha_status = Declined from the vendor query in boardhub-admin.php. Declined vendors remain visible in WP Admin \u003e Vendor Applications. No UI changes."
                     }
                 ]
 }

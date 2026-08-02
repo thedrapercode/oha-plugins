@@ -908,49 +908,69 @@ add_action('wp_ajax_oha_get_vendor_details', function() {
     
     // Get history
     $history_raw = get_post_meta($app_id, '_oha_history', true);
+    $history_entries = [];
+    if (!empty($history_raw)) {
+        $decoded = is_array($history_raw) ? $history_raw : json_decode($history_raw, true);
+        if (is_array($decoded)) $history_entries = $decoded;
+    }
     $history = [];
-    if ($history_raw && is_array($history_raw)) {
-        foreach (array_reverse($history_raw) as $entry) {
-            $description = '';
-            switch ($entry['type'] ?? '') {
-                case 'application_submitted':
-                    $description = '📝 Application submitted';
-                    break;
-                case 'final_application_signed':
-                    $description = '✍️ Agreement signed';
-                    break;
-                case 'payment_received':
-                    $description = '💰 Payment received ($' . ($entry['amount'] ?? '0') . ')';
-                    break;
-                case 'pdf_generated':
-                    $description = '📄 PDF generated';
-                    break;
-                case 'email_sent':
-                    $description = '📧 Email sent to ' . ($entry['to'] ?? 'vendor');
-                    break;
-                case 'pre_paid_vendor':
-                    $description = '✅ Pre-paid vendor confirmed';
-                    break;
-                case 'manual_email_sent':
-                    $description = '📧 Agreement manually resent by ' . ($entry['sent_by_name'] ?? 'admin');
-                    break;
-                case 'payment_completed_webhook':
-                    $description = '💳 Payment processed via webhook';
-                    break;
-                case 'admin_status_override':
-                    $from = $entry['status_from'] ?? '?';
-                    $to   = $entry['status_to']   ?? '?';
-                    $description = '🔧 Admin overrode status: ' . esc_html($from) . ' → ' . esc_html($to);
-                    break;
-                default:
-                    $description = '• ' . esc_html($entry['type'] ?? 'Unknown');
-            }
-            
-            $history[] = [
-                'date' => date('M j, Y g:i A', $entry['timestamp'] ?? time()),
-                'description' => $description,
-            ];
+    foreach (array_reverse($history_entries) as $entry) {
+        $description = '';
+        switch ($entry['type'] ?? '') {
+            case 'application_submitted':
+                $description = 'Application submitted';
+                break;
+            case 'return_invite_created':
+                $description = 'Return invite application created';
+                break;
+            case 'return_invite_email':
+                $sent_str = ($entry['sent'] ?? '') === 'success' ? 'sent' : 'FAILED';
+                $description = 'Return invite email ' . $sent_str . ' to ' . ($entry['to'] ?? 'vendor');
+                break;
+            case 'final_application_signed':
+                $description = 'Agreement signed';
+                break;
+            case 'payment_received':
+                $description = 'Payment received ($' . ($entry['amount'] ?? '0') . ')';
+                break;
+            case 'pdf_generated':
+                $description = 'PDF generated';
+                break;
+            case 'auto_email':
+                $sent_str = ($entry['sent'] ?? '') === 'success' ? 'sent' : 'FAILED';
+                $description = 'Automated email (' . ($entry['status'] ?? '') . ') ' . $sent_str . ' to ' . ($entry['to'] ?? 'vendor');
+                break;
+            case 'email_sent':
+                $description = 'Email sent to ' . ($entry['to'] ?? 'vendor');
+                break;
+            case 'pre_paid_vendor':
+                $description = 'Pre-paid vendor confirmed';
+                break;
+            case 'manual_email_sent':
+                $description = 'Agreement manually resent by ' . ($entry['sent_by_name'] ?? 'admin');
+                break;
+            case 'payment_completed_webhook':
+                $description = 'Payment processed via webhook';
+                break;
+            case 'admin_status_override':
+                $from = $entry['status_from'] ?? '?';
+                $to   = $entry['status_to']   ?? '?';
+                $description = 'Admin changed status: ' . $from . ' to ' . $to;
+                break;
+            case 'update':
+                $description = 'Record updated: ' . ($entry['status_from'] ?? '') . ' to ' . ($entry['status_to'] ?? '');
+                break;
+            default:
+                $description = $entry['type'] ?? 'Unknown';
         }
+
+        $ts_unix = !empty($entry['ts']) ? strtotime($entry['ts']) : (!empty($entry['timestamp']) ? intval($entry['timestamp']) : 0);
+
+        $history[] = [
+            'date'        => $ts_unix ? date('M j, Y g:i A', $ts_unix) : '',
+            'description' => $description,
+            'by'          => $entry['by'] ?? '',
+        ];
     }
     $vendor['history'] = $history;
     
@@ -1217,7 +1237,7 @@ add_action('wp_ajax_oha_vh_admin_override_status', function() {
     $app_id     = intval($_POST['app_id'] ?? 0);
     $new_status = sanitize_text_field($_POST['new_status'] ?? '');
 
-    $valid_statuses = ['Submitted', 'Approved', 'Agreement Sent', 'Agreement Signed', 'Paid'];
+    $valid_statuses = ['Invited', 'Submitted', 'Approved', 'Agreement Sent', 'Agreement Signed', 'Paid', 'Declined'];
     if (!$app_id || !in_array($new_status, $valid_statuses, true)) {
         wp_send_json_error('Invalid parameters');
     }

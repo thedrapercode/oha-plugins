@@ -29,7 +29,7 @@ function oha_vh_send_edit_links_page() {
     $settings_url  = admin_url('edit.php?post_type=vendor_application&page=oha-vhcpt-settings');
     $nonce         = wp_create_nonce('oha_vh_send_edit_links');
 
-    $all_statuses = ['Submitted', 'Approved', 'Agreement Sent', 'Agreement Signed', 'Paid'];
+    $all_statuses = ['Invited', 'Submitted', 'Approved', 'Agreement Sent', 'Agreement Signed', 'Paid'];
     ?>
     <div class="wrap">
         <h1>Send Vendor Edit Links</h1>
@@ -42,8 +42,8 @@ function oha_vh_send_edit_links_page() {
             </div>
         <?php else: ?>
             <div class="notice notice-info is-dismissible">
-                <p>Each vendor will receive a unique 24-hour link to their edit form at:
-                <strong><?php echo esc_html($edit_page_url); ?></strong><br>
+                <p>Each vendor will receive an email with the vendor update page URL and their Vendor ID number.
+                They visit <strong><?php echo esc_html($edit_page_url); ?></strong>, enter their email and Vendor ID, and their application loads pre-filled.<br>
                 Customize the email subject and body in
                 <a href="<?php echo esc_url($settings_url); ?>">Vendor Hub Settings</a>
                 under <em>Application Status &gt; Edit Link Email</em>.</p>
@@ -130,7 +130,7 @@ function oha_vh_send_edit_links_page() {
                 showResult('<div class="notice notice-warning inline"><p>Select at least one status.</p></div>');
                 return;
             }
-            if (!confirm('Send edit links to all vendors with the selected statuses?\n\nEach vendor will receive a unique 24-hour link. This cannot be undone.')) {
+            if (!confirm('Send edit links to all vendors with the selected statuses?\n\nEach vendor will receive the vendor update page URL and their Vendor ID number. This cannot be undone.')) {
                 return;
             }
 
