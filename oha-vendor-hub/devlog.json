@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.15.1",
+    "version":  "3.15.2",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -547,6 +547,13 @@
                         "type":  "change",
                         "summary":  "Declined vendors excluded from [oha_vendor_boardhub] front-end query",
                         "notes":  "Added meta_clause to always filter out _oha_status = Declined from the vendor query in boardhub-admin.php. Declined vendors remain visible in WP Admin \u003e Vendor Applications. No UI changes."
+                    },
+                    {
+                        "date":  "2026-08-10",
+                        "version":  "3.15.2",
+                        "type":  "change",
+                        "summary":  "vendor form: hint text white, required asterisk yellow, booth notice colors changed from orange to OHA red",
+                        "notes":  "All changes are in the inline style block inside form-frontend.php. .oha-vh-hint color #666-\u003ewhite, .oha-vh-req color red-\u003eyellow (#ffd700), .oha-vh-booth-notice background/border changed from orange to red tint using --global-palette1. Booth notice paragraph text set to var(--global-palette1, #ad3119). No changes to vendor-hub.css."
                     }
                 ]
 }

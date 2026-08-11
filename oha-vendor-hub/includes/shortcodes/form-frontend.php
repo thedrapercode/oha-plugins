@@ -249,11 +249,11 @@ add_shortcode('oha_vendor_form', function(){
     .oha-vh-section-desc { font-size: 0.875em; margin: 0; }
     .oha-vh-badge-public { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #1a7a3a; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
     .oha-vh-badge-private { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #555; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
-    .oha-vh-hint { display: block; font-size: 0.8em; color: #666; margin-top: 4px; line-height: 1.4; }
-    .oha-vh-req { color: #b32020; }
+    .oha-vh-hint { display: block; font-size: 0.8em; color: #ffffff; margin-top: 4px; line-height: 1.4; }
+    .oha-vh-req { color: #ffd700; }
     .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
-    .oha-vh-booth-notice { background: #fff8f0; border: 1px solid #f0c070; border-left: 4px solid #c87000; border-radius: 4px; padding: 1em 1.25em; margin-bottom: 1.25em; }
-    .oha-vh-booth-notice p { margin: 0 0 0.5em; font-size: 0.9em; line-height: 1.5; }
+    .oha-vh-booth-notice { background: rgba(173, 49, 25, 0.08); border: 1px solid rgba(173, 49, 25, 0.30); border-left: 4px solid var(--global-palette1, #ad3119); border-radius: 4px; padding: 1em 1.25em; margin-bottom: 1.25em; }
+    .oha-vh-booth-notice p { margin: 0 0 0.5em; font-size: 0.9em; line-height: 1.5; color: var(--global-palette1, #ad3119); }
     .oha-vh-booth-notice p:last-child { margin-bottom: 0; }
     </style>
 
