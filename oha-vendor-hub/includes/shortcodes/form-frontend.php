@@ -28,7 +28,13 @@ function oha_vhcpt_fields_default(){
  *
  * Shortcode: [oha_vendor_form]
  *
- * NOTE: This form is intentionally open to the public (no login required).
+ * Unified form for new and returning vendors.
+ * Returning vendors use the New/Returning toggle to look up their previous
+ * application by email + Vendor ID, which pre-fills the form fields.
+ * On submit, returning vendors with an existing Invited application for the
+ * active year will have that application updated and promoted to Submitted.
+ * Returning vendors without an existing application get a new post created
+ * with their permanent VID carried forward.
  */
 add_shortcode('oha_vendor_form', function(){
     wp_enqueue_style('oha-vhcpt');
@@ -42,7 +48,6 @@ add_shortcode('oha_vendor_form', function(){
     $user   = wp_get_current_user();
     $fields = get_option('oha_vhcpt_fields', oha_vhcpt_fields_default());
 
-    // Build a key => config map for easy lookup.
     $field_map = [];
     foreach ($fields as $f) {
         $field_map[$f['key']] = $f;
@@ -50,7 +55,7 @@ add_shortcode('oha_vendor_form', function(){
 
     $msg = '';
 
-    // Success redirect (Post/Redirect/Get pattern).
+    // Success message (shown after redirect or direct return).
     if (isset($_GET['vendor_submitted']) && $_GET['vendor_submitted'] === 'success') {
         return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
     }
@@ -62,6 +67,10 @@ add_shortcode('oha_vendor_form', function(){
         if (!empty($_POST['vendor_website_url'])) {
             return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
         }
+
+        // Returning vendor detection — set by JS after a successful AJAX lookup.
+        $is_returning = isset($_POST['is_returning_verified']) && $_POST['is_returning_verified'] === '1';
+        $source_vid   = $is_returning ? intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['source_vid'] ?? ''))) : 0;
 
         $meta   = [];
         $errors = [];
@@ -95,10 +104,9 @@ add_shortcode('oha_vendor_form', function(){
             }
         }
 
-        // Normalize website URL — add https:// if protocol is missing, strip junk characters.
+        // Normalize website URL.
         if (!empty($meta['website'])) {
             $url = trim($meta['website']);
-            // Strip common copy-paste artifacts: smart quotes, zero-width spaces, trailing slashes noise.
             $url = preg_replace('/[\x{00AD}\x{200B}\x{FEFF}]/u', '', $url);
             $url = trim($url, " \t\n\r\0\x0B\"'\u{201C}\u{201D}\u{2018}\u{2019}");
             if ($url !== '' && !preg_match('#^https?://#i', $url)) {
@@ -107,14 +115,10 @@ add_shortcode('oha_vendor_form', function(){
             $meta['website'] = $url !== '' ? esc_url_raw($url) : '';
         }
 
-        // Private notes (not in $fields loop — always optional, always textarea).
-        $private_notes   = sanitize_textarea_field(wp_unslash($_POST['vendor_private_notes'] ?? ''));
-        $returning_vendor = isset($_POST['returning_vendor']) ? 1 : 0;
+        $private_notes    = sanitize_textarea_field(wp_unslash($_POST['vendor_private_notes'] ?? ''));
         $booth_preference = sanitize_textarea_field(wp_unslash($_POST['booth_preference'] ?? ''));
-
-        // Tables needed and electrical access — required, not in $fields loop.
-        $tables_needed = max(0, intval(wp_unslash($_POST['tables_needed'] ?? -1)));
-        $need_electric = sanitize_text_field(wp_unslash($_POST['need_electric'] ?? ''));
+        $tables_needed    = max(0, intval(wp_unslash($_POST['tables_needed'] ?? -1)));
+        $need_electric    = sanitize_text_field(wp_unslash($_POST['need_electric'] ?? ''));
 
         if (!isset($_POST['tables_needed'])) {
             $errors[] = 'The field "Number of tables needed" is required.';
@@ -130,74 +134,152 @@ add_shortcode('oha_vendor_form', function(){
             }
             $msg .= '</ul></div>';
         } else {
-            // Duplicate check — same email within last 10 minutes.
-            $recent_duplicate = new WP_Query([
-                'post_type'      => 'vendor_application',
-                'post_status'    => 'publish',
-                'meta_query'     => [['key' => 'email', 'value' => $meta['email'], 'compare' => '=']],
-                'date_query'     => [['after' => '10 minutes ago']],
-                'posts_per_page' => 1,
-            ]);
 
-            if ($recent_duplicate->have_posts()) {
-                wp_reset_postdata();
-                $msg = '<div class="oha-vh-error">We recently received an application from this email address. If you need to update your application, please contact us directly at <a href="mailto:info@ohiohaunters.com">info@ohiohaunters.com</a>.</div>';
-            } else {
-                $title = !empty($meta['company_name'])
-                    ? $meta['company_name']
-                    : trim(($meta['first_name'] ?? '') . ' ' . ($meta['last_name'] ?? ''));
-                if ($title === '') $title = 'Vendor Application';
+            $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+            $post_id     = 0;
+            $is_upgrade  = false; // true when promoting an existing Invited app to Submitted
 
-                $post_id = wp_insert_post([
-                    'post_type'   => 'vendor_application',
-                    'post_status' => 'publish',
-                    'post_title'  => $title,
-                    'post_author' => get_current_user_id(),
-                ], true);
+            // Verify source_vid is real before trusting it.
+            if ($is_returning && $source_vid > 0) {
+                $vid_exists = get_posts([
+                    'post_type'      => 'vendor_application',
+                    'post_status'    => 'publish',
+                    'posts_per_page' => 1,
+                    'fields'         => 'ids',
+                    'meta_query'     => [
+                        'relation' => 'AND',
+                        ['key' => '_vendor_permanent_id', 'value' => $source_vid,   'compare' => '=', 'type' => 'NUMERIC'],
+                        ['key' => 'email',                'value' => $meta['email'], 'compare' => '='],
+                    ],
+                ]);
+                if (empty($vid_exists)) {
+                    $is_returning = false;
+                    $source_vid   = 0;
+                }
+            }
 
-                if (is_wp_error($post_id)) {
-                    $msg = '<div class="oha-vh-error">Error creating application: ' . esc_html($post_id->get_error_message()) . '</div>';
+            if ($is_returning && $source_vid > 0) {
+                // Check for an existing current-year application with this VID.
+                $existing = get_posts([
+                    'post_type'      => 'vendor_application',
+                    'post_status'    => 'publish',
+                    'posts_per_page' => 1,
+                    'fields'         => 'ids',
+                    'meta_query'     => [
+                        'relation' => 'AND',
+                        ['key' => '_vendor_permanent_id', 'value' => $source_vid, 'compare' => '=', 'type' => 'NUMERIC'],
+                        ['key' => '_convention_year',     'value' => $active_year, 'compare' => '='],
+                    ],
+                ]);
+
+                if (!empty($existing)) {
+                    $existing_id     = $existing[0];
+                    $existing_status = get_post_meta($existing_id, '_oha_status', true);
+                    $locked_statuses = ['Submitted', 'Approved', 'Agreement Sent', 'Agreement Signed', 'Paid'];
+
+                    if (in_array($existing_status, $locked_statuses, true)) {
+                        $edit_url = get_permalink((int) get_option('oha_vhcpt_vendor_edit_page_id'));
+                        $msg = '<div class="oha-vh-error">You already have an active application for this convention year (status: <strong>'
+                             . esc_html($existing_status) . '</strong>). '
+                             . ($edit_url ? 'To update your details, use the <a href="' . esc_url($edit_url) . '">vendor update page</a>. ' : '')
+                             . 'For assistance, contact <a href="mailto:info@ohiohaunters.com">info@ohiohaunters.com</a>.</div>';
+                    } else {
+                        // Existing Invited application — update in place and promote to Submitted.
+                        $post_id    = $existing_id;
+                        $is_upgrade = true;
+                    }
                 } else {
-                    foreach ($meta as $k => $v) {
-                        update_post_meta($post_id, $k, $v);
+                    // No current-year app — create a new post, carrying the permanent VID forward.
+                    $title   = !empty($meta['company_name']) ? $meta['company_name'] : trim(($meta['first_name'] ?? '') . ' ' . ($meta['last_name'] ?? ''));
+                    $post_id = wp_insert_post([
+                        'post_type'   => 'vendor_application',
+                        'post_status' => 'publish',
+                        'post_title'  => $title ?: 'Vendor Application',
+                        'post_author' => get_current_user_id(),
+                    ], true);
+                    if (!is_wp_error($post_id)) {
+                        update_post_meta($post_id, '_convention_year',     $active_year);
+                        update_post_meta($post_id, '_vendor_permanent_id', $source_vid);
                     }
+                }
 
-                    if (!empty($private_notes)) {
-                        update_post_meta($post_id, 'vendor_private_notes', $private_notes);
+            } else {
+                // New vendor path — duplicate email check.
+                $recent_duplicate = new WP_Query([
+                    'post_type'      => 'vendor_application',
+                    'post_status'    => 'publish',
+                    'meta_query'     => [['key' => 'email', 'value' => $meta['email'], 'compare' => '=']],
+                    'date_query'     => [['after' => '10 minutes ago']],
+                    'posts_per_page' => 1,
+                ]);
+
+                if ($recent_duplicate->have_posts()) {
+                    wp_reset_postdata();
+                    $msg = '<div class="oha-vh-error">We recently received an application from this email address. If you need to update your application, please contact us directly at <a href="mailto:info@ohiohaunters.com">info@ohiohaunters.com</a>.</div>';
+                } else {
+                    wp_reset_postdata();
+                    $title   = !empty($meta['company_name']) ? $meta['company_name'] : trim(($meta['first_name'] ?? '') . ' ' . ($meta['last_name'] ?? ''));
+                    $post_id = wp_insert_post([
+                        'post_type'   => 'vendor_application',
+                        'post_status' => 'publish',
+                        'post_title'  => $title ?: 'Vendor Application',
+                        'post_author' => get_current_user_id(),
+                    ], true);
+                    if (!is_wp_error($post_id)) {
+                        update_post_meta($post_id, '_convention_year',     $active_year);
+                        update_post_meta($post_id, '_vendor_permanent_id', $post_id); // self-referential for new vendors
                     }
-                    update_post_meta($post_id, 'returning_vendor', $returning_vendor);
-                    if (!empty($booth_preference)) {
-                        update_post_meta($post_id, 'booth_preference', $booth_preference);
-                    }
-                    update_post_meta($post_id, 'tables_needed', $tables_needed);
-                    update_post_meta($post_id, 'need_electric', $need_electric === 'yes' ? 1 : 0);
+                }
+            }
 
-                    // Handle optional logo upload.
-                    if (!empty($_FILES['vendor_logo']['name']) && function_exists('oha_vh_handle_logo_upload')) {
-                        oha_vh_handle_logo_upload($post_id);
-                    }
+            // Common save path — runs when we have a valid post ID.
+            if (empty($msg) && $post_id && !is_wp_error($post_id)) {
 
-                    update_post_meta($post_id, '_oha_status', 'Submitted');
+                foreach ($meta as $k => $v) {
+                    update_post_meta($post_id, $k, $v);
+                }
 
-                    // Stamp convention year and assign permanent vendor ID on every new submission.
-                    $active_year = intval( get_option('oha_vhcpt_active_year', date('Y')) );
-                    update_post_meta($post_id, '_convention_year', $active_year);
-                    update_post_meta($post_id, '_vendor_permanent_id', $post_id);
+                $new_title = !empty($meta['company_name']) ? $meta['company_name'] : trim(($meta['first_name'] ?? '') . ' ' . ($meta['last_name'] ?? ''));
+                if ($new_title) {
+                    wp_update_post(['ID' => $post_id, 'post_title' => $new_title]);
+                }
 
-                    // Log the initial submission in history.
-                    if (function_exists('oha_vhcpt_append_history')) {
+                update_post_meta($post_id, 'returning_vendor',     ($is_returning && $source_vid > 0) ? 1 : 0);
+                update_post_meta($post_id, 'vendor_private_notes', $private_notes);
+                update_post_meta($post_id, 'booth_preference',     $booth_preference);
+                update_post_meta($post_id, 'tables_needed',        $tables_needed);
+                update_post_meta($post_id, 'need_electric',        $need_electric === 'yes' ? 1 : 0);
+
+                if (!empty($_FILES['vendor_logo']['name']) && function_exists('oha_vh_handle_logo_upload')) {
+                    oha_vh_handle_logo_upload($post_id);
+                }
+
+                update_post_meta($post_id, '_oha_status', 'Submitted');
+
+                if (function_exists('oha_vhcpt_append_history')) {
+                    if ($is_upgrade) {
+                        oha_vhcpt_append_history($post_id, [
+                            'type'        => 'status_change',
+                            'description' => 'Returning vendor completed application via intake form. Status promoted from Invited to Submitted.',
+                        ]);
+                    } else {
                         oha_vhcpt_append_history($post_id, [
                             'type'        => 'application_submitted',
-                            'description' => 'Application submitted via vendor application form.',
+                            'description' => ($is_returning && $source_vid > 0)
+                                ? 'Returning vendor submitted via intake form. Previous application data pre-filled.'
+                                : 'Application submitted via vendor application form.',
                         ]);
                     }
-
-                    if (function_exists('oha_vhcpt_maybe_send_status_email')) {
-                        oha_vhcpt_maybe_send_status_email($post_id, 'Submitted');
-                    }
-
-                    return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
                 }
+
+                if (function_exists('oha_vhcpt_maybe_send_status_email')) {
+                    oha_vhcpt_maybe_send_status_email($post_id, 'Submitted');
+                }
+
+                return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
+
+            } elseif (empty($msg) && is_wp_error($post_id)) {
+                $msg = '<div class="oha-vh-error">Error creating application: ' . esc_html($post_id->get_error_message()) . '</div>';
             }
         }
     }
@@ -239,6 +321,10 @@ add_shortcode('oha_vendor_form', function(){
         echo '</div>';
     };
 
+    $prefill_nonce   = wp_create_nonce('oha_vh_prefill');
+    $ajax_url        = admin_url('admin-ajax.php');
+    $vendor_edit_url = get_permalink((int) get_option('oha_vhcpt_vendor_edit_page_id'));
+
     ob_start();
     echo $msg;
     ?>
@@ -252,10 +338,25 @@ add_shortcode('oha_vendor_form', function(){
     .oha-vh-hint { display: block; font-size: 0.8em; color: #ffffff; margin-top: 4px; line-height: 1.4; }
     .oha-vh-req { color: #ffd700; }
     .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
-    .oha-vh-booth-notice { background: rgba(173, 49, 25, 0.08); border: 1px solid rgba(173, 49, 25, 0.30); border-left: 4px solid var(--global-palette1, #ad3119); border-radius: 4px; padding: 1em 1.25em; margin-bottom: 1.25em; }
-    .oha-vh-booth-notice p { margin: 0 0 0.5em; font-size: 0.9em; line-height: 1.5; color: var(--global-palette1, #ad3119); }
-    .oha-vh-booth-notice p:last-child { margin-bottom: 0; }
+    .oha-vh-type-toggle { margin-bottom: 2em; padding: 1.25em 1.5em; background: rgba(173,49,25,0.08); border: 1px solid rgba(173,49,25,0.30); border-left: 4px solid var(--global-palette1,#ad3119); border-radius: 4px; }
+    .oha-vh-toggle-label { font-size: 1em; font-weight: 600; margin: 0 0 .75em; }
+    .oha-vh-toggle-btns { display: flex; gap: .5em; flex-wrap: wrap; }
+    .oha-vh-toggle-btn { padding: .55em 1.4em; border: 2px solid rgba(173,49,25,0.5); border-radius: 4px; background: transparent; color: var(--global-palette4,#f7fafc); font-size: .95em; cursor: pointer; }
+    .oha-vh-toggle-btn.oha-active { background: var(--global-palette1,#ad3119); border-color: var(--global-palette1,#ad3119); color: #fff; font-weight: 600; }
+    .oha-vh-returning-panel { margin-bottom: 2em; padding: 1.25em 1.5em; background: rgba(0,0,0,0.25); border: 1px solid rgba(173,49,25,0.30); border-radius: 4px; }
+    .oha-vh-prefill-success { background: rgba(19,97,46,0.15); border: 1px solid rgba(19,97,46,0.45); border-left: 4px solid var(--global-palette11,#13612e); border-radius: 4px; padding: .75em 1em; margin: .75em 0; font-size: .9em; }
+    .oha-vh-btn-secondary { display: inline-block; padding: .6em 1.4em; background: transparent; border: 2px solid var(--global-palette1,#ad3119); color: var(--global-palette1,#ad3119); border-radius: 4px; font-size: .95em; cursor: pointer; margin-top: .75em; }
+    .oha-vh-forgot-vid { font-size: .85em; color: var(--global-palette7,#e76653); cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
     </style>
+
+    <!-- New / Returning toggle (outside the form) -->
+    <div class="oha-vh-type-toggle">
+        <p class="oha-vh-toggle-label">Are you a new or returning vendor?</p>
+        <div class="oha-vh-toggle-btns" role="group">
+            <button type="button" class="oha-vh-toggle-btn oha-active" data-type="new">New Vendor</button>
+            <button type="button" class="oha-vh-toggle-btn" data-type="returning">Returning Vendor</button>
+        </div>
+    </div>
 
     <form class="oha-vh-form" method="post" enctype="multipart/form-data">
         <?php wp_nonce_field('oha_vhcpt_submit', 'oha_vhcpt_nonce'); ?>
@@ -265,6 +366,31 @@ add_shortcode('oha_vendor_form', function(){
             <label>Leave this field blank
                 <input type="text" name="vendor_website_url" value="" tabindex="-1" autocomplete="off">
             </label>
+        </div>
+
+        <!-- Hidden fields populated by JS on successful returning vendor lookup -->
+        <input type="hidden" name="source_vid" id="oha-source-vid" value="">
+        <input type="hidden" name="is_returning_verified" id="oha-is-returning-verified" value="0">
+
+        <!-- Returning vendor lookup panel (hidden until toggle is clicked) -->
+        <div id="oha-returning-panel" class="oha-vh-returning-panel" style="display:none;">
+            <div class="oha-vh-section-head">
+                <p class="oha-vh-section-title">Find Your Previous Application</p>
+                <p class="oha-vh-section-desc">Enter your email address and Vendor ID to pre-fill this form with your information from your previous application. Your Vendor ID was included in your original confirmation email as "VID-" followed by a number.</p>
+            </div>
+            <div class="oha-vh-row">
+                <label for="oha-ret-email">Email address from your previous application <span class="oha-vh-req">*</span></label>
+                <input type="email" id="oha-ret-email" autocomplete="email" placeholder="you@example.com">
+            </div>
+            <div class="oha-vh-row">
+                <label for="oha-ret-vid">Your Vendor ID <span class="oha-vh-req">*</span></label>
+                <input type="text" id="oha-ret-vid" placeholder="e.g. VID-123 or just 123">
+                <span class="oha-vh-hint">Don't know your Vendor ID?
+                    <button type="button" class="oha-vh-forgot-vid" id="oha-forgot-vid-btn">Send it to my email</button>
+                </span>
+            </div>
+            <div id="oha-prefill-notice"></div>
+            <button type="button" class="oha-vh-btn-secondary" id="oha-prefill-btn">Find My Application</button>
         </div>
 
         <?php /* ── SECTION 1: PUBLIC BUSINESS INFORMATION ── */ ?>
@@ -305,7 +431,7 @@ add_shortcode('oha_vendor_form', function(){
             <div class="oha-vh-section-head">
                 <p class="oha-vh-section-title">Convention Details</p>
             </div>
-            <?php $render_field('booths', 'Each booth space is 10x10. Contact us if you need clarification before submitting.'); ?>
+            <?php $render_field('booths', 'Each booth space is 8x10. Contact us if you need clarification before submitting.'); ?>
             <div class="oha-vh-row">
                 <label for="tables_needed">Number of tables needed <span class="oha-vh-req">*</span></label>
                 <input type="number" id="tables_needed" name="tables_needed" value="0" min="0" max="10" required>
@@ -322,24 +448,15 @@ add_shortcode('oha_vendor_form', function(){
             <?php $render_field('sponsor'); ?>
         </div>
 
-        <?php /* ── SECTION 4: BOOTH PREFERENCE (RETURNING VENDORS) ── */ ?>
+        <?php /* ── SECTION 4: BOOTH PREFERENCE ── */ ?>
         <div class="oha-vh-section">
             <div class="oha-vh-section-head">
                 <p class="oha-vh-section-title">Booth Preference <span class="oha-vh-badge-private">Board Only</span></p>
-            </div>
-            <div class="oha-vh-booth-notice">
-                <p><strong>Returning vendors receive first choice on booth location.</strong></p>
-                <p>If you vended with us at a previous OHA convention, you may request to keep your current spot or indicate a preference for a new one. New vendors are welcome to note any preferences as well - we will do our best to accommodate requests based on availability.</p>
+                <p class="oha-vh-section-desc">If you have a preferred location or would like to be near a specific area, let us know. We will do our best to accommodate requests based on availability.</p>
             </div>
             <div class="oha-vh-row">
-                <label class="oha-vh-checkbox-label">
-                    <input type="checkbox" name="returning_vendor" value="1">
-                    I am a returning vendor from a previous OHA convention
-                </label>
-            </div>
-            <div class="oha-vh-row" style="margin-top:0.75em">
                 <label for="booth_preference">Booth preference or location notes (optional)</label>
-                <textarea id="booth_preference" name="booth_preference" rows="3" placeholder="Example: I would like to keep booth 14 from last year. Or: I would prefer to be near the main entrance."></textarea>
+                <textarea id="booth_preference" name="booth_preference" rows="3" placeholder="Example: I would like to keep my booth from last year. Or: I would prefer to be near the main entrance."></textarea>
             </div>
         </div>
 
@@ -347,7 +464,7 @@ add_shortcode('oha_vendor_form', function(){
         <div class="oha-vh-section">
             <div class="oha-vh-section-head">
                 <p class="oha-vh-section-title">Note to the OHA Board <span class="oha-vh-badge-private">Board Only</span></p>
-                <p class="oha-vh-section-desc">Share anything the board should know - booth placement preferences, accessibility needs, questions, or special requests. This message is seen only by the board and is never shared publicly.</p>
+                <p class="oha-vh-section-desc">Share anything the board should know - accessibility needs, questions, or special requests. This message is seen only by the board and is never shared publicly.</p>
             </div>
             <div class="oha-vh-row">
                 <label for="vendor_private_notes">Notes (optional)</label>
@@ -360,6 +477,168 @@ add_shortcode('oha_vendor_form', function(){
 
     <script>
     (function(){
+        var ajaxUrl = <?php echo wp_json_encode($ajax_url); ?>;
+        var nonce   = <?php echo wp_json_encode($prefill_nonce); ?>;
+        var editUrl = <?php echo wp_json_encode($vendor_edit_url ?: ''); ?>;
+
+        // ── New / Returning toggle ─────────────────────────────────────────────
+        var toggleBtns     = document.querySelectorAll('.oha-vh-toggle-btn');
+        var returningPanel = document.getElementById('oha-returning-panel');
+
+        toggleBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                toggleBtns.forEach(function(b) { b.classList.remove('oha-active'); });
+                this.classList.add('oha-active');
+                if (this.getAttribute('data-type') === 'returning') {
+                    returningPanel.style.display = 'block';
+                } else {
+                    returningPanel.style.display = 'none';
+                    document.getElementById('oha-source-vid').value          = '';
+                    document.getElementById('oha-is-returning-verified').value = '0';
+                    document.getElementById('oha-prefill-notice').innerHTML  = '';
+                }
+            });
+        });
+
+        // ── Returning vendor lookup ────────────────────────────────────────────
+        var prefillBtn    = document.getElementById('oha-prefill-btn');
+        var prefillNotice = document.getElementById('oha-prefill-notice');
+
+        function showMsg(html) { if (prefillNotice) prefillNotice.innerHTML = html; }
+
+        if (prefillBtn) {
+            prefillBtn.addEventListener('click', function() {
+                var email = document.getElementById('oha-ret-email').value.trim();
+                var vid   = document.getElementById('oha-ret-vid').value.trim();
+
+                if (!email || !vid) {
+                    showMsg('<div class="oha-vh-error">Please enter both your email address and Vendor ID.</div>');
+                    return;
+                }
+
+                prefillBtn.disabled    = true;
+                prefillBtn.textContent = 'Looking up...';
+                showMsg('');
+
+                var fd = new FormData();
+                fd.append('action', 'oha_vh_prefill_lookup');
+                fd.append('nonce',  nonce);
+                fd.append('email',  email);
+                fd.append('vid',    vid);
+
+                fetch(ajaxUrl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(resp) {
+                        prefillBtn.disabled    = false;
+                        prefillBtn.textContent = 'Find My Application';
+
+                        if (!resp.success) {
+                            showMsg('<div class="oha-vh-error">' + resp.data.message + '</div>');
+                            return;
+                        }
+
+                        var d = resp.data;
+                        var locked = ['Submitted','Approved','Agreement Sent','Agreement Signed','Paid'];
+
+                        // Warn if already has an active application this year.
+                        if (d.existing_year_app && locked.indexOf(d.existing_year_status) !== -1) {
+                            var editLink = editUrl ? ' To update your details, use the <a href="' + editUrl + '">vendor update page</a>.' : '';
+                            showMsg('<div class="oha-vh-error">You already have an active application for this convention year (status: <strong>' + d.existing_year_status + '</strong>).' + editLink + '</div>');
+                            return;
+                        }
+
+                        // Set hidden verification fields.
+                        document.getElementById('oha-source-vid').value           = d.vid;
+                        document.getElementById('oha-is-returning-verified').value = '1';
+
+                        // Pre-fill text / number / textarea fields by name.
+                        ['company_name','website','product_type','first_name','last_name',
+                         'email','phone','address_street','address_city','address_zip',
+                         'booths','booth_preference','vendor_private_notes'
+                        ].forEach(function(name) {
+                            var el = document.querySelector('[name="' + name + '"]');
+                            if (el && d[name] !== undefined && d[name] !== null) el.value = d[name];
+                        });
+
+                        // tables_needed: default to 0 if source record predates this field.
+                        var tnEl = document.querySelector('[name="tables_needed"]');
+                        if (tnEl) tnEl.value = (d.tables_needed !== undefined && d.tables_needed !== null && d.tables_needed !== '') ? d.tables_needed : '0';
+
+                        // State dropdown.
+                        if (d.address_state) {
+                            var stEl = document.querySelector('[name="address_state"]');
+                            if (stEl) stEl.value = d.address_state;
+                        }
+
+                        // Electrical select (stored as 1/0, form uses yes/no).
+                        var elEl = document.getElementById('need_electric');
+                        if (elEl && d.need_electric !== undefined) {
+                            elEl.value = (d.need_electric === '1' || d.need_electric === 1) ? 'yes' : 'no';
+                        }
+
+                        // Sponsor checkbox.
+                        var spEl = document.querySelector('[name="sponsor"]');
+                        if (spEl) spEl.checked = (d.sponsor === '1' || d.sponsor === 1);
+
+                        // Logo preview.
+                        if (d.logo_url) {
+                            var prev = document.getElementById('oha-intake-logo-preview');
+                            if (prev) { prev.src = d.logo_url; prev.style.display = 'block'; }
+                        }
+
+                        var note = d.existing_year_app
+                            ? 'Your information has been pre-filled. This will update your existing application for this convention year.'
+                            : 'Your information has been pre-filled from your previous application. Review and update as needed, then submit.';
+                        showMsg('<div class="oha-vh-prefill-success">' + note + '</div>');
+
+                        var firstSection = document.querySelector('.oha-vh-section');
+                        if (firstSection) firstSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    })
+                    .catch(function() {
+                        prefillBtn.disabled    = false;
+                        prefillBtn.textContent = 'Find My Application';
+                        showMsg('<div class="oha-vh-error">An error occurred. Please try again.</div>');
+                    });
+            });
+        }
+
+        // ── Forgot VID ────────────────────────────────────────────────────────
+        var forgotBtn = document.getElementById('oha-forgot-vid-btn');
+        if (forgotBtn) {
+            forgotBtn.addEventListener('click', function() {
+                var email = document.getElementById('oha-ret-email').value.trim();
+                if (!email) {
+                    showMsg('<div class="oha-vh-error">Please enter your email address first, then click the link to send your Vendor ID.</div>');
+                    return;
+                }
+
+                forgotBtn.disabled    = true;
+                forgotBtn.textContent = 'Sending...';
+
+                var fd = new FormData();
+                fd.append('action', 'oha_vh_send_vid_reminder');
+                fd.append('nonce',  nonce);
+                fd.append('email',  email);
+
+                fetch(ajaxUrl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(resp) {
+                        forgotBtn.disabled    = false;
+                        forgotBtn.textContent = 'Send it to my email';
+                        if (resp.success) {
+                            showMsg('<div class="oha-vh-prefill-success">' + resp.data.message + '</div>');
+                        } else {
+                            showMsg('<div class="oha-vh-error">' + resp.data.message + '</div>');
+                        }
+                    })
+                    .catch(function() {
+                        forgotBtn.disabled    = false;
+                        forgotBtn.textContent = 'Send it to my email';
+                    });
+            });
+        }
+
+        // ── Logo file preview ─────────────────────────────────────────────────
         var logoInput   = document.getElementById('vendor_logo');
         var logoPreview = document.getElementById('oha-intake-logo-preview');
         if (logoInput && logoPreview) {
@@ -377,8 +656,8 @@ add_shortcode('oha_vendor_form', function(){
                 }
             });
         }
-    })();
-    (function(){
+
+        // ── Submit guard (prevent double-click) ───────────────────────────────
         var form = document.querySelector('.oha-vh-form');
         var btn  = document.getElementById('oha-submit-btn');
         if (form && btn) {
@@ -386,11 +665,11 @@ add_shortcode('oha_vendor_form', function(){
             form.addEventListener('submit', function(e){
                 if (submitted) { e.preventDefault(); return false; }
                 submitted = true;
-                btn.disabled = true;
+                btn.disabled    = true;
                 btn.textContent = 'Submitting...';
                 setTimeout(function(){
-                    submitted = false;
-                    btn.disabled = false;
+                    submitted       = false;
+                    btn.disabled    = false;
                     btn.textContent = 'Submit Application';
                 }, 5000);
             });

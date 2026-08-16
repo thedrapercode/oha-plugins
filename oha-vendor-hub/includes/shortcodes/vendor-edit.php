@@ -330,7 +330,30 @@ add_shortcode('oha_vendor_edit', function() {
 
     $lookup_email = sanitize_email(wp_unslash($_POST['lookup_email'] ?? ''));
     $lookup_vid   = intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['lookup_vid'] ?? '')));
-    $status       = get_post_meta($app_id, '_oha_status', true) ?: 'Invited';
+    $status = get_post_meta($app_id, '_oha_status', true) ?: 'Invited';
+
+    // Lock — applications at Agreement Signed or Paid cannot be edited directly.
+    if (in_array($status, ['Agreement Signed', 'Paid'], true)) {
+        ob_start();
+        echo oha_vh_sandbox_banner();
+        ?>
+        <style>
+        .oha-vh-locked-notice{background:rgba(0,0,0,0.3);border:1px solid rgba(173,49,25,0.4);border-left:4px solid var(--global-palette1,#ad3119);border-radius:6px;padding:1.5em;margin:1em 0}
+        .oha-vh-locked-notice h3{margin:0 0 .75em;color:var(--global-palette3,#fff)}
+        .oha-vh-locked-notice p{color:var(--global-palette4,#f7fafc);margin:0 0 .5em;line-height:1.5}
+        .oha-vh-locked-notice a{color:var(--global-palette7,#e76653)}
+        </style>
+        <div class="oha-vh-locked-notice">
+            <h3>Application Locked</h3>
+            <p>Your vendor application has reached the <strong><?php echo esc_html($status); ?></strong> stage. The information in your application has been incorporated into your contract and can no longer be edited directly.</p>
+            <p>If you need to make a correction, please email the OHA board: <a href="mailto:info@ohiohaunters.com">info@ohiohaunters.com</a></p>
+        </div>
+        <p style="margin-top:1.5em;font-size:.9em;">
+            <a href="<?php echo esc_url($current_url); ?>" style="color:var(--global-palette7,#e76653);">Back to application lookup</a>
+        </p>
+        <?php
+        return ob_get_clean();
+    }
 
     $using_post = (isset($_POST['oha_vh_edit_nonce']) && $_SERVER['REQUEST_METHOD'] === 'POST');
 
@@ -492,7 +515,7 @@ add_shortcode('oha_vendor_edit', function() {
                 <div class="oha-vh-row">
                     <label for="ve_booths">Number of booth spaces requested <span class="oha-vh-req">*</span></label>
                     <input type="number" id="ve_booths" name="booths" value="<?php echo esc_attr($v['booths'] ?: 1); ?>" min="1" max="10" required>
-                    <span class="oha-vh-hint">Each booth space is 10x10. Contact us if you need clarification before submitting.</span>
+                    <span class="oha-vh-hint">Each booth space is 8x10. Contact us if you need clarification before submitting.</span>
                 </div>
                 <div class="oha-vh-row">
                     <label for="ve_tables_needed">Number of tables needed <span class="oha-vh-req">*</span></label>

@@ -1537,6 +1537,114 @@ add_action('wp_ajax_oha_vh_test_edit_link', function() {
  * @param array $statuses Status strings to match against _oha_status meta.
  * @return array
  */
+// ── AJAX: Returning vendor pre-fill lookup ────────────────────────────────
+
+add_action('wp_ajax_oha_vh_prefill_lookup',        'oha_vh_handle_prefill_lookup');
+add_action('wp_ajax_nopriv_oha_vh_prefill_lookup', 'oha_vh_handle_prefill_lookup');
+
+function oha_vh_handle_prefill_lookup() {
+    check_ajax_referer('oha_vh_prefill', 'nonce');
+
+    $email = sanitize_email(wp_unslash($_POST['email'] ?? ''));
+    $vid   = intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['vid'] ?? '')));
+
+    if (!$email || !$vid) {
+        wp_send_json_error(['message' => 'Please enter both your email address and Vendor ID.']);
+    }
+
+    $active_year = intval(get_option('oha_vhcpt_active_year', date('Y')));
+
+    $apps = get_posts([
+        'post_type'      => 'vendor_application',
+        'post_status'    => 'publish',
+        'posts_per_page' => 10,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [
+            'relation' => 'AND',
+            ['key' => 'email',                'value' => $email, 'compare' => '='],
+            ['key' => '_vendor_permanent_id', 'value' => $vid,   'compare' => '=', 'type' => 'NUMERIC'],
+        ],
+    ]);
+
+    if (empty($apps)) {
+        wp_send_json_error(['message' => 'No application found matching that email and Vendor ID. Please check both and try again.']);
+    }
+
+    $prev_app         = null;
+    $current_year_app = null;
+
+    foreach ($apps as $a) {
+        $year = intval(get_post_meta($a->ID, '_convention_year', true));
+        if ($year === $active_year && !$current_year_app) {
+            $current_year_app = $a;
+        } elseif ($year !== $active_year && !$prev_app) {
+            $prev_app = $a;
+        }
+    }
+
+    $source = $prev_app ?: $current_year_app;
+    $src_id = $source->ID;
+
+    $keys = ['company_name','first_name','last_name','email','phone',
+             'address_street','address_city','address_state','address_zip',
+             'website','product_type','booths','tables_needed','need_electric',
+             'sponsor','booth_preference','vendor_private_notes'];
+
+    $data = ['vid' => $vid];
+    foreach ($keys as $k) {
+        $data[$k] = (string) get_post_meta($src_id, $k, true);
+    }
+    $data['logo_url']             = get_post_meta($src_id, '_company_logo_url', true);
+    $data['existing_year_app']    = (bool) $current_year_app;
+    $data['existing_year_status'] = $current_year_app
+        ? (string) get_post_meta($current_year_app->ID, '_oha_status', true)
+        : '';
+
+    wp_send_json_success($data);
+}
+
+// ── AJAX: Send Vendor ID reminder email ──────────────────────────────────
+
+add_action('wp_ajax_oha_vh_send_vid_reminder',        'oha_vh_handle_vid_reminder');
+add_action('wp_ajax_nopriv_oha_vh_send_vid_reminder', 'oha_vh_handle_vid_reminder');
+
+function oha_vh_handle_vid_reminder() {
+    check_ajax_referer('oha_vh_prefill', 'nonce');
+
+    $email = sanitize_email(wp_unslash($_POST['email'] ?? ''));
+    if (!$email || !is_email($email)) {
+        wp_send_json_error(['message' => 'Please enter your email address first, then click the link.']);
+    }
+
+    $apps = get_posts([
+        'post_type'      => 'vendor_application',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'fields'         => 'ids',
+        'meta_query'     => [['key' => 'email', 'value' => $email, 'compare' => '=']],
+    ]);
+
+    if (!empty($apps)) {
+        $post_id   = $apps[0];
+        $vid       = intval(get_post_meta($post_id, '_vendor_permanent_id', true));
+        $first     = get_post_meta($post_id, 'first_name', true);
+        $name_part = $first ? " {$first}" : '';
+
+        $body = "Hello{$name_part},\n\nYour Vendor ID is: VID-{$vid}\n\n"
+              . "You will need this number along with your email address to look up your vendor application.\n\n"
+              . "If you did not request this email, you can safely ignore it.\n\n"
+              . "-- The OHA Team";
+
+        wp_mail($email, 'Your OHA Vendor ID', $body);
+    }
+
+    // Always return success to avoid revealing whether an email is on file.
+    wp_send_json_success(['message' => 'If we have an application on file for that email address, your Vendor ID has been sent to it. Please check your inbox.']);
+}
+
 function oha_vh_get_vendor_emails_by_status(array $statuses) {
     global $wpdb;
 

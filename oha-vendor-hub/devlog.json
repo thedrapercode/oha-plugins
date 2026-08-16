@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.15.2",
+    "version":  "3.16.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -554,6 +554,41 @@
                         "type":  "change",
                         "summary":  "vendor form: hint text white, required asterisk yellow, booth notice colors changed from orange to OHA red",
                         "notes":  "All changes are in the inline style block inside form-frontend.php. .oha-vh-hint color #666-\u003ewhite, .oha-vh-req color red-\u003eyellow (#ffd700), .oha-vh-booth-notice background/border changed from orange to red tint using --global-palette1. Booth notice paragraph text set to var(--global-palette1, #ad3119). No changes to vendor-hub.css."
+                    },
+                    {
+                        "date":  "2026-08-16",
+                        "version":  "3.16.0",
+                        "type":  "fix",
+                        "summary":  "Corrected booth size description from 10x10 to 8x10 on vendor intake form",
+                        "notes":  "Changed in form-frontend.php Section 3 booth hint text."
+                    },
+                    {
+                        "date":  "2026-08-16",
+                        "version":  "3.16.0",
+                        "type":  "feature",
+                        "summary":  "Unified [oha_vendor_form] for new and returning vendors with AJAX pre-fill lookup",
+                        "notes":  "New/returning toggle at top of form. Returning vendors enter email + VID to pre-fill form from previous year. VID reminder email sends VID to registered address. On submit: returning vendors with existing Invited app for active year get it promoted to Submitted; without one, a new post is created with permanent VID carried forward. Duplicate detection blocks resubmission if status is Submitted or beyond. History logged on all submit paths. AJAX handlers in actions.php: oha_vh_prefill_lookup, oha_vh_send_vid_reminder."
+                    },
+                    {
+                        "date":  "2026-08-16",
+                        "version":  "3.16.0",
+                        "type":  "feature",
+                        "summary":  "Added lock notice to [oha_vendor_edit] when status is Agreement Signed or Paid",
+                        "notes":  "When vendor tries to use edit shortcode at locked status, a notice is shown directing them to email info@ohiohaunters.com. Board email and current URL link back included in notice."
+                    },
+                    {
+                        "date":  "2026-08-16",
+                        "version":  "3.16.0",
+                        "type":  "fix",
+                        "summary":  "VID security: verify submitted source_vid matches both VID and email on form submit",
+                        "notes":  "Added email to the meta_query in the VID verification step so a bad actor who knows a valid post ID cannot claim a foreign VID by crafting a POST request."
+                    },
+                    {
+                        "date":  "2026-08-16",
+                        "version":  "3.16.0",
+                        "type":  "fix",
+                        "summary":  "tables_needed pre-fill defaults to 0 for legacy 2026 vendor records that lack the field",
+                        "notes":  "Removed tables_needed from the generic pre-fill forEach loop and added a dedicated handler that falls back to 0 when the returned value is empty string, preventing required field validation from blocking submit."
                     }
                 ]
 }
