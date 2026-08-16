@@ -338,11 +338,11 @@ add_shortcode('oha_vendor_form', function(){
     .oha-vh-hint { display: block; font-size: 0.8em; color: #ffffff; margin-top: 4px; line-height: 1.4; }
     .oha-vh-req { color: #ffd700; }
     .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
-    .oha-vh-type-toggle { margin-bottom: 2em; padding: 1.25em 1.5em; background: rgba(173,49,25,0.08); border: 1px solid rgba(173,49,25,0.30); border-left: 4px solid var(--global-palette1,#ad3119); border-radius: 4px; }
-    .oha-vh-toggle-label { font-size: 1em; font-weight: 600; margin: 0 0 .75em; }
-    .oha-vh-toggle-btns { display: flex; gap: .5em; flex-wrap: wrap; }
-    .oha-vh-toggle-btn { padding: .55em 1.4em; border: 2px solid rgba(173,49,25,0.5); border-radius: 4px; background: transparent; color: var(--global-palette4,#f7fafc); font-size: .95em; cursor: pointer; }
-    .oha-vh-toggle-btn.oha-active { background: var(--global-palette1,#ad3119); border-color: var(--global-palette1,#ad3119); color: #fff; font-weight: 600; }
+    .oha-vh-type-toggle { margin-bottom: 2em; padding: 1.75em 1.5em; background: rgba(173,49,25,0.08); border: 1px solid rgba(173,49,25,0.30); border-radius: 6px; text-align: center; }
+    .oha-vh-toggle-label { font-size: 1.15em; font-weight: 700; margin: 0 0 1.1em; }
+    .oha-vh-toggle-btns { display: flex; gap: 1em; flex-wrap: wrap; justify-content: center; }
+    .oha-vh-toggle-btn { padding: .9em 2.75em; border: 2px solid rgba(173,49,25,0.5); border-radius: 6px; background: transparent; color: var(--global-palette4,#f7fafc); font-size: 1.1em; font-weight: 600; cursor: pointer; min-width: 190px; letter-spacing: 0.01em; }
+    .oha-vh-toggle-btn.oha-active { background: var(--global-palette1,#ad3119); border-color: var(--global-palette1,#ad3119); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(173,49,25,0.45); }
     .oha-vh-returning-panel { margin-bottom: 2em; padding: 1.25em 1.5em; background: rgba(0,0,0,0.25); border: 1px solid rgba(173,49,25,0.30); border-radius: 4px; }
     .oha-vh-prefill-success { background: rgba(19,97,46,0.15); border: 1px solid rgba(19,97,46,0.45); border-left: 4px solid var(--global-palette11,#13612e); border-radius: 4px; padding: .75em 1em; margin: .75em 0; font-size: .9em; }
     .oha-vh-btn-secondary { display: inline-block; padding: .6em 1.4em; background: transparent; border: 2px solid var(--global-palette1,#ad3119); color: var(--global-palette1,#ad3119); border-radius: 4px; font-size: .95em; cursor: pointer; margin-top: .75em; }

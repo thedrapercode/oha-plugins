@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.16.0",
+    "version":  "3.16.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -589,6 +589,13 @@
                         "type":  "fix",
                         "summary":  "tables_needed pre-fill defaults to 0 for legacy 2026 vendor records that lack the field",
                         "notes":  "Removed tables_needed from the generic pre-fill forEach loop and added a dedicated handler that falls back to 0 when the returned value is empty string, preventing required field validation from blocking submit."
+                    },
+                    {
+                        "date":  "2026-08-16",
+                        "version":  "3.16.1",
+                        "type":  "change",
+                        "summary":  "Centered and enlarged New/Returning vendor toggle buttons on intake form",
+                        "notes":  "Buttons are now centered, min-width 190px, font 1.1em, more padding. Active button has red drop shadow. Left accent border removed since centering made it look odd."
                     }
                 ]
 }
