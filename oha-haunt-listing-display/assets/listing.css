@@ -1,0 +1,1755 @@
+/*
+ * OHA Haunt Listing Display - listing.css
+ * All selectors scoped to .oha-listing-wrap to prevent bleed into other GD pages.
+ */
+
+/* ── Google Fonts ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Rajdhani:wght@400;500;600&display=swap');
+
+/* ── Design tokens ───────────────────────────────────────────────────────── */
+:root {
+    --oha-blood:   #8B0000;
+    --oha-blood2:  #B22222;
+    --oha-crimson: #C41E3A;
+    --oha-gold:    #C9A84C;
+    --oha-gold2:   #E8C96A;
+    --oha-dark1:   #0D0D0D;
+    --oha-dark2:   #141414;
+    --oha-dark3:   #1C1C1C;
+    --oha-dark4:   #242424;
+    --oha-text:    #E0D5C5;
+    --oha-muted:   rgba(200, 185, 165, 0.7);
+    --oha-gray:    #666666;
+    --oha-radius:  6px;
+    --oha-gap:     24px;
+}
+
+/* ── Base reset (scoped) ─────────────────────────────────────────────────── */
+.oha-listing-wrap {
+    background: var(--oha-dark1);
+    color: var(--oha-text);
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.oha-listing-wrap *,
+.oha-listing-wrap *::before,
+.oha-listing-wrap *::after {
+    box-sizing: border-box;
+}
+
+.oha-listing-wrap a {
+    color: var(--oha-gold);
+    text-decoration: none;
+}
+
+.oha-listing-wrap a:hover {
+    color: var(--oha-gold2);
+}
+
+/* ── Section title ───────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--oha-gold);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+}
+
+/* ── Pill / badge ────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-pill {
+    display: inline-block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.oha-listing-wrap .oha-pill--cat {
+    background: rgba(196, 30, 58, 0.2);
+    color: var(--oha-gold2);
+    border: 1px solid rgba(196, 30, 58, 0.5);
+}
+
+.oha-listing-wrap .oha-pill--cat:hover {
+    background: rgba(196, 30, 58, 0.35);
+}
+
+.oha-listing-wrap .oha-pill--feature {
+    background: var(--oha-dark4);
+    color: var(--oha-text);
+    border: 1px solid rgba(224, 213, 197, 0.15);
+}
+
+.oha-listing-wrap .oha-pill--tag {
+    background: transparent;
+    color: var(--oha-muted);
+    border: 1px solid rgba(224, 213, 197, 0.15);
+}
+
+.oha-listing-wrap .oha-pill--tag:hover {
+    color: var(--oha-text);
+    border-color: rgba(224, 213, 197, 0.4);
+}
+
+.oha-listing-wrap .oha-badge {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+}
+
+.oha-listing-wrap .oha-badge--featured {
+    background: var(--oha-gold);
+    color: var(--oha-dark1);
+}
+
+.oha-listing-wrap .oha-badge--sm {
+    font-size: 10px;
+    padding: 2px 7px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-hero {
+    position: relative;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: var(--oha-dark2);
+    background-size: cover;
+    background-position: center;
+}
+
+.oha-listing-wrap .oha-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(13, 13, 13, 0.4) 0%,
+        rgba(13, 13, 13, 0.6) 50%,
+        rgba(13, 13, 13, 0.92) 100%
+    );
+}
+
+.oha-listing-wrap .oha-hero__topbar,
+.oha-listing-wrap .oha-hero__content {
+    position: relative;
+    z-index: 1;
+    padding: 20px 32px;
+}
+
+.oha-listing-wrap .oha-hero__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.oha-listing-wrap .oha-hero__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-muted);
+    transition: color 0.2s;
+}
+
+.oha-listing-wrap .oha-hero__back:hover {
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-hero__back svg {
+    fill: currentColor;
+}
+
+.oha-listing-wrap .oha-hero__content {
+    padding-top: 0;
+}
+
+.oha-listing-wrap .oha-hero__cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.oha-listing-wrap .oha-hero__title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 12px;
+    line-height: 1.15;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.oha-listing-wrap .oha-hero__location {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--oha-muted);
+    margin: 0;
+}
+
+.oha-listing-wrap .oha-hero__location svg {
+    fill: var(--oha-gold);
+    flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BODY LAYOUT  (2-col grid desktop, stack mobile)
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-listing-body {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: var(--oha-gap);
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LEFT COLUMN - MAIN CONTENT
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-listing-main {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+}
+
+/* ── Rating ──────────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oha-listing-wrap .oha-rating__stars {
+    display: flex;
+    gap: 2px;
+}
+
+.oha-listing-wrap .oha-star {
+    font-size: 18px;
+    color: var(--oha-gray);
+}
+
+.oha-listing-wrap .oha-star--full {
+    color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-star--half {
+    color: var(--oha-gold);
+    /* Simple half-star approximation via opacity */
+    opacity: 0.6;
+}
+
+.oha-listing-wrap .oha-rating__score {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-rating__count {
+    font-size: 14px;
+    color: var(--oha-muted);
+}
+
+/* ── About ───────────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-about__body {
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-about__body p:first-child {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.oha-listing-wrap .oha-about__body p {
+    margin: 0 0 16px;
+}
+
+/* ── Features row ────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-features-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ── Gallery grid ────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-gallery__grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 160px 160px;
+    gap: 6px;
+    border-radius: var(--oha-radius);
+    overflow: hidden;
+}
+
+.oha-listing-wrap .oha-gallery__item {
+    display: block;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--oha-dark3);
+    transition: opacity 0.2s;
+}
+
+.oha-listing-wrap .oha-gallery__item:first-child {
+    grid-row: 1 / 3;
+}
+
+.oha-listing-wrap .oha-gallery__item:hover {
+    opacity: 0.85;
+}
+
+.oha-listing-wrap .oha-gallery__item--more::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 13, 13, 0.65);
+}
+
+.oha-listing-wrap .oha-gallery__more-count {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* ── Tags ────────────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RIGHT COLUMN - SIDEBAR
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 24px;
+}
+
+/* ── Claim banner ────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-claim-banner {
+    background: rgba(139, 0, 0, 0.15);
+    border: 1px solid rgba(139, 0, 0, 0.4);
+    border-radius: var(--oha-radius);
+    padding: 16px;
+    text-align: center;
+}
+
+.oha-listing-wrap .oha-claim-banner__text {
+    font-size: 14px;
+    color: var(--oha-muted);
+    margin: 0 0 10px;
+}
+
+.oha-listing-wrap .oha-claim-banner__link {
+    display: inline-block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-crimson);
+    border: 1px solid var(--oha-crimson);
+    border-radius: var(--oha-radius);
+    padding: 6px 16px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.oha-listing-wrap .oha-claim-banner__link:hover {
+    background: var(--oha-crimson);
+    color: #fff;
+}
+
+/* ── CTA buttons ─────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.oha-listing-wrap .oha-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    border-radius: var(--oha-radius);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    width: 100%;
+}
+
+.oha-listing-wrap .oha-cta-btn svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-cta-btn--directions {
+    background: var(--oha-blood);
+    color: #fff;
+    border: 1px solid var(--oha-blood2);
+}
+
+.oha-listing-wrap .oha-cta-btn--directions:hover {
+    background: var(--oha-blood2);
+    color: #fff;
+}
+
+.oha-listing-wrap .oha-cta-btn--call {
+    background: var(--oha-dark4);
+    color: var(--oha-text);
+    border: 1px solid rgba(224, 213, 197, 0.15);
+}
+
+.oha-listing-wrap .oha-cta-btn--call:hover {
+    border-color: rgba(224, 213, 197, 0.4);
+    color: #fff;
+}
+
+.oha-listing-wrap .oha-cta-btn--website {
+    background: transparent;
+    color: var(--oha-gold);
+    border: 1px solid rgba(201, 168, 76, 0.4);
+}
+
+.oha-listing-wrap .oha-cta-btn--website:hover {
+    background: rgba(201, 168, 76, 0.1);
+    color: var(--oha-gold2);
+}
+
+/* ── Info card ───────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-info-card {
+    background: var(--oha-dark3);
+    border: 1px solid rgba(224, 213, 197, 0.08);
+    border-radius: var(--oha-radius);
+    padding: 20px;
+}
+
+.oha-listing-wrap .oha-info-card__row {
+    display: grid;
+    grid-template-columns: 20px auto 1fr;
+    gap: 6px 10px;
+    align-items: start;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(224, 213, 197, 0.06);
+}
+
+.oha-listing-wrap .oha-info-card__row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.oha-listing-wrap .oha-info-card__row:first-child {
+    padding-top: 0;
+}
+
+.oha-listing-wrap .oha-info-card__icon {
+    display: flex;
+    align-items: center;
+    padding-top: 2px;
+}
+
+.oha-listing-wrap .oha-info-card__icon svg {
+    fill: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-info-card__label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--oha-muted);
+    padding-top: 3px;
+    white-space: nowrap;
+}
+
+.oha-listing-wrap .oha-info-card__value {
+    font-size: 15px;
+    color: var(--oha-text);
+    word-break: break-word;
+}
+
+.oha-listing-wrap .oha-info-card__value--link {
+    color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-info-card__value--link:hover {
+    color: var(--oha-gold2);
+}
+
+/* ── Map ─────────────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-map__frame {
+    border-radius: var(--oha-radius);
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.oha-listing-wrap .oha-map__frame iframe {
+    display: block;
+    width: 100%;
+    height: 220px;
+    border: none;
+}
+
+.oha-listing-wrap .oha-map__directions-link {
+    display: block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--oha-muted);
+    transition: color 0.2s;
+}
+
+.oha-listing-wrap .oha-map__directions-link:hover {
+    color: var(--oha-gold);
+}
+
+/* ── Social ──────────────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-social {
+    display: flex;
+    gap: 10px;
+}
+
+.oha-listing-wrap .oha-social__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 9px 16px;
+    border-radius: var(--oha-radius);
+    transition: background 0.2s;
+    flex: 1;
+    justify-content: center;
+}
+
+.oha-listing-wrap .oha-social__btn svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-social__btn--facebook {
+    background: #1877f2;
+    color: #fff;
+}
+
+.oha-listing-wrap .oha-social__btn--facebook:hover {
+    background: #166fe5;
+    color: #fff;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NEARBY HAUNTS
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-nearby {
+    padding: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-top: 1px solid rgba(224, 213, 197, 0.08);
+}
+
+.oha-listing-wrap .oha-nearby__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--oha-gap);
+}
+
+.oha-listing-wrap .oha-nearby__card {
+    display: flex;
+    flex-direction: column;
+    background: var(--oha-dark3);
+    border: 1px solid rgba(224, 213, 197, 0.08);
+    border-radius: var(--oha-radius);
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-nearby__card:hover {
+    border-color: rgba(201, 168, 76, 0.4);
+    transform: translateY(-2px);
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-nearby__img {
+    position: relative;
+    height: 160px;
+    background-color: var(--oha-dark2);
+    background-size: cover;
+    background-position: center;
+}
+
+.oha-listing-wrap .oha-nearby__img .oha-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.oha-listing-wrap .oha-nearby__body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.oha-listing-wrap .oha-nearby__cat {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-nearby__title {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin: 4px 0;
+    line-height: 1.3;
+}
+
+.oha-listing-wrap .oha-nearby__location {
+    font-size: 13px;
+    color: var(--oha-muted);
+    margin: 0;
+}
+
+.oha-listing-wrap .oha-nearby__rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--oha-muted);
+    margin-top: 4px;
+}
+
+.oha-listing-wrap .oha-nearby__star {
+    color: var(--oha-gold);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CLAIM SECTION
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-claim-section {
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.12), rgba(13, 13, 13, 0.4));
+    border: 1px solid rgba(139, 0, 0, 0.35);
+    border-radius: var(--oha-radius);
+    padding: 20px;
+    text-align: center;
+}
+
+.oha-listing-wrap .oha-claim-section__heading {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 10px;
+}
+
+.oha-listing-wrap .oha-claim-section__body {
+    font-size: 14px;
+    color: var(--oha-muted);
+    margin: 0 0 16px;
+    line-height: 1.5;
+}
+
+.oha-listing-wrap .oha-claim-btn {
+    display: inline-block;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-crimson);
+    border: 1px solid var(--oha-crimson);
+    border-radius: var(--oha-radius);
+    padding: 9px 20px;
+    cursor: pointer;
+    background: transparent;
+    transition: background 0.2s, color 0.2s;
+    text-decoration: none;
+}
+
+.oha-listing-wrap .oha-claim-btn:hover,
+.oha-listing-wrap .oha-claim-btn:focus {
+    background: var(--oha-crimson);
+    color: #fff;
+    outline: none;
+}
+
+.oha-listing-wrap .oha-claim-btn--login {
+    color: var(--oha-muted);
+    border-color: rgba(224, 213, 197, 0.25);
+}
+
+.oha-listing-wrap .oha-claim-btn--login:hover {
+    background: rgba(224, 213, 197, 0.1);
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-claim-already {
+    font-size: 13px;
+    color: var(--oha-muted);
+    margin: 0;
+    font-style: italic;
+}
+
+/* Admin info panel variant */
+.oha-listing-wrap .oha-claim-section--admin {
+    background: rgba(13, 13, 13, 0.6);
+    border-color: rgba(224, 213, 197, 0.15);
+    text-align: left;
+}
+
+.oha-listing-wrap .oha-claim-admin-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.oha-listing-wrap .oha-claim-admin-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-muted);
+    min-width: 56px;
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-claim-admin-value {
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-claim-admin-value a {
+    color: var(--oha-gold);
+    text-decoration: none;
+}
+
+.oha-listing-wrap .oha-claim-admin-value a:hover {
+    text-decoration: underline;
+}
+
+.oha-listing-wrap .oha-claim-admin-value--claimed {
+    color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-claim-admin-value--unclaimed {
+    color: var(--oha-muted);
+    font-style: italic;
+}
+
+/* "You Own This" owner variant */
+.oha-listing-wrap .oha-claim-section--owner {
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.08), rgba(13, 13, 13, 0.4));
+    border-color: rgba(139, 0, 0, 0.25);
+}
+
+.oha-listing-wrap .oha-claim-btn--edit {
+    color: var(--oha-gold);
+    border-color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-claim-btn--edit:hover,
+.oha-listing-wrap .oha-claim-btn--edit:focus {
+    background: var(--oha-gold);
+    color: var(--oha-dark1);
+}
+
+/* ── Claim modal (OHA-styled overlay) ────────────────────────────────────── */
+.oha-claim-modal[hidden] { display: none; }
+
+.oha-claim-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 20px;
+}
+
+.oha-claim-dialog {
+    background: var(--oha-dark3);
+    border: 1px solid rgba(139, 0, 0, 0.4);
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    max-width: 540px;
+    width: 100%;
+    padding: 28px;
+    position: relative;
+    color: var(--oha-text);
+}
+
+.oha-claim-modal__close {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    background: transparent;
+    border: 0;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--oha-muted);
+    transition: color 0.15s;
+}
+
+.oha-claim-modal__close:hover {
+    color: #fff;
+}
+
+.oha-claim-modal__heading {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 16px;
+}
+
+.oha-claim-modal__label {
+    display: block;
+    font-size: 14px;
+    color: var(--oha-muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.oha-claim-modal__textarea {
+    width: 100%;
+    background: var(--oha-dark4);
+    color: var(--oha-text);
+    border: 1px solid rgba(224, 213, 197, 0.15);
+    border-radius: var(--oha-radius);
+    padding: 10px 12px;
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.oha-claim-modal__textarea::placeholder {
+    color: var(--oha-gray);
+}
+
+.oha-claim-modal__textarea:focus {
+    outline: none;
+    border-color: rgba(196, 30, 58, 0.5);
+}
+
+.oha-claim-modal__submit {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--oha-blood);
+    color: #fff;
+    border: 1px solid var(--oha-blood2);
+    border-radius: var(--oha-radius);
+    padding: 11px 28px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+}
+
+.oha-claim-modal__submit:hover {
+    background: var(--oha-blood2);
+}
+
+.oha-claim-modal__submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.oha-claim-modal__success {
+    text-align: center;
+    padding: 16px 0;
+    color: var(--oha-gold2);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   REPORT POST LINK
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Scope and style the GeoDirectory report post output within our sidebar */
+.oha-listing-wrap .oha-report-post {
+    text-align: center;
+    padding-top: 4px;
+}
+
+.oha-listing-wrap .oha-report-post a,
+.oha-listing-wrap .oha-report-post .geodir-report-post-action {
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: var(--oha-gray) !important;
+    text-decoration: none !important;
+    transition: color 0.2s !important;
+}
+
+.oha-listing-wrap .oha-report-post a:hover,
+.oha-listing-wrap .oha-report-post .geodir-report-post-action:hover {
+    color: var(--oha-muted) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MOBILE ACTION BAR
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-mobile-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--oha-dark2);
+    border-top: 1px solid rgba(224, 213, 197, 0.12);
+    padding: 10px 16px;
+    gap: 10px;
+    z-index: 100;
+}
+
+.oha-listing-wrap .oha-mobile-bar__btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border-radius: var(--oha-radius);
+}
+
+.oha-listing-wrap .oha-mobile-bar__btn svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-mobile-bar__btn--directions {
+    background: var(--oha-blood);
+    color: #fff;
+}
+
+.oha-listing-wrap .oha-mobile-bar__btn--call {
+    background: var(--oha-dark4);
+    color: var(--oha-text);
+    border: 1px solid rgba(224, 213, 197, 0.15);
+}
+
+/* Accessibility */
+.oha-listing-wrap .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* 768–1023px: single column, sidebar stacks */
+@media (max-width: 1023px) {
+    .oha-listing-wrap .oha-listing-body {
+        grid-template-columns: 1fr;
+        padding: 24px;
+    }
+
+    .oha-listing-wrap .oha-sidebar {
+        position: static;
+    }
+
+    .oha-listing-wrap .oha-nearby__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .oha-listing-wrap .oha-nearby {
+        padding: 24px;
+    }
+}
+
+/* < 768px: mobile */
+@media (max-width: 767px) {
+    .oha-listing-wrap .oha-hero {
+        min-height: 300px;
+    }
+
+    .oha-listing-wrap .oha-hero__topbar,
+    .oha-listing-wrap .oha-hero__content {
+        padding: 16px 20px;
+    }
+
+    .oha-listing-wrap .oha-hero__title {
+        font-size: 28px;
+    }
+
+    .oha-listing-wrap .oha-listing-body {
+        padding: 20px 16px;
+        gap: 28px;
+    }
+
+    .oha-listing-wrap .oha-nearby {
+        padding: 20px 16px;
+    }
+
+    .oha-listing-wrap .oha-nearby__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .oha-listing-wrap .oha-gallery__grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+    }
+
+    .oha-listing-wrap .oha-gallery__item:first-child {
+        grid-row: auto;
+        grid-column: 1 / -1;
+        height: 200px;
+    }
+
+    .oha-listing-wrap .oha-gallery__item {
+        height: 120px;
+    }
+
+    /* Features: scroll horizontal on mobile */
+    .oha-listing-wrap .oha-features-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+    }
+
+    .oha-listing-wrap .oha-features-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Show mobile action bar */
+    .oha-listing-wrap .oha-mobile-bar {
+        display: flex;
+    }
+
+    /* Add bottom padding so content doesn't hide behind mobile bar */
+    .oha-listing-wrap .oha-nearby {
+        padding-bottom: 80px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OHA SESSION 3 ADDITIONS
+   New sections: discount bar, fear pills, unclaimed states, empty states,
+   stats block, visitor tips, recruiting banner, accessibility, Track B fields
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Discount notice bar ─────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-discount-notice {
+    background: linear-gradient(90deg, rgba(139, 0, 0, 0.25), rgba(139, 0, 0, 0.12));
+    border-top: 1px solid rgba(139, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(139, 0, 0, 0.5);
+    padding: 10px 20px;
+}
+
+.oha-listing-wrap .oha-discount-notice__inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.oha-listing-wrap .oha-discount-notice__icon {
+    fill: var(--oha-gold);
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-discount-notice__rate {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--oha-gold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.oha-listing-wrap .oha-discount-notice__msg {
+    font-size: 13px;
+    color: var(--oha-text);
+    line-height: 1.4;
+}
+
+/* ── Unclaimed state ─────────────────────────────────────────────────────── */
+.oha-listing-wrap.oha-unclaimed .oha-hero {
+    background-image: none !important;
+    background-color: var(--oha-dark2);
+    /* Diagonal hatched pattern for unclaimed hero */
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(139, 0, 0, 0.08) 10px,
+        rgba(139, 0, 0, 0.08) 20px
+    ) !important;
+}
+
+.oha-listing-wrap .oha-badge--unclaimed {
+    background: rgba(100, 100, 100, 0.7);
+    color: #ccc;
+    border-color: rgba(200, 200, 200, 0.25);
+}
+
+.oha-listing-wrap .oha-title-unclaimed {
+    color: rgba(255, 255, 255, 0.6);
+    text-shadow: none;
+}
+
+/* ── Empty state boxes ───────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: var(--oha-radius);
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 8px,
+        rgba(255, 255, 255, 0.02) 8px,
+        rgba(255, 255, 255, 0.02) 16px
+    );
+    text-align: center;
+}
+
+.oha-listing-wrap .oha-empty-state-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-muted);
+    margin: 0 0 6px;
+}
+
+.oha-listing-wrap .oha-empty-state-body {
+    font-size: 13px;
+    color: rgba(224, 213, 197, 0.4);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Fear level pills ────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-fear-pill {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: var(--oha-radius);
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.oha-listing-wrap .oha-fear-family-friendly { color: #4ade80; border-color: rgba(74,222,128,.4); background: rgba(74,222,128,.1); }
+.oha-listing-wrap .oha-fear-mild            { color: #a3e635; border-color: rgba(163,230,53,.4); background: rgba(163,230,53,.1); }
+.oha-listing-wrap .oha-fear-moderate        { color: #fb923c; border-color: rgba(251,146,60,.4); background: rgba(251,146,60,.1); }
+.oha-listing-wrap .oha-fear-intense         { color: #f87171; border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.1); }
+.oha-listing-wrap .oha-fear-extreme         { color: #dc2626; border-color: rgba(220,38,38,.5); background: rgba(220,38,38,.15); }
+
+/* Fear level as inline value in info card */
+.oha-listing-wrap .oha-fear-inline {
+    font-weight: 600;
+}
+
+/* ── Hero badges area ────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-hero__badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.oha-listing-wrap .oha-badge--open {
+    background: rgba(251, 146, 60, 0.85);
+    color: #fff;
+    border-color: rgba(251, 146, 60, 0.9);
+    font-size: 10px;
+}
+
+.oha-listing-wrap .oha-pill--type {
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 11px;
+}
+
+/* ── Accessibility / warning pills ──────────────────────────────────────── */
+.oha-listing-wrap .oha-pill--warning {
+    background: rgba(251, 146, 60, 0.12);
+    color: #fb923c;
+    border-color: rgba(251, 146, 60, 0.35);
+    font-size: 12px;
+}
+
+/* ── Section title small variant ─────────────────────────────────────────── */
+.oha-listing-wrap .oha-section-title--sm {
+    font-size: 11px;
+}
+
+/* ── About storyline ─────────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-about__storyline {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-style: italic;
+    color: var(--oha-muted);
+    line-height: 1.7;
+}
+
+/* ── Haunt stats block ───────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-stats-block {
+    padding: 24px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.oha-listing-wrap .oha-stats-block__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+}
+
+.oha-listing-wrap .oha-stats-block__item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--oha-radius);
+    padding: 14px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.oha-listing-wrap .oha-stats-block__value {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--oha-gold);
+    line-height: 1;
+}
+
+.oha-listing-wrap .oha-stats-block__label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-muted);
+}
+
+/* ── Visitor tips collapsible ────────────────────────────────────────────── */
+.oha-listing-wrap .oha-visitor-tips {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--oha-radius);
+    overflow: hidden;
+}
+
+.oha-listing-wrap .oha-visitor-tips__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: none;
+    color: var(--oha-text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: left;
+}
+
+.oha-listing-wrap .oha-visitor-tips__toggle:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.oha-listing-wrap .oha-visitor-tips__toggle svg:first-child {
+    fill: var(--oha-gold);
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-visitor-tips__chevron {
+    fill: var(--oha-muted);
+    margin-left: auto;
+    transition: transform 0.2s;
+}
+
+.oha-listing-wrap .oha-visitor-tips__toggle[aria-expanded="true"] .oha-visitor-tips__chevron {
+    transform: rotate(180deg);
+}
+
+.oha-listing-wrap .oha-visitor-tips__body {
+    padding: 16px;
+    font-size: 14px;
+    color: var(--oha-muted);
+    line-height: 1.6;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.oha-listing-wrap .oha-visitor-tips__body[hidden] {
+    display: none;
+}
+
+/* ── Recruiting banner ───────────────────────────────────────────────────── */
+.oha-listing-wrap .oha-recruiting-banner {
+    background: linear-gradient(135deg, rgba(139, 0, 0, 0.2), rgba(100, 0, 0, 0.15));
+    border: 1px solid rgba(139, 0, 0, 0.4);
+    border-radius: var(--oha-radius);
+    padding: 20px;
+}
+
+.oha-listing-wrap .oha-recruiting-banner__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.oha-listing-wrap .oha-recruiting-banner__title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    color: var(--oha-blood);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.oha-listing-wrap .oha-recruiting-banner__body {
+    font-size: 13px;
+    color: var(--oha-muted);
+    margin: 0;
+}
+
+.oha-listing-wrap .oha-recruiting-banner__btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--oha-blood);
+    border: 1px solid var(--oha-blood);
+    border-radius: var(--oha-radius);
+    padding: 10px 20px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.oha-listing-wrap .oha-recruiting-banner__btn:hover {
+    opacity: 0.85;
+}
+
+/* ── Social: Instagram / TikTok / YouTube ────────────────────────────────── */
+.oha-listing-wrap .oha-social__btn--instagram {
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+    color: #fff;
+    border-color: transparent;
+}
+
+.oha-listing-wrap .oha-social__btn--instagram svg {
+    stroke: #fff;
+    fill: none;
+}
+
+.oha-listing-wrap .oha-social__btn--tiktok {
+    background: #010101;
+    color: #fff;
+    border-color: rgba(255,255,255,.15);
+}
+
+.oha-listing-wrap .oha-social__btn--youtube {
+    background: #ff0000;
+    color: #fff;
+    border-color: transparent;
+}
+
+/* ── Nearby: distance badge ──────────────────────────────────────────────── */
+.oha-listing-wrap .oha-nearby__distance {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+}
+
+.oha-listing-wrap .oha-nearby__distance svg {
+    fill: var(--oha-gold);
+}
+
+/* Ensure nearby img has position:relative for badge placement */
+.oha-listing-wrap .oha-nearby__img {
+    position: relative;
+}
+
+/* ── Discount bar on [oha_discounts] shortcode page ─────────────────────── */
+/* Overrides the inline styles from oha-discounts-frontend plugin */
+.oha-discount-card {
+    background: var(--oha-dark3, #1a1a1a) !important;
+    border-color: rgba(139, 0, 0, 0.3) !important;
+    border-radius: 8px !important;
+    color: #e0d5c5 !important;
+}
+
+.oha-discount-head {
+    background: rgba(139, 0, 0, 0.12) !important;
+    border-bottom-color: rgba(139, 0, 0, 0.2) !important;
+    color: #fff !important;
+    font-family: 'Cinzel', Georgia, serif !important;
+    font-size: 14px !important;
+}
+
+.oha-discount-body {
+    color: #e0d5c5 !important;
+}
+
+.oha-discount-meta {
+    color: rgba(224, 213, 197, 0.6) !important;
+    font-size: 12px !important;
+}
+
+.oha-discount-actions a.button {
+    background: transparent !important;
+    border-color: rgba(139, 0, 0, 0.6) !important;
+    color: #c0392b !important;
+    border-radius: 6px !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    font-size: 12px !important;
+}
+
+.oha-discount-actions a.button:hover {
+    background: rgba(139, 0, 0, 0.15) !important;
+    color: #e74c3c !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LIGHTBOX
+   The lightbox HTML is injected by listing.js into <body>.
+   Selectors are NOT scoped to .oha-listing-wrap (it lives outside).
+═══════════════════════════════════════════════════════════════════════════ */
+#oha-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.93);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 60px;
+    /* display managed by JS (none / flex) */
+}
+
+#oha-lb-img {
+    max-width: 100%;
+    max-height: calc(100vh - 80px);
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    display: block;
+    transition: opacity 0.15s;
+    user-select: none;
+}
+
+#oha-lightbox.oha-lb-loading #oha-lb-img {
+    opacity: 0.25;
+}
+
+/* Spinner when loading next image */
+#oha-lightbox.oha-lb-loading::after {
+    content: '';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    border: 3px solid rgba(255, 255, 255, 0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: oha-lb-spin 0.7s linear infinite;
+    z-index: 3;
+    pointer-events: none;
+}
+
+@keyframes oha-lb-spin {
+    to { transform: rotate(360deg); }
+}
+
+#oha-lb-close {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 3;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.15s;
+    padding: 0;
+}
+
+#oha-lb-close:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+#oha-lb-prev,
+#oha-lb-next {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 36px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 3;
+    width: 48px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.15s;
+    padding: 0;
+    user-select: none;
+}
+
+#oha-lb-prev { left: 10px; }
+#oha-lb-next { right: 10px; }
+
+#oha-lb-prev:hover,
+#oha-lb-next:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 767px) {
+    #oha-lightbox {
+        padding: 10px;
+    }
+
+    #oha-lb-img {
+        max-height: calc(100vh - 100px);
+    }
+
+    #oha-lb-prev { left: 4px; width: 36px; height: 56px; font-size: 28px; }
+    #oha-lb-next { right: 4px; width: 36px; height: 56px; font-size: 28px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BUSINESS HOURS
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-bh-card {
+    background: var(--oha-dark3);
+    border: 1px solid rgba(224, 213, 197, 0.08);
+    border-radius: var(--oha-radius);
+    padding: 16px 20px 20px;
+}
+
+.oha-listing-wrap .oha-bh-card .oha-section-title {
+    margin-bottom: 10px;
+}
+
+.oha-listing-wrap .oha-bh-table {
+    display: flex;
+    flex-direction: column;
+}
+
+.oha-listing-wrap .oha-bh-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--oha-muted);
+}
+
+.oha-listing-wrap .oha-bh-row--today {
+    background: rgba(139, 0, 0, 0.22);
+    color: var(--oha-text);
+    font-weight: 600;
+}
+
+.oha-listing-wrap .oha-bh-day {
+    min-width: 80px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+.oha-listing-wrap .oha-bh-row--today .oha-bh-day {
+    color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-bh-hours {
+    text-align: right;
+    flex: 1;
+}
+
+.oha-listing-wrap .oha-bh-closed {
+    color: var(--oha-gray);
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* Email reveal button — looks like inline text, not a form button */
+.oha-listing-wrap .oha-email-reveal {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--oha-gold);
+    font-size: 15px;
+    font-family: inherit;
+    text-align: left;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s;
+}
+
+.oha-listing-wrap .oha-email-reveal:hover {
+    color: var(--oha-gold2);
+}
+
+/* Revealed email link — allow wrapping on small screens */
+.oha-listing-wrap .oha-info-card__value--link[href^="mailto:"] {
+    word-break: break-all;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   VIDEO EMBED
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-listing-wrap .oha-video__embed {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    border-radius: var(--oha-radius);
+    overflow: hidden;
+    background: var(--oha-dark2);
+}
+
+.oha-listing-wrap .oha-video__embed iframe,
+.oha-listing-wrap .oha-video__embed video,
+.oha-listing-wrap .oha-video__embed object,
+.oha-listing-wrap .oha-video__embed embed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
