@@ -46,7 +46,7 @@ if (!defined('ABSPATH')) exit;
 
     <div class="oha-portal-header">
         <h2>🎉 Welcome, <?php echo esc_html($volunteer->first_name); ?>!</h2>
-        <p style="font-size: 18px; margin: 0;">Your OHA Convention 2026 Volunteer Dashboard</p>
+        <p style="font-size: 18px; margin: 0;">Your <?php echo esc_html(\OHA\VH\Settings::get('convention_name', 'OHA Convention')); ?> Volunteer Dashboard</p>
     </div>
 
     <?php if (empty($assignments)): ?>

@@ -32,12 +32,14 @@ class Admin {
         }
 
         // Get filter parameters
-        $status = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
+        $status     = isset($_GET['status'])     ? sanitize_text_field($_GET['status'])     : '';
         $experience = isset($_GET['experience']) ? sanitize_text_field($_GET['experience']) : '';
-        $search = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+        $search     = isset($_GET['s'])          ? sanitize_text_field($_GET['s'])          : '';
+        $active_year = Database::get_active_year();
+        $year_filter = isset($_GET['year']) ? (int) $_GET['year'] : $active_year;
 
         // Get volunteers
-        $volunteers = self::get_filtered_volunteers($status, $experience, $search);
+        $volunteers = self::get_filtered_volunteers($status, $experience, $search, $year_filter);
         $areas = Database::get_areas();
         
         ?>
@@ -51,7 +53,19 @@ class Admin {
                 <div class="alignleft actions">
                     <form method="get">
                         <input type="hidden" name="page" value="oha-volunteer-signups">
-                        
+
+                        <select name="year">
+                            <?php
+                            // Show the active year plus a few years back for historical review
+                            $earliest_year = 2026;
+                            for ($y = $active_year; $y >= $earliest_year; $y--) {
+                                $label = ($y === $active_year) ? $y . ' (Active)' : $y;
+                                printf('<option value="%d"%s>%s</option>', $y, selected($year_filter, $y, false), esc_html($label));
+                            }
+                            echo '<option value="0"' . selected($year_filter, 0, false) . '>All Years</option>';
+                            ?>
+                        </select>
+
                         <select name="status">
                             <option value="">All Statuses</option>
                             <option value="pending" <?php selected($status, 'pending'); ?>>Pending Approval</option>
@@ -59,14 +73,14 @@ class Admin {
                             <option value="assigned" <?php selected($status, 'assigned'); ?>>Assigned</option>
                             <option value="declined" <?php selected($status, 'declined'); ?>>Declined</option>
                         </select>
-                        
+
                         <select name="experience">
                             <option value="">All Experience Levels</option>
                             <option value="newbie" <?php selected($experience, 'newbie'); ?>>First Timer</option>
                             <option value="experienced" <?php selected($experience, 'experienced'); ?>>Experienced</option>
                             <option value="veteran" <?php selected($experience, 'veteran'); ?>>Veteran</option>
                         </select>
-                        
+
                         <button type="submit" class="button">Filter</button>
                         <a href="<?php echo admin_url('admin.php?page=oha-volunteer-signups'); ?>" class="button">Reset</a>
                     </form>
@@ -348,20 +362,29 @@ class Admin {
     /**
      * Get filtered volunteers
      */
-    private static function get_filtered_volunteers($status = '', $experience = '', $search = '') {
+    private static function get_filtered_volunteers($status = '', $experience = '', $search = '', $year = -1) {
         global $wpdb;
         $table = $wpdb->prefix . 'oha_volunteers';
 
         $where = ['1=1'];
-        
+
+        // Year filter: -1 = active year, 0 = all years, positive int = specific year
+        $year_int = (int) $year;
+        if ($year_int === -1) {
+            $year_int = Database::get_active_year();
+        }
+        if ($year_int > 0) {
+            $where[] = $wpdb->prepare("convention_year = %d", $year_int);
+        }
+
         if ($status) {
             $where[] = $wpdb->prepare("status = %s", $status);
         }
-        
+
         if ($experience) {
             $where[] = $wpdb->prepare("experience_level = %s", $experience);
         }
-        
+
         if ($search) {
             $search = '%' . $wpdb->esc_like($search) . '%';
             $where[] = $wpdb->prepare(
@@ -371,7 +394,7 @@ class Admin {
         }
 
         $where_sql = implode(' AND ', $where);
-        
+
         return $wpdb->get_results(
             "SELECT * FROM $table WHERE $where_sql ORDER BY signup_date DESC"
         );

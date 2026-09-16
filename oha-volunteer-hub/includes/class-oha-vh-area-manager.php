@@ -51,7 +51,7 @@ class AreaManager {
         <div class="oha-vh-manager-dashboard">
             <div class="dashboard-header">
                 <h2>👥 Area Manager Dashboard</h2>
-                <p class="dashboard-subtitle">Manage your volunteer areas for OHA Convention 2026</p>
+                <p class="dashboard-subtitle">Manage your volunteer areas for <?php echo esc_html(\OHA\VH\Settings::get('convention_name', 'OHA Convention')); ?></p>
             </div>
 
             <div class="dashboard-stats">

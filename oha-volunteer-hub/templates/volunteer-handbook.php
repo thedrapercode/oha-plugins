@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) { exit; }
 
 <div class="oha-vh-handbook">
     <div class="handbook-header" style="text-align: center; padding: 30px 0; border-bottom: 3px solid #2271b1;">
-        <h1 style="margin: 0; color: #2271b1;">Ohio Haunters Convention 2026</h1>
+        <h1 style="margin: 0; color: #2271b1;"><?php echo esc_html(\OHA\VH\Settings::get('convention_name', 'OHA Convention')); ?></h1>
         <h2 style="margin: 10px 0 0 0; color: #666;">Volunteer Manual</h2>
     </div>
 

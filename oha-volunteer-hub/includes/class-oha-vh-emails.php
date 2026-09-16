@@ -61,9 +61,9 @@ class Emails {
             ? "Your Area Manager(s):\n" . implode("\n", $manager_lines)
             : '';
 
-        $convention_name     = Settings::get('convention_name', get_option('oha_vh_convention_name', 'OHA Convention 2026'));
-        $convention_date_raw = Settings::get('convention_date', get_option('oha_vh_convention_date', '2026-05-09'));
-        $convention_date     = date('F j, Y', strtotime($convention_date_raw));
+        $convention_name     = Settings::get('convention_name', 'OHA Convention');
+        $convention_date_raw = Settings::get('convention_date', '');
+        $convention_date     = $convention_date_raw ? date('F j, Y', strtotime($convention_date_raw)) : '';
         $portal_url          = home_url('/volunteer-portal');
 
         // Use saved template, fall back to default
@@ -112,9 +112,9 @@ class Emails {
             return false;
         }
 
-        $convention_name     = Settings::get('convention_name', get_option('oha_vh_convention_name', 'OHA Convention 2026'));
-        $convention_date_raw = Settings::get('convention_date', get_option('oha_vh_convention_date', '2026-05-09'));
-        $convention_date     = date('F j, Y', strtotime($convention_date_raw));
+        $convention_name     = Settings::get('convention_name', 'OHA Convention');
+        $convention_date_raw = Settings::get('convention_date', '');
+        $convention_date     = $convention_date_raw ? date('F j, Y', strtotime($convention_date_raw)) : '';
         $coordinator_email   = Settings::get('volunteer_coordinator_email', get_option('admin_email'));
 
         $subject = Settings::get('confirmation_subject', 'Volunteer Application Received - ' . $convention_name);
@@ -158,7 +158,7 @@ class Emails {
             return false;
         }
 
-        $convention_name   = Settings::get('convention_name', get_option('oha_vh_convention_name', 'OHA Convention 2026'));
+        $convention_name   = Settings::get('convention_name', 'OHA Convention');
         $coordinator_email = Settings::get('volunteer_coordinator_email', get_option('admin_email'));
 
         $subject = Settings::get('approval_subject', Settings::get_default_approval_subject());
@@ -224,9 +224,9 @@ class Emails {
                           date('g:i A', strtotime($assignment->shift_end));
         }
 
-        $convention_name     = Settings::get('convention_name', get_option('oha_vh_convention_name', 'OHA Convention 2026'));
-        $convention_date_raw = Settings::get('convention_date', get_option('oha_vh_convention_date', '2026-05-09'));
-        $convention_date     = date('l, F j, Y', strtotime($convention_date_raw));
+        $convention_name     = Settings::get('convention_name', 'OHA Convention');
+        $convention_date_raw = Settings::get('convention_date', '');
+        $convention_date     = $convention_date_raw ? date('l, F j, Y', strtotime($convention_date_raw)) : '';
         $coordinator_email   = Settings::get('volunteer_coordinator_email', get_option('admin_email'));
         $coordinator_phone   = Settings::get('volunteer_coordinator_phone', '');
 
@@ -264,8 +264,9 @@ class Emails {
      * Send message from area manager to volunteer(s)
      */
     public static function send_area_message($to, $volunteer_name, $subject, $message, $area) {
-        $convention_date_raw = Settings::get('convention_date', '2026-05-09');
-        $formatted_date = date('l, F j, Y', strtotime($convention_date_raw));
+        $convention_name     = Settings::get('convention_name', 'OHA Convention');
+        $convention_date_raw = Settings::get('convention_date', '');
+        $formatted_date      = $convention_date_raw ? date('l, F j, Y', strtotime($convention_date_raw)) : '';
 
         $email_body  = "Dear {$volunteer_name},\n\n";
         $email_body .= "You have a message from your {$area->icon} {$area->area_name} area manager:\n\n";
@@ -285,8 +286,8 @@ class Emails {
             $email_body .= "\n";
         }
 
-        $email_body .= "OHA Convention 2026\n";
-        $email_body .= "Date: {$formatted_date}\n\n";
+        $email_body .= "{$convention_name}\n";
+        $email_body .= $formatted_date ? "Date: {$formatted_date}\n\n" : "\n";
         $email_body .= "Visit your volunteer portal: " . home_url('/volunteer-portal/') . "\n\n";
         $email_body .= "Thank you for volunteering!\n\n";
         $email_body .= "-- The OHA Convention Team";

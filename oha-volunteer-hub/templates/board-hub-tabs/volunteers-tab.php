@@ -6,12 +6,23 @@
 if (!defined('ABSPATH')) { exit; }
 
 $status_filter = isset($_GET['vh_status']) ? sanitize_text_field($_GET['vh_status']) : 'all';
-$search = isset($_GET['vh_search']) ? sanitize_text_field($_GET['vh_search']) : '';
+$search        = isset($_GET['vh_search']) ? sanitize_text_field($_GET['vh_search']) : '';
+$active_year   = \OHA\VH\Database::get_active_year();
+$year_filter   = isset($_GET['vh_year']) ? (int) $_GET['vh_year'] : -1; // -1 = active year
 
 $args = ['limit' => 500];
-if ($status_filter !== 'all') {
-    $args['status'] = $status_filter;
+
+if ($status_filter === 'banned') {
+    // Special pseudo-filter: show all banned volunteers regardless of status or year
+    $args['banned'] = true;
+    $args['year']   = 0;
+} else {
+    if ($status_filter !== 'all') {
+        $args['status'] = $status_filter;
+    }
+    $args['year'] = $year_filter; // -1 = active year, 0 = all, N = specific
 }
+
 if ($search) {
     $args['search'] = $search;
 }
@@ -31,6 +42,11 @@ $all_areas = \OHA\VH\Database::get_areas();
             </button>
             <button class="button" onclick="openBroadcastModal()" style="background: #2271b1; border-color: #2271b1; color: white;">
                 Broadcast Email to All Assigned
+            </button>
+            <button class="button" onclick="bulkMarkNoShows()" id="oha-bulk-no-show-btn"
+                    style="background:#e67e22;border-color:#e67e22;color:white;"
+                    title="Mark all assigned volunteers without a check-in as no-shows for the active year">
+                Bulk Mark No-Shows
             </button>
         </div>
     </div>
@@ -118,21 +134,36 @@ $all_areas = \OHA\VH\Database::get_areas();
     <!-- Filters -->
     <div class="oha-vh-filters">
         <label>
+            <strong>Year:</strong>
+            <select name="vh_year" onchange="location.href=buildBoardHubUrl('volunteers', {vh_status: '<?php echo esc_js($status_filter); ?>', vh_search: '<?php echo esc_js($search); ?>', vh_year: this.value})">
+                <?php
+                $earliest_year = 2026;
+                for ($y = $active_year; $y >= $earliest_year; $y--) {
+                    $label = ($y === $active_year) ? $y . ' (Active)' : $y;
+                    printf('<option value="%d"%s>%s</option>', $y, ($year_filter === -1 && $y === $active_year) || $year_filter === $y ? ' selected' : '', esc_html($label));
+                }
+                echo '<option value="0"' . ($year_filter === 0 ? ' selected' : '') . '>All Years</option>';
+                ?>
+            </select>
+        </label>
+        <label>
             <strong>Status:</strong>
-            <select name="status" onchange="location.href=buildBoardHubUrl('volunteers', {vh_status: this.value, vh_search: '<?php echo esc_js($search); ?>'})">
+            <select name="status" onchange="location.href=buildBoardHubUrl('volunteers', {vh_status: this.value, vh_search: '<?php echo esc_js($search); ?>', vh_year: '<?php echo esc_js($year_filter === -1 ? $active_year : $year_filter); ?>'})">
                 <option value="all" <?php selected($status_filter, 'all'); ?>>All Status</option>
                 <option value="pending" <?php selected($status_filter, 'pending'); ?>>Pending</option>
                 <option value="approved" <?php selected($status_filter, 'approved'); ?>>Approved</option>
                 <option value="assigned" <?php selected($status_filter, 'assigned'); ?>>Assigned</option>
                 <option value="rejected" <?php selected($status_filter, 'rejected'); ?>>Rejected</option>
                 <option value="declined" <?php selected($status_filter, 'declined'); ?>>Declined</option>
-                <option value="trashed" <?php selected($status_filter, 'trashed'); ?>>🗑️ Trash</option>
+                <option value="no_show" <?php selected($status_filter, 'no_show'); ?>>No Show</option>
+                <option value="banned" <?php selected($status_filter, 'banned'); ?>>Banned</option>
+                <option value="trashed" <?php selected($status_filter, 'trashed'); ?>>Trash</option>
             </select>
         </label>
         <label>
             <strong>Search:</strong>
-            <input type="search" name="search" value="<?php echo esc_attr($search); ?>" 
-                   onkeyup="if(event.key==='Enter')location.href=buildBoardHubUrl('volunteers', {vh_status: '<?php echo esc_js($status_filter); ?>', vh_search: this.value})"
+            <input type="search" name="search" value="<?php echo esc_attr($search); ?>"
+                   onkeyup="if(event.key==='Enter')location.href=buildBoardHubUrl('volunteers', {vh_status: '<?php echo esc_js($status_filter); ?>', vh_search: this.value, vh_year: '<?php echo esc_js($year_filter === -1 ? $active_year : $year_filter); ?>'})"
                    placeholder="Name or email...">
         </label>
     </div>
@@ -172,8 +203,11 @@ $all_areas = \OHA\VH\Database::get_areas();
                     <tr data-volunteer-id="<?php echo esc_attr($v->id); ?>" onclick="toggleVolunteerDetails(<?php echo esc_js($v->id); ?>)" style="cursor: pointer;" class="volunteer-row">
                         <td data-label="Status" style="white-space: nowrap;">
                             <span class="status-badge status-<?php echo esc_attr($v->status); ?>">
-                                <?php echo esc_html(ucfirst($v->status)); ?>
+                                <?php echo esc_html(ucfirst(str_replace('_', ' ', $v->status))); ?>
                             </span>
+                            <?php if (!empty($v->banned)): ?>
+                                <span class="status-badge" style="background:#7b1010;color:#fff;margin-left:4px;">BANNED</span>
+                            <?php endif; ?>
                         </td>
                         <td data-label="Name"><strong><?php echo esc_html($v->first_name . ' ' . $v->last_name); ?></strong></td>
                         <td data-label="Contact">
@@ -307,6 +341,21 @@ $all_areas = \OHA\VH\Database::get_areas();
                                                 <?php echo !empty($v->last_emailed_at) ? esc_html(date('F j, Y g:i A', strtotime($v->last_emailed_at))) : '<em>Never</em>'; ?>
                                             </td>
                                         </tr>
+                                        <?php if ($v->banned || !empty($v->ban_attempts)): ?>
+                                        <tr>
+                                            <th style="background: #7b1010; color: #fff; padding: 10px; text-align: left;">Ban Attempts:</th>
+                                            <td style="padding: 10px; border: 1px solid #ddd; background: #fff8f8;">
+                                                <?php if (!empty($v->ban_attempts) && $v->ban_attempts > 0): ?>
+                                                    <strong style="color:#7b1010;"><?php echo (int) $v->ban_attempts; ?></strong> attempt<?php echo $v->ban_attempts > 1 ? 's' : ''; ?> to re-apply since being banned
+                                                    <?php if (!empty($v->last_ban_attempt)): ?>
+                                                        &mdash; last attempt <?php echo esc_html(date('F j, Y g:i A', strtotime($v->last_ban_attempt))); ?>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <em>No attempts</em>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endif; ?>
                                         <?php if ($v->user_id): ?>
                                         <tr>
                                             <th style="background: #2c3e50; color: #fff; padding: 10px; text-align: left;">WordPress Account:</th>
@@ -361,10 +410,10 @@ $all_areas = \OHA\VH\Database::get_areas();
                                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                         <?php if ($v->status === 'pending'): ?>
                                             <button class="button button-primary" onclick="event.stopPropagation(); quickApprove(<?php echo esc_js($v->id); ?>)" style="background: #28a745; border-color: #28a745;">
-                                                ✅ Approve
+                                                Approve
                                             </button>
                                             <button class="button" onclick="event.stopPropagation(); quickReject(<?php echo esc_js($v->id); ?>)" style="background: #dc3545; border-color: #dc3545; color: white;">
-                                                ❌ Reject
+                                                Reject
                                             </button>
                                         <?php endif; ?>
                                         <?php if ($v->status === 'approved' || $v->status === 'assigned'): ?>
@@ -377,13 +426,26 @@ $all_areas = \OHA\VH\Database::get_areas();
                                                 Resend Assignment Email
                                             </button>
                                         <?php endif; ?>
+                                        <?php if ($v->status !== 'no_show'): ?>
+                                            <button class="button" onclick="event.stopPropagation(); markNoShow(<?php echo esc_js($v->id); ?>)"
+                                                    style="background:#e67e22;border-color:#e67e22;color:white;"
+                                                    title="Mark this volunteer as a no-show (did not appear for their shift)">
+                                                Mark No-Show
+                                            </button>
+                                        <?php endif; ?>
+                                        <button class="button oha-ban-btn-<?php echo esc_attr($v->id); ?>"
+                                                onclick="event.stopPropagation(); toggleBan(<?php echo esc_js($v->id); ?>, <?php echo $v->banned ? 1 : 0; ?>)"
+                                                style="<?php echo $v->banned ? 'background:#28a745;border-color:#28a745;color:white;' : 'background:#7b1010;border-color:#7b1010;color:white;'; ?>"
+                                                title="<?php echo $v->banned ? 'Remove ban — allow this volunteer to sign up again' : 'Ban this volunteer from all future signups'; ?>">
+                                            <?php echo $v->banned ? 'Remove Ban' : 'Ban Volunteer'; ?>
+                                        </button>
                                         <?php if ($is_admin): ?>
                                             <button class="button" onclick="event.stopPropagation(); deleteVolunteer(<?php echo esc_js($v->id); ?>)" style="background: #6c757d; border-color: #6c757d; color: white;">
-                                                🗑️ Delete
+                                                Delete
                                             </button>
                                         <?php endif; ?>
                                         <button class="button" onclick="event.stopPropagation(); toggleVolunteerDetails(<?php echo esc_js($v->id); ?>)">
-                                            ⬆ Close Details
+                                            Close Details
                                         </button>
                                     </div>
                                 </div>
@@ -788,6 +850,94 @@ document.addEventListener('click', function(e) {
     const reassign = document.getElementById('reassign-modal');
     if (e.target === reassign) closeReassignModal();
 });
+
+// --- Mark No-Show ---
+function markNoShow(id) {
+    if (!confirm('Mark this volunteer as a no-show? Their status will be changed to "No Show".')) return;
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_mark_no_show',
+            volunteer_id: id,
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.data.message || 'Error updating status.');
+        }
+    });
+}
+
+// --- Toggle Ban ---
+function toggleBan(id, currentBanned) {
+    const action = currentBanned ? 'remove the ban from' : 'ban';
+    if (!confirm('Are you sure you want to ' + action + ' this volunteer?\n\nBanned volunteers cannot sign up for any future conventions.')) return;
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_toggle_ban',
+            volunteer_id: id,
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const newBanned = data.data.banned;
+            // Update the button label/color in-place
+            const btn = document.querySelector('.oha-ban-btn-' + id);
+            if (btn) {
+                btn.textContent = newBanned ? 'Remove Ban' : 'Ban Volunteer';
+                btn.style.background = newBanned ? '#28a745' : '#7b1010';
+                btn.style.borderColor = newBanned ? '#28a745' : '#7b1010';
+                btn.setAttribute('onclick', 'event.stopPropagation(); toggleBan(' + id + ', ' + (newBanned ? 1 : 0) + ')');
+            }
+            // Reload to refresh the BANNED badge in the status cell
+            location.reload();
+        } else {
+            alert(data.data.message || 'Error updating ban status.');
+        }
+    });
+}
+
+// --- Bulk Mark No-Shows ---
+function bulkMarkNoShows() {
+    if (!confirm('Mark all assigned volunteers who have not checked in as no-shows for the active convention year?\n\nThis cannot be undone in bulk.')) return;
+
+    const btn = document.getElementById('oha-bulk-no-show-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Processing...'; }
+
+    fetch(ajaxurl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+            action: 'oha_vh_bulk_mark_no_show',
+            nonce: '<?php echo wp_create_nonce('oha_vh_board'); ?>'
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (btn) { btn.disabled = false; btn.textContent = 'Bulk Mark No-Shows'; }
+        if (data.success) {
+            alert(data.data.message || 'Done.');
+            if (data.data.count > 0) location.reload();
+        } else {
+            alert(data.data.message || 'Error running bulk no-show.');
+        }
+    })
+    .catch(() => {
+        if (btn) { btn.disabled = false; btn.textContent = 'Bulk Mark No-Shows'; }
+        alert('Connection error. Please try again.');
+    });
+}
 
 // Delete volunteer (move to trash)
 function deleteVolunteer(id) {

@@ -7,7 +7,7 @@
 if (!defined('ABSPATH')) { exit; }
 
 $selected_area = isset($_GET['area_id']) ? intval($_GET['area_id']) : 0;
-$convention_date = \OHA\VH\Settings::get('convention_date', '2026-05-09');
+$convention_date = \OHA\VH\Settings::get('convention_date', '');
 ?>
 
 <div class="oha-vh-shifts-tab">

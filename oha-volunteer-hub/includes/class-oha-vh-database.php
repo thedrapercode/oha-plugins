@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) { exit; }
 
 class Database {
 
-    const DB_VERSION = '4.11.0'; // v4.11.0: last_emailed_at added to volunteers table
+    const DB_VERSION = '4.15.0'; // v4.15.0: ban_attempts + last_ban_attempt columns added
     const DB_VERSION_OPTION = 'oha_vh_db_version';
 
     /**
@@ -48,6 +48,10 @@ class Database {
                 status varchar(20) DEFAULT 'pending',
                 notes longtext DEFAULT NULL,
                 last_emailed_at datetime DEFAULT NULL,
+                convention_year smallint DEFAULT NULL,
+                banned tinyint(1) DEFAULT 0,
+                ban_attempts smallint DEFAULT 0,
+                last_ban_attempt datetime DEFAULT NULL,
                 PRIMARY KEY  (id),
                 KEY idx_email (email),
                 KEY idx_user_id (user_id),
@@ -204,6 +208,27 @@ class Database {
                 $wpdb->query("ALTER TABLE {$table_volunteers} ADD COLUMN last_emailed_at DATETIME DEFAULT NULL AFTER notes");
             }
 
+            // Add convention_year column (v4.13.0)
+            $year_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_volunteers} LIKE 'convention_year'");
+            if (empty($year_exists)) {
+                $wpdb->query("ALTER TABLE {$table_volunteers} ADD COLUMN convention_year SMALLINT DEFAULT NULL AFTER last_emailed_at");
+                // Backfill all existing rows as 2026 (the first convention year)
+                $wpdb->query("UPDATE {$table_volunteers} SET convention_year = 2026 WHERE convention_year IS NULL");
+            }
+
+            // Add banned column (v4.14.0)
+            $banned_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_volunteers} LIKE 'banned'");
+            if (empty($banned_exists)) {
+                $wpdb->query("ALTER TABLE {$table_volunteers} ADD COLUMN banned TINYINT(1) DEFAULT 0 AFTER convention_year");
+            }
+
+            // Add ban attempt tracking columns (v4.15.0)
+            $ban_attempts_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_volunteers} LIKE 'ban_attempts'");
+            if (empty($ban_attempts_exists)) {
+                $wpdb->query("ALTER TABLE {$table_volunteers} ADD COLUMN ban_attempts SMALLINT DEFAULT 0 AFTER banned");
+                $wpdb->query("ALTER TABLE {$table_volunteers} ADD COLUMN last_ban_attempt DATETIME DEFAULT NULL AFTER ban_attempts");
+            }
+
             // Update version
             update_option(self::DB_VERSION_OPTION, self::DB_VERSION);
         }
@@ -332,6 +357,33 @@ class Database {
     }
 
     /**
+     * Return the active convention year.
+     * Derived from the convention_date setting: once that month has passed in
+     * that year, the next year becomes active. Defaults to a May cutoff when
+     * no convention date is stored.
+     */
+    public static function get_active_year() {
+        $convention_date = Settings::get('convention_date', '');
+        if ($convention_date) {
+            $ts               = strtotime($convention_date);
+            $conv_year        = (int) date('Y', $ts);
+            $conv_month       = (int) date('n', $ts);
+            $current_year     = (int) date('Y');
+            $current_month    = (int) date('n');
+
+            if ($current_year > $conv_year ||
+                ($current_year === $conv_year && $current_month > $conv_month)) {
+                return $conv_year + 1;
+            }
+            return $conv_year;
+        }
+        // Fallback: after May each year, advance to the next year
+        $month = (int) date('n');
+        $year  = (int) date('Y');
+        return $month > 5 ? $year + 1 : $year;
+    }
+
+    /**
      * Get all volunteers
      */
     public static function get_volunteers($args = []) {
@@ -339,19 +391,37 @@ class Database {
         $table = $wpdb->prefix . 'oha_volunteers';
 
         $defaults = [
-            'status' => '',
-            'search' => '',
+            'status'  => '',
+            'search'  => '',
+            'year'    => -1,    // -1 = active year, 0 = all years, any int = specific year
+            'banned'  => null,  // null = no filter, true = only banned, false = only not-banned
             'orderby' => 'signup_date',
-            'order' => 'DESC',
-            'limit' => 100,
-            'offset' => 0
+            'order'   => 'DESC',
+            'limit'   => 100,
+            'offset'  => 0
         ];
 
         $args = wp_parse_args($args, $defaults);
 
         $where = [];
+
+        // Year filter
+        $year_arg = (int) $args['year'];
+        if ($year_arg === -1) {
+            $where[] = $wpdb->prepare("convention_year = %d", self::get_active_year());
+        } elseif ($year_arg > 0) {
+            $where[] = $wpdb->prepare("convention_year = %d", $year_arg);
+        }
+        // 0 = no year filter (show all)
+
         if (!empty($args['status'])) {
             $where[] = $wpdb->prepare("status = %s", $args['status']);
+        }
+
+        if ($args['banned'] === true) {
+            $where[] = "banned = 1";
+        } elseif ($args['banned'] === false) {
+            $where[] = "banned = 0";
         }
 
         if (!empty($args['search'])) {
@@ -488,16 +558,17 @@ class Database {
     }
 
     /**
-     * Get area statistics
+     * Get area statistics, scoped to the active convention year.
      */
     public static function get_area_stats() {
         global $wpdb;
-        $table_volunteers = $wpdb->prefix . 'oha_volunteers';
-        $table_areas = $wpdb->prefix . 'oha_volunteer_areas';
+        $table_volunteers  = $wpdb->prefix . 'oha_volunteers';
+        $table_areas       = $wpdb->prefix . 'oha_volunteer_areas';
         $table_assignments = $wpdb->prefix . 'oha_volunteer_assignments';
+        $active_year       = self::get_active_year();
 
-        return $wpdb->get_results("
-            SELECT 
+        return $wpdb->get_results($wpdb->prepare("
+            SELECT
                 ar.id,
                 ar.area_name,
                 ar.min_volunteers,
@@ -506,25 +577,38 @@ class Database {
                 COUNT(DISTINCT v.id) as interested_count
             FROM $table_areas ar
             LEFT JOIN $table_assignments a ON ar.id = a.area_id
-            LEFT JOIN $table_volunteers v ON FIND_IN_SET(ar.id, REPLACE(REPLACE(v.preferred_areas, '[', ''), ']', ''))
+            LEFT JOIN $table_volunteers v
+                   ON FIND_IN_SET(ar.id, REPLACE(REPLACE(v.preferred_areas, '[', ''), ']', ''))
+                  AND v.convention_year = %d
             WHERE ar.is_active = 1
             GROUP BY ar.id
             ORDER BY ar.display_order
-        ");
+        ", $active_year));
     }
 
     /**
-     * Get volunteer count by status
+     * Get volunteer count by status, scoped to the active convention year.
      */
-    public static function get_volunteer_counts() {
+    public static function get_volunteer_counts($year = -1) {
         global $wpdb;
         $table = $wpdb->prefix . 'oha_volunteers';
 
-        return $wpdb->get_results("
-            SELECT status, COUNT(*) as count
-            FROM $table
-            GROUP BY status
-        ", OBJECT_K);
+        $year_int = (int) $year;
+        if ($year_int === -1) {
+            $year_int = self::get_active_year();
+        }
+
+        if ($year_int > 0) {
+            return $wpdb->get_results($wpdb->prepare(
+                "SELECT status, COUNT(*) as count FROM $table WHERE convention_year = %d GROUP BY status",
+                $year_int
+            ), OBJECT_K);
+        }
+
+        return $wpdb->get_results(
+            "SELECT status, COUNT(*) as count FROM $table GROUP BY status",
+            OBJECT_K
+        );
     }
 
     /**

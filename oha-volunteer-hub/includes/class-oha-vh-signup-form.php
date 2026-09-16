@@ -60,7 +60,7 @@ class SignupForm {
         <div class="oha-vh oha-vh-signup">
             <div class="oha-vh-signup-header">
                 <h2><?php echo esc_html($atts['title']); ?></h2>
-                <p class="oha-vh-tagline" style="color: #ffffff !important;">Be a Haunt Hero! Help make OHA Convention 2026 unforgettable!</p>
+                <p class="oha-vh-tagline" style="color: #ffffff !important;">Be a Haunt Hero! Help make <?php echo esc_html(Settings::get('convention_name', 'OHA Convention')); ?> unforgettable!</p>
             </div>
 
             <form id="oha-volunteer-signup-form" class="oha-vh-signup-form">
@@ -540,12 +540,30 @@ class SignupForm {
             wp_send_json_error(['message' => 'Please enter a valid email address']);
         }
 
-        // Check for duplicate email
         global $wpdb;
-        $table = $wpdb->prefix . 'oha_volunteers';
-        $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $table WHERE email = %s",
+        $table       = $wpdb->prefix . 'oha_volunteers';
+        $active_year = Database::get_active_year();
+
+        // Check if this email is banned (checked across all years)
+        $is_banned = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table WHERE email = %s AND banned = 1 LIMIT 1",
             $email
+        ));
+        if ($is_banned) {
+            // Log the attempt — increment counter and timestamp on their record
+            $wpdb->query($wpdb->prepare(
+                "UPDATE $table SET ban_attempts = ban_attempts + 1, last_ban_attempt = %s WHERE email = %s AND banned = 1",
+                current_time('mysql'),
+                $email
+            ));
+            $blocked_message = Settings::get('ban_blocked_message', 'Unable to process your application. Please contact us for assistance.');
+            wp_send_json_error(['message' => $blocked_message]);
+        }
+
+        // Check for duplicate email within the same convention year
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE email = %s AND convention_year = %d",
+            $email, $active_year
         ));
 
         if ($exists) {
@@ -577,9 +595,10 @@ class SignupForm {
             'tshirt_size' => sanitize_text_field($_POST['tshirt_size'] ?? ''),
             'emergency_contact' => sanitize_text_field($_POST['emergency_contact'] ?? ''),
             'emergency_contact_attending' => sanitize_text_field($_POST['emergency_contact_attending'] ?? ''),
-            'signup_date' => current_time('mysql'),
-            'status' => 'pending',
-            'user_id' => (is_user_logged_in() && !empty($_POST['link_account'])) ? get_current_user_id() : null
+            'signup_date'     => current_time('mysql'),
+            'status'          => 'pending',
+            'convention_year' => $active_year,
+            'user_id'         => (is_user_logged_in() && !empty($_POST['link_account'])) ? get_current_user_id() : null
         ];
 
         // Insert into database
@@ -620,8 +639,8 @@ class SignupForm {
      * Uses the editable template from Volunteer Hub > Settings > Email Templates
      */
     private static function send_confirmation_email($volunteer_id, $data) {
-        $convention_name      = Settings::get('convention_name', 'OHA Convention 2026');
-        $convention_date_raw  = Settings::get('convention_date', '2026-05-09');
+        $convention_name      = Settings::get('convention_name', 'OHA Convention');
+        $convention_date_raw  = Settings::get('convention_date', '');
         $convention_date      = date('F j, Y', strtotime($convention_date_raw));
         $coordinator_email    = Settings::get('volunteer_coordinator_email', get_option('admin_email'));
 

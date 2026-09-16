@@ -68,21 +68,23 @@ class Shortcodes {
             </div>';
         }
 
-        $user_id = get_current_user_id();
-        $user_email = wp_get_current_user()->user_email;
-        
+        $user_id     = get_current_user_id();
+        $user_email  = wp_get_current_user()->user_email;
+        $active_year = Database::get_active_year();
+
         global $wpdb;
         $volunteer = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE user_id = %d OR email = %s LIMIT 1",
-            $user_id, $user_email
+            "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE (user_id = %d OR email = %s) AND convention_year = %d LIMIT 1",
+            $user_id, $user_email, $active_year
         ));
 
         if (!$volunteer) {
+            $signup_url = rtrim(get_option('oha_convention_base_url', '/convention'), '/') . '/volunteers/';
             return '<div style="text-align: center; padding: 60px 20px; background: white; border-radius: 8px;">
                 <div style="font-size: 72px; margin-bottom: 20px;">📋</div>
                 <h3>Not Registered Yet</h3>
                 <p>You haven\'t signed up as a volunteer yet!</p>
-                <p><a href="' . home_url('/convention-2026/volunteers/') . '" class="button button-primary">Sign Up Now</a></p>
+                <p><a href="' . esc_url($signup_url) . '" class="button button-primary">Sign Up Now</a></p>
             </div>';
         }
 

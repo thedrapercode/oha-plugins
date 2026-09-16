@@ -385,36 +385,40 @@ class Ajax {
             wp_send_json_error(['message' => 'First name, last name, and email are required']);
         }
         
-        // Check if email already exists
+        $active_year = Database::get_active_year();
+
+        // Board members can still manually add banned volunteers (intentional override)
+        // Check duplicate for the active convention year only
         $existing = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$table} WHERE email = %s",
-            $email
+            "SELECT id FROM {$table} WHERE email = %s AND convention_year = %d",
+            $email, $active_year
         ));
-        
+
         if ($existing) {
-            wp_send_json_error(['message' => 'A volunteer with this email already exists']);
+            wp_send_json_error(['message' => 'A volunteer with this email already exists for this convention year']);
         }
-        
+
         // Insert volunteer
         $inserted = $wpdb->insert(
             $table,
             [
-                'user_id' => $user_id ?: null,
-                'first_name' => $first_name,
-                'last_name' => $last_name,
-                'email' => $email,
-                'phone' => $phone,
-                'special_skills' => $special_skills,
-                'status' => $status,
+                'user_id'          => $user_id ?: null,
+                'first_name'       => $first_name,
+                'last_name'        => $last_name,
+                'email'            => $email,
+                'phone'            => $phone,
+                'special_skills'   => $special_skills,
+                'status'           => $status,
                 'experience_level' => 'unknown',
-                'signup_date' => current_time('mysql'),
-                'preferred_areas' => json_encode([]),
-                'availability' => 'Manually added by board member',
+                'signup_date'      => current_time('mysql'),
+                'convention_year'  => $active_year,
+                'preferred_areas'  => json_encode([]),
+                'availability'     => 'Manually added by board member',
                 'emergency_contact' => '',
-                'notes' => ''
+                'notes'            => ''
             ],
             [
-                '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'
+                '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s'
             ]
         );
         

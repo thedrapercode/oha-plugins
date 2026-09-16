@@ -374,7 +374,7 @@ class Portal {
 
                 <div class="portal-gate-header">
                     <h2>Volunteer Portal</h2>
-                    <p>OHA Convention 2026 - View your assignment and check in</p>
+                    <p><?php echo esc_html(Settings::get('convention_name', 'OHA Convention')); ?> - View your assignment and check in</p>
                 </div>
 
                 <div class="portal-gate-section">
@@ -624,13 +624,14 @@ class Portal {
         wp_enqueue_style('oha-vh');
         wp_enqueue_script('oha-vh');
 
-        // Look up volunteer by user_id OR by WP account email
-        $user_id    = get_current_user_id();
-        $user_email = wp_get_current_user()->user_email;
+        // Look up volunteer by user_id OR by WP account email, scoped to the active convention year
+        $user_id     = get_current_user_id();
+        $user_email  = wp_get_current_user()->user_email;
+        $active_year = Database::get_active_year();
         global $wpdb;
         $volunteer = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE user_id = %d OR email = %s LIMIT 1",
-            $user_id, $user_email
+            "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE (user_id = %d OR email = %s) AND convention_year = %d LIMIT 1",
+            $user_id, $user_email, $active_year
         ));
 
         if (!$volunteer) {
@@ -659,7 +660,7 @@ class Portal {
 
             <div class="portal-header">
                 <h2 style="color: #ffffff !important;">Welcome, <?php echo esc_html($volunteer->first_name); ?>!</h2>
-                <p class="portal-subtitle">Your OHA Convention 2026 Assignments</p>
+                <p class="portal-subtitle">Your <?php echo esc_html(Settings::get('convention_name', 'OHA Convention')); ?> Assignments</p>
             </div>
 
             <?php if (empty($assignments)): ?>
@@ -978,13 +979,16 @@ class Portal {
         }
 
         global $wpdb;
+        $active_year = Database::get_active_year();
         $volunteer = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE email = %s LIMIT 1",
-            $email
+            "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE email = %s AND convention_year = %d LIMIT 1",
+            $email, $active_year
         ));
 
         if (!$volunteer) {
-            wp_send_json_error(['message' => 'No volunteer record found for that email address. Please double-check your spelling, or <a href="/convention-2026/volunteers/">sign up here</a> if you haven\'t yet.']);
+            $convention_name = Settings::get('convention_name', 'OHA Convention');
+            $signup_url      = rtrim(get_option('oha_convention_base_url', '/convention'), '/') . '/volunteers/';
+            wp_send_json_error(['message' => 'No volunteer record found for that email address for ' . esc_html($convention_name) . '. Please double-check your spelling, or <a href="' . esc_url($signup_url) . '">sign up here</a> if you haven\'t yet.']);
         }
 
         $assignments       = Database::get_assignments_by_volunteer($volunteer->id);

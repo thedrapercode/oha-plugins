@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Volunteer Hub",
-    "version":  "4.12.1",
+    "version":  "4.15.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -288,6 +288,34 @@
                         "type":  "fix",
                         "summary":  "Replace hardcoded /convention/2026-convention/volunteers/volunteer-handbook/ with oha_convention_base_url-derived URL",
                         "notes":  "Two locations updated: class-oha-vh-signup-form.php (perks section of signup form) and class-oha-vh-portal.php (Important Resources box in portal). Both now read rtrim(get_option(oha_convention_base_url, /convention), /) . /volunteers/volunteer-handbook/. No other 2026-convention references exist in this plugin."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "4.15.1",
+                        "type":  "feature",
+                        "summary":  "Multi-year support: convention_year column, year-scoped queries, 2027-ready defaults",
+                        "notes":  "v4.13.0. Database::get_active_year() reads convention_date setting. All volunteer queries default to active year. Signup duplicate check is year-scoped. Hardcoded 2026 strings removed from user-facing output."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "4.15.1",
+                        "type":  "feature",
+                        "summary":  "No-show tracking and permanent volunteer ban system",
+                        "notes":  "v4.14.0. no_show status + banned/ban_attempts/last_ban_attempt columns on wp_oha_volunteers. mark_no_show, toggle_ban, bulk_mark_no_show AJAX handlers. Signup form checks ban before duplicate check. DB_VERSION 4.14.0."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "4.15.1",
+                        "type":  "feature",
+                        "summary":  "Ban attempt logging, editable block message, and ban attempt display in admin",
+                        "notes":  "v4.15.0. Increments ban_attempts and last_ban_attempt on blocked signup. ban_blocked_message setting in admin. Ban Attempts row in expanded volunteer details. DB_VERSION 4.15.0."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "4.15.1",
+                        "type":  "feature",
+                        "summary":  "Year filter dropdown added to board hub volunteers tab",
+                        "notes":  "v4.15.1. vh_year GET param. Active year default. Year preserved when changing status or search filters. Banned pseudo-filter still ignores year. No DB change."
                     }
                 ]
 }

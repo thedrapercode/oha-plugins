@@ -44,6 +44,11 @@ class Board {
         add_action('wp_ajax_oha_vh_remove_assignment', [__CLASS__, 'remove_assignment']);
         add_action('wp_ajax_oha_vh_update_assignment_area', [__CLASS__, 'update_assignment_area']);
 
+        // No-show and ban actions
+        add_action('wp_ajax_oha_vh_mark_no_show',      [__CLASS__, 'mark_no_show']);
+        add_action('wp_ajax_oha_vh_toggle_ban',        [__CLASS__, 'toggle_ban']);
+        add_action('wp_ajax_oha_vh_bulk_mark_no_show', [__CLASS__, 'bulk_mark_no_show']);
+
         // Export action
         add_action('admin_post_oha_vh_export_volunteers', [__CLASS__, 'export_volunteers']);
     }
@@ -227,6 +232,107 @@ class Board {
         } else {
             wp_send_json_error(['message' => 'Failed to reject volunteer']);
         }
+    }
+
+    /**
+     * Mark a single volunteer as no-show (status → no_show)
+     */
+    public static function mark_no_show() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        $volunteer_id = absint($_POST['volunteer_id'] ?? 0);
+        if (!$volunteer_id) {
+            wp_send_json_error(['message' => 'Invalid volunteer ID']);
+        }
+
+        $result = Database::update_volunteer($volunteer_id, ['status' => 'no_show']);
+        if ($result === false) {
+            wp_send_json_error(['message' => 'Failed to update status']);
+        }
+
+        wp_send_json_success(['message' => 'Marked as no-show']);
+    }
+
+    /**
+     * Toggle the banned flag on a volunteer (cross-year block).
+     * Returns the new banned state so the UI can update without a reload.
+     */
+    public static function toggle_ban() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        $volunteer_id = absint($_POST['volunteer_id'] ?? 0);
+        if (!$volunteer_id) {
+            wp_send_json_error(['message' => 'Invalid volunteer ID']);
+        }
+
+        $volunteer = Database::get_volunteer($volunteer_id);
+        if (!$volunteer) {
+            wp_send_json_error(['message' => 'Volunteer not found']);
+        }
+
+        $new_banned = $volunteer->banned ? 0 : 1;
+        $result = Database::update_volunteer($volunteer_id, ['banned' => $new_banned]);
+        if ($result === false) {
+            wp_send_json_error(['message' => 'Failed to update ban status']);
+        }
+
+        wp_send_json_success([
+            'banned'  => $new_banned,
+            'message' => $new_banned ? 'Volunteer banned from future signups' : 'Ban removed',
+        ]);
+    }
+
+    /**
+     * Bulk mark no-shows: sets status = no_show on every volunteer who is
+     * assigned for the active year but has not checked in to any assignment.
+     * Returns the count of records updated.
+     */
+    public static function bulk_mark_no_show() {
+        check_ajax_referer('oha_vh_board', 'nonce');
+        if (!Core::can_manage()) {
+            wp_send_json_error(['message' => 'Access denied']);
+        }
+
+        global $wpdb;
+        $tv = $wpdb->prefix . 'oha_volunteers';
+        $ta = $wpdb->prefix . 'oha_volunteer_assignments';
+        $active_year = Database::get_active_year();
+
+        // Find all assigned volunteers for the active year who never checked in
+        $ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT v.id
+             FROM {$tv} v
+             WHERE v.status = 'assigned'
+               AND v.convention_year = %d
+               AND NOT EXISTS (
+                   SELECT 1 FROM {$ta} a
+                   WHERE a.volunteer_id = v.id AND a.checked_in = 1
+               )",
+            $active_year
+        ));
+
+        if (empty($ids)) {
+            wp_send_json_success(['count' => 0, 'message' => 'No unchecked-in assigned volunteers found.']);
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        $updated = $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$tv} SET status = 'no_show' WHERE id IN ($placeholders)",
+                ...$ids
+            )
+        );
+
+        wp_send_json_success([
+            'count'   => $updated,
+            'message' => $updated . ' volunteer(s) marked as no-show.',
+        ]);
     }
 
     /**
@@ -596,16 +702,16 @@ class Board {
         $area_id = isset($_POST['area_id']) ? intval($_POST['area_id']) : 0;
         $fields = isset($_POST['fields']) ? array_map('sanitize_text_field', $_POST['fields']) : ['basic'];
 
-        // Build query
-        $args = ['limit' => 10000];
-        
+        // Build query — always scoped to the active convention year
+        $active_year = Database::get_active_year();
+        $args = ['limit' => 10000]; // year defaults to -1 (active year) in get_volunteers()
+
         if (!in_array('all', $statuses) && !empty($statuses)) {
-            // Multiple statuses
             global $wpdb;
             $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
             $volunteers = $wpdb->get_results($wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE status IN ($placeholders) ORDER BY signup_date DESC",
-                ...$statuses
+                "SELECT * FROM {$wpdb->prefix}oha_volunteers WHERE status IN ($placeholders) AND convention_year = %d ORDER BY signup_date DESC",
+                ...[...$statuses, $active_year]
             ));
         } else {
             $volunteers = Database::get_volunteers($args);

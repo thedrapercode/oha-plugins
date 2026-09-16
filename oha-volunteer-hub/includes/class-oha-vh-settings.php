@@ -107,8 +107,8 @@ class Settings {
             'approval_body' => self::get_default_approval_email(),
 
             // Convention Info
-            'convention_date' => '2026-05-09',
-            'convention_name' => 'OHA Convention 2026',
+            'convention_date' => '2027-05-08',
+            'convention_name' => 'OHA Convention 2027',
             'convention_location' => 'To Be Announced',
             'volunteer_coordinator_email' => get_option('admin_email'),
             'volunteer_coordinator_phone' => '',
@@ -129,7 +129,8 @@ class Settings {
 
             // Applications
             'signup_closed'          => '0',
-            'signup_closed_message'  => 'Volunteer applications for OHA Convention 2026 are now closed. Thank you for your interest - please keep us in mind for 2027!',
+            'signup_closed_message'  => 'Volunteer applications are currently closed. Thank you for your interest - watch for announcements about the next convention!',
+            'ban_blocked_message'    => 'Unable to process your application. Please contact us for assistance.',
         ];
     }
 
@@ -186,6 +187,11 @@ class Settings {
         // Applications closed message (plain text)
         if (isset($input['signup_closed_message'])) {
             $sanitized['signup_closed_message'] = sanitize_textarea_field($input['signup_closed_message']);
+        }
+
+        // Ban blocked message (plain text)
+        if (isset($input['ban_blocked_message'])) {
+            $sanitized['ban_blocked_message'] = sanitize_textarea_field($input['ban_blocked_message']);
         }
 
         return $sanitized;
@@ -557,6 +563,13 @@ class Settings {
                             <td>
                                 <textarea id="signup_closed_message" name="oha_vh_settings[signup_closed_message]" rows="3" class="large-text"><?php echo esc_textarea($settings['signup_closed_message'] ?? ''); ?></textarea>
                                 <p class="description">Displayed on the signup page when applications are closed. Shown only when the toggle above is checked.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><label for="ban_blocked_message">Banned Applicant Message</label></th>
+                            <td>
+                                <textarea id="ban_blocked_message" name="oha_vh_settings[ban_blocked_message]" rows="2" class="large-text"><?php echo esc_textarea($settings['ban_blocked_message'] ?? 'Unable to process your application. Please contact us for assistance.'); ?></textarea>
+                                <p class="description">Shown on the signup form when a banned person tries to apply. Keep this vague - do not reveal that they are banned. Each attempt is logged on their volunteer record.</p>
                             </td>
                         </tr>
                         <tr>
