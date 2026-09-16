@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.6.0",
+    "version":  "1.6.1",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -364,6 +364,13 @@
                         "type":  "feature",
                         "summary":  "Zoom API sync suite: host key sync, reschedule sync, cancel/trash delete, recording fetch",
                         "notes":  "Requires user:read:admin scope on Zoom app for host key sync. New settings toggles for auto-reschedule, auto-cancel-delete, auto-trash-delete. New post meta: oha_ve_zoom_synced_start, oha_ve_zoom_synced_at."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.6.1",
+                        "type":  "fix",
+                        "summary":  "Replace the_content filter with direct action hook to eliminate duplicate events on haunt listing pages",
+                        "notes":  "display_events_on_place_page removed from the_content filter. New render_place_events method hooked to oha_place_page_events action. Haunt listing display template calls do_action(oha_place_page_events, listing_id) after the About section. Removed empty-events placeholder (Seasonal Attraction fallback text) - nothing renders when no events exist."
                     }
                 ]
 }

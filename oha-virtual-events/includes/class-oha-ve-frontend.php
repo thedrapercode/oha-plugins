@@ -32,7 +32,7 @@ class OHA_VE_Frontend {
 
     public function __construct() {
         add_filter( 'the_content', [ $this, 'display_virtual_event' ],    20 );
-        add_filter( 'the_content', [ $this, 'display_events_on_place_page' ], 30 );
+        add_action( 'oha_place_page_events', [ $this, 'render_place_events' ] );
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_styles' ] );
         add_action( 'rest_api_init',      [ $this, 'register_rest_routes' ] );
     }
@@ -506,23 +506,17 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
 
     // =========================================================
     // 2. PLACE EVENTS LIST - gd_place single pages
-    //    Replaces the gd_show_events_on_place_page snippet.
-    //    Logic preserved exactly from the original snippet.
+    //    Called via do_action('oha_place_page_events', $place_id)
+    //    from the haunt listing display template (main-content.php).
+    //    Using a direct action avoids the_content double-fire issue
+    //    caused by GeoDirectory's nested template override.
     // =========================================================
 
-    public function display_events_on_place_page( $content ) {
+    public function render_place_events( $place_id ) {
 
-        if ( ! is_singular( 'gd_place' ) ) {
-            return $content;
-        }
-
-        // Skip if old snippet is still running (admin notice already shown).
         if ( function_exists( 'gd_show_events_on_place_page' ) ) {
-            return $content;
+            return;
         }
-
-        global $post;
-        $place_id = $post->ID;
 
         $events = get_posts( [
             'post_type'      => 'gd_event',
@@ -534,12 +528,10 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
         ] );
 
         if ( empty( $events ) ) {
-            return $content
-                . '<h3>Upcoming Events</h3>'
-                . '<p>&#127875; <strong>Seasonal Attraction</strong> - Open Select Nights</p>';
+            return;
         }
 
-        $event_list = '<br><h3>Upcoming Events</h3><ul>';
+        echo '<h3>Upcoming Events</h3><ul>';
 
         foreach ( $events as $event ) {
             $start_raw = get_post_meta( $event->ID, 'date_time', true );
@@ -558,17 +550,15 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
                 $event_datetime = 'Date/Time TBD';
             }
 
-            $event_list .= sprintf(
+            printf(
                 '<li><a href="%s">%s</a> &ndash; %s</li>',
-                get_permalink( $event->ID ),
+                esc_url( get_permalink( $event->ID ) ),
                 esc_html( $event->post_title ),
                 esc_html( $event_datetime )
             );
         }
 
-        $event_list .= '</ul><br>';
-
-        return $content . $event_list;
+        echo '</ul>';
     }
 
     // =========================================================
