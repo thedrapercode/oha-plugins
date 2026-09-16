@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.14.0",
+    "version":  "2.15.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -645,6 +645,13 @@
                         "type":  "feature",
                         "summary":  "Change history sub-rows in haunt discounts admin table with toggle button",
                         "notes":  "_oha_disc_history meta key stores up to 10 entries (date, user, status, rate, message, source). History button reveals hidden sub-row inline. Read-only display."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.15.0",
+                        "type":  "feature",
+                        "summary":  "Promo Code and Private Link columns added to haunt discounts admin table",
+                        "notes":  "New meta keys _oha_disc_promo_code and _oha_disc_private_link. Both inline-editable via existing single-row REST endpoint. Added to allowlist in switch-case. History colspan updated from 10 to 12."
                     }
                 ]
 }

@@ -271,19 +271,23 @@ if ($sort === 'active') {
                     <th>Start</th>
                     <th>End</th>
                     <th>Link</th>
+                    <th>Promo Code</th>
+                    <th>Private Link</th>
                     <th>Colors</th>
                     <th>Actions</th>
                 </tr></thead>
                 <tbody>
                 <?php if ($q->have_posts()): while ($q->have_posts()): $q->the_post(); $pid=get_the_ID();
-                    $disc_active = get_post_meta($pid,'_oha_disc_active',true)==='1'?'1':'0';
-                    $rate = get_post_meta($pid,'_oha_disc_rate',true);
-                    $message = get_post_meta($pid,'_oha_disc_message',true);
-                    $link = get_post_meta($pid,'_oha_disc_link',true);
-                    $start = get_post_meta($pid,'_oha_disc_start',true);
-                    $end = get_post_meta($pid,'_oha_disc_end',true);
-                    $bg = get_post_meta($pid,'_oha_disc_bg',true) ?: '#111111';
-                    $color = get_post_meta($pid,'_oha_disc_color',true) ?: '#ffffff';
+                    $disc_active  = get_post_meta($pid,'_oha_disc_active',true)==='1'?'1':'0';
+                    $rate         = get_post_meta($pid,'_oha_disc_rate',true);
+                    $message      = get_post_meta($pid,'_oha_disc_message',true);
+                    $link         = get_post_meta($pid,'_oha_disc_link',true);
+                    $start        = get_post_meta($pid,'_oha_disc_start',true);
+                    $end          = get_post_meta($pid,'_oha_disc_end',true);
+                    $promo_code   = get_post_meta($pid,'_oha_disc_promo_code',true);
+                    $private_link = get_post_meta($pid,'_oha_disc_private_link',true);
+                    $bg           = get_post_meta($pid,'_oha_disc_bg',true) ?: '#111111';
+                    $color        = get_post_meta($pid,'_oha_disc_color',true) ?: '#ffffff';
                 ?>
                     <?php
                         $history = get_post_meta($pid, '_oha_disc_history', true);
@@ -304,6 +308,8 @@ if ($sort === 'active') {
                         <td><input type="date" class="oha-field" data-k="_oha_disc_start" value="<?php echo esc_attr($start); ?>"></td>
                         <td><input type="date" class="oha-field" data-k="_oha_disc_end" value="<?php echo esc_attr($end); ?>"></td>
                         <td><input type="url" class="oha-field" data-k="_oha_disc_link" value="<?php echo esc_attr($link); ?>" placeholder="https://"></td>
+                        <td><input type="text" class="oha-field" data-k="_oha_disc_promo_code" value="<?php echo esc_attr($promo_code); ?>" placeholder="PROMO25" style="width:110px" title="Members-only promo code"></td>
+                        <td><input type="url" class="oha-field" data-k="_oha_disc_private_link" value="<?php echo esc_attr($private_link); ?>" placeholder="https://" style="width:140px" title="Members-only private link"></td>
                         <td>
                             <input type="text" class="oha-field" data-k="_oha_disc_bg" value="<?php echo esc_attr($bg); ?>" style="width:90px" title="Background">
                             <input type="text" class="oha-field" data-k="_oha_disc_color" value="<?php echo esc_attr($color); ?>" style="width:90px" title="Text color">
@@ -317,7 +323,7 @@ if ($sort === 'active') {
                     </tr>
                     <?php if (!empty($history)): ?>
                     <tr id="<?php echo esc_attr($hist_id); ?>" class="oha-hist-row" style="display:none;">
-                        <td colspan="10" style="padding:10px 14px;background:#f0f0f0;">
+                        <td colspan="12" style="padding:10px 14px;background:#f0f0f0;">
                             <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;">Change History</strong>
                             <table style="margin-top:8px;width:100%;font-size:12px;border-collapse:collapse;">
                                 <thead><tr style="text-align:left;border-bottom:1px solid #ccc;">
@@ -678,6 +684,7 @@ public static function register_rest() {
                 switch($key){
                     case '_oha_disc_active': $val = $val==='1'?'1':'0'; break;
                     case '_oha_disc_rate':
+                    case '_oha_disc_promo_code':
                     case '_oha_disc_bg':
                     case '_oha_disc_color':
                     case '_oha_disc_start':
@@ -686,6 +693,7 @@ public static function register_rest() {
                     case '_oha_disc_message':
                         $val = wp_kses_post($val); break;
                     case '_oha_disc_link':
+                    case '_oha_disc_private_link':
                         $val = esc_url_raw($val); break;
                     default: return new WP_Error('bad_key','Invalid key',array('status'=>400));
                 }
