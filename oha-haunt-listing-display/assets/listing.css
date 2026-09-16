@@ -1153,6 +1153,113 @@
     line-height: 1.4;
 }
 
+.oha-listing-wrap .oha-discount-notice__members {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 20px;
+    border-top: 1px solid rgba(139, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.15);
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 13px;
+    color: var(--oha-text);
+}
+
+.oha-listing-wrap .oha-discount-notice__lock {
+    fill: var(--oha-gold);
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-discount-notice__members-label {
+    font-weight: 700;
+    color: var(--oha-gold);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.oha-listing-wrap .oha-discount-notice__promo-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.oha-listing-wrap .oha-discount-notice__promo-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 8px;
+    user-select: all;
+}
+
+.oha-listing-wrap .oha-discount-notice__copy {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+.oha-listing-wrap .oha-discount-notice__copy:hover,
+.oha-listing-wrap .oha-discount-notice__copy:focus {
+    border-color: var(--oha-gold);
+    color: var(--oha-gold);
+}
+.oha-listing-wrap .oha-discount-notice__copy.is-copied {
+    border-color: #2a9a4a;
+    color: #2a9a4a;
+}
+
+.oha-listing-wrap .oha-discount-notice__private-link {
+    display: inline-block;
+    background: var(--oha-primary, #ad3119);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+.oha-listing-wrap .oha-discount-notice__private-link:hover {
+    background: #c03820;
+    color: #fff;
+}
+
+.oha-listing-wrap .oha-discount-notice__teaser {
+    color: rgba(246, 232, 228, 0.7);
+    font-style: italic;
+}
+
+.oha-listing-wrap .oha-discount-notice__join-link {
+    display: inline-block;
+    border: 1px solid var(--oha-gold);
+    color: var(--oha-gold);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+.oha-listing-wrap .oha-discount-notice__join-link:hover {
+    background: var(--oha-gold);
+    color: #000;
+}
+
 /* ── Unclaimed state ─────────────────────────────────────────────────────── */
 .oha-listing-wrap.oha-unclaimed .oha-hero {
     background-image: none !important;

@@ -65,13 +65,15 @@ class OHA_HLD_GD_Form {
         $is_admin  = current_user_can( 'manage_options' ) || current_user_can( 'manage_oha_members' );
         if ( ! $is_owner && ! $is_admin ) return;
 
-        $active  = get_post_meta( $post_id, '_oha_disc_active',  true );
-        $rate    = get_post_meta( $post_id, '_oha_disc_rate',    true );
-        $message = get_post_meta( $post_id, '_oha_disc_message', true );
-        $link    = get_post_meta( $post_id, '_oha_disc_link',    true );
-        $start   = get_post_meta( $post_id, '_oha_disc_start',   true );
-        $end     = get_post_meta( $post_id, '_oha_disc_end',     true );
-        $history = get_post_meta( $post_id, '_oha_disc_history', true );
+        $active       = get_post_meta( $post_id, '_oha_disc_active',       true );
+        $rate         = get_post_meta( $post_id, '_oha_disc_rate',         true );
+        $message      = get_post_meta( $post_id, '_oha_disc_message',      true );
+        $link         = get_post_meta( $post_id, '_oha_disc_link',         true );
+        $start        = get_post_meta( $post_id, '_oha_disc_start',        true );
+        $end          = get_post_meta( $post_id, '_oha_disc_end',          true );
+        $promo_code   = get_post_meta( $post_id, '_oha_disc_promo_code',   true );
+        $private_link = get_post_meta( $post_id, '_oha_disc_private_link', true );
+        $history      = get_post_meta( $post_id, '_oha_disc_history',      true );
         if ( ! is_array( $history ) ) $history = [];
 
         $nonce = wp_create_nonce( 'oha_disc_frontend_save' );
@@ -142,6 +144,28 @@ class OHA_HLD_GD_Form {
                 </div>
             </div>
 
+            <!-- Members-only fields: full width -->
+            <div class="mb-3 row oha-span-2" style="border-top:1px solid rgba(255,255,255,.08);padding-top:14px;margin-top:6px;">
+                <label for="oha_disc_promo_f" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.7;">Members-Only Access</label>
+                <div style="font-size:12px;opacity:.55;margin-bottom:6px;">Promo codes and private links are visible only to logged-in OHA paid members.</div>
+            </div>
+
+            <div class="mb-3 row">
+                <label for="oha_disc_promo_f">Promo Code</label>
+                <div class="col-sm-10">
+                    <input type="text" id="oha_disc_promo_f" name="oha_disc_promo_code" class="form-control"
+                           value="<?php echo esc_attr( $promo_code ); ?>" placeholder="e.g. OHASPOOK25">
+                </div>
+            </div>
+
+            <div class="mb-3 row">
+                <label for="oha_disc_private_link_f">Private Link</label>
+                <div class="col-sm-10">
+                    <input type="url" id="oha_disc_private_link_f" name="oha_disc_private_link" class="form-control"
+                           value="<?php echo esc_attr( $private_link ); ?>" placeholder="https://">
+                </div>
+            </div>
+
             <?php if ( ! empty( $history ) ) : ?>
             <!-- History: full width, last 5 entries -->
             <div class="mb-3 row oha-span-2">
@@ -193,19 +217,23 @@ class OHA_HLD_GD_Form {
         $old_message = get_post_meta( $post_id, '_oha_disc_message', true );
 
         // Sanitise + save
-        $active  = ! empty( $_POST['oha_disc_active'] ) ? '1' : '0';
-        $rate    = sanitize_text_field( wp_unslash( $_POST['oha_disc_rate']    ?? '' ) );
-        $message = sanitize_text_field( wp_unslash( $_POST['oha_disc_message'] ?? '' ) );
-        $link    = esc_url_raw( wp_unslash( $_POST['oha_disc_link']   ?? '' ) );
-        $start   = sanitize_text_field( wp_unslash( $_POST['oha_disc_start']   ?? '' ) );
-        $end     = sanitize_text_field( wp_unslash( $_POST['oha_disc_end']     ?? '' ) );
+        $active       = ! empty( $_POST['oha_disc_active'] ) ? '1' : '0';
+        $rate         = sanitize_text_field( wp_unslash( $_POST['oha_disc_rate']         ?? '' ) );
+        $message      = sanitize_text_field( wp_unslash( $_POST['oha_disc_message']      ?? '' ) );
+        $link         = esc_url_raw( wp_unslash( $_POST['oha_disc_link']                 ?? '' ) );
+        $start        = sanitize_text_field( wp_unslash( $_POST['oha_disc_start']        ?? '' ) );
+        $end          = sanitize_text_field( wp_unslash( $_POST['oha_disc_end']          ?? '' ) );
+        $promo_code   = sanitize_text_field( wp_unslash( $_POST['oha_disc_promo_code']   ?? '' ) );
+        $private_link = esc_url_raw( wp_unslash( $_POST['oha_disc_private_link']         ?? '' ) );
 
-        update_post_meta( $post_id, '_oha_disc_active',  $active );
-        update_post_meta( $post_id, '_oha_disc_rate',    $rate );
-        update_post_meta( $post_id, '_oha_disc_message', $message );
-        update_post_meta( $post_id, '_oha_disc_link',    $link );
-        update_post_meta( $post_id, '_oha_disc_start',   $start );
-        update_post_meta( $post_id, '_oha_disc_end',     $end );
+        update_post_meta( $post_id, '_oha_disc_active',       $active );
+        update_post_meta( $post_id, '_oha_disc_rate',         $rate );
+        update_post_meta( $post_id, '_oha_disc_message',      $message );
+        update_post_meta( $post_id, '_oha_disc_link',         $link );
+        update_post_meta( $post_id, '_oha_disc_start',        $start );
+        update_post_meta( $post_id, '_oha_disc_end',          $end );
+        update_post_meta( $post_id, '_oha_disc_promo_code',   $promo_code );
+        update_post_meta( $post_id, '_oha_disc_private_link', $private_link );
 
         // Fire existing Board Hub hooks so featured-sync etc. stay in sync
         do_action( $active === '1' ? 'oha_discount_activated' : 'oha_discount_deactivated', $post_id );

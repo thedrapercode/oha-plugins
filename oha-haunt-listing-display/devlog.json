@@ -1,225 +1,246 @@
 {
-    "plugin": "oha-haunt-listing-display",
-    "version": "1.7.0",
-    "entries": [
-        {
-            "date": "2026-09-16",
-            "version": "1.7.0",
-            "type": "feature",
-            "summary": "Migrated GD edit form CSS/JS overlay from Code Snippets into class-oha-hld-gd-form.php",
-            "notes": "Snippet oha-gd-single-form-ui must be DEACTIVATED after this update. Enqueue at priority 99 on is_gd_form_page() only."
-        },
-        {
-            "date": "2026-09-16",
-            "version": "1.7.0",
-            "type": "feature",
-            "summary": "Haunt owner discount edit section on GD frontend listing form",
-            "notes": "Owner or admin only. Fields: active, rate, message, link, start, end. Injected via wp_footer priority 5 then moved into form by JS before fieldset processing so collapsible behavior applies automatically. Nonce: oha_disc_frontend_save."
-        },
-        {
-            "date": "2026-09-16",
-            "version": "1.7.0",
-            "type": "feature",
-            "summary": "Discount change history logging and board email notification on frontend save",
-            "notes": "_oha_disc_history meta: max 10 entries, records date/user/status/rate/message/source. Board notified via wp_mail to claim_email_recipients option or admin_email fallback."
-        },
-        {
-            "date": "2026-03-09",
-            "version": "1.6.0",
-            "type": "feature",
-            "summary": "Utilities tab: absorbed gd-core-autocomplete-enhancer and gd-place-count-extended into HLD",
-            "notes": "Deactivate gd-core-autocomplete-enhancer and gd-place-count-extended once this version is active. Settings: enable_autocomplete, enable_place_count stored in oha_hld_settings."
-        },
-        {
-            "date": "2026-03-09",
-            "version": "1.6.0",
-            "type": "fix",
-            "summary": "Standalone autocomplete had unregistered gd_autocomplete_locations AJAX action - now correctly registered",
-            "notes": "Silent bug in the original gd-core-autocomplete-enhancer plugin - both keyword and location handlers now registered in HLD."
-        },
-        {
-            "date": "2026-03-09",
-            "version": "1.6.0",
-            "type": "feature",
-            "summary": "Discount/Deal admin meta box fields on gd_place edit screens (_oha_disc_* keys)",
-            "notes": "Fields: active, rate, message, link, start, end, bg, color. Same meta keys read by [oha_discounts] shortcode. Admins can manage discount data from listing edit screen."
-        },
-        {
-            "date": "2026-03-09",
-            "version": "1.6.0",
-            "type": "change",
-            "summary": "Added Requires Plugins: geodirectory to plugin header (WP 6.5+ dependency declaration)",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.5.2",
-            "type": "feature",
-            "summary": "oha-home-haunt-hub integration: Hub listings display through HLD template with oha_hh_* meta fallbacks",
-            "notes": "Mapped: scare_level->fear_level, age_rec->age_restriction, years_running, scene_count, facebook, email, style[]->features. Hub-exclusive: operating_nights, public_visitors, visitor_range_label, builders_notes. No Hub plugin changes required."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.5.1",
-            "type": "fix",
-            "summary": "Business hours not showing: geodir_get_business_hours() keys are full day names, not abbreviations",
-            "notes": "API returns ['days']['Monday'...] with 'closed' bool + 'slots'[]['range'] (pre-formatted string). Completely rewrote sidebar rendering to match actual API."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.5.1",
-            "type": "change",
-            "summary": "Email anti-spam: reveal-on-click button replaces plain mailto link in sidebar info card",
-            "notes": "Email split at @ into data-u / data-d attributes. JS assembles mailto on first click. No full address in HTML source."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.5.0",
-            "type": "feature",
-            "summary": "GD email and business_hours fields displayed in sidebar (email row + weekly hours table)",
-            "notes": "Today's hours row highlighted dark-red. Times formatted 12-hour. haunt_theme field now rendered as Theme row above Phone."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.1",
-            "type": "fix",
-            "summary": "Video oEmbed not rendering for plain YouTube/Vimeo URLs",
-            "notes": "Replaced wp_embed->autoembed() with wp_oembed_get() as primary, autoembed with post_ID as secondary, wp_kses_post for raw iframe. Regex guard prevents oEmbed on non-URL strings."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.0",
-            "type": "fix",
-            "summary": "Gallery thumbnails blurry: changed from medium (300px) to large src for background-image",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.0",
-            "type": "feature",
-            "summary": "Lightbox CSS added; image preloader with loading state; touch/swipe mobile navigation",
-            "notes": "Swipe threshold 40px, horizontal-only."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.0",
-            "type": "feature",
-            "summary": "Video section: reads GD video field, converts YouTube/Vimeo via oEmbed, 16:9 responsive wrapper",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.0",
-            "type": "feature",
-            "summary": "_oha_hld_override_claimed meta: suppresses unclaimed display state from WP admin meta box",
-            "notes": "Shown in admin info panel as 'Owner-managed (admin override)' status."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.0",
-            "type": "change",
-            "summary": "Admin info panel: added Edit (Frontend) and Edit (WP Admin) buttons",
-            "notes": "Frontend edit uses GD gd_action=edit_post URL."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.4.0",
-            "type": "feature",
-            "summary": "Field Reference tab in admin: all GD custom fields for gd_place with live value preview by post ID",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.3.0",
-            "type": "change",
-            "summary": "Nearby haunts: featured-only, haversine distance sort, distance badge. Section renamed to Featured Haunts Nearby.",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.3.0",
-            "type": "change",
-            "summary": "Full Track B field reads: 20+ GD custom fields, discount meta, is_display_unclaimed flag, gallery fix",
-            "notes": "Discount meta: _oha_disc_*. Gallery now shows all images, not just 2+. is_display_unclaimed: author=3 && !claimed."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.3.0",
-            "type": "change",
-            "summary": "Hero badges, unclaimed state, fear level pill, haunt type pill; main-content features, stats, visitor tips, recruiting",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.2.0",
-            "type": "fix",
-            "summary": "Claim section replaced button_html() with section_html(): full context-aware rendering for all owner states",
-            "notes": "States: admin info panel, author You Own This, real-user claimed hidden, unclaimed claim prompt."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.1.0",
-            "type": "feature",
-            "summary": "Admin settings page with Display and Claim tabs under GeoDirectory > OHA Listing Display",
-            "notes": ""
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.1.0",
-            "type": "feature",
-            "summary": "Integrated claim workflow: hidden CPT, AJAX submit, approve/reject, email notifications, pending count badge",
-            "notes": "Compatible with gd-claim-via-reports meta keys. Deactivate gd-claim-via-reports when using HLD."
-        },
-        {
-            "date": "2026-01-01",
-            "version": "1.0.0",
-            "type": "feature",
-            "summary": "Initial plugin: GD single listing template override with hero, 2-col layout, gallery, nearby, OHA dark theme CSS",
-            "notes": "Template: content-single.php + partials. Override via geodir_overwrite_single_template_content filter."
-        }
-    ],
-    "admin_settings": {
-        "option_key": "oha_hld_settings",
-        "tabs": [
-            "Display Settings: feature toggles (claim, report, gallery, nearby, mobile bar), nearby count",
-            "Claim Settings: heading/body/button text, email from/recipients, submit email, approval email",
-            "Pending Claims: approve/reject queue with pending count badge",
-            "Field Reference: all GD custom fields for gd_place, with live value preview by post ID",
-            "Utilities: enable_autocomplete (search autocomplete), enable_place_count ([gd_place_count] shortcode)"
-        ]
-    },
-    "claim_integration": {
-        "cpt": "oha_hld_claim",
-        "meta_keys_on_claim": ["_oha_hld_listing_id", "_oha_hld_claimant", "_oha_hld_message"],
-        "meta_keys_on_listing": ["_gd_claimed", "_gd_claimed_by"],
-        "ajax_action": "oha_hld_claim_submit",
-        "nonce": "oha_hld_claim_nonce_action"
-    },
-    "v1.0.0_audit_corrections": [
-        {
-            "item": "Template override filter name",
-            "correct_value": "geodir_overwrite_single_template_content (3 args: $overwrite, $content, $page_id)",
-            "source": "geodirectory/includes/class-geodir-template-loader.php:531"
-        },
-        {
-            "item": "Rating count function",
-            "correct_value": "geodir_get_review_count_total()",
-            "source": "geodirectory/includes/comments-functions.php:128"
-        },
-        {
-            "item": "Image URL access",
-            "correct_value": "geodir_get_image_src( $image_obj, 'large' ) - no ->src property exists",
-            "source": "geodirectory/includes/image-functions.php:44"
-        },
-        {
-            "item": "Multiselect separator",
-            "correct_value": "Comma , separator (confirmed from implode(\",\",$value) in save logic)",
-            "source": "geodirectory/includes/admin/settings/class-geodir-settings-cpt-cf.php:1866"
-        },
-        {
-            "item": "Custom field data access",
-            "correct_value": "$gd = geodir_get_post_info($listing_id); then $gd->haunt_features",
-            "source": "geodirectory/includes/post-functions.php:61"
-        }
-    ]
+    "plugin":  "oha-haunt-listing-display",
+    "version":  "1.8.0",
+    "entries":  [
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Migrated GD edit form CSS/JS overlay from Code Snippets into class-oha-hld-gd-form.php",
+                        "notes":  "Snippet oha-gd-single-form-ui must be DEACTIVATED after this update. Enqueue at priority 99 on is_gd_form_page() only."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Haunt owner discount edit section on GD frontend listing form",
+                        "notes":  "Owner or admin only. Fields: active, rate, message, link, start, end. Injected via wp_footer priority 5 then moved into form by JS before fieldset processing so collapsible behavior applies automatically. Nonce: oha_disc_frontend_save."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Discount change history logging and board email notification on frontend save",
+                        "notes":  "_oha_disc_history meta: max 10 entries, records date/user/status/rate/message/source. Board notified via wp_mail to claim_email_recipients option or admin_email fallback."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.6.0",
+                        "type":  "feature",
+                        "summary":  "Utilities tab: absorbed gd-core-autocomplete-enhancer and gd-place-count-extended into HLD",
+                        "notes":  "Deactivate gd-core-autocomplete-enhancer and gd-place-count-extended once this version is active. Settings: enable_autocomplete, enable_place_count stored in oha_hld_settings."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.6.0",
+                        "type":  "fix",
+                        "summary":  "Standalone autocomplete had unregistered gd_autocomplete_locations AJAX action - now correctly registered",
+                        "notes":  "Silent bug in the original gd-core-autocomplete-enhancer plugin - both keyword and location handlers now registered in HLD."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.6.0",
+                        "type":  "feature",
+                        "summary":  "Discount/Deal admin meta box fields on gd_place edit screens (_oha_disc_* keys)",
+                        "notes":  "Fields: active, rate, message, link, start, end, bg, color. Same meta keys read by [oha_discounts] shortcode. Admins can manage discount data from listing edit screen."
+                    },
+                    {
+                        "date":  "2026-03-09",
+                        "version":  "1.6.0",
+                        "type":  "change",
+                        "summary":  "Added Requires Plugins: geodirectory to plugin header (WP 6.5+ dependency declaration)",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.5.2",
+                        "type":  "feature",
+                        "summary":  "oha-home-haunt-hub integration: Hub listings display through HLD template with oha_hh_* meta fallbacks",
+                        "notes":  "Mapped: scare_level-\u003efear_level, age_rec-\u003eage_restriction, years_running, scene_count, facebook, email, style[]-\u003efeatures. Hub-exclusive: operating_nights, public_visitors, visitor_range_label, builders_notes. No Hub plugin changes required."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.5.1",
+                        "type":  "fix",
+                        "summary":  "Business hours not showing: geodir_get_business_hours() keys are full day names, not abbreviations",
+                        "notes":  "API returns [\u0027days\u0027][\u0027Monday\u0027...] with \u0027closed\u0027 bool + \u0027slots\u0027[][\u0027range\u0027] (pre-formatted string). Completely rewrote sidebar rendering to match actual API."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.5.1",
+                        "type":  "change",
+                        "summary":  "Email anti-spam: reveal-on-click button replaces plain mailto link in sidebar info card",
+                        "notes":  "Email split at @ into data-u / data-d attributes. JS assembles mailto on first click. No full address in HTML source."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "GD email and business_hours fields displayed in sidebar (email row + weekly hours table)",
+                        "notes":  "Today\u0027s hours row highlighted dark-red. Times formatted 12-hour. haunt_theme field now rendered as Theme row above Phone."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.1",
+                        "type":  "fix",
+                        "summary":  "Video oEmbed not rendering for plain YouTube/Vimeo URLs",
+                        "notes":  "Replaced wp_embed-\u003eautoembed() with wp_oembed_get() as primary, autoembed with post_ID as secondary, wp_kses_post for raw iframe. Regex guard prevents oEmbed on non-URL strings."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.0",
+                        "type":  "fix",
+                        "summary":  "Gallery thumbnails blurry: changed from medium (300px) to large src for background-image",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Lightbox CSS added; image preloader with loading state; touch/swipe mobile navigation",
+                        "notes":  "Swipe threshold 40px, horizontal-only."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Video section: reads GD video field, converts YouTube/Vimeo via oEmbed, 16:9 responsive wrapper",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "_oha_hld_override_claimed meta: suppresses unclaimed display state from WP admin meta box",
+                        "notes":  "Shown in admin info panel as \u0027Owner-managed (admin override)\u0027 status."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Admin info panel: added Edit (Frontend) and Edit (WP Admin) buttons",
+                        "notes":  "Frontend edit uses GD gd_action=edit_post URL."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Field Reference tab in admin: all GD custom fields for gd_place with live value preview by post ID",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.3.0",
+                        "type":  "change",
+                        "summary":  "Nearby haunts: featured-only, haversine distance sort, distance badge. Section renamed to Featured Haunts Nearby.",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.3.0",
+                        "type":  "change",
+                        "summary":  "Full Track B field reads: 20+ GD custom fields, discount meta, is_display_unclaimed flag, gallery fix",
+                        "notes":  "Discount meta: _oha_disc_*. Gallery now shows all images, not just 2+. is_display_unclaimed: author=3 \u0026\u0026 !claimed."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.3.0",
+                        "type":  "change",
+                        "summary":  "Hero badges, unclaimed state, fear level pill, haunt type pill; main-content features, stats, visitor tips, recruiting",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Claim section replaced button_html() with section_html(): full context-aware rendering for all owner states",
+                        "notes":  "States: admin info panel, author You Own This, real-user claimed hidden, unclaimed claim prompt."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Admin settings page with Display and Claim tabs under GeoDirectory \u003e OHA Listing Display",
+                        "notes":  ""
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Integrated claim workflow: hidden CPT, AJAX submit, approve/reject, email notifications, pending count badge",
+                        "notes":  "Compatible with gd-claim-via-reports meta keys. Deactivate gd-claim-via-reports when using HLD."
+                    },
+                    {
+                        "date":  "2026-01-01",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Initial plugin: GD single listing template override with hero, 2-col layout, gallery, nearby, OHA dark theme CSS",
+                        "notes":  "Template: content-single.php + partials. Override via geodir_overwrite_single_template_content filter."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Tiered discount bar: promo code and private link visible to OHA paid members only",
+                        "notes":  "PHP-gated: promo code and private link never appear in HTML source for non-members. Member check uses oha_member_id usermeta (canonical for all active members). Teaser shown to non-members with smart join link: basic members go to /my-membership/, non-logged-in go to /register/."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Promo code and private link fields added to HLD admin meta box and GD frontend owner edit form",
+                        "notes":  "Meta keys: _oha_disc_promo_code (sanitize_text_field), _oha_disc_private_link (esc_url_raw). Saved in both class-oha-hld-admin.php save_meta_box() and class-oha-hld-gd-form.php save_discount()."
+                    }
+                ],
+    "admin_settings":  {
+                           "option_key":  "oha_hld_settings",
+                           "tabs":  [
+                                        "Display Settings: feature toggles (claim, report, gallery, nearby, mobile bar), nearby count",
+                                        "Claim Settings: heading/body/button text, email from/recipients, submit email, approval email",
+                                        "Pending Claims: approve/reject queue with pending count badge",
+                                        "Field Reference: all GD custom fields for gd_place, with live value preview by post ID",
+                                        "Utilities: enable_autocomplete (search autocomplete), enable_place_count ([gd_place_count] shortcode)"
+                                    ]
+                       },
+    "claim_integration":  {
+                              "cpt":  "oha_hld_claim",
+                              "meta_keys_on_claim":  [
+                                                         "_oha_hld_listing_id",
+                                                         "_oha_hld_claimant",
+                                                         "_oha_hld_message"
+                                                     ],
+                              "meta_keys_on_listing":  [
+                                                           "_gd_claimed",
+                                                           "_gd_claimed_by"
+                                                       ],
+                              "ajax_action":  "oha_hld_claim_submit",
+                              "nonce":  "oha_hld_claim_nonce_action"
+                          },
+    "v1.0.0_audit_corrections":  [
+                                     {
+                                         "item":  "Template override filter name",
+                                         "correct_value":  "geodir_overwrite_single_template_content (3 args: $overwrite, $content, $page_id)",
+                                         "source":  "geodirectory/includes/class-geodir-template-loader.php:531"
+                                     },
+                                     {
+                                         "item":  "Rating count function",
+                                         "correct_value":  "geodir_get_review_count_total()",
+                                         "source":  "geodirectory/includes/comments-functions.php:128"
+                                     },
+                                     {
+                                         "item":  "Image URL access",
+                                         "correct_value":  "geodir_get_image_src( $image_obj, \u0027large\u0027 ) - no -\u003esrc property exists",
+                                         "source":  "geodirectory/includes/image-functions.php:44"
+                                     },
+                                     {
+                                         "item":  "Multiselect separator",
+                                         "correct_value":  "Comma , separator (confirmed from implode(\",\",$value) in save logic)",
+                                         "source":  "geodirectory/includes/admin/settings/class-geodir-settings-cpt-cf.php:1866"
+                                     },
+                                     {
+                                         "item":  "Custom field data access",
+                                         "correct_value":  "$gd = geodir_get_post_info($listing_id); then $gd-\u003ehaunt_features",
+                                         "source":  "geodirectory/includes/post-functions.php:61"
+                                     }
+                                 ]
 }

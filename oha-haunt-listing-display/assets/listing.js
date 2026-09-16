@@ -242,6 +242,28 @@
         });
     }
 
+    /* ── Promo code copy button ─────────────────────────────────────────── */
+    function setupPromoCodeCopy() {
+        $(document).on('click', '.oha-discount-notice__copy', function () {
+            var $btn  = $(this);
+            var code  = $btn.prev('.oha-discount-notice__promo-code').data('code') ||
+                        $btn.prev('.oha-discount-notice__promo-code').text();
+            if (!code) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function () {
+                    $btn.text('Copied!').addClass('is-copied');
+                    setTimeout(function () { $btn.text('Copy').removeClass('is-copied'); }, 2000);
+                });
+            } else {
+                // Fallback for older browsers
+                var $tmp = $('<textarea style="position:fixed;opacity:0">').val(code).appendTo('body').select();
+                try { document.execCommand('copy'); $btn.text('Copied!').addClass('is-copied'); } catch (e) {}
+                $tmp.remove();
+                setTimeout(function () { $btn.text('Copy').removeClass('is-copied'); }, 2000);
+            }
+        });
+    }
+
     /* ── Init ────────────────────────────────────────────────────────────── */
     $(function () {
         if ($('.oha-listing-wrap').length) {
@@ -250,6 +272,7 @@
             setupClaimModal();
             setupVisitorTips();
             setupEmailReveal();
+            setupPromoCodeCopy();
         }
     });
 

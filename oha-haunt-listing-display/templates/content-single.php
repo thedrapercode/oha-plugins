@@ -275,16 +275,31 @@ $override_claimed     = get_post_meta( $listing_id, '_oha_hld_override_claimed',
 $is_display_unclaimed = ( $author_id === 3 && ! $claimed_val && ! $override_claimed );
 
 // ── Discount bar (from oha-discounts-frontend plugin meta) ────────────────────
-$disc_active  = get_post_meta( $listing_id, '_oha_disc_active',  true ) === '1';
-$disc_rate    = get_post_meta( $listing_id, '_oha_disc_rate',    true );
-$disc_message = get_post_meta( $listing_id, '_oha_disc_message', true );
-$disc_start   = get_post_meta( $listing_id, '_oha_disc_start',   true );
-$disc_end     = get_post_meta( $listing_id, '_oha_disc_end',     true );
+$disc_active       = get_post_meta( $listing_id, '_oha_disc_active',       true ) === '1';
+$disc_rate         = get_post_meta( $listing_id, '_oha_disc_rate',         true );
+$disc_message      = get_post_meta( $listing_id, '_oha_disc_message',      true );
+$disc_start        = get_post_meta( $listing_id, '_oha_disc_start',        true );
+$disc_end          = get_post_meta( $listing_id, '_oha_disc_end',          true );
+$disc_promo_code   = get_post_meta( $listing_id, '_oha_disc_promo_code',   true );
+$disc_private_link = get_post_meta( $listing_id, '_oha_disc_private_link', true );
 $today        = date( 'Y-m-d' );
 $disc_date_ok = true;
 if ( ! empty( $disc_start ) && $today < $disc_start ) $disc_date_ok = false;
 if ( ! empty( $disc_end )   && $today > $disc_end   ) $disc_date_ok = false;
-$show_discount = $disc_active && $disc_date_ok && ( $disc_rate || $disc_message );
+$show_discount    = $disc_active && $disc_date_ok && ( $disc_rate || $disc_message );
+$has_members_only = ! empty( $disc_promo_code ) || ! empty( $disc_private_link );
+
+// OHA paid member check — oha_member_id is the canonical field present on all active members
+$viewer_id     = get_current_user_id();
+$is_oha_member = $viewer_id && ! empty( get_user_meta( $viewer_id, 'oha_member_id', true ) );
+
+// Teaser link for non-members: basic members (listing owners) upgrade at /my-membership/,
+// everyone else (not logged in) registers at /register/
+$viewer_is_basic = $viewer_id && get_user_meta( $viewer_id, '_uwp_register_form_id', true ) === '4';
+$disc_join_url   = $viewer_is_basic
+    ? 'https://ohiohaunters.com/my-membership/'
+    : 'https://ohiohaunters.com/register/';
+$disc_join_label = $viewer_is_basic ? 'Upgrade Membership' : 'Register to Join OHA';
 
 // ── Full address string ───────────────────────────────────────────────────────
 $address_parts = array_filter( [ $city, $state, $zip ] );
@@ -295,9 +310,11 @@ $location_str  = implode( ', ', $address_parts );
 
     <?php include OHA_HLD_PATH . 'templates/partials/hero.php'; ?>
 
-    <?php if ( $show_discount ) : ?>
+    <?php if ( $show_discount || ( $has_members_only && $disc_active && $disc_date_ok ) ) : ?>
     <!-- ── OHA Discount notice ─────────────────────────────────────────────── -->
     <div class="oha-discount-notice" role="complementary" aria-label="Member discount">
+
+        <?php if ( $show_discount ) : ?>
         <div class="oha-discount-notice__inner">
             <svg class="oha-discount-notice__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
             <?php if ( $disc_rate ) : ?>
@@ -307,6 +324,31 @@ $location_str  = implode( ', ', $address_parts );
                 <span class="oha-discount-notice__msg"><?php echo esc_html( $disc_message ); ?></span>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
+
+        <?php if ( $has_members_only ) : ?>
+        <div class="oha-discount-notice__members">
+            <?php if ( $is_oha_member ) : ?>
+                <svg class="oha-discount-notice__lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                <span class="oha-discount-notice__members-label">Member Access</span>
+                <?php if ( $disc_promo_code ) : ?>
+                    <span class="oha-discount-notice__promo-wrap">
+                        Promo Code:
+                        <span class="oha-discount-notice__promo-code" data-code="<?php echo esc_attr( $disc_promo_code ); ?>"><?php echo esc_html( $disc_promo_code ); ?></span>
+                        <button type="button" class="oha-discount-notice__copy" aria-label="Copy promo code">Copy</button>
+                    </span>
+                <?php endif; ?>
+                <?php if ( $disc_private_link ) : ?>
+                    <a class="oha-discount-notice__private-link" href="<?php echo esc_url( $disc_private_link ); ?>" target="_blank" rel="noopener noreferrer">Members Link</a>
+                <?php endif; ?>
+            <?php else : ?>
+                <svg class="oha-discount-notice__lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                <span class="oha-discount-notice__teaser">OHA members unlock an exclusive promo code for this haunt.</span>
+                <a class="oha-discount-notice__join-link" href="<?php echo esc_url( $disc_join_url ); ?>"><?php echo esc_html( $disc_join_label ); ?></a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
     </div>
     <?php endif; ?>
 

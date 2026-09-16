@@ -121,14 +121,16 @@ class OHA_HLD_Admin {
         echo '<hr style="margin:12px 0;">';
         echo '<p style="font-weight:600;margin:0 0 8px;">Discount / Deal</p>';
 
-        $disc_active  = get_post_meta( $post->ID, '_oha_disc_active',  true );
-        $disc_rate    = get_post_meta( $post->ID, '_oha_disc_rate',    true );
-        $disc_message = get_post_meta( $post->ID, '_oha_disc_message', true );
-        $disc_link    = get_post_meta( $post->ID, '_oha_disc_link',    true );
-        $disc_start   = get_post_meta( $post->ID, '_oha_disc_start',   true );
-        $disc_end     = get_post_meta( $post->ID, '_oha_disc_end',     true );
-        $disc_bg      = get_post_meta( $post->ID, '_oha_disc_bg',      true ) ?: '#111111';
-        $disc_color   = get_post_meta( $post->ID, '_oha_disc_color',   true ) ?: '#ffffff';
+        $disc_active       = get_post_meta( $post->ID, '_oha_disc_active',       true );
+        $disc_rate         = get_post_meta( $post->ID, '_oha_disc_rate',         true );
+        $disc_message      = get_post_meta( $post->ID, '_oha_disc_message',      true );
+        $disc_link         = get_post_meta( $post->ID, '_oha_disc_link',         true );
+        $disc_start        = get_post_meta( $post->ID, '_oha_disc_start',        true );
+        $disc_end          = get_post_meta( $post->ID, '_oha_disc_end',          true );
+        $disc_bg           = get_post_meta( $post->ID, '_oha_disc_bg',           true ) ?: '#111111';
+        $disc_color        = get_post_meta( $post->ID, '_oha_disc_color',        true ) ?: '#ffffff';
+        $disc_promo_code   = get_post_meta( $post->ID, '_oha_disc_promo_code',   true );
+        $disc_private_link = get_post_meta( $post->ID, '_oha_disc_private_link', true );
 
         echo '<label style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;margin-bottom:8px;">';
         echo '<input type="checkbox" name="oha_disc_active" value="1" ' . checked( $disc_active, '1', false ) . ' style="margin-top:3px;">';
@@ -160,6 +162,15 @@ class OHA_HLD_Admin {
         echo '<div style="flex:1;"><label ' . $lbl . '>Text Color</label>';
         echo '<input type="color" name="oha_disc_color" value="' . esc_attr( $disc_color ) . '" style="width:100%;height:30px;cursor:pointer;border:1px solid #ccc;border-radius:3px;"></div>';
         echo '</div>';
+
+        echo '<hr style="margin:10px 0;">';
+        echo '<p style="font-size:11px;color:#666;margin:0 0 6px;">Members-only fields (visible only to logged-in OHA paid members)</p>';
+
+        echo '<label ' . $lbl . '>Promo Code (members only)</label>';
+        echo '<input type="text" name="oha_disc_promo_code" value="' . esc_attr( $disc_promo_code ) . '" placeholder="e.g. OHASPOOK25" ' . $iw . '>';
+
+        echo '<label ' . $lbl . '>Private Link (members only)</label>';
+        echo '<input type="url" name="oha_disc_private_link" value="' . esc_attr( $disc_private_link ) . '" placeholder="https://" ' . $iw . '>';
     }
 
     public static function save_meta_box( $post_id, $post ) {
@@ -174,14 +185,16 @@ class OHA_HLD_Admin {
 
         // Discount fields
         $disc_fields = [
-            '_oha_disc_active'  => ! empty( $_POST['oha_disc_active'] ) ? '1' : '',
-            '_oha_disc_rate'    => sanitize_text_field( $_POST['oha_disc_rate']    ?? '' ),
-            '_oha_disc_message' => sanitize_text_field( $_POST['oha_disc_message'] ?? '' ),
-            '_oha_disc_link'    => esc_url_raw( $_POST['oha_disc_link']   ?? '' ),
-            '_oha_disc_start'   => sanitize_text_field( $_POST['oha_disc_start']   ?? '' ),
-            '_oha_disc_end'     => sanitize_text_field( $_POST['oha_disc_end']     ?? '' ),
-            '_oha_disc_bg'      => sanitize_hex_color( $_POST['oha_disc_bg']    ?? '#111111' ) ?: '#111111',
-            '_oha_disc_color'   => sanitize_hex_color( $_POST['oha_disc_color'] ?? '#ffffff' ) ?: '#ffffff',
+            '_oha_disc_active'       => ! empty( $_POST['oha_disc_active'] ) ? '1' : '',
+            '_oha_disc_rate'         => sanitize_text_field( $_POST['oha_disc_rate']         ?? '' ),
+            '_oha_disc_message'      => sanitize_text_field( $_POST['oha_disc_message']      ?? '' ),
+            '_oha_disc_link'         => esc_url_raw( $_POST['oha_disc_link']                 ?? '' ),
+            '_oha_disc_start'        => sanitize_text_field( $_POST['oha_disc_start']        ?? '' ),
+            '_oha_disc_end'          => sanitize_text_field( $_POST['oha_disc_end']          ?? '' ),
+            '_oha_disc_bg'           => sanitize_hex_color( $_POST['oha_disc_bg']    ?? '#111111' ) ?: '#111111',
+            '_oha_disc_color'        => sanitize_hex_color( $_POST['oha_disc_color'] ?? '#ffffff' ) ?: '#ffffff',
+            '_oha_disc_promo_code'   => sanitize_text_field( $_POST['oha_disc_promo_code']   ?? '' ),
+            '_oha_disc_private_link' => esc_url_raw( $_POST['oha_disc_private_link']         ?? '' ),
         ];
         foreach ( $disc_fields as $key => $val ) {
             update_post_meta( $post_id, $key, $val );
