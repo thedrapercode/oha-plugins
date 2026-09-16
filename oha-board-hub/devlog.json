@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.12.0",
+    "version":  "2.13.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -610,6 +610,27 @@
                         "type":  "change",
                         "summary":  "Export CSV now uses oha_member_id as card_number column and includes date-stamped filename",
                         "notes":  "Export handler defaults updated to match new tab defaults (lvl=all, card=any)."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.13.0",
+                        "type":  "change",
+                        "summary":  "Members tab search replaced with client-side live search; filters no longer preserve search term",
+                        "notes":  "Server-side q param removed from filter button URLs and SQL calls. Plain input with JS input listener filters tbody rows instantly. oha-members-main-table ID scopes search away from Stripe section table below."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.13.0",
+                        "type":  "feature",
+                        "summary":  "Export CSV button hides automatically when live search is active",
+                        "notes":  "exportWrap visibility toggled in the same input listener as live search. Reappears when search box is cleared. Prevents exporting a set that does not match what is visible on screen."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.13.0",
+                        "type":  "feature",
+                        "summary":  "Card number edits now append audit history to oha_member_id_history usermeta",
+                        "notes":  "action_oha_set_member_id reads old value then appends {old, new, changed_by, ts} to serialized history array before overwriting. History only created on users whose card number has been changed. Avoids card events table due to SWPM member_id key conflict."
                     }
                 ]
 }

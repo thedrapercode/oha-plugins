@@ -549,6 +549,16 @@ try {
         if (!get_user_by('ID', $wp_user_id)) {
             wp_send_json_error(['message' => 'User not found'], 200);
         }
+        $old_id  = (string) get_user_meta($wp_user_id, 'oha_member_id', true);
+        $history = get_user_meta($wp_user_id, 'oha_member_id_history', true);
+        if (!is_array($history)) $history = [];
+        $history[] = [
+            'old'        => $old_id,
+            'new'        => $new_id,
+            'changed_by' => get_current_user_id(),
+            'ts'         => gmdate('Y-m-d H:i:s'),
+        ];
+        update_user_meta($wp_user_id, 'oha_member_id_history', $history);
         update_user_meta($wp_user_id, 'oha_member_id', $new_id);
         wp_send_json_success(['wp_user_id' => $wp_user_id, 'oha_member_id' => $new_id], 200);
     }
@@ -1366,14 +1376,11 @@ private function render_overview_tab($range = '30d') {
         }
 
 
-        $q = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
-
-        
         $card = isset($_GET['card']) ? sanitize_key($_GET['card']) : 'any';
         $allowed_card_filters = ['any','sent','not'];
         if (!in_array($card, $allowed_card_filters, true)) $card = 'any';
-// One dataset for current level (or all), search applied; then range filtered in PHP
-        $rows_all = $this->fetch_members_legacy_raw($active_level_id, $q);
+// One dataset for current level (or all); range filtered in PHP; search is client-side
+        $rows_all = $this->fetch_members_legacy_raw($active_level_id, '');
         $rows = $this->php_filter_by_range($rows_all, $range_key);
 
         
@@ -1385,7 +1392,7 @@ private function render_overview_tab($range = '30d') {
             }));
         }
 // Counts by level from a single "all-levels" dataset for consistency
-        $rows_for_counts = $this->php_filter_by_range($this->fetch_members_legacy_raw(null, $q), $range_key);
+        $rows_for_counts = $this->php_filter_by_range($this->fetch_members_legacy_raw(null, ''), $range_key);
         $counts = ['oha_member' => 0, 'listing_owners' => 0, 'board' => 0];
         foreach ($rows_for_counts as $r) {
             $lvl = (string)($r['membership_level'] ?? '');
@@ -1397,7 +1404,6 @@ private function render_overview_tab($range = '30d') {
         $export_url = admin_url('admin-post.php?action=oha_export_members_csv');
         $export_url = add_query_arg(['lvl'=>$lvl_key,'range'=>$range_key], $export_url);
         if ($card !== 'any') $export_url = add_query_arg(['card'=>$card], $export_url);
-        if ($q !== '') $export_url = add_query_arg(['q'=>$q], $export_url);
 
         ob_start(); ?>
         <div class="oha-members-toolbar">
@@ -1412,7 +1418,7 @@ private function render_overview_tab($range = '30d') {
                         'board'   => 'Board (' . intval($counts['board']) . ')',
                     ];
                     foreach ($level_defs as $lk => $llabel) {
-                        $url = add_query_arg(['tab'=>'members','lvl'=>$lk,'range'=>'all','q'=>$q]);
+                        $url = add_query_arg(['tab'=>'members','lvl'=>$lk,'range'=>'all']);
                         $cls = ($lvl_key === $lk) ? ' is-active' : '';
                         echo '<a class="oha-members-filter-btn' . $cls . '" href="' . esc_url($url) . '">' . esc_html($llabel) . '</a> ';
                     }
@@ -1423,7 +1429,7 @@ private function render_overview_tab($range = '30d') {
                     <?php
                     $ranges = ['all'=>'All time','30d'=>'Last 30 days','90d'=>'Last 90 days','ytd'=>'Year to date'];
                     foreach ($ranges as $rk => $rlabel) {
-                        $rargs = ['tab'=>'members','lvl'=>$lvl_key,'range'=>$rk,'q'=>$q];
+                        $rargs = ['tab'=>'members','lvl'=>$lvl_key,'range'=>$rk];
                         if ($card === 'not') $rargs['card'] = 'not';
                         $url = add_query_arg($rargs);
                         $cls = ($range_key === $rk) ? ' is-active' : '';
@@ -1441,20 +1447,11 @@ private function render_overview_tab($range = '30d') {
             </div>
         </div>
 
-        <form method="get" class="oha-members-search-line" role="search" aria-label="Search members">
-            <?php
-            $hidden = ['tab'=>'members','lvl'=>$lvl_key,'range'=>$range_key];
-            if ($card === 'not') $hidden['card'] = 'not';
-            foreach ($hidden as $hk => $hv) {
-                printf('<input type="hidden" name="%s" value="%s" />', esc_attr($hk), esc_attr($hv));
-            }
-            ?>
-            <input type="search" name="q" value="<?php echo esc_attr($q); ?>" placeholder="Search name or email..." aria-label="Search members" />
-            <button class="button">Search</button>
-            <?php if ($q !== ''): ?><a class="button" href="<?php echo esc_url(add_query_arg(['q'=>false])); ?>">Clear</a><?php endif; ?>
-        </form>
+        <div class="oha-members-search-line">
+            <input type="search" id="oha-member-live-search" placeholder="Search name or email..." aria-label="Search members" autocomplete="off" />
+        </div>
 
-        <p class="oha-members-found"><strong><?php echo intval(count($rows)); ?></strong> members found</p>
+        <p class="oha-members-found"><strong id="oha-members-found-count"><?php echo intval(count($rows)); ?></strong> members found</p>
         <?php echo $this->render_members_table($rows); ?>
         <script>
         (function(){
@@ -1559,10 +1556,29 @@ private function render_overview_tab($range = '30d') {
                 onSaveClick(e);
                 onCancelClick(e);
             });
+
+            // Live search — filters visible rows without a page reload
+            var liveSearch = document.getElementById('oha-member-live-search');
+            var foundCount = document.getElementById('oha-members-found-count');
+            var exportWrap = document.getElementById('oha-members-export-wrap');
+            if (liveSearch) {
+                liveSearch.addEventListener('input', function() {
+                    var q = this.value.trim().toLowerCase();
+                    var rows = document.querySelectorAll('#oha-members-main-table tbody tr');
+                    var visible = 0;
+                    rows.forEach(function(row) {
+                        var match = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+                        row.style.display = match ? '' : 'none';
+                        if (match) visible++;
+                    });
+                    if (foundCount) foundCount.textContent = visible;
+                    if (exportWrap) exportWrap.style.display = q ? 'none' : '';
+                });
+            }
         })();
         </script>
 
-<div class="oha-actions-bottom">
+<div class="oha-actions-bottom" id="oha-members-export-wrap">
             <a class="button" href="<?php echo esc_url($export_url); ?>">Export CSV</a>
         </div>
 
@@ -1580,7 +1596,7 @@ private function render_overview_tab($range = '30d') {
 
     private function render_members_table($rows) {
         if (empty($rows)) return '<p><em>No members found for this filter.</em></p>';
-        $html = '<div class="oha-table-wrap"><table class="oha-table"><thead><tr>';
+        $html = '<div class="oha-table-wrap"><table class="oha-table" id="oha-members-main-table"><thead><tr>';
         $cols = ['ID','Name','Email','Address','Level','Start','Card'];
         foreach($cols as $c) { $html .= '<th>'.esc_html($c).'</th>'; }
         $html .= '</tr></thead><tbody>';
