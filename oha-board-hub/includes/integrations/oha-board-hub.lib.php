@@ -573,9 +573,9 @@ private function current_user_sm_level_equals($target_level) {
         }
         $s = get_option(self::OPT, []);
         $tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'overview';
-        $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'oha';
+        $lvl_key = isset($_GET['lvl']) ? sanitize_key($_GET['lvl']) : 'all';
         $allowed_lvl_keys = ['listing','board','vendors','sponsors','con2026','oha','all'];
-        if (!in_array($lvl_key, $allowed_lvl_keys, true)) $lvl_key = 'oha';
+        if (!in_array($lvl_key, $allowed_lvl_keys, true)) $lvl_key = 'all';
         $range_default = ($tab === 'members') ? 'all' : '30d';
         $range = isset($_GET['range']) ? sanitize_key($_GET['range']) : $range_default;
         $allowed_ranges = ['30d','90d','ytd','all'];
@@ -1369,7 +1369,7 @@ private function render_overview_tab($range = '30d') {
         $q = isset($_GET['q']) ? sanitize_text_field($_GET['q']) : '';
 
         
-        $card = isset($_GET['card']) ? sanitize_key($_GET['card']) : 'not';
+        $card = isset($_GET['card']) ? sanitize_key($_GET['card']) : 'any';
         $allowed_card_filters = ['any','sent','not'];
         if (!in_array($card, $allowed_card_filters, true)) $card = 'any';
 // One dataset for current level (or all), search applied; then range filtered in PHP
@@ -1378,10 +1378,10 @@ private function render_overview_tab($range = '30d') {
 
         
         if ($card !== 'any') {
-            $rows = array_values(array_filter($rows, function($r){
+            $rows = array_values(array_filter($rows, function($r) use ($card) {
                 $st = $this->get_card_status($r['member_id'], $r['wp_user_id'] ?? 0);
-                if ($st['sent']) return ($_GET['card']==='sent');
-                return ($_GET['card']==='not');
+                if ($st['sent']) return ($card === 'sent');
+                return ($card === 'not');
             }));
         }
 // Counts by level from a single "all-levels" dataset for consistency
@@ -1395,74 +1395,66 @@ private function render_overview_tab($range = '30d') {
         }
 
         $export_url = admin_url('admin-post.php?action=oha_export_members_csv');
-        $export_url = add_query_arg(['range'=>$range_key], $export_url);
-        $export_url = add_query_arg(['card'=>$card], $export_url);if ($lvl_key && $lvl_key !== 'all') $export_url = add_query_arg(['lvl'=>$lvl_key], $export_url);
+        $export_url = add_query_arg(['lvl'=>$lvl_key,'range'=>$range_key], $export_url);
+        if ($card !== 'any') $export_url = add_query_arg(['card'=>$card], $export_url);
         if ($q !== '') $export_url = add_query_arg(['q'=>$q], $export_url);
 
         ob_start(); ?>
-        <div class="oha-toolbar">
-            <div class="oha-filters">
-                <strong>Level:</strong>
-                <?php
-                    // Build consistent links with active styling
-                    $url_all = add_query_arg(['tab'=>'members','lvl'=>'all','range'=>$range_key,'q'=>$q]);
-                    $cls_all = ($lvl_key==='all') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_all.'" href="'.esc_url($url_all).'">All ('.intval(array_sum($counts)).')</a> ';
-                    
-                    $url_oha = add_query_arg(['tab'=>'members','lvl'=>'oha','range'=>$range_key,'q'=>$q]);
-                    $cls_oha = ($lvl_key==='oha') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_oha.'" href="'.esc_url($url_oha).'">OHA Member ('.intval($counts['oha_member']).')</a> ';
-
-                    $url_listing = add_query_arg(['tab'=>'members','lvl'=>'listing','range'=>$range_key,'q'=>$q]);
-                    $cls_listing = ($lvl_key==='listing') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_listing.'" href="'.esc_url($url_listing).'">Basic ('.intval($counts['listing_owners']).')</a> ';
-
-                    $url_board = add_query_arg(['tab'=>'members','lvl'=>'board','range'=>$range_key,'q'=>$q]);
-                    $cls_board = ($lvl_key==='board') ? 'button button-primary' : 'button';
-                    echo '<a class="'.$cls_board.'" href="'.esc_url($url_board).'">Board ('.intval($counts['board']).')</a> ';
-
-                ?>
-            </div>
-
-            <div class="oha-filters">
-                <strong>Range:</strong>
-                <?php
-                $ranges = ['30d'=>'Last 30 days','90d'=>'Last 90 days','ytd'=>'Year to date','all'=>'All time'];
-                foreach ($ranges as $k=>$label) {
-                    $url = add_query_arg(['tab'=>'members','lvl'=>$lvl_key,'range'=>$k,'q'=>$q]);
-                    $cls = $range_key === $k ? 'button-primary' : '';
-                    echo '<a class="button '.$cls.'" href="'.esc_url($url).'">'.esc_html($label).'</a> ';
-                }
-                ?>
-            </div>
-        
-            <div class="oha-filters">
-                <strong>Card:</strong>
-                <?php
-                    $cards = ['any'=>'Any','sent'=>'Sent'];
-                    foreach ($cards as $ck=>$clabel) {
-                        $url = add_query_arg(['tab'=>'members','lvl'=>$lvl_key,'range'=>$range_key,'card'=>$ck,'q'=>$q]);
-                        $cls = $card === $ck ? 'button-primary' : '';
-                        echo '<a class="button '.$cls.'" href="'.esc_url($url).'">'.esc_html($clabel).'</a> ';
+        <div class="oha-members-toolbar">
+            <div class="oha-members-filter-bar">
+                <div class="oha-members-filter-group">
+                    <span class="oha-members-filter-label">Level:</span>
+                    <?php
+                    $level_defs = [
+                        'all'     => 'All (' . intval(array_sum($counts)) . ')',
+                        'oha'     => 'OHA Member (' . intval($counts['oha_member']) . ')',
+                        'listing' => 'Basic (' . intval($counts['listing_owners']) . ')',
+                        'board'   => 'Board (' . intval($counts['board']) . ')',
+                    ];
+                    foreach ($level_defs as $lk => $llabel) {
+                        $url = add_query_arg(['tab'=>'members','lvl'=>$lk,'range'=>'all','q'=>$q]);
+                        $cls = ($lvl_key === $lk) ? ' is-active' : '';
+                        echo '<a class="oha-members-filter-btn' . $cls . '" href="' . esc_url($url) . '">' . esc_html($llabel) . '</a> ';
                     }
-                    // "Create Membership Cards" always resets to the baseline card-making view
-                    $cls_cmc = ($card === 'not') ? 'button-primary' : '';
-                    $url_cmc = add_query_arg(['tab'=>'members','lvl'=>'oha','range'=>'all','card'=>'not','q'=>'']);
-                    echo '<a class="button '.$cls_cmc.'" href="'.esc_url($url_cmc).'">Create Membership Cards</a> ';
+                    ?>
+                </div>
+                <div class="oha-members-filter-group">
+                    <span class="oha-members-filter-label">Range:</span>
+                    <?php
+                    $ranges = ['all'=>'All time','30d'=>'Last 30 days','90d'=>'Last 90 days','ytd'=>'Year to date'];
+                    foreach ($ranges as $rk => $rlabel) {
+                        $rargs = ['tab'=>'members','lvl'=>$lvl_key,'range'=>$rk,'q'=>$q];
+                        if ($card === 'not') $rargs['card'] = 'not';
+                        $url = add_query_arg($rargs);
+                        $cls = ($range_key === $rk) ? ' is-active' : '';
+                        echo '<a class="oha-members-filter-btn' . $cls . '" href="' . esc_url($url) . '">' . esc_html($rlabel) . '</a> ';
+                    }
+                    ?>
+                </div>
+            </div>
+            <div class="oha-members-cmc-wrap">
+                <?php
+                $url_cmc = add_query_arg(['tab'=>'members','lvl'=>'oha','range'=>'all','card'=>'not','q'=>'']);
+                $cmc_cls = ($card === 'not') ? ' is-active' : '';
+                echo '<a class="oha-members-cmc-btn' . $cmc_cls . '" href="' . esc_url($url_cmc) . '">Create Membership Cards</a>';
                 ?>
             </div>
-</div>
+        </div>
 
-        <form method="get" class="oha-search-line" role="search" aria-label="Search members">
-            <?php foreach (['tab'=>'members','lvl'=>$lvl_key,'range'=>$range_key] as $k=>$v) {
-                printf('<input type="hidden" name="%s" value="%s" />', esc_attr(is_int($k)?'':$k), esc_attr($v));
-            } ?>
-            <input type="search" name="q" value="<?php echo esc_attr($q); ?>" placeholder="Search name or email…" aria-label="Search query" />
+        <form method="get" class="oha-members-search-line" role="search" aria-label="Search members">
+            <?php
+            $hidden = ['tab'=>'members','lvl'=>$lvl_key,'range'=>$range_key];
+            if ($card === 'not') $hidden['card'] = 'not';
+            foreach ($hidden as $hk => $hv) {
+                printf('<input type="hidden" name="%s" value="%s" />', esc_attr($hk), esc_attr($hv));
+            }
+            ?>
+            <input type="search" name="q" value="<?php echo esc_attr($q); ?>" placeholder="Search name or email..." aria-label="Search members" />
             <button class="button">Search</button>
-            <?php if ($q !== ''): ?><a class="button" href="<?php echo esc_url( add_query_arg(['q'=>false]) ); ?>">Clear</a><?php endif; ?>
+            <?php if ($q !== ''): ?><a class="button" href="<?php echo esc_url(add_query_arg(['q'=>false])); ?>">Clear</a><?php endif; ?>
         </form>
 
-        <p class="oha-found"><em><strong>Found <?php echo intval(count($rows)); ?> members</strong> for this filter.</em></p>
+        <p class="oha-members-found"><strong><?php echo intval(count($rows)); ?></strong> members found</p>
         <?php echo $this->render_members_table($rows); ?>
         <script>
         (function(){
@@ -1807,12 +1799,12 @@ private function render_overview_tab($range = '30d') {
 
     public function export_members_csv() {
         if (!is_user_logged_in() || !$this->user_can_view()) { wp_die('Access denied.'); }
-        $lvl_key   = isset($_GET['lvl'])   ? sanitize_key($_GET['lvl'])          : 'oha';
+        $lvl_key   = isset($_GET['lvl'])   ? sanitize_key($_GET['lvl'])          : 'all';
         $range_key = isset($_GET['range']) ? sanitize_key($_GET['range'])         : 'all';
         $q         = isset($_GET['q'])     ? sanitize_text_field($_GET['q'])      : '';
-        $card      = isset($_GET['card'])  ? sanitize_key($_GET['card'])          : 'not';
+        $card      = isset($_GET['card'])  ? sanitize_key($_GET['card'])          : 'any';
         $allowed_card_filters = ['any', 'sent', 'not'];
-        if (!in_array($card, $allowed_card_filters, true)) $card = 'not';
+        if (!in_array($card, $allowed_card_filters, true)) $card = 'any';
 
         $levels = $this->get_level_map();
         $level_id = null;
@@ -1833,14 +1825,16 @@ private function render_overview_tab($range = '30d') {
             }));
         }
 
-        $filename = 'oha_members_' . ($level_id ? ('level'.$level_id.'_') : '') . $range_key . ($q? '_q' : '') . '.csv';
+        $level_part = ($lvl_key !== 'all') ? $lvl_key . '_' : '';
+        $range_part = ($range_key !== 'all') ? $range_key . '_' : '';
+        $filename = 'oha_members_' . $level_part . $range_part . date('Y-m-d') . '.csv';
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename='.$filename);
+        header('Content-Disposition: attachment; filename=' . $filename);
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['member_id','first_name','last_name','email','membership_level','subscription_starts','address_street','address_city','address_state','address_zipcode','country']);
-        foreach($rows as $r) {
+        fputcsv($out, ['card_number','first_name','last_name','email','level','paid_since','address_street','address_city','address_state','address_zip','country']);
+        foreach ($rows as $r) {
             fputcsv($out, [
-                $r['member_id'] ?? '',
+                $r['oha_member_id'] ?: ($r['member_id'] ?? ''),
                 $r['first_name'] ?? '',
                 $r['last_name'] ?? '',
                 $r['email'] ?? '',
@@ -2438,7 +2432,27 @@ add_action('wp_head', function(){
     .oha-card a.button,.oha-toolbar a.button,.oha-actions-bottom a.button{color:#eee;text-decoration:none}
     
     .oha-card-toggle{min-width:0;padding:4px 8px;font-size:12px;line-height:1.2}
-.oha-found{margin:6px 0}
+
+    /* Members tab filter bar */
+    .oha-members-toolbar{margin-bottom:14px}
+    .oha-members-filter-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+    .oha-members-filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .oha-members-filter-label{color:var(--global-palette6,#cbd2d9);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;min-width:44px}
+    .oha-members-filter-btn{display:inline-block;padding:5px 12px;background:transparent;border:1px solid rgba(173,49,25,.4);border-radius:4px;color:var(--global-palette4,#f7fafc);font-size:13px;text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+    .oha-members-filter-btn:hover{border-color:var(--global-palette1,#ad3119);color:var(--global-palette3,#fff);text-decoration:none}
+    .oha-members-filter-btn.is-active{background:var(--global-palette1,#ad3119);border-color:var(--global-palette1,#ad3119);color:#fff;font-weight:600}
+    .oha-members-filter-btn.is-active:hover{background:var(--global-palette2,#ff0000);border-color:var(--global-palette2,#ff0000)}
+    .oha-members-cmc-wrap{margin-top:4px}
+    .oha-members-cmc-btn{display:inline-block;padding:7px 16px;background:var(--global-palette11,#13612e);border:1px solid var(--global-palette11,#13612e);border-radius:4px;color:#fff;font-size:13px;font-weight:600;text-decoration:none;transition:background .15s,border-color .15s}
+    .oha-members-cmc-btn:hover{background:#0d4a22;border-color:#0d4a22;color:#fff;text-decoration:none}
+    .oha-members-cmc-btn.is-active{background:#0d4a22;border-color:#0d4a22;box-shadow:0 0 0 2px rgba(19,97,46,.5);color:#fff}
+    .oha-members-search-line{display:flex;gap:8px;align-items:center;margin:8px 0 10px;flex-wrap:wrap}
+    .oha-members-search-line input[type="search"]{flex:1 1 220px;padding:7px 10px;border-radius:4px;border:1px solid rgba(173,49,25,.4);background:rgba(0,0,0,.4);color:var(--global-palette4,#f7fafc);font-size:13px}
+    .oha-members-search-line input[type="search"]:focus{outline:none;border-color:var(--global-palette1,#ad3119)}
+    .oha-members-search-line .button{color:var(--global-palette4,#f7fafc);border-color:rgba(173,49,25,.4);background:transparent}
+    .oha-members-search-line .button:hover{border-color:var(--global-palette1,#ad3119);color:#fff}
+    .oha-members-found{color:var(--global-palette6,#cbd2d9);font-size:13px;margin:0 0 8px}
+    .oha-members-found strong{color:var(--global-palette4,#f7fafc)}
     </style>
     <?php
 });

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.11.3",
+    "version":  "2.12.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -582,6 +582,34 @@
                         "type":  "fix",
                         "summary":  "Overview tab vendor stat cards now filter by active convention year only",
                         "notes":  "All 6 queries in render_overview_tab() (total, paid, pending, booths, recent, recent_payments) now JOIN on _convention_year = oha_vhcpt_active_year. Previously showed all-time totals across every year."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.12.0",
+                        "type":  "fix",
+                        "summary":  "Fix zero-members bug on first visit: card filter closure read $_GET[card] directly, null vs not was always false",
+                        "notes":  "Closure now uses use(). Affected render_members_tab() in oha-board-hub.lib.php line ~1381."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.12.0",
+                        "type":  "feature",
+                        "summary":  "Rework members tab filter UI: new Level/Range buttons, standalone Create Membership Cards button, clear active states",
+                        "notes":  "All new styles use .oha-members-* CSS prefix. Level buttons reset range to all. CMC button uses green palette11. Card filter row removed."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.12.0",
+                        "type":  "change",
+                        "summary":  "Members tab default view changed to all levels, all time -- full member list on first visit",
+                        "notes":  "lvl default changed from oha to all. card default changed from not to any. Invalid lvl fallback also changed to all."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.12.0",
+                        "type":  "change",
+                        "summary":  "Export CSV now uses oha_member_id as card_number column and includes date-stamped filename",
+                        "notes":  "Export handler defaults updated to match new tab defaults (lvl=all, card=any)."
                     }
                 ]
 }
