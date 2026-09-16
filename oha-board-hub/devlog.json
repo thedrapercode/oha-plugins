@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.13.0",
+    "version":  "2.14.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -631,6 +631,20 @@
                         "type":  "feature",
                         "summary":  "Card number edits now append audit history to oha_member_id_history usermeta",
                         "notes":  "action_oha_set_member_id reads old value then appends {old, new, changed_by, ts} to serialized history array before overwriting. History only created on users whose card number has been changed. Avoids card events table due to SWPM member_id key conflict."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.14.0",
+                        "type":  "feature",
+                        "summary":  "CSV import panel on haunt discounts admin page with fuzzy name matching and confidence preview",
+                        "notes":  "REST routes oha/v1/haunt-discounts/preview-import and confirm-import. similar_text() scoring with color-coded preview table (green \u003e=80%, yellow \u003e=55%, red \u003c55%). Editable rows before confirm."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.14.0",
+                        "type":  "feature",
+                        "summary":  "Change history sub-rows in haunt discounts admin table with toggle button",
+                        "notes":  "_oha_disc_history meta key stores up to 10 entries (date, user, status, rate, message, source). History button reveals hidden sub-row inline. Read-only display."
                     }
                 ]
 }

@@ -14,7 +14,7 @@ class OHA_Haunt_Discounts {
         add_shortcode('oha_haunt_discount', array(__CLASS__,'shortcode'));
         add_shortcode('oha_haunt_discounts_admin', array(__CLASS__,'admin_shortcode'));
 
-        // REST for inline editing and bulk actions
+        // REST for inline editing, bulk actions, and CSV import
         add_action('rest_api_init', array(__CLASS__,'register_rest'));
     }
 
@@ -200,9 +200,25 @@ if ($sort === 'active') {
         $single_url = esc_url_raw( rest_url('oha/v1/haunt-discounts/update') );
         $nonce      = wp_create_nonce('wp_rest');
 
+        $preview_url = esc_url_raw( rest_url('oha/v1/haunt-discounts/preview-import') );
+        $confirm_url = esc_url_raw( rest_url('oha/v1/haunt-discounts/confirm-import') );
+
         ob_start(); ?>
         <div class="oha-disc-admin">
             <h2>Haunt Discounts</h2>
+
+            <div class="oha-disc-import-wrap" style="margin:0 0 16px;">
+                <button class="button" id="oha-import-toggle" type="button">Import from CSV</button>
+                <div id="oha-import-panel" style="display:none;margin-top:10px;padding:14px;border:1px solid #ccd0d4;background:#f9f9f9;">
+                    <p style="margin-top:0;"><strong>CSV columns (no header required):</strong> Name, Rate, Message, Link, Start Date (YYYY-MM-DD), End Date (YYYY-MM-DD)</p>
+                    <p style="margin:0 0 10px;">Excel users: save your file as CSV (File &gt; Save As &gt; CSV) before uploading.</p>
+                    <input type="file" id="oha-import-file" accept=".csv,text/csv" style="margin-right:8px;">
+                    <button class="button button-primary" id="oha-import-preview-btn" type="button">Preview Matches</button>
+                    <span id="oha-import-loading" style="display:none;margin-left:8px;font-style:italic;">Matching haunts...</span>
+                    <div id="oha-import-results" style="margin-top:14px;"></div>
+                </div>
+            </div>
+
             <form method="get" style="margin:8px 0; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <?php
                     // Explicit whitelist — never echo arbitrary $_GET keys as form field names.
@@ -269,9 +285,19 @@ if ($sort === 'active') {
                     $bg = get_post_meta($pid,'_oha_disc_bg',true) ?: '#111111';
                     $color = get_post_meta($pid,'_oha_disc_color',true) ?: '#ffffff';
                 ?>
+                    <?php
+                        $history = get_post_meta($pid, '_oha_disc_history', true);
+                        if (!is_array($history)) $history = [];
+                        $hist_id = 'oha-hist-' . $pid;
+                    ?>
                     <tr data-id="<?php echo esc_attr($pid); ?>">
                         <td><input type="checkbox" class="oha-disc-cb" value="<?php echo esc_attr($pid); ?>"></td>
-                        <td><a href="<?php echo get_edit_post_link($pid); ?>"><?php echo esc_html(get_the_title()); ?></a></td>
+                        <td>
+                            <a href="<?php echo get_edit_post_link($pid); ?>"><?php echo esc_html(get_the_title()); ?></a>
+                            <?php if (!empty($history)): ?>
+                                <br><small style="color:#999;"><?php echo count($history); ?> change<?php echo count($history) !== 1 ? 's' : ''; ?> logged</small>
+                            <?php endif; ?>
+                        </td>
                         <td><input type="checkbox" class="oha-field" data-k="_oha_disc_active" <?php checked($disc_active,'1'); ?>></td>
                         <td><input type="text" class="oha-field" data-k="_oha_disc_rate" value="<?php echo esc_attr($rate); ?>" placeholder="e.g., 10% OFF"></td>
                         <td><input type="text" class="oha-field" data-k="_oha_disc_message" value="<?php echo esc_attr($message); ?>" placeholder="Message"></td>
@@ -282,8 +308,42 @@ if ($sort === 'active') {
                             <input type="text" class="oha-field" data-k="_oha_disc_bg" value="<?php echo esc_attr($bg); ?>" style="width:90px" title="Background">
                             <input type="text" class="oha-field" data-k="_oha_disc_color" value="<?php echo esc_attr($color); ?>" style="width:90px" title="Text color">
                         </td>
-                        <td><a class="button" href="<?php echo esc_url(get_permalink($pid)); ?>" target="_blank">View</a></td>
+                        <td>
+                            <a class="button" href="<?php echo esc_url(get_permalink($pid)); ?>" target="_blank">View</a>
+                            <?php if (!empty($history)): ?>
+                                <button type="button" class="button oha-hist-toggle" data-target="<?php echo esc_attr($hist_id); ?>" style="margin-top:4px;">History</button>
+                            <?php endif; ?>
+                        </td>
                     </tr>
+                    <?php if (!empty($history)): ?>
+                    <tr id="<?php echo esc_attr($hist_id); ?>" class="oha-hist-row" style="display:none;">
+                        <td colspan="10" style="padding:10px 14px;background:#f0f0f0;">
+                            <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;">Change History</strong>
+                            <table style="margin-top:8px;width:100%;font-size:12px;border-collapse:collapse;">
+                                <thead><tr style="text-align:left;border-bottom:1px solid #ccc;">
+                                    <th style="padding:4px 8px;">Date</th>
+                                    <th style="padding:4px 8px;">By</th>
+                                    <th style="padding:4px 8px;">Status</th>
+                                    <th style="padding:4px 8px;">Rate</th>
+                                    <th style="padding:4px 8px;">Message</th>
+                                    <th style="padding:4px 8px;">Source</th>
+                                </tr></thead>
+                                <tbody>
+                                <?php foreach ($history as $h): ?>
+                                <tr style="border-bottom:1px solid #e5e5e5;">
+                                    <td style="padding:4px 8px;"><?php echo esc_html($h['date'] ?? ''); ?></td>
+                                    <td style="padding:4px 8px;"><?php echo esc_html($h['name'] ?? ''); ?></td>
+                                    <td style="padding:4px 8px;"><?php echo ($h['active'] ?? '') === '1' ? '<span style="color:#1a7a1a;font-weight:700;">Active</span>' : '<span style="color:#a00;">Inactive</span>'; ?></td>
+                                    <td style="padding:4px 8px;"><?php echo esc_html($h['rate'] ?? ''); ?></td>
+                                    <td style="padding:4px 8px;"><?php echo esc_html($h['message'] ?? ''); ?></td>
+                                    <td style="padding:4px 8px;opacity:.7;"><?php echo esc_html($h['source'] ?? 'admin'); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                 <?php endwhile; wp_reset_postdata(); else: ?>
                     <tr><td colspan="10"><em>No haunts found.</em></td></tr>
                 <?php endif; ?>
@@ -321,9 +381,139 @@ if ($sort === 'active') {
         </style>
         <script>
         (function(){
-            var singleUrl = <?php echo json_encode($single_url); ?>;
-            var bulkUrl   = <?php echo json_encode($bulk_url); ?>;
-            var nonce     = <?php echo json_encode($nonce); ?>;
+            var singleUrl  = <?php echo json_encode($single_url); ?>;
+            var bulkUrl    = <?php echo json_encode($bulk_url); ?>;
+            var previewUrl = <?php echo json_encode($preview_url); ?>;
+            var confirmUrl = <?php echo json_encode($confirm_url); ?>;
+            var nonce      = <?php echo json_encode($nonce); ?>;
+
+            // ---- CSV Import ----
+            var importToggle  = document.getElementById('oha-import-toggle');
+            var importPanel   = document.getElementById('oha-import-panel');
+            var importFile    = document.getElementById('oha-import-file');
+            var importPreview = document.getElementById('oha-import-preview-btn');
+            var importLoading = document.getElementById('oha-import-loading');
+            var importResults = document.getElementById('oha-import-results');
+
+            if (importToggle) {
+                importToggle.addEventListener('click', function(){
+                    importPanel.style.display = importPanel.style.display === 'none' ? '' : 'none';
+                });
+            }
+
+            if (importPreview) {
+                importPreview.addEventListener('click', function(){
+                    if (!importFile || !importFile.files.length) { alert('Choose a CSV file first.'); return; }
+                    var reader = new FileReader();
+                    reader.onload = function(e){
+                        importLoading.style.display = 'inline';
+                        importResults.innerHTML = '';
+                        fetch(previewUrl, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json', 'X-WP-Nonce': nonce},
+                            body: JSON.stringify({csv: e.target.result})
+                        })
+                        .then(function(r){ return r.json(); })
+                        .then(function(resp){
+                            importLoading.style.display = 'none';
+                            if (!resp || !resp.ok) { importResults.innerHTML = '<p style="color:red;">Error reading CSV.</p>'; return; }
+                            renderImportPreview(resp.rows);
+                        })
+                        .catch(function(){ importLoading.style.display = 'none'; importResults.innerHTML = '<p style="color:red;">Request failed.</p>'; });
+                    };
+                    reader.readAsText(importFile.files[0]);
+                });
+            }
+
+            function renderImportPreview(rows) {
+                if (!rows || !rows.length) { importResults.innerHTML = '<p>No rows found in CSV.</p>'; return; }
+                var html = '<table class="widefat striped" style="margin-bottom:10px;">';
+                html += '<thead><tr>';
+                html += '<th style="width:28px;"><input type="checkbox" id="oha-import-select-all" checked></th>';
+                html += '<th>CSV Name</th><th>Matched Listing</th><th style="width:50px;">Score</th>';
+                html += '<th>Rate</th><th>Message</th><th>Link</th><th>Start</th><th>End</th>';
+                html += '</tr></thead><tbody>';
+
+                rows.forEach(function(row, idx){
+                    var matched   = row.match;
+                    var scoreVal  = matched ? matched.score : 0;
+                    var scoreColor = scoreVal >= 80 ? '#1a7a1a' : (scoreVal >= 55 ? '#856404' : '#a00');
+                    var scoreText  = matched ? (scoreVal + '%') : 'No match';
+                    var rowBg      = matched ? '' : 'background:#fff3f3;';
+                    html += '<tr style="' + rowBg + '" data-idx="' + idx + '">';
+                    html += '<td><input type="checkbox" class="oha-import-cb" data-idx="' + idx + '"' + (matched ? ' checked' : '') + '></td>';
+                    html += '<td>' + esc(row.csv_name) + '</td>';
+                    html += '<td>' + (matched ? esc(matched.title) : '<em style="color:#a00;">Not found</em>') + '</td>';
+                    html += '<td style="color:' + scoreColor + ';font-weight:700;">' + scoreText + '</td>';
+                    html += '<td><input type="text" class="oha-imp-field" data-field="rate" value="' + esc(row.rate) + '" style="width:110px;" placeholder="e.g. $5 OFF"></td>';
+                    html += '<td><input type="text" class="oha-imp-field" data-field="message" value="' + esc(row.message) + '" style="width:180px;" placeholder="Optional message"></td>';
+                    html += '<td><input type="url" class="oha-imp-field" data-field="link" value="' + esc(row.link) + '" style="width:130px;" placeholder="https://"></td>';
+                    html += '<td><input type="date" class="oha-imp-field" data-field="start" value="' + esc(row.start) + '" style="width:130px;"></td>';
+                    html += '<td><input type="date" class="oha-imp-field" data-field="end" value="' + esc(row.end) + '" style="width:130px;"></td>';
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                html += '<div style="display:flex;align-items:center;gap:10px;">';
+                html += '<button class="button button-primary" id="oha-import-confirm">Import Selected</button>';
+                html += '<span id="oha-import-confirm-status" style="font-size:13px;"></span>';
+                html += '</div>';
+
+                importResults.innerHTML = html;
+                importResults.__rows = rows;
+
+                // Select-all toggle
+                var selAll = document.getElementById('oha-import-select-all');
+                if (selAll) {
+                    selAll.addEventListener('change', function(){
+                        importResults.querySelectorAll('.oha-import-cb').forEach(function(cb){ cb.checked = selAll.checked; });
+                    });
+                }
+
+                // Confirm import
+                var confirmBtn = document.getElementById('oha-import-confirm');
+                if (confirmBtn) {
+                    confirmBtn.addEventListener('click', function(){
+                        var rows = importResults.__rows;
+                        var payload = [];
+                        importResults.querySelectorAll('.oha-import-cb:checked').forEach(function(cb){
+                            var idx  = parseInt(cb.getAttribute('data-idx'), 10);
+                            var row  = rows[idx];
+                            if (!row || !row.match) return;
+                            var tr   = importResults.querySelector('tr[data-idx="' + idx + '"]');
+                            payload.push({
+                                post_id: row.match.id,
+                                rate:    tr.querySelector('[data-field="rate"]').value,
+                                message: tr.querySelector('[data-field="message"]').value,
+                                link:    tr.querySelector('[data-field="link"]').value,
+                                start:   tr.querySelector('[data-field="start"]').value,
+                                end:     tr.querySelector('[data-field="end"]').value,
+                            });
+                        });
+                        if (!payload.length) { alert('No matched rows selected.'); return; }
+                        var status = document.getElementById('oha-import-confirm-status');
+                        status.textContent = 'Saving...';
+                        status.style.color = '';
+                        fetch(confirmUrl, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json', 'X-WP-Nonce': nonce},
+                            body: JSON.stringify({rows: payload})
+                        })
+                        .then(function(r){ return r.json(); })
+                        .then(function(resp){
+                            if (resp && resp.ok) {
+                                status.textContent = resp.saved + ' haunt(s) updated. Reload the page to see changes in the table below.';
+                                status.style.color = '#1a7a1a';
+                            } else {
+                                status.textContent = 'Error saving.';
+                                status.style.color = '#a00';
+                            }
+                        });
+                    });
+                }
+            }
+
+            function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
             // ---- Single inline edit ----
             function postSingle(row, key, val){
@@ -398,10 +588,77 @@ if ($sort === 'active') {
             var btnDeactivate = document.getElementById('oha-bulk-deactivate');
             if (btnActivate)   btnActivate.addEventListener('click',   function(){ bulkAction('1'); });
             if (btnDeactivate) btnDeactivate.addEventListener('click', function(){ bulkAction('0'); });
+
+            // ---- History row toggles ----
+            document.querySelectorAll('.oha-hist-toggle').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var target = document.getElementById(btn.getAttribute('data-target'));
+                    if (!target) return;
+                    var isHidden = target.style.display === 'none';
+                    target.style.display = isHidden ? '' : 'none';
+                    btn.textContent = isHidden ? 'Hide' : 'History';
+                });
+            });
         })();
         </script>
         <?php
         return ob_get_clean();
+    }
+
+    /* ===== CSV Import Helpers ===== */
+
+    private static function match_haunt_by_name($name) {
+        $name_lower = strtolower(trim($name));
+        if ($name_lower === '') return null;
+
+        static $all_posts = null;
+        if ($all_posts === null) {
+            $all_posts = get_posts(array(
+                'post_type'      => 'gd_place',
+                'post_status'    => array('publish','pending','draft'),
+                'posts_per_page' => -1,
+                'no_found_rows'  => true,
+            ));
+        }
+
+        $best       = null;
+        $best_score = 0;
+        foreach ($all_posts as $post) {
+            similar_text($name_lower, strtolower($post->post_title), $pct);
+            if ($pct > $best_score) {
+                $best_score = $pct;
+                $best       = $post;
+            }
+        }
+
+        if ($best && $best_score >= 35) {
+            return array('id' => $best->ID, 'title' => $best->post_title, 'score' => round($best_score));
+        }
+        return null;
+    }
+
+    private static function parse_csv_rows($csv_text) {
+        $rows  = array();
+        $lines = str_getcsv(trim($csv_text), "\n");
+        foreach ($lines as $i => $line) {
+            if (trim($line) === '') continue;
+            $cells = str_getcsv($line);
+            if ($i === 0) {
+                $first = strtolower(trim($cells[0] ?? ''));
+                if (in_array($first, array('name','haunt','haunt name','title'), true)) {
+                    continue; // skip header row
+                }
+            }
+            $rows[] = array(
+                'name'    => trim($cells[0] ?? ''),
+                'rate'    => trim($cells[1] ?? ''),
+                'message' => trim($cells[2] ?? ''),
+                'link'    => trim($cells[3] ?? ''),
+                'start'   => trim($cells[4] ?? ''),
+                'end'     => trim($cells[5] ?? ''),
+            );
+        }
+        return $rows;
     }
 
 public static function register_rest() {
@@ -459,6 +716,71 @@ public static function register_rest() {
                     $updated++;
                 }
                 return array('ok' => true, 'updated' => $updated);
+            }
+        ));
+
+        // CSV import — preview: parse CSV, fuzzy-match haunts, return rows for review
+        register_rest_route('oha/v1', '/haunt-discounts/preview-import', array(
+            'methods'             => 'POST',
+            'permission_callback' => function(){ return self::user_can_manage(); },
+            'callback'            => function($req){
+                $p        = $req->get_json_params();
+                $csv_text = isset($p['csv']) ? wp_unslash($p['csv']) : '';
+                if (trim($csv_text) === '') return new WP_Error('bad_request', 'No CSV data', array('status' => 400));
+
+                $rows    = self::parse_csv_rows($csv_text);
+                $results = array();
+                foreach ($rows as $row) {
+                    if ($row['name'] === '') continue;
+                    $match = self::match_haunt_by_name($row['name']);
+                    $results[] = array(
+                        'csv_name' => $row['name'],
+                        'rate'     => $row['rate'],
+                        'message'  => $row['message'],
+                        'link'     => esc_url_raw($row['link']),
+                        'start'    => sanitize_text_field($row['start']),
+                        'end'      => sanitize_text_field($row['end']),
+                        'match'    => $match,
+                    );
+                }
+                return array('ok' => true, 'rows' => $results);
+            }
+        ));
+
+        // CSV import — confirm: save approved rows
+        register_rest_route('oha/v1', '/haunt-discounts/confirm-import', array(
+            'methods'             => 'POST',
+            'permission_callback' => function(){ return self::user_can_manage(); },
+            'callback'            => function($req){
+                $p    = $req->get_json_params();
+                $rows = isset($p['rows']) ? (array) $p['rows'] : array();
+                if (empty($rows)) return new WP_Error('bad_request', 'No rows provided', array('status' => 400));
+
+                $saved  = 0;
+                $errors = array();
+                foreach ($rows as $row) {
+                    $post_id = isset($row['post_id']) ? absint($row['post_id']) : 0;
+                    if (!$post_id || get_post_type($post_id) !== 'gd_place') {
+                        $errors[] = 'Invalid post ID: ' . $post_id;
+                        continue;
+                    }
+                    $rate    = sanitize_text_field(wp_unslash($row['rate']    ?? ''));
+                    $message = wp_kses_post(wp_unslash($row['message'] ?? ''));
+                    $link    = esc_url_raw(wp_unslash($row['link']    ?? ''));
+                    $start   = sanitize_text_field(wp_unslash($row['start']   ?? ''));
+                    $end     = sanitize_text_field(wp_unslash($row['end']     ?? ''));
+                    $active  = ($rate !== '' || $message !== '') ? '1' : '0';
+
+                    update_post_meta($post_id, '_oha_disc_rate',    $rate);
+                    update_post_meta($post_id, '_oha_disc_message', $message);
+                    update_post_meta($post_id, '_oha_disc_link',    $link);
+                    update_post_meta($post_id, '_oha_disc_start',   $start);
+                    update_post_meta($post_id, '_oha_disc_end',     $end);
+                    update_post_meta($post_id, '_oha_disc_active',  $active);
+                    do_action($active === '1' ? 'oha_discount_activated' : 'oha_discount_deactivated', $post_id);
+                    $saved++;
+                }
+                return array('ok' => true, 'saved' => $saved, 'errors' => $errors);
             }
         ));
     }

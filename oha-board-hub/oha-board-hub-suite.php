@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.13.0
+ * Version: 2.14.0
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
