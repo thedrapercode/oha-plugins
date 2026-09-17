@@ -425,13 +425,14 @@ add_action('wp_ajax_oha_create_checkout_session', function(){
         'client_reference_id'=>(string)$uid,
         'metadata[wp_user_id]'=>(string)$uid,
 
-        // one-time $20
-        'line_items[0][price]'=>$s['price_signup_20'],
+        // $10/yr recurring -- only recurring prices allowed in line_items when using proration_behavior=none
+        'line_items[0][price]'=>$s['price_yearly_10'],
         'line_items[0][quantity]'=>1,
 
-        // $10/yr
-        'line_items[1][price]'=>$s['price_yearly_10'],
-        'line_items[1][quantity]'=>1,
+        // $20 card fee as an invoice item on the first invoice (not a line_items one-time price)
+        // Stripe blocks proration_behavior=none when one-time prices are in line_items
+        'subscription_data[add_invoice_items][0][price]'=>$s['price_signup_20'],
+        'subscription_data[add_invoice_items][0][quantity]'=>1,
 
         // defer first $10 charge to renewal date; billing_cycle_anchor avoids "X days free" trial language
         'subscription_data[billing_cycle_anchor]'=>$trial_ts,

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.15.1",
+    "version":  "2.15.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -659,6 +659,13 @@
                         "type":  "fix",
                         "summary":  "Replace subscription_data trial_end with billing_cycle_anchor + proration_behavior=none",
                         "notes":  "Removes Stripe Checkout  X days free language. Billing behavior unchanged:  today, /year from Jan 1 2027. Existing subscriptions unaffected. OHA_BHS_VERSION also corrected from stale 2.13.0 to match header."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.15.2",
+                        "type":  "fix",
+                        "summary":  "Move  card fee to subscription_data add_invoice_items to fix proration_behavior=none Stripe error",
+                        "notes":  "Stripe blocks proration_behavior=none when one-time prices exist in line_items. Moving price_signup_20 to add_invoice_items resolves this.  still charged immediately at checkout on the first subscription invoice. billing_cycle_anchor approach retained."
                     }
                 ]
 }
