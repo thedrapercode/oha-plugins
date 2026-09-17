@@ -100,6 +100,15 @@ $featured_haunts = array_slice( $featured_haunts, 0, $nearby_count );
 
             $n_cats   = get_the_terms( $n_id, 'gd_placecategory' );
             $n_rating = function_exists( 'geodir_get_post_rating' ) ? (float) geodir_get_post_rating( $n_id ) : 0;
+
+            $n_disc_active = get_post_meta( $n_id, '_oha_disc_active', true ) === '1';
+            $n_disc_rate   = get_post_meta( $n_id, '_oha_disc_rate',   true );
+            $n_disc_start  = get_post_meta( $n_id, '_oha_disc_start',  true );
+            $n_disc_end    = get_post_meta( $n_id, '_oha_disc_end',    true );
+            $n_disc_ok     = true;
+            if ( ! empty( $n_disc_start ) && $today < $n_disc_start ) $n_disc_ok = false;
+            if ( ! empty( $n_disc_end )   && $today > $n_disc_end   ) $n_disc_ok = false;
+            $n_show_disc = $n_disc_active && $n_disc_ok && $n_disc_rate;
         ?>
         <a class="oha-nearby__card" href="<?php echo esc_url( $n_link ); ?>">
             <div class="oha-nearby__img" <?php if ( $n_img ) : ?>style="background-image: url('<?php echo esc_url( $n_img ); ?>')"<?php endif; ?>>
@@ -116,6 +125,9 @@ $featured_haunts = array_slice( $featured_haunts, 0, $nearby_count );
                     <span class="oha-nearby__cat"><?php echo esc_html( $n_cats[0]->name ); ?></span>
                 <?php endif; ?>
                 <h3 class="oha-nearby__title"><?php echo esc_html( $n_title ); ?></h3>
+                <?php if ( $n_show_disc ) : ?>
+                    <span class="oha-nearby__discount"><?php echo esc_html( $n_disc_rate ); ?> Member Discount</span>
+                <?php endif; ?>
                 <?php if ( $n_loc ) : ?>
                     <p class="oha-nearby__location"><?php echo esc_html( $n_loc ); ?></p>
                 <?php endif; ?>

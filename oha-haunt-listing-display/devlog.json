@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.9.1",
+    "version":  "1.10.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -211,6 +211,20 @@
                         "type":  "fix",
                         "summary":  "Moved discount card back below the hero image",
                         "notes":  "Reverted v1.9.0 positioning change. Discount notice now renders after hero.php, before .oha-listing-body."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.10.0",
+                        "type":  "fix",
+                        "summary":  "Social buttons switched to 2-column grid with white-space:nowrap to prevent text wrapping",
+                        "notes":  "Changed .oha-social from display:flex to display:grid with repeat(2,1fr). Added white-space:nowrap and tightened padding on .oha-social__btn. Removed flex:1 (not needed in grid context)."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.10.0",
+                        "type":  "feature",
+                        "summary":  "Discount rate badge shown on nearby featured haunt cards when discount is active",
+                        "notes":  "Reads _oha_disc_active, _oha_disc_rate, _oha_disc_start, _oha_disc_end per nearby card. Badge shows rate + Member Discount label below title. Uses  from parent content-single.php scope. CSS class: .oha-nearby__discount (gold, Rajdhani, subtle border)."
                     }
                 ],
     "admin_settings":  {

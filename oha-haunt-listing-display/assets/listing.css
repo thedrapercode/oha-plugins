@@ -554,24 +554,25 @@
 
 /* ── Social ──────────────────────────────────────────────────────────────── */
 .oha-listing-wrap .oha-social {
-    display: flex;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
 }
 
 .oha-listing-wrap .oha-social__btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 7px;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 9px 16px;
+    white-space: nowrap;
+    padding: 8px 12px;
     border-radius: var(--oha-radius);
     transition: background 0.2s;
-    flex: 1;
-    justify-content: center;
 }
 
 .oha-listing-wrap .oha-social__btn svg {
@@ -680,6 +681,23 @@
 
 .oha-listing-wrap .oha-nearby__star {
     color: var(--oha-gold);
+}
+
+.oha-listing-wrap .oha-nearby__discount {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-gold);
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 3px;
+    padding: 2px 7px;
+    margin-top: 2px;
+    white-space: nowrap;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
