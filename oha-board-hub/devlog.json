@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.15.0",
+    "version":  "2.15.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -652,6 +652,13 @@
                         "type":  "feature",
                         "summary":  "Promo Code and Private Link columns added to haunt discounts admin table",
                         "notes":  "New meta keys _oha_disc_promo_code and _oha_disc_private_link. Both inline-editable via existing single-row REST endpoint. Added to allowlist in switch-case. History colspan updated from 10 to 12."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.15.1",
+                        "type":  "fix",
+                        "summary":  "Replace subscription_data trial_end with billing_cycle_anchor + proration_behavior=none",
+                        "notes":  "Removes Stripe Checkout  X days free language. Billing behavior unchanged:  today, /year from Jan 1 2027. Existing subscriptions unaffected. OHA_BHS_VERSION also corrected from stale 2.13.0 to match header."
                     }
                 ]
 }

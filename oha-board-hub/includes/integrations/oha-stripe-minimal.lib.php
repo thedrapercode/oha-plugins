@@ -433,8 +433,9 @@ add_action('wp_ajax_oha_create_checkout_session', function(){
         'line_items[1][price]'=>$s['price_yearly_10'],
         'line_items[1][quantity]'=>1,
 
-        // first recurring charge
-        'subscription_data[trial_end]'=>$trial_ts,
+        // defer first $10 charge to renewal date; billing_cycle_anchor avoids "X days free" trial language
+        'subscription_data[billing_cycle_anchor]'=>$trial_ts,
+        'subscription_data[proration_behavior]'=>'none',
         'subscription_data[metadata][wp_user_id]'=>(string)$uid,
 
         // collect addresses
