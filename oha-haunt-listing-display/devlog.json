@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.9.0",
+    "version":  "1.9.1",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -204,6 +204,13 @@
                         "type":  "change",
                         "summary":  "Redesigned discount notice as two-column card with OHA Member Discount label and 30px rate text",
                         "notes":  "Removed __inner/__icon elements. New structure: __card (flex row), __main (left col with label+rate+msg), __members (right col, vertical gold divider). Rate 14px gold -\u003e 30px white Cinzel. Label is Cinzel small caps gold. Members uses __members-header wrapper. Mobile stacks at 600px."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.9.1",
+                        "type":  "fix",
+                        "summary":  "Moved discount card back below the hero image",
+                        "notes":  "Reverted v1.9.0 positioning change. Discount notice now renders after hero.php, before .oha-listing-body."
                     }
                 ],
     "admin_settings":  {

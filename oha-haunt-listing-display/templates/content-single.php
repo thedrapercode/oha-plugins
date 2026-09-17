@@ -308,6 +308,8 @@ $location_str  = implode( ', ', $address_parts );
 ?>
 <div class="oha-listing-wrap <?php echo $is_display_unclaimed ? 'oha-unclaimed' : 'oha-claimed'; ?>">
 
+    <?php include OHA_HLD_PATH . 'templates/partials/hero.php'; ?>
+
     <?php if ( $show_discount || ( $has_members_only && $disc_active && $disc_date_ok ) ) : ?>
     <!-- ── OHA Discount notice ─────────────────────────────────────────────── -->
     <div class="oha-discount-notice" role="complementary" aria-label="OHA Member Discount">
@@ -350,8 +352,6 @@ $location_str  = implode( ', ', $address_parts );
         </div>
     </div>
     <?php endif; ?>
-
-    <?php include OHA_HLD_PATH . 'templates/partials/hero.php'; ?>
 
     <div class="oha-listing-body">
         <?php include OHA_HLD_PATH . 'templates/partials/main-content.php'; ?>
