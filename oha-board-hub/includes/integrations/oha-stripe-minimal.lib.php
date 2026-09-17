@@ -399,10 +399,10 @@ add_shortcode('oha_membership_checkout', function($atts){
     
     $output = '<div class="oha-membership-signup" style="background:#f5f5f5;padding:20px;border-radius:8px;margin:20px 0;">';
     $output .= '<h3 style="margin-top:0;color:#a0232a;">OHA Membership</h3>';
-    $output .= '<p><strong>Initial Fee:</strong> $20 (one-time for membership card creation and mailing)</p>';
-    $output .= '<p><strong>Annual Renewal:</strong> $10/year (starting January 1st of following year)</p>';
-    $output .= '<p style="font-size:14px;color:#666;">You\'ll receive your physical membership card by mail and be charged $10 annually to maintain your membership.</p>';
-    $output .= '<p><a class="button button-primary button-large" href="'.esc_url($url).'">Join / Renew OHA Membership →</a></p>';
+    $output .= '<p><strong>Due today:</strong> $20 (covers your 2026 membership and the one-time card creation and mailing fee)</p>';
+    $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning January 1, 2027</p>';
+    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on January 1, 2027 - not a free trial. You are paying $20 today for your 2026 membership.</p>';
+    $output .= '<p><a class="button button-primary button-large" href="'.esc_url($url).'">Join OHA Membership</a></p>';
     $output .= '</div>';
     
     return $output;
@@ -425,18 +425,17 @@ add_action('wp_ajax_oha_create_checkout_session', function(){
         'client_reference_id'=>(string)$uid,
         'metadata[wp_user_id]'=>(string)$uid,
 
-        // $10/yr recurring -- only recurring prices allowed in line_items when using proration_behavior=none
-        'line_items[0][price]'=>$s['price_yearly_10'],
+        // one-time $20
+        'line_items[0][price]'=>$s['price_signup_20'],
         'line_items[0][quantity]'=>1,
 
-        // $20 card fee as an invoice item on the first invoice (not a line_items one-time price)
-        // Stripe blocks proration_behavior=none when one-time prices are in line_items
-        'subscription_data[add_invoice_items][0][price]'=>$s['price_signup_20'],
-        'subscription_data[add_invoice_items][0][quantity]'=>1,
+        // $10/yr
+        'line_items[1][price]'=>$s['price_yearly_10'],
+        'line_items[1][quantity]'=>1,
 
-        // defer first $10 charge to renewal date; billing_cycle_anchor avoids "X days free" trial language
-        'subscription_data[billing_cycle_anchor]'=>$trial_ts,
-        'subscription_data[proration_behavior]'=>'none',
+        // trial_end defers first $10 charge until renewal date
+        // Stripe shows "X days free" for this period -- explained to members via shortcode copy before checkout
+        'subscription_data[trial_end]'=>$trial_ts,
         'subscription_data[metadata][wp_user_id]'=>(string)$uid,
 
         // collect addresses

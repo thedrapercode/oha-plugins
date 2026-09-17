@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.15.2",
+    "version":  "2.15.3",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -666,6 +666,13 @@
                         "type":  "fix",
                         "summary":  "Move  card fee to subscription_data add_invoice_items to fix proration_behavior=none Stripe error",
                         "notes":  "Stripe blocks proration_behavior=none when one-time prices exist in line_items. Moving price_signup_20 to add_invoice_items resolves this.  still charged immediately at checkout on the first subscription invoice. billing_cycle_anchor approach retained."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "2.15.3",
+                        "type":  "change",
+                        "summary":  "Revert checkout to trial_end; update shortcode copy to explain Stripe free-trial language to members",
+                        "notes":  "billing_cycle_anchor with proration_behavior=none is blocked by Stripe when one-time prices exist. add_invoice_items is not supported in Checkout Session API. trial_end is the only working approach. Shortcode now shows a note warning members that the Stripe checkout page will say X days free and explains it is not a free trial."
                     }
                 ]
 }
