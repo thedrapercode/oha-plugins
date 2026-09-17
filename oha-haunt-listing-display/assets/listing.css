@@ -1115,56 +1115,69 @@
    stats block, visitor tips, recruiting banner, accessibility, Track B fields
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Discount notice bar ─────────────────────────────────────────────────── */
+/* ── Discount notice card ─────────────────────────────────────────────────── */
 .oha-listing-wrap .oha-discount-notice {
-    background: linear-gradient(90deg, rgba(139, 0, 0, 0.25), rgba(139, 0, 0, 0.12));
-    border-top: 1px solid rgba(139, 0, 0, 0.5);
-    border-bottom: 1px solid rgba(139, 0, 0, 0.5);
-    padding: 10px 20px;
+    background: var(--oha-dark2);
+    border-top: 3px solid var(--oha-gold);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+    padding: 24px 28px;
 }
 
-.oha-listing-wrap .oha-discount-notice__inner {
+.oha-listing-wrap .oha-discount-notice__card {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    align-items: stretch;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.oha-listing-wrap .oha-discount-notice__icon {
-    fill: var(--oha-gold);
-    flex-shrink: 0;
+.oha-listing-wrap .oha-discount-notice__main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    flex: 1;
+    padding-right: 32px;
+}
+
+.oha-listing-wrap .oha-discount-notice__label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--oha-gold);
 }
 
 .oha-listing-wrap .oha-discount-notice__rate {
     font-family: 'Cinzel', serif;
-    font-size: 14px;
+    font-size: 30px;
     font-weight: 700;
-    color: var(--oha-gold);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    white-space: nowrap;
+    color: #fff;
+    line-height: 1.05;
+    letter-spacing: 0.02em;
 }
 
 .oha-listing-wrap .oha-discount-notice__msg {
-    font-size: 13px;
-    color: var(--oha-text);
+    font-size: 14px;
+    color: var(--oha-muted);
     line-height: 1.4;
 }
 
+/* Members column: right panel with vertical divider */
 .oha-listing-wrap .oha-discount-notice__members {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
     gap: 10px;
-    padding: 8px 20px;
-    border-top: 1px solid rgba(139, 0, 0, 0.3);
-    background: rgba(0, 0, 0, 0.15);
-    max-width: 1200px;
-    margin: 0 auto;
-    font-size: 13px;
-    color: var(--oha-text);
+    min-width: 240px;
+    padding-left: 32px;
+    border-left: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+.oha-listing-wrap .oha-discount-notice__members-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
 }
 
 .oha-listing-wrap .oha-discount-notice__lock {
@@ -1173,41 +1186,44 @@
 }
 
 .oha-listing-wrap .oha-discount-notice__members-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
     font-weight: 700;
-    color: var(--oha-gold);
-    font-size: 12px;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    color: var(--oha-gold);
     white-space: nowrap;
 }
 
 .oha-listing-wrap .oha-discount-notice__promo-wrap {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--oha-muted);
 }
 
 .oha-listing-wrap .oha-discount-notice__promo-code {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: var(--oha-radius);
+    padding: 3px 10px;
     user-select: all;
 }
 
 .oha-listing-wrap .oha-discount-notice__copy {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--oha-radius);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 11px;
-    padding: 2px 8px;
+    padding: 3px 10px;
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s;
 }
@@ -1223,41 +1239,73 @@
 
 .oha-listing-wrap .oha-discount-notice__private-link {
     display: inline-block;
-    background: var(--oha-primary, #ad3119);
+    align-self: flex-start;
+    background: var(--oha-blood);
     color: #fff;
-    font-size: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
     font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 4px;
+    letter-spacing: 0.04em;
+    padding: 6px 16px;
+    border-radius: var(--oha-radius);
     text-decoration: none;
     white-space: nowrap;
     transition: background 0.15s;
 }
 .oha-listing-wrap .oha-discount-notice__private-link:hover {
-    background: #c03820;
+    background: var(--oha-blood2);
     color: #fff;
 }
 
 .oha-listing-wrap .oha-discount-notice__teaser {
-    color: rgba(246, 232, 228, 0.7);
+    color: var(--oha-muted);
+    font-size: 13px;
     font-style: italic;
+    line-height: 1.45;
+    margin: 0;
 }
 
 .oha-listing-wrap .oha-discount-notice__join-link {
     display: inline-block;
+    align-self: flex-start;
     border: 1px solid var(--oha-gold);
     color: var(--oha-gold);
-    font-size: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
     font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 4px;
+    letter-spacing: 0.04em;
+    padding: 6px 16px;
+    border-radius: var(--oha-radius);
     text-decoration: none;
     white-space: nowrap;
     transition: background 0.15s, color 0.15s;
 }
 .oha-listing-wrap .oha-discount-notice__join-link:hover {
     background: var(--oha-gold);
-    color: #000;
+    color: var(--oha-dark1);
+}
+
+@media (max-width: 600px) {
+    .oha-listing-wrap .oha-discount-notice {
+        padding: 18px 20px;
+    }
+    .oha-listing-wrap .oha-discount-notice__card {
+        flex-direction: column;
+        gap: 18px;
+    }
+    .oha-listing-wrap .oha-discount-notice__main {
+        padding-right: 0;
+    }
+    .oha-listing-wrap .oha-discount-notice__members {
+        min-width: 0;
+        padding-left: 0;
+        padding-top: 18px;
+        border-left: none;
+        border-top: 1px solid rgba(201, 168, 76, 0.2);
+    }
+    .oha-listing-wrap .oha-discount-notice__rate {
+        font-size: 24px;
+    }
 }
 
 /* ── Unclaimed state ─────────────────────────────────────────────────────── */

@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.8.0",
+    "version":  "1.9.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -190,6 +190,20 @@
                         "type":  "feature",
                         "summary":  "Promo code and private link fields added to HLD admin meta box and GD frontend owner edit form",
                         "notes":  "Meta keys: _oha_disc_promo_code (sanitize_text_field), _oha_disc_private_link (esc_url_raw). Saved in both class-oha-hld-admin.php save_meta_box() and class-oha-hld-gd-form.php save_discount()."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.9.0",
+                        "type":  "change",
+                        "summary":  "Moved discount notice above the hero image for immediate visibility on page load",
+                        "notes":  "Block now renders before include hero.php in content-single.php (Option D positioning)."
+                    },
+                    {
+                        "date":  "2026-09-16",
+                        "version":  "1.9.0",
+                        "type":  "change",
+                        "summary":  "Redesigned discount notice as two-column card with OHA Member Discount label and 30px rate text",
+                        "notes":  "Removed __inner/__icon elements. New structure: __card (flex row), __main (left col with label+rate+msg), __members (right col, vertical gold divider). Rate 14px gold -\u003e 30px white Cinzel. Label is Cinzel small caps gold. Members uses __members-header wrapper. Mobile stacks at 600px."
                     }
                 ],
     "admin_settings":  {

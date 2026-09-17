@@ -308,49 +308,50 @@ $location_str  = implode( ', ', $address_parts );
 ?>
 <div class="oha-listing-wrap <?php echo $is_display_unclaimed ? 'oha-unclaimed' : 'oha-claimed'; ?>">
 
-    <?php include OHA_HLD_PATH . 'templates/partials/hero.php'; ?>
-
     <?php if ( $show_discount || ( $has_members_only && $disc_active && $disc_date_ok ) ) : ?>
     <!-- ── OHA Discount notice ─────────────────────────────────────────────── -->
-    <div class="oha-discount-notice" role="complementary" aria-label="Member discount">
+    <div class="oha-discount-notice" role="complementary" aria-label="OHA Member Discount">
+        <div class="oha-discount-notice__card">
 
-        <?php if ( $show_discount ) : ?>
-        <div class="oha-discount-notice__inner">
-            <svg class="oha-discount-notice__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
-            <?php if ( $disc_rate ) : ?>
-                <strong class="oha-discount-notice__rate"><?php echo esc_html( $disc_rate ); ?></strong>
-            <?php endif; ?>
-            <?php if ( $disc_message ) : ?>
-                <span class="oha-discount-notice__msg"><?php echo esc_html( $disc_message ); ?></span>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-
-        <?php if ( $has_members_only ) : ?>
-        <div class="oha-discount-notice__members">
-            <?php if ( $is_oha_member ) : ?>
-                <svg class="oha-discount-notice__lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                <span class="oha-discount-notice__members-label">Member Access</span>
-                <?php if ( $disc_promo_code ) : ?>
-                    <span class="oha-discount-notice__promo-wrap">
-                        Promo Code:
-                        <span class="oha-discount-notice__promo-code" data-code="<?php echo esc_attr( $disc_promo_code ); ?>"><?php echo esc_html( $disc_promo_code ); ?></span>
-                        <button type="button" class="oha-discount-notice__copy" aria-label="Copy promo code">Copy</button>
-                    </span>
+            <div class="oha-discount-notice__main">
+                <span class="oha-discount-notice__label">OHA Member Discount</span>
+                <?php if ( $disc_rate ) : ?>
+                    <strong class="oha-discount-notice__rate"><?php echo esc_html( $disc_rate ); ?></strong>
                 <?php endif; ?>
-                <?php if ( $disc_private_link ) : ?>
-                    <a class="oha-discount-notice__private-link" href="<?php echo esc_url( $disc_private_link ); ?>" target="_blank" rel="noopener noreferrer">Members Link</a>
+                <?php if ( $disc_message ) : ?>
+                    <span class="oha-discount-notice__msg"><?php echo esc_html( $disc_message ); ?></span>
                 <?php endif; ?>
-            <?php else : ?>
-                <svg class="oha-discount-notice__lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-                <span class="oha-discount-notice__teaser">OHA members unlock an exclusive promo code for this haunt.</span>
-                <a class="oha-discount-notice__join-link" href="<?php echo esc_url( $disc_join_url ); ?>"><?php echo esc_html( $disc_join_label ); ?></a>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
+            </div>
 
+            <?php if ( $has_members_only ) : ?>
+            <div class="oha-discount-notice__members">
+                <div class="oha-discount-notice__members-header">
+                    <svg class="oha-discount-notice__lock" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                    <span class="oha-discount-notice__members-label">Member Access</span>
+                </div>
+                <?php if ( $is_oha_member ) : ?>
+                    <?php if ( $disc_promo_code ) : ?>
+                        <span class="oha-discount-notice__promo-wrap">
+                            Promo Code:
+                            <span class="oha-discount-notice__promo-code" data-code="<?php echo esc_attr( $disc_promo_code ); ?>"><?php echo esc_html( $disc_promo_code ); ?></span>
+                            <button type="button" class="oha-discount-notice__copy" aria-label="Copy promo code">Copy</button>
+                        </span>
+                    <?php endif; ?>
+                    <?php if ( $disc_private_link ) : ?>
+                        <a class="oha-discount-notice__private-link" href="<?php echo esc_url( $disc_private_link ); ?>" target="_blank" rel="noopener noreferrer">Members Link</a>
+                    <?php endif; ?>
+                <?php else : ?>
+                    <p class="oha-discount-notice__teaser">OHA members unlock an exclusive promo code for this haunt.</p>
+                    <a class="oha-discount-notice__join-link" href="<?php echo esc_url( $disc_join_url ); ?>"><?php echo esc_html( $disc_join_label ); ?></a>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+        </div>
     </div>
     <?php endif; ?>
+
+    <?php include OHA_HLD_PATH . 'templates/partials/hero.php'; ?>
 
     <div class="oha-listing-body">
         <?php include OHA_HLD_PATH . 'templates/partials/main-content.php'; ?>
