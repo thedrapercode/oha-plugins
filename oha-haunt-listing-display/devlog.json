@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.10.1",
+    "version":  "1.11.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -260,6 +260,20 @@
                         "type":  "fix",
                         "summary":  "Autocomplete AJAX responses cached with 1-hour transient to avoid per-request DB queries",
                         "notes":  "Keys: oha_hld_ac_keywords and oha_hld_ac_locations; locations callback skips caching if GD table missing"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.11.0",
+                        "type":  "feature",
+                        "summary":  "Add OHA Discount sort option to GeoDirectory place search with admin toggle in Utilities tab",
+                        "notes":  "Hooks: geodir_add_custom_sort_options, posts_join, geodir_custom_key_orderby. One-time setup: drag OHA Discount tile in GD Admin \u003e Places \u003e Sorting, set DESC. Toggle off hides option from frontend dropdown via geodir_get_sort_options filter."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.11.0",
+                        "type":  "fix",
+                        "summary":  "Guard against duplicate JOIN alias on multi-loop pages; hide sort option from dropdown when disabled",
+                        "notes":  "discount_sort_join checks strpos for oha_disc_pm before adding. maybe_hide_discount_sort_option always registered so stale DB entry cannot show broken sort."
                     }
                 ],
     "admin_settings":  {

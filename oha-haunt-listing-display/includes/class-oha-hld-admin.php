@@ -47,8 +47,9 @@ class OHA_HLD_Admin {
             'claim_email_approved_body'    => "Hi {user_name},\n\nGreat news - your claim for {listing_title} has been approved.\nYou now manage this listing on {site_name}.\n\nListing: {listing_url}\n",
 
             // ── Utilities ─────────────────────────────────────────────────
-            'enable_autocomplete' => 1,  // GD search autocomplete (keyword + location)
-            'enable_place_count'  => 1,  // [gd_place_count] shortcode
+            'enable_autocomplete'  => 1,  // GD search autocomplete (keyword + location)
+            'enable_place_count'   => 1,  // [gd_place_count] shortcode
+            'enable_discount_sort' => 1,  // GD sort option: OHA Discount
         ];
     }
 
@@ -90,6 +91,16 @@ class OHA_HLD_Admin {
             add_action( 'save_post',    [ __CLASS__, 'clear_place_count_cache' ] );
             add_action( 'deleted_post', [ __CLASS__, 'clear_place_count_cache' ] );
             add_action( 'trashed_post', [ __CLASS__, 'clear_place_count_cache' ] );
+        }
+
+        // Always registered: hides the sort option from the dropdown when the toggle is off,
+        // so a previously-dragged-in DB entry doesn't produce silent wrong-sort behavior.
+        add_filter( 'geodir_get_sort_options', [ __CLASS__, 'maybe_hide_discount_sort_option' ], 10, 2 );
+
+        if ( self::get( 'enable_discount_sort', 1 ) ) {
+            add_filter( 'geodir_add_custom_sort_options', [ __CLASS__, 'register_discount_sort_option' ], 10, 2 );
+            add_filter( 'posts_join',                     [ __CLASS__, 'discount_sort_join' ],             10, 2 );
+            add_filter( 'geodir_custom_key_orderby',      [ __CLASS__, 'discount_sort_orderby' ],          10, 7 );
         }
     }
 
@@ -253,8 +264,9 @@ class OHA_HLD_Admin {
         }
 
         if ( $tab === 'utilities' ) {
-            $s['enable_autocomplete'] = isset( $_POST['enable_autocomplete'] ) ? 1 : 0;
-            $s['enable_place_count']  = isset( $_POST['enable_place_count'] )  ? 1 : 0;
+            $s['enable_autocomplete']  = isset( $_POST['enable_autocomplete'] )  ? 1 : 0;
+            $s['enable_place_count']   = isset( $_POST['enable_place_count'] )   ? 1 : 0;
+            $s['enable_discount_sort'] = isset( $_POST['enable_discount_sort'] ) ? 1 : 0;
         }
 
         update_option( self::OPTION_KEY, $s );
@@ -507,6 +519,20 @@ class OHA_HLD_Admin {
                         <p class="description"><em>Replaces the standalone <strong>GeoDirectory Place Count Shortcode</strong> plugin — deactivate that plugin if you enable this.</em></p>
                     </td>
                 </tr>
+                <tr>
+                    <th scope="row">Discount Sort Option</th>
+                    <td>
+                        <label><input type="checkbox" name="enable_discount_sort" <?php checked( $s['enable_discount_sort'] ); ?>>
+                        Add "OHA Discount" sort option to GeoDirectory place search</label>
+                        <p class="description">
+                            When enabled, haunts with an active OHA discount sort to the top when "OHA Discount" is selected in the GD sort dropdown.
+                            Disable this during off-season when discounts are not in use.
+                        </p>
+                        <p class="description">
+                            After enabling for the first time, go to <strong>GeoDirectory &rarr; Places &rarr; Sorting</strong> and drag the <strong>OHA Discount</strong> tile from the left panel into the active sort list. Set direction to <strong>DESC</strong>.
+                        </p>
+                    </td>
+                </tr>
             </table>
             <p><button type="submit" name="oha_hld_save" class="button button-primary">Save Settings</button></p>
         </form>
@@ -732,6 +758,54 @@ class OHA_HLD_Admin {
         if ( get_post_type( $post_id ) === 'gd_place' ) {
             delete_transient( 'gd_place_count' );
         }
+    }
+
+    // ── Discount Sort (GeoDirectory) ─────────────────────────────────────────────
+
+    // Removes oha_disc_active from the live sort dropdown when the toggle is off,
+    // preventing a stale GD sort-table entry from showing a broken sort option.
+    public static function maybe_hide_discount_sort_option( $options, $post_type ) {
+        if ( self::get( 'enable_discount_sort', 1 ) ) return $options;
+        if ( ! is_array( $options ) ) return $options;
+        return array_values( array_filter( $options, function( $opt ) {
+            return ! ( isset( $opt->htmlvar_name ) && $opt->htmlvar_name === 'oha_disc_active' );
+        } ) );
+    }
+
+    public static function register_discount_sort_option( $fields, $post_type ) {
+        if ( $post_type !== 'gd_place' ) return $fields;
+        $fields['oha_discount'] = [
+            'post_type'      => $post_type,
+            'data_type'      => 'TINYINT',
+            'field_type'     => 'checkbox',
+            'frontend_title' => 'OHA Discount',
+            'htmlvar_name'   => 'oha_disc_active',
+            'field_icon'     => 'fas fa-tag',
+            'description'    => 'Haunts with an active OHA member discount sort first (use DESC)',
+        ];
+        return $fields;
+    }
+
+    public static function discount_sort_join( $join, $wp_query ) {
+        global $wpdb;
+        $sort_by = get_query_var( 'order_by' );
+        if ( isset( $_REQUEST['sort_by'] ) && $_REQUEST['sort_by'] !== '' ) {
+            $sort_by = sanitize_text_field( wp_unslash( $_REQUEST['sort_by'] ) );
+        }
+        if ( strpos( $sort_by, 'oha_disc_active' ) === false ) return $join;
+        if ( $wp_query->get( 'post_type' ) !== 'gd_place' ) return $join;
+        if ( strpos( $join, 'oha_disc_pm' ) !== false ) return $join; // already added
+        $join .= " LEFT JOIN {$wpdb->postmeta} AS oha_disc_pm"
+               . " ON ({$wpdb->posts}.ID = oha_disc_pm.post_id"
+               . " AND oha_disc_pm.meta_key = '_oha_disc_active') ";
+        return $join;
+    }
+
+    // $sort_by arrives already stripped of _asc/_desc suffix by GeoDirectory
+    public static function discount_sort_orderby( $orderby, $sort_by, $order, $old_orderby, $table, $post_type, $wp_query ) {
+        if ( $sort_by !== 'oha_disc_active' ) return $orderby;
+        global $wpdb;
+        return "COALESCE(oha_disc_pm.meta_value + 0, 0) {$order}, {$wpdb->posts}.post_title ASC";
     }
 
 }
