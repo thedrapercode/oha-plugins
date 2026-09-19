@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.6.1",
+    "version":  "1.6.2",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -371,6 +371,27 @@
                         "type":  "fix",
                         "summary":  "Replace the_content filter with direct action hook to eliminate duplicate events on haunt listing pages",
                         "notes":  "display_events_on_place_page removed from the_content filter. New render_place_events method hooked to oha_place_page_events action. Haunt listing display template calls do_action(oha_place_page_events, listing_id) after the About section. Removed empty-events placeholder (Seasonal Attraction fallback text) - nothing renders when no events exist."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.6.2",
+                        "type":  "fix",
+                        "summary":  "Shortcode event cards now parse GD schedule times as UTC, consistent with frontend.php v1.5.0 fix",
+                        "notes":  "render_event_card() was using strtotime() without timezone on schedule start_date+start_time. GD stores times as UTC; strtotime on a non-UTC PHP server inflates the displayed time by the UTC offset. Fixed to use new DateTime(..., UTC)-\u003egetTimestamp() matching get_frontend_schedule() in class-oha-ve-frontend.php."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.6.2",
+                        "type":  "fix",
+                        "summary":  "Live banner cancelled-event window check now uses time() and UTC DateTime instead of current_time+strtotime",
+                        "notes":  "sc_live_banner() was using current_time(timestamp) vs strtotime() for the cancelled-event window comparison. current_time(timestamp) is offset by the WP site timezone while strtotime() uses PHP server timezone (UTC on most hosts). Could cause the cancelled banner to appear or auto-close at the wrong time. Replaced with time() and new DateTime(..., UTC) throughout the cancelled-event block and banner time string calculation."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.6.2",
+                        "type":  "fix",
+                        "summary":  "Board create form now converts entered local time to UTC before writing GD event schedule row",
+                        "notes":  "insert_event_schedule() in class-oha-ve-create.php was storing the admin-entered time directly without UTC conversion. GD stores schedule times as UTC and the auto-flip cron reads them as UTC. Entering 7:00 PM EDT stored 19:00:00, causing the cron to flip status to live at 7:00 PM UTC (3:00 PM EDT) -- 4 hours early. Fixed by converting via wp_timezone() before insertion. The Zoom API call was already correct (passes WP timezone in the start_time payload)."
                     }
                 ]
 }

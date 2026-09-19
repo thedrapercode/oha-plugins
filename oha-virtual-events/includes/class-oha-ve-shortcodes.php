@@ -397,9 +397,10 @@ class OHA_VE_Shortcodes {
         $out .= '<h4 class="oha-edu-card-title"><a href="' . esc_url( $permalink ) . '">'
               . esc_html( $title ) . '</a></h4>';
 
-        // Date / time from schedule
+        // Date / time from schedule (GD stores times as UTC; parse accordingly)
         if ( $schedule ) {
-            $ts = strtotime( $schedule->start_date . ' ' . $schedule->start_time );
+            $dt = new DateTime( $schedule->start_date . ' ' . ( $schedule->start_time ?: '00:00:00' ), new DateTimeZone( 'UTC' ) );
+            $ts = $dt->getTimestamp();
             if ( $ts ) {
                 $out .= '<p class="oha-edu-card-date">'
                       . esc_html( date_i18n( 'F j, Y \a\t g:i A', $ts ) )
@@ -566,12 +567,13 @@ class OHA_VE_Shortcodes {
         // For cancelled events: only show within the scheduled time window.
         // Auto-close in DB once the window has passed.
         if ( $is_cancelled ) {
-            $now_ts = current_time( 'timestamp' );
+            $utc_tz = new DateTimeZone( 'UTC' );
+            $now_ts = time();
 
             // Not yet started - don't show yet.
             if ( $schedule && ! empty( $schedule->start_time ) ) {
-                $start_ts = strtotime( $schedule->start_date . ' ' . $schedule->start_time );
-                if ( $start_ts && $now_ts < $start_ts ) {
+                $dt_start = new DateTime( $schedule->start_date . ' ' . $schedule->start_time, $utc_tz );
+                if ( $now_ts < $dt_start->getTimestamp() ) {
                     return '';
                 }
             }
@@ -579,8 +581,8 @@ class OHA_VE_Shortcodes {
             // Past end time - auto-close and hide.
             if ( $schedule && ! empty( $schedule->end_time ) ) {
                 $end_date = ! empty( $schedule->end_date ) ? $schedule->end_date : $schedule->start_date;
-                $end_ts   = strtotime( $end_date . ' ' . $schedule->end_time );
-                if ( $end_ts && $now_ts > $end_ts ) {
+                $dt_end   = new DateTime( $end_date . ' ' . $schedule->end_time, $utc_tz );
+                if ( $now_ts > $dt_end->getTimestamp() ) {
                     update_post_meta( $event_id, 'oha_ve_event_status', 'closed' );
                     return '';
                 }
@@ -608,13 +610,18 @@ class OHA_VE_Shortcodes {
         // Featured image for album-art panel.
         $thumb_url = get_the_post_thumbnail_url( $event_id, [ 80, 80 ] );
 
-        // Build start - end time string from schedule.
+        // Build start - end time string from schedule (GD stores times as UTC).
         $time_str  = '';
         $end_ts_js = 0;
         if ( $schedule ) {
-            $s_ts = $schedule->start_time ? strtotime( $schedule->start_date . ' ' . $schedule->start_time ) : 0;
-            $e_d  = ! empty( $schedule->end_date ) ? $schedule->end_date : $schedule->start_date;
-            $e_ts = $schedule->end_time   ? strtotime( $e_d . ' ' . $schedule->end_time )   : 0;
+            $utc_tz = new DateTimeZone( 'UTC' );
+            $s_ts   = $schedule->start_time
+                ? ( new DateTime( $schedule->start_date . ' ' . $schedule->start_time, $utc_tz ) )->getTimestamp()
+                : 0;
+            $e_d    = ! empty( $schedule->end_date ) ? $schedule->end_date : $schedule->start_date;
+            $e_ts   = $schedule->end_time
+                ? ( new DateTime( $e_d . ' ' . $schedule->end_time, $utc_tz ) )->getTimestamp()
+                : 0;
             if ( $s_ts ) {
                 $time_str = date_i18n( 'g:i A', $s_ts );
                 if ( $e_ts && $e_ts > $s_ts ) {

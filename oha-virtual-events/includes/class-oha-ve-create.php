@@ -332,17 +332,24 @@ class OHA_VE_Create {
             ? GEODIR_EVENT_SCHEDULES_TABLE
             : $wpdb->prefix . 'geodir_event_schedule';
 
-        $end_ts   = strtotime( $start_date . ' ' . $start_time ) + ( $duration * 60 );
-        $end_time = date( 'H:i:s', $end_ts );
+        // Convert the admin-entered local time to UTC before storing.
+        // GD stores event schedule times as UTC; the auto-flip cron reads them as UTC.
+        // The form input is in the site's local timezone (e.g. America/New_York).
+        $wp_tz    = wp_timezone();
+        $utc_tz   = new DateTimeZone( 'UTC' );
+        $dt_start = new DateTime( $start_date . ' ' . $start_time, $wp_tz );
+        $dt_start->setTimezone( $utc_tz );
+        $dt_end   = clone $dt_start;
+        $dt_end->modify( '+' . $duration . ' minutes' );
 
         $wpdb->insert(
             $table,
             [
                 'event_id'   => $event_id,
-                'start_date' => $start_date,
-                'end_date'   => $start_date,
-                'start_time' => $start_time . ':00',
-                'end_time'   => $end_time,
+                'start_date' => $dt_start->format( 'Y-m-d' ),
+                'end_date'   => $dt_end->format( 'Y-m-d' ),
+                'start_time' => $dt_start->format( 'H:i:s' ),
+                'end_time'   => $dt_end->format( 'H:i:s' ),
                 'recurring'  => 0,
             ],
             [ '%d', '%s', '%s', '%s', '%s', '%d' ]
