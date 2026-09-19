@@ -648,33 +648,41 @@ class OHA_HLD_Admin {
     // ── Utility: Autocomplete AJAX ────────────────────────────────────────────
 
     public static function autocomplete_keywords_cb() {
-        global $wpdb;
-        $results = $wpdb->get_col(
-            "SELECT post_title FROM {$wpdb->posts}
-             WHERE post_type = 'gd_place' AND post_status = 'publish'
-             ORDER BY post_title
-             LIMIT 500"
-        );
+        $results = get_transient( 'oha_hld_ac_keywords' );
+        if ( false === $results ) {
+            global $wpdb;
+            $results = $wpdb->get_col(
+                "SELECT post_title FROM {$wpdb->posts}
+                 WHERE post_type = 'gd_place' AND post_status = 'publish'
+                 ORDER BY post_title
+                 LIMIT 500"
+            );
+            set_transient( 'oha_hld_ac_keywords', $results, HOUR_IN_SECONDS );
+        }
         wp_send_json( $results );
     }
 
     public static function autocomplete_locations_cb() {
-        global $wpdb;
-        $table = $wpdb->prefix . 'geodir_gd_place_detail';
-        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
-            wp_send_json( [] );
+        $cities = get_transient( 'oha_hld_ac_locations' );
+        if ( false === $cities ) {
+            global $wpdb;
+            $table = $wpdb->prefix . 'geodir_gd_place_detail';
+            if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
+                wp_send_json( [] ); // Don't cache — table may not exist yet
+            }
+            $cities = array_values( array_filter( $wpdb->get_col(
+                "SELECT DISTINCT city FROM {$table}
+                 WHERE city != '' AND city IS NOT NULL
+                 ORDER BY city
+                 LIMIT 500"
+            ) ) );
+            set_transient( 'oha_hld_ac_locations', $cities, HOUR_IN_SECONDS );
         }
-        $cities = $wpdb->get_col(
-            "SELECT DISTINCT city FROM {$table}
-             WHERE city != '' AND city IS NOT NULL
-             ORDER BY city
-             LIMIT 500"
-        );
-        wp_send_json( array_values( array_filter( $cities ) ) );
+        wp_send_json( $cities );
     }
 
     public static function enqueue_autocomplete() {
-        if ( ! is_search() && ! is_page() ) return;
+        if ( is_admin() ) return;
 
         wp_enqueue_script( 'jquery-ui-autocomplete' );
 
@@ -685,8 +693,8 @@ class OHA_HLD_Admin {
             '.ui-autocomplete{position:absolute;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:4px;'
             . 'padding:4px 0;list-style:none;margin:0;max-height:300px;overflow-y:auto;box-shadow:0 2px 6px rgba(0,0,0,.15);}'
             . '.ui-menu-item{padding:0;}'
-            . '.ui-menu-item-wrapper{padding:6px 12px;cursor:pointer;display:block;white-space:nowrap;}'
-            . '.ui-menu-item-wrapper.ui-state-active{background:#0073aa;color:#fff;}'
+            . '.ui-autocomplete .ui-menu-item-wrapper{padding:6px 12px;cursor:pointer;display:block;white-space:nowrap;color:#111;}'
+            . '.ui-autocomplete .ui-menu-item-wrapper.ui-state-active{background:#0073aa;color:#fff;}'
         );
 
         wp_enqueue_script(

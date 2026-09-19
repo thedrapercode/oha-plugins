@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.10.0",
+    "version":  "1.10.1",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -225,6 +225,41 @@
                         "type":  "feature",
                         "summary":  "Discount rate badge shown on nearby featured haunt cards when discount is active",
                         "notes":  "Reads _oha_disc_active, _oha_disc_rate, _oha_disc_start, _oha_disc_end per nearby card. Badge shows rate + Member Discount label below title. Uses  from parent content-single.php scope. CSS class: .oha-nearby__discount (gold, Rajdhani, subtle border)."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.10.1",
+                        "type":  "fix",
+                        "summary":  "Autocomplete dropdown: white text on white bg fixed by scoping color to .ui-autocomplete",
+                        "notes":  "Added color:#111 to .ui-autocomplete .ui-menu-item-wrapper; scoped both ui-menu-item-wrapper rules under .ui-autocomplete to avoid bleeding into other jQuery UI menus"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.10.1",
+                        "type":  "fix",
+                        "summary":  "Autocomplete now loads sitewide, not only on haunt-list page",
+                        "notes":  "Changed enqueue_autocomplete guard from is_search/is_page check to is_admin only; JS self-guards with length check so no-ops on pages without GD search forms"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.10.1",
+                        "type":  "fix",
+                        "summary":  "Autocomplete no longer attaches to WP native search input[name=s]",
+                        "notes":  "JS now scopes to form:has(input[name=snear]) so only GD search forms get autocomplete, not the WP search widget"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.10.1",
+                        "type":  "fix",
+                        "summary":  "Autocomplete AJAX calls are now lazy, firing on first focus instead of page load",
+                        "notes":  "Used .one focus handler; race condition handled by calling autocomplete search immediately after attach if input already has 2+ chars"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.10.1",
+                        "type":  "fix",
+                        "summary":  "Autocomplete AJAX responses cached with 1-hour transient to avoid per-request DB queries",
+                        "notes":  "Keys: oha_hld_ac_keywords and oha_hld_ac_locations; locations callback skips caching if GD table missing"
                     }
                 ],
     "admin_settings":  {
