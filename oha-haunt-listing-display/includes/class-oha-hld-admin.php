@@ -793,7 +793,6 @@ class OHA_HLD_Admin {
             $sort_by = sanitize_text_field( wp_unslash( $_REQUEST['sort_by'] ) );
         }
         if ( strpos( $sort_by, 'oha_disc_active' ) === false ) return $join;
-        if ( $wp_query->get( 'post_type' ) !== 'gd_place' ) return $join;
         if ( strpos( $join, 'oha_disc_pm' ) !== false ) return $join; // already added
         $join .= " LEFT JOIN {$wpdb->postmeta} AS oha_disc_pm"
                . " ON ({$wpdb->posts}.ID = oha_disc_pm.post_id"

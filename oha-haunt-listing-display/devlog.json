@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.11.0",
+    "version":  "1.11.1",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -274,6 +274,13 @@
                         "type":  "fix",
                         "summary":  "Guard against duplicate JOIN alias on multi-loop pages; hide sort option from dropdown when disabled",
                         "notes":  "discount_sort_join checks strpos for oha_disc_pm before adding. maybe_hide_discount_sort_option always registered so stale DB entry cannot show broken sort."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.11.1",
+                        "type":  "fix",
+                        "summary":  "Remove post_type guard from discount_sort_join that blocked JOIN on GD search pages causing zero results",
+                        "notes":  "GD search pages do not set post_type on WP_Query; guard caused JOIN to be skipped while ORDER BY still referenced oha_disc_pm alias, producing MySQL error and empty results. sort_by guard alone is sufficient."
                     }
                 ],
     "admin_settings":  {
