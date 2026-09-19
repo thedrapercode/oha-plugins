@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.16.1",
+    "version":  "3.16.2",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -596,6 +596,20 @@
                         "type":  "change",
                         "summary":  "Centered and enlarged New/Returning vendor toggle buttons on intake form",
                         "notes":  "Buttons are now centered, min-width 190px, font 1.1em, more padding. Active button has red drop shadow. Left accent border removed since centering made it look odd."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "3.16.2",
+                        "type":  "fix",
+                        "summary":  "Add form timing token to reject instant-submit bots on vendor application form",
+                        "notes":  "Token (UUID) stored as WP transient on page load. Submissions rejected silently if token missing or \u003c 3 sec old. Token is single-use (deleted on valid check). Transient key prefix: oha_vh_ft_."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "3.16.2",
+                        "type":  "fix",
+                        "summary":  "Add server-side booth count cap of 4 on vendor application form",
+                        "notes":  "Rejects booth values outside 1-4 with a visible error. Also sets HTML min/max via JS. Prevents bots from submitting applications requesting 1000s of booths."
                     }
                 ]
 }

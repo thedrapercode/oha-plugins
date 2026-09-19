@@ -68,6 +68,14 @@ add_shortcode('oha_vendor_form', function(){
             return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
         }
 
+        // Timing token check — rejects instant-submit bots.
+        $submitted_token = sanitize_key(wp_unslash($_POST['oha_form_token'] ?? ''));
+        $token_time      = $submitted_token ? (int) get_transient('oha_vh_ft_' . $submitted_token) : 0;
+        if (!$token_time || (time() - $token_time) < 3) {
+            return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
+        }
+        delete_transient('oha_vh_ft_' . $submitted_token);
+
         // Returning vendor detection — set by JS after a successful AJAX lookup.
         $is_returning = isset($_POST['is_returning_verified']) && $_POST['is_returning_verified'] === '1';
         $source_vid   = $is_returning ? intval(preg_replace('/[^0-9]/', '', wp_unslash($_POST['source_vid'] ?? ''))) : 0;
@@ -102,6 +110,11 @@ add_shortcode('oha_vendor_form', function(){
                     $errors[] = sprintf('The field "%s" is required.', $f['label']);
                 }
             }
+        }
+
+        // Booth count cap.
+        if (isset($meta['booths']) && ($meta['booths'] < 1 || $meta['booths'] > 4)) {
+            $errors[] = 'Booth count must be between 1 and 4. Contact us at info@ohiohaunters.com to discuss larger space requirements.';
         }
 
         // Normalize website URL.
@@ -321,6 +334,8 @@ add_shortcode('oha_vendor_form', function(){
         echo '</div>';
     };
 
+    $form_token      = wp_generate_uuid4();
+    set_transient('oha_vh_ft_' . $form_token, time(), 2 * HOUR_IN_SECONDS);
     $prefill_nonce   = wp_create_nonce('oha_vh_prefill');
     $ajax_url        = admin_url('admin-ajax.php');
     $vendor_edit_url = get_permalink((int) get_option('oha_vhcpt_vendor_edit_page_id'));
@@ -360,6 +375,7 @@ add_shortcode('oha_vendor_form', function(){
 
     <form class="oha-vh-form" method="post" enctype="multipart/form-data">
         <?php wp_nonce_field('oha_vhcpt_submit', 'oha_vhcpt_nonce'); ?>
+        <input type="hidden" name="oha_form_token" value="<?php echo esc_attr($form_token); ?>">
 
         <!-- Honeypot -->
         <div style="position:absolute;left:-9999px;" aria-hidden="true">
@@ -656,6 +672,10 @@ add_shortcode('oha_vendor_form', function(){
                 }
             });
         }
+
+        // ── Booth count max ───────────────────────────────────────────────────
+        var boothsEl = document.getElementById('booths');
+        if (boothsEl) { boothsEl.min = '1'; boothsEl.max = '4'; }
 
         // ── Submit guard (prevent double-click) ───────────────────────────────
         var form = document.querySelector('.oha-vh-form');
