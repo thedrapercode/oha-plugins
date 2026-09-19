@@ -1,0 +1,90 @@
+{
+  "plugin": "OHA Weekly Haunt Spotlight",
+  "version": "1.3.0",
+  "entries": [
+    {
+      "date": "2026-02-23",
+      "version": "1.0.0",
+      "type": "feature",
+      "summary": "Created plugin that logs GeoDirectory listing saves and publishes a weekly Sunday digest post.",
+      "notes": "Hooks into geodir_after_save_listing (3 params: post_id, post_data, is_update). Only logs gd_place post type. First event per listing per week wins -- repeat saves for the same listing are ignored. Uses wp_schedule_single_event targeted at next Sunday 8:00 AM in the site WordPress timezone, converted to UTC for WP cron. Reschedules itself after every run so the chain is self-sustaining."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.0.0",
+      "type": "feature",
+      "summary": "Digest post splits listings into New and Updated sections with haunt name linked and city/region.",
+      "notes": "City and region are read via geodir_get_post_info(post_id) -- never get_post_meta, which returns empty for GeoDirectory fields. Post is published immediately on Sunday with post_date and post_date_gmt set to current_time. Listings that are trashed or deleted before Sunday are silently skipped. Log is cleared from oha_spotlight_listing_log option only after a successful wp_insert_post."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.0.0",
+      "type": "feature",
+      "summary": "Auto-creates Haunt Highlight WordPress category if it does not already exist.",
+      "notes": "Uses get_term_by name lookup before inserting to avoid duplicates. Falls back to default_category option if wp_insert_term returns a WP_Error."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.0.0",
+      "type": "feature",
+      "summary": "Added admin notice on dashboard showing queued listing count and next publish date/time.",
+      "notes": "Notice is scoped to dashboard and the plugin admin page only -- not shown on every admin screen. Displays in the site WordPress timezone using wp_timezone()."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.1.0",
+      "type": "feature",
+      "summary": "Added Tools > Haunt Spotlight admin page showing the live queue broken down by new and updated.",
+      "notes": "Each queued listing shows its name linked to the frontend listing URL and city/region. Resolves listing data live from the log at page load time using the same oha_spotlight_build_listings() shared function used by the cron. Page is registered via add_management_page."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.1.0",
+      "type": "feature",
+      "summary": "Added Generate Draft Preview button that creates a draft and redirects admin to the WP frontend preview.",
+      "notes": "Uses admin-post.php action oha_spotlight_generate_draft secured with wp_nonce_field and check_admin_referer. Draft post ID is stored in oha_spotlight_draft_id option. Redirect goes to get_preview_post_link(post_id) which opens the live frontend preview. Does NOT clear the log -- the log is only cleared after the real Sunday publish. If a previous draft exists it is deleted before the new one is created."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.1.0",
+      "type": "feature",
+      "summary": "Admin page shows draft status banner with Preview, Edit in WordPress, and Delete Draft actions.",
+      "notes": "Preview links to get_preview_post_link, Edit links to get_edit_post_link. Delete uses admin-post.php action oha_spotlight_delete_draft with nonce. Stale draft references (where the post no longer exists) are cleaned up automatically on page load."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.1.0",
+      "type": "change",
+      "summary": "Refactored post generation into shared functions used by both the cron and the draft preview.",
+      "notes": "Extracted oha_spotlight_build_listings(), oha_spotlight_build_content(), oha_spotlight_get_category_id(), and oha_spotlight_create_post(status). oha_spotlight_create_post accepts 'publish' or 'draft' and sets post_date only for publish. The cron calls create_post('publish') then clears the log. The draft action calls create_post('draft') and stores the ID."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.1.0",
+      "type": "change",
+      "summary": "Sunday cron now automatically deletes any leftover preview draft after the live post is published.",
+      "notes": "Prevents duplicate content. Draft ID is read from oha_spotlight_draft_id option, post is force-deleted with wp_delete_post(id, true), and the option is reset to 0. This runs only if oha_spotlight_create_post returned a valid post ID."
+    },
+    {
+      "date": "2026-02-23",
+      "version": "1.1.1",
+      "type": "fix",
+      "summary": "Fixed listing queue never populating because geodir_after_save_listing does not exist in this GeoDirectory version.",
+      "notes": "Searched GeoDirectory source (class-geodir-post-data.php). The hook geodir_after_save_listing is not fired anywhere in the plugin. The correct hook is geodir_post_saved, which fires at line 729 after a successful write to the GD detail table. New signature: add_action('geodir_post_saved', callback, 10, 4) with params ($postarr, $gd_post, $post WP_Post, $update bool). Post ID is now read from $post->ID, post type from $post->post_type, and update flag from $update. Added post_status !== 'publish' guard to skip pending or draft saves."
+    },
+    {
+      "date": "2026-09-19",
+      "version": "1.2.0",
+      "type": "change",
+      "summary": "Unknown changes between 1.1.1 and 1.2.0 -- version number was bumped in the PHP header without a devlog entry.",
+      "notes": "Plugin was in Unzipped/ as v1.2.0 when migrated to _working/. No code diff available."
+    },
+    {
+      "date": "2026-09-19",
+      "version": "1.3.0",
+      "type": "change",
+      "summary": "Restyled generated post cards to match OHA dark theme using Kadence CSS palette variables and a dedicated enqueued stylesheet.",
+      "notes": "Added assets/spotlight.css with OHA dark card pattern: black card bg (--global-palette9), maroon border (rgba 173,49,25,0.45), hover glow, white headings, palette button vars. Replaced all inline styles in oha_spotlight_render_card() with .ohaws-card / .ohaws-grid CSS classes. Removed all emoji characters from generated post HTML (badge text: 'New'/'Updated'; section headings: 'New Listings'/'Updated Listings'; location pin removed). Wrapped post content in <div class='ohaws-wrap'>. Stylesheet enqueued via wp_enqueue_scripts on singular posts in the Haunt Highlight category only. OHA_SPOTLIGHT_VERSION constant added as the enqueue version."
+    }
+  ]
+}
