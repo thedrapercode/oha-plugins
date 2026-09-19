@@ -1,0 +1,177 @@
+
+/* OHA Awards frontend styles */
+.oha-awards-centered {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.oha-awards-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.oha-awards-form .field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.oha-awards-form label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.oha-awards-form input[type="text"],
+.oha-awards-form input[type="email"],
+.oha-awards-form input[type="url"],
+.oha-awards-form input[type="file"],
+.oha-awards-form select,
+.oha-awards-form textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.oha-awards-admin-wrap {
+  overflow-x: auto;
+}
+
+.oha-awards-admin-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+.oha-awards-admin-wrap table th,
+.oha-awards-admin-wrap table td {
+  border: 1px solid #c3c4c7; /* table borders */
+  padding: 8px 10px;
+  vertical-align: top;
+}
+
+.oha-awards-admin-wrap .oa-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+
+.oha-status-form select {
+  min-width: 140px;
+}
+
+/* Compact mode toggle */
+.oha-compact .oha-awards-admin-wrap table {
+  font-size: 12px;
+}
+.oha-compact .oha-awards-admin-wrap table td,
+.oha-compact .oha-awards-admin-wrap table th {
+  padding: 6px 8px;
+}
+
+/* Small screens: allow columns to wrap with an expandable details row */
+@media (max-width: 768px) {
+  .oha-awards-admin-wrap table thead {
+    display: none;
+  }
+  .oha-awards-admin-wrap table,
+  .oha-awards-admin-wrap table tbody,
+  .oha-awards-admin-wrap table tr,
+  .oha-awards-admin-wrap table td {
+    display: block;
+    width: 100%;
+  }
+  .oha-awards-admin-wrap table tr {
+    margin-bottom: 12px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .oha-awards-admin-wrap table td {
+    border: 0;
+    border-top: 1px solid #e2e4e7;
+  }
+  .oha-awards-admin-wrap table td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    display: inline-block;
+    min-width: 120px;
+  }
+}
+
+
+/* -------- Flex-based table for admin shortcode -------- */
+.oha-flex-table { display: block; width: 100%; }
+.oha-flex-header, .oha-flex-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid #c3c4c7;
+  border-bottom: 0;
+}
+.oha-flex-header { background: rgba(195,196,199,0.15); font-weight: 700; }
+.oha-flex-table > .oha-flex-row:last-child { border-bottom: 1px solid #c3c4c7; }
+.oha-flex-cell {
+  padding: 10px 12px;
+  border-right: 1px solid #c3c4c7;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.oha-flex-cell:last-child { border-right: 0; }
+
+/* Column sizing on desktop */
+.oha-col-id        { flex: 0 0 68px; }    /* small */
+.oha-col-date      { flex: 0 0 150px; }
+.oha-col-haunt     { flex: 1 1 180px; }   /* grow */
+.oha-col-actor     { flex: 0 0 140px; }
+.oha-col-owner     { flex: 0 0 240px; }
+.oha-col-status    { flex: 0 0 200px; }
+.oha-col-photo     { flex: 0 0 120px; }
+.oha-col-cert      { flex: 0 0 140px; }
+.oha-col-actions   { flex: 0 0 220px; }
+
+/* Compact toggle still works */
+.oha-compact .oha-flex-cell { padding: 6px 8px; font-size: 12px; }
+.oha-compact .oha-col-owner { flex-basis: 200px; }
+.oha-compact .oha-col-actions{ flex-basis: 180px; }
+
+/* Mobile/cards: stack into clear labeled blocks with borders */
+@media (max-width: 900px) {
+  .oha-flex-header { display: none; }
+  .oha-flex-row {
+    flex-direction: column;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .oha-flex-cell {
+    border-right: 0;
+    border-top: 1px solid #e2e4e7;
+    align-items: flex-start;
+  }
+  .oha-flex-cell:first-child { border-top: 0; }
+  .oha-flex-label { font-weight: 700; display: block; margin-bottom: 4px; opacity: .9; }
+  .oha-flex-value { display: block; }
+}
+
+/* Buttons and forms inline */
+.oha-inline { display: inline-flex; gap: 8px; align-items: center; }
+.oha-status-form select { min-width: 140px; }
+
+
+/* Vendor-hub like table styles */
+.oha-awards-admin { width: 100%; }
+.oha-awards-admin table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.oha-awards-admin th, .oha-awards-admin td { border: 1px solid #c3c4c7; padding: 8px; vertical-align: top; }
+.oha-awards-admin .filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 8px 0; }
+.oha-awards-admin .wide { flex: 1 1 260px; }
+.oha-awards-admin .actions form { display: inline-block; margin-right: 6px; }
+.oha-awards-admin .bulk-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 6px; }
+.oha-awards-admin .compact-toggle { margin-left: auto; }
+@media (max-width: 900px){
+  .oha-awards-admin table { font-size: 14px; }
+  .oha-awards-admin th:nth-child(n+6), .oha-awards-admin td:nth-child(n+6){ display: none; } /* hide extra columns on small screens */
+}

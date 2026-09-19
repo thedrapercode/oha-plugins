@@ -1,0 +1,20 @@
+{
+    "plugin":  "oha-board-hub-awards-addon",
+    "version":  "6.7.1",
+    "entries":  [
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "6.7.1",
+                        "type":  "fix",
+                        "summary":  "Owner status shortcode now shows plain-English labels instead of raw status strings",
+                        "notes":  "Map: in_review=Under Review, verified=Verified, completed=Certificate Ready. Unknown statuses fall back to ucwords."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "6.7.1",
+                        "type":  "fix",
+                        "summary":  "No-submission message now includes the active award year for context",
+                        "notes":  "Was: No award submission found. Now: No submissions found for the 2026 haunt award season."
+                    }
+                ]
+}
