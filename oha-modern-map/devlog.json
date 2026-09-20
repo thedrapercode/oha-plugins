@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.15.1",
+    "version":  "2.16.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -946,6 +946,41 @@
                         "type":  "fix",
                         "summary":  "Ohio state outline now uses real Census TIGER boundary (300+ pts) instead of hand-drawn 55-pt polygon",
                         "notes":  "get_ohio_state_geojson() fetches from Census TIGER State_County MapServer layer 0 where NAME=Ohio. Cached 7 days as oha_ohio_state_v1. Returned alongside county GeoJSON in ajax_get_ohio_counties response. loadCounties JS updates ohio-outline source with the real boundary. Falls back to existing hand-drawn outline if Census fetch fails."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.0",
+                        "type":  "fix",
+                        "summary":  "Fix sidebar panel list overflow by adding min-height:0 to .oha-panel-list flex item",
+                        "notes":  "Classic flex overflow bug -- flex items default to min-height:auto so overflow-y:auto never activates. Fix: min-height:0 on .oha-panel-list. Also added overflow:hidden to .oha-map-content when sidebar open."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.0",
+                        "type":  "feature",
+                        "summary":  "Sidebar panel replaces separate list view on desktop (\u003e=900px)",
+                        "notes":  "On desktop the old List/Map view toggle is hidden via CSS. List button now calls toggleSidebar(). Map button closes sidebar. toggleSidebar syncs view button active state. Mobile list view unchanged."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.0",
+                        "type":  "feature",
+                        "summary":  "Bottom sheet card uses side-by-side layout on tablet/desktop (\u003e=640px)",
+                        "notes":  "At 640px+ .oha-popup-card becomes flex row: 220px thumbnail left column, content right. Thumbnail has gradient overlay (fade bottom on mobile, fade right on desktop). Title bumped 17-\u003e18px."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.0",
+                        "type":  "change",
+                        "summary":  "CTA button in haunt bottom sheet replaced with solid OHA red block button",
+                        "notes":  ".oha-popup-cta now has own styles: var(--oha-primary) solid bg, uppercase, 13px padding. No longer relying on .oha-btn-primary gradient."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.0",
+                        "type":  "change",
+                        "summary":  "Sidebar panel cards improved: 72px thumb, featured gold border, home-haunt purple border",
+                        "notes":  "Thumb widened from 60px to 72px. oha-type-featured gets 3px gold left border. oha-type-home_haunt gets 3px purple left border."
                     }
                 ]
 }

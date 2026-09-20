@@ -1042,6 +1042,18 @@
                 const view = $(this).data('view');
                 $wrapper.find('.oha-view-btn').removeClass('active');
                 $(this).addClass('active');
+
+                // Desktop (>=900px): "List" opens sidebar, "Map" closes it
+                if (window.innerWidth >= 900) {
+                    if (view === 'list' && !self.sidebarOpen[mapId]) {
+                        self.toggleSidebar(mapId, $wrapper);
+                    } else if (view === 'map' && self.sidebarOpen[mapId]) {
+                        self.toggleSidebar(mapId, $wrapper);
+                    }
+                    return;
+                }
+
+                // Mobile: traditional map/list view swap
                 $wrapper.find('.oha-map-view, .oha-list-view').removeClass('active');
                 $wrapper.find(`.oha-${view}-view`).addClass('active');
                 if (view === 'map') {
@@ -1153,6 +1165,11 @@
             const isOpen = this.sidebarOpen[mapId];
             $wrapper.toggleClass('oha-sidebar-open', isOpen);
             $wrapper.find('.oha-panel-toggle').toggleClass('active', isOpen);
+            // Keep "List" / "Map" view buttons in sync on desktop
+            if (window.innerWidth >= 900) {
+                $wrapper.find('.oha-view-btn[data-view="list"]').toggleClass('active', isOpen);
+                $wrapper.find('.oha-view-btn[data-view="map"]').toggleClass('active', !isOpen);
+            }
             const map = this.maps[mapId];
             if (map) setTimeout(() => map.resize(), 50);
             if (!isOpen && map && map.getLayer('haunts-hover-ring')) {

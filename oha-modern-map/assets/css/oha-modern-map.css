@@ -443,15 +443,40 @@
 }
 
 .oha-popup-thumb {
+    position:            relative;
     width:               100%;
-    height:              180px;
+    height:              190px;
     background-size:     cover;
     background-position: center;
     background-color:    var(--oha-bg-dark);
+    flex-shrink:         0;
+}
+
+/* Bottom-fade gradient so the card body transitions cleanly */
+.oha-popup-thumb::after {
+    content:    '';
+    position:   absolute;
+    bottom:     0;
+    left:       0;
+    right:      0;
+    height:     60px;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.55));
+    pointer-events: none;
+}
+
+.oha-popup-no-thumb {
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    width:           100%;
+    height:          64px;
+    background:      rgba(173, 49, 25, 0.08);
+    border-bottom:   1px solid var(--oha-border);
+    flex-shrink:     0;
 }
 
 .oha-popup-body {
-    padding: 16px 18px 20px;
+    padding: 14px 18px 20px;
 }
 
 .oha-popup-badges {
@@ -459,6 +484,34 @@
     flex-wrap:     wrap;
     gap:           6px;
     margin-bottom: 8px;
+}
+
+/* Tablet/desktop: side-by-side thumbnail + content */
+@media (min-width: 640px) {
+    .oha-popup-card {
+        display:   flex;
+        flex-direction: row;
+        min-height: 200px;
+    }
+
+    .oha-popup-thumb {
+        width:      220px;
+        height:     auto;
+        min-height: 200px;
+    }
+
+    .oha-popup-thumb::after {
+        top:    0;
+        bottom: 0;
+        height: auto;
+        background: linear-gradient(to right, transparent 60%, rgba(0,0,0,0.35) 100%);
+    }
+
+    .oha-popup-body {
+        flex:      1;
+        min-width: 0;
+        padding:   18px 20px 20px;
+    }
 }
 
 .oha-badge {
@@ -483,9 +536,9 @@
 
 .oha-popup-title {
     color:       var(--oha-text-primary);
-    font-size:   17px;
+    font-size:   18px;
     font-weight: 700;
-    line-height: 1.3;
+    line-height: 1.25;
     margin:      0 0 12px;
 }
 
@@ -568,10 +621,29 @@
 
 /* CTA button */
 .oha-popup-cta {
-    display:    block;
-    text-align: center;
-    width:      100%;
-    box-sizing: border-box;
+    display:         block;
+    text-align:      center;
+    width:           100%;
+    box-sizing:      border-box;
+    background:      var(--oha-primary);
+    border:          none;
+    border-radius:   var(--oha-radius-sm);
+    color:           #ffffff;
+    font-size:       13px;
+    font-weight:     700;
+    letter-spacing:  0.05em;
+    padding:         13px 20px;
+    text-decoration: none;
+    text-transform:  uppercase;
+    transition:      background var(--oha-transition), transform var(--oha-transition);
+    margin-top:      2px;
+}
+
+.oha-popup-cta:hover {
+    background:      var(--oha-accent-dark);
+    color:           #ffffff;
+    text-decoration: none;
+    transform:       translateY(-1px);
 }
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
@@ -783,7 +855,7 @@
     .oha-view-toggle,
     .oha-layer-toggles { flex-wrap: nowrap; }
 
-    .oha-popup-thumb { height: 150px; }
+    .oha-popup-thumb { height: 170px; }
 
     .oha-bottom-sheet-panel { max-height: 80vh; }
 
@@ -1038,9 +1110,14 @@ body.oha-sheet-open {
 }
 
 @media (min-width: 900px) {
+    /* Sidebar panel replaces the old separate list view on desktop */
+    .oha-filter-view { display: none; }
+    .oha-list-view   { display: none !important; }
+
     .oha-map-wrapper.oha-sidebar-open .oha-map-content {
         display:     flex;
         align-items: stretch;
+        overflow:    hidden;
     }
 
     .oha-map-wrapper.oha-sidebar-open .oha-map-view {
@@ -1094,6 +1171,7 @@ body.oha-sheet-open {
 /* ── Panel List ─────────────────────────────────────────────────────────── */
 .oha-panel-list {
     flex:            1;
+    min-height:      0;
     overflow-y:      auto;
     padding:         8px;
     scrollbar-width: thin;
@@ -1124,17 +1202,27 @@ body.oha-sheet-open {
 }
 
 .oha-panel-card-thumb {
-    width:               60px;
+    width:               72px;
     flex-shrink:         0;
     background-size:     cover;
     background-position: center;
     background-color:    var(--oha-bg-dark);
 }
 
+/* Featured haunts get a gold left accent */
+.oha-panel-card.oha-type-featured {
+    border-left: 3px solid var(--oha-featured);
+}
+
+/* Home haunts get a purple left accent */
+.oha-panel-card.oha-type-home_haunt {
+    border-left: 3px solid var(--oha-home-haunt);
+}
+
 .oha-panel-card-body {
     flex:      1;
     min-width: 0;
-    padding:   8px 10px;
+    padding:   9px 10px 9px 12px;
 }
 
 .oha-panel-card-title {
@@ -1142,7 +1230,7 @@ body.oha-sheet-open {
     font-size:     13px;
     font-weight:   700;
     line-height:   1.3;
-    margin:        4px 0 2px;
+    margin:        3px 0 2px;
     overflow:      hidden;
     text-overflow: ellipsis;
     white-space:   nowrap;
