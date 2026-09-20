@@ -1676,3 +1676,93 @@ body.oha-sheet-open {
     70%  { box-shadow: 0 0 0 12px rgba(17,89,175,0); }
     100% { box-shadow: 0 0 0 0   rgba(17,89,175,0); }
 }
+
+/* ==========================================================================
+   PHASE 1 ENHANCEMENTS (v2.19.0)
+   Fear level badges, feature tags, accessible/venue badges, fear filter pills
+   ========================================================================== */
+
+/* ── Fear level badges ───────────────────────────────────────────────────── */
+.oha-badge-fear {
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.oha-fear-mild     { background: #13612e; color: #fff; }
+.oha-fear-moderate { background: #8a6d00; color: #fff; }
+.oha-fear-intense  { background: #ad3119; color: #fff; }
+.oha-fear-extreme  { background: #1a0a0a; color: #ff4444; border: 1px solid #ff4444; }
+
+/* ── Accessible + venue badges ──────────────────────────────────────────── */
+.oha-badge-accessible {
+    background: #1159af;
+    color:      #fff;
+}
+
+.oha-badge-venue {
+    background: rgba(173, 49, 25, 0.25);
+    color:      var(--oha-text-muted, #cbd2d9);
+    border:     1px solid rgba(173, 49, 25, 0.4);
+}
+
+/* ── Feature tag pills ───────────────────────────────────────────────────── */
+.oha-feature-tags {
+    display:    flex;
+    flex-wrap:  wrap;
+    gap:        5px;
+    margin-top: 8px;
+}
+
+.oha-feature-tag {
+    background:     rgba(173, 49, 25, 0.15);
+    border:         1px solid rgba(173, 49, 25, 0.35);
+    border-radius:  12px;
+    color:          var(--oha-text-muted, #cbd2d9);
+    font-size:      11px;
+    font-weight:    600;
+    letter-spacing: 0.03em;
+    padding:        3px 9px;
+    white-space:    nowrap;
+}
+
+/* ── Fear level filter pills (controls bar + mobile sheet) ──────────────── */
+.oha-fear-pills {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       6px;
+}
+
+.oha-fear-pill {
+    background:    rgba(255, 255, 255, 0.06);
+    border:        1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color:         var(--oha-text-muted, #cbd2d9);
+    cursor:        pointer;
+    font-size:     12px;
+    font-weight:   600;
+    padding:       5px 12px;
+    transition:    background 0.2s, border-color 0.2s, color 0.2s;
+    white-space:   nowrap;
+}
+
+.oha-fear-pill:hover {
+    background:   rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+    color:        #fff;
+}
+
+.oha-fear-pill.active {
+    color:  #fff;
+}
+
+.oha-fear-pill.oha-fear-mild.active     { background: #13612e; border-color: #13612e; }
+.oha-fear-pill.oha-fear-moderate.active { background: #8a6d00; border-color: #8a6d00; }
+.oha-fear-pill.oha-fear-intense.active  { background: #ad3119; border-color: #ad3119; }
+.oha-fear-pill.oha-fear-extreme.active  { background: #1a0a0a; border-color: #ff4444; color: #ff4444; }
+.oha-fear-pill[data-fear=""].active     { background: rgba(173,49,25,0.35); border-color: #ad3119; }
+
+/* ── Accessible toggle in filter groups ─────────────────────────────────── */
+.oha-accessible-toggle {
+    width: 100%;
+}

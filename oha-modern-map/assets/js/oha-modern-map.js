@@ -16,8 +16,10 @@
         allHaunts:   {},   // raw listings from AJAX, keyed by mapId
         allEvents:   {},   // raw events from AJAX, keyed by mapId
         activeFilters: {
-            region: '',
-            types:  ['featured', 'professional', 'home_haunt', 'free'],
+            region:     '',
+            types:      ['featured', 'professional', 'home_haunt', 'free'],
+            fearLevel:  '',
+            accessible: false,
         },
         layerVisible: {
             haunts: true,
@@ -739,6 +741,9 @@
             const favsOnly   = this.favoritesActive[mapId];
             const favIds     = favsOnly ? this.getFavorites() : null;
 
+            const fearLevel     = this.activeFilters.fearLevel;
+            const accessibleOnly = this.activeFilters.accessible;
+
             const filtered = allHaunts.filter(listing => {
                 if (region && listing.region !== region) return false;
                 if (!types.includes(listing.type)) return false;
@@ -747,6 +752,11 @@
                     const titleMatch = listing.title.toLowerCase().includes(query);
                     const cityMatch  = listing.city && listing.city.toLowerCase().includes(query);
                     if (!titleMatch && !cityMatch) return false;
+                }
+                if (fearLevel && listing.fear_level !== fearLevel) return false;
+                if (accessibleOnly) {
+                    const wc = (listing.wheelchair_accessible || '').toLowerCase();
+                    if (wc !== 'yes' && wc !== 'true' && wc !== '1') return false;
                 }
                 return true;
             });
@@ -791,10 +801,14 @@
                         website:     listing.website     || '',
                         permalink:   listing.permalink   || '',
                         thumbnail:   listing.thumbnail   || '',
-                        status:      listing.status      || '',
-                        featured:    listing.featured    ? 'yes' : 'no',
-                        region:      listing.region      || '',
-                        gd_icon_url: listing.gd_icon_url || '',
+                        status:         listing.status         || '',
+                        featured:       listing.featured       ? 'yes' : 'no',
+                        region:         listing.region         || '',
+                        gd_icon_url:    listing.gd_icon_url    || '',
+                        fear_level:     listing.fear_level     || '',
+                        haunt_features: Array.isArray(listing.haunt_features) ? listing.haunt_features.join(',') : '',
+                        wheelchair:     listing.wheelchair_accessible || '',
+                        indoor_outdoor: listing.indoor_outdoor  || '',
                     },
                 };
             });
@@ -955,8 +969,25 @@
             if (cardFields.status_badge !== false && props.status) {
                 badgesHtml.push(`<span class="oha-badge oha-badge-status oha-badge-${this.escHtml(props.status)}">${this.escHtml(props.status.charAt(0).toUpperCase() + props.status.slice(1))}</span>`);
             }
+            if (props.fear_level) {
+                const fc = this.getFearLevelClass(props.fear_level);
+                badgesHtml.push(`<span class="oha-badge oha-badge-fear oha-fear-${fc}">${this.escHtml(props.fear_level)}</span>`);
+            }
+            if (props.wheelchair && props.wheelchair.toLowerCase().match(/^(yes|true|1)$/)) {
+                badgesHtml.push(`<span class="oha-badge oha-badge-accessible">Accessible</span>`);
+            }
+            if (props.indoor_outdoor) {
+                badgesHtml.push(`<span class="oha-badge oha-badge-venue">${this.escHtml(props.indoor_outdoor)}</span>`);
+            }
             if (badgesHtml.length) {
                 html += `<div class="oha-popup-badges">${badgesHtml.join('')}</div>`;
+            }
+            // Feature tags
+            if (props.haunt_features) {
+                const feats = props.haunt_features.split(',').map(f => f.trim()).filter(f => f);
+                if (feats.length) {
+                    html += `<div class="oha-feature-tags">${feats.map(f => `<span class="oha-feature-tag">${this.escHtml(f)}</span>`).join('')}</div>`;
+                }
             }
 
             // Title + fav button row
@@ -1056,6 +1087,23 @@
                     $(this).prop('checked', types.includes($(this).val()));
                 });
                 self.activeFilters.types = types;
+                self.applyFilters(mapId, $wrapper);
+            });
+
+            // Fear level pills — synced between desktop and mobile sheet
+            $wrapper.on('click', '.oha-fear-pill', function () {
+                const fear = $(this).data('fear') || '';
+                $wrapper.find('.oha-fear-pill').removeClass('active');
+                $wrapper.find(`.oha-fear-pill[data-fear="${fear}"]`).addClass('active');
+                self.activeFilters.fearLevel = fear;
+                self.applyFilters(mapId, $wrapper);
+            });
+
+            // Wheelchair accessible toggle — synced between desktop and mobile sheet
+            $wrapper.on('change', '.oha-accessible-filter', function () {
+                const checked = $(this).is(':checked');
+                $wrapper.find('.oha-accessible-filter').prop('checked', checked);
+                self.activeFilters.accessible = checked;
                 self.applyFilters(mapId, $wrapper);
             });
 
@@ -1314,6 +1362,7 @@
                 <div class="oha-panel-card-body">
                     <div class="oha-panel-card-header">
                         <span class="oha-badge oha-badge-${this.escHtml(listing.type)}">${this.escHtml(typeLabel)}</span>
+                        ${listing.fear_level ? `<span class="oha-badge oha-badge-fear oha-fear-${this.getFearLevelClass(listing.fear_level)}">${this.escHtml(listing.fear_level)}</span>` : ''}
                         ${distHtml}
                         <button class="oha-panel-fav-btn${favClass}" data-id="${parseInt(listing.id, 10)}" title="Save to favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
                     </div>
@@ -1324,9 +1373,11 @@
         },
 
         updateMobileFilterBadge($wrapper) {
-            const hasRegion = this.activeFilters.region ? 1 : 0;
+            const hasRegion     = this.activeFilters.region     ? 1 : 0;
             const hasTypeFilter = this.activeFilters.types.length < 4 ? 1 : 0;
-            const count = hasRegion + hasTypeFilter;
+            const hasFear       = this.activeFilters.fearLevel   ? 1 : 0;
+            const hasAccess     = this.activeFilters.accessible  ? 1 : 0;
+            const count         = hasRegion + hasTypeFilter + hasFear + hasAccess;
             const $badge = $wrapper.find('.oha-mob-pill-badge');
             if (count > 0) {
                 $badge.text(count).show();
@@ -1613,6 +1664,15 @@
         formatDistance(miles) {
             if (miles < 1) return `${(Math.round(miles * 10) / 10)} mi`;
             return `${Math.round(miles)} mi`;
+        },
+
+        getFearLevelClass(fearLevel) {
+            const lvl = (fearLevel || '').toLowerCase();
+            if (lvl === 'mild')     return 'mild';
+            if (lvl === 'moderate') return 'moderate';
+            if (lvl === 'intense')  return 'intense';
+            if (lvl === 'extreme')  return 'extreme';
+            return 'mild';
         },
 
         // ---------------------------------------------------------------

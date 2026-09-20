@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.18.0",
+    "version":  "2.19.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -1086,6 +1086,41 @@
                         "type":  "change",
                         "summary":  "Mobile map container height changed from calc(100vh-80px) to fixed 480px",
                         "notes":  "100vh on mobile caused overflow and layout issues; fixed height keeps map usable without full-screen mode"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Fear level badge + filter: pull fear_level from GD, show color-coded badge on cards, add filter pills to desktop and mobile",
+                        "notes":  "Fear levels: Mild=green, Moderate=amber, Intense=red, Extreme=black/red. Values must match GD select options exactly."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Haunt feature tags: pull haunt_features multiselect from GD, render as pill tags on popup and panel cards",
+                        "notes":  "GD multiselect stored as comma-separated string; parse_multiselect() handles JSON/serialized/CSV formats defensively."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Wheelchair accessible badge + filter toggle on desktop and mobile controls",
+                        "notes":  "Checks wheelchair_accessible field for yes/true/1 to handle varied GD select option values."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Indoor/Outdoor badge on popup cards pulled from indoor_outdoor GD field",
+                        "notes":  "Display only, not filterable in v2.19.0 - can add filter later if needed."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "change",
+                        "summary":  "activeFilters extended with fearLevel and accessible; applyFilters and mobile badge count updated",
+                        "notes":  "Mobile filter badge count now reflects 4 filter dimensions: region, type, fear level, accessible."
                     }
                 ]
 }

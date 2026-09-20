@@ -141,6 +141,23 @@ class OHA_Map_Shortcode {
                             </label>
                         </div>
                     </div>
+                    <div class="oha-mob-filter-section">
+                        <p class="oha-mob-filter-label"><?php _e('Fear Level', 'oha-modern-map'); ?></p>
+                        <div class="oha-fear-pills">
+                            <button class="oha-fear-pill active" data-fear="" type="button"><?php _e('All', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-mild" data-fear="Mild" type="button"><?php _e('Mild', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-moderate" data-fear="Moderate" type="button"><?php _e('Moderate', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-intense" data-fear="Intense" type="button"><?php _e('Intense', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-extreme" data-fear="Extreme" type="button"><?php _e('Extreme', 'oha-modern-map'); ?></button>
+                        </div>
+                    </div>
+                    <div class="oha-mob-filter-section">
+                        <p class="oha-mob-filter-label"><?php _e('Accessibility', 'oha-modern-map'); ?></p>
+                        <label class="oha-toggle oha-accessible-toggle">
+                            <input type="checkbox" class="oha-accessible-filter">
+                            <span class="oha-toggle-label"><?php _e('Wheelchair Accessible', 'oha-modern-map'); ?></span>
+                        </label>
+                    </div>
                     <p class="oha-mob-filter-count">
                         <span class="oha-count">0</span> <?php _e('haunts', 'oha-modern-map'); ?>
                     </p>
@@ -230,6 +247,27 @@ class OHA_Map_Shortcode {
                             </button>
                             <div class="oha-autocomplete-list"></div>
                         </div>
+                    </div>
+
+                    <!-- Fear Level Filter -->
+                    <div class="oha-filter-group oha-filter-fear">
+                        <label class="oha-filter-label"><?php _e('Fear Level', 'oha-modern-map'); ?></label>
+                        <div class="oha-fear-pills">
+                            <button class="oha-fear-pill active" data-fear="" type="button"><?php _e('All', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-mild" data-fear="Mild" type="button"><?php _e('Mild', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-moderate" data-fear="Moderate" type="button"><?php _e('Moderate', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-intense" data-fear="Intense" type="button"><?php _e('Intense', 'oha-modern-map'); ?></button>
+                            <button class="oha-fear-pill oha-fear-extreme" data-fear="Extreme" type="button"><?php _e('Extreme', 'oha-modern-map'); ?></button>
+                        </div>
+                    </div>
+
+                    <!-- Accessible Filter -->
+                    <div class="oha-filter-group oha-filter-access">
+                        <label class="oha-filter-label"><?php _e('Access', 'oha-modern-map'); ?></label>
+                        <label class="oha-toggle oha-accessible-toggle">
+                            <input type="checkbox" class="oha-accessible-filter">
+                            <span class="oha-toggle-label"><?php _e('Wheelchair Accessible', 'oha-modern-map'); ?></span>
+                        </label>
                     </div>
 
                     <!-- Near Me + Favorites -->

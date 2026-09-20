@@ -215,11 +215,15 @@ class OHA_Map_Data {
                 'phone'       => $phone,
                 'email'       => $email,
                 'website'     => $website,
-                'status'      => self::get_haunt_status($row->ID),
-                'featured'    => !empty($row->featured) && $row->featured == '1',
-                'region'      => OHA_Map_Regions::get_region_for_point($lat, $lng),
-                'gd_icon_url' => $gd_icon_url,
-                'thumbnail'   => get_the_post_thumbnail_url((int) $row->ID, 'thumbnail') ?: '',
+                'status'               => self::get_haunt_status($row->ID),
+                'featured'             => !empty($row->featured) && $row->featured == '1',
+                'region'               => OHA_Map_Regions::get_region_for_point($lat, $lng),
+                'gd_icon_url'          => $gd_icon_url,
+                'thumbnail'            => get_the_post_thumbnail_url((int) $row->ID, 'thumbnail') ?: '',
+                'fear_level'           => !empty($row->fear_level)            ? sanitize_text_field($row->fear_level)            : '',
+                'haunt_features'       => !empty($row->haunt_features)        ? self::parse_multiselect($row->haunt_features)    : [],
+                'wheelchair_accessible'=> !empty($row->wheelchair_accessible) ? sanitize_text_field($row->wheelchair_accessible) : '',
+                'indoor_outdoor'       => !empty($row->indoor_outdoor)        ? sanitize_text_field($row->indoor_outdoor)        : '',
             ];
         }
 
@@ -290,6 +294,29 @@ class OHA_Map_Data {
         }
 
         return 'free';
+    }
+
+    /**
+     * Parse a GeoDirectory multiselect value into a clean array.
+     * GD stores multiselect as comma-separated string; may also be JSON or serialized.
+     */
+    private static function parse_multiselect($value) {
+        $value = trim($value);
+        if (empty($value)) return [];
+        // Try JSON array first
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return array_map('sanitize_text_field', $decoded);
+        }
+        // Try serialized PHP
+        if (is_serialized($value)) {
+            $unserialized = @unserialize($value);
+            if (is_array($unserialized)) {
+                return array_map('sanitize_text_field', $unserialized);
+            }
+        }
+        // Fall back to comma-separated
+        return array_filter(array_map('trim', explode(',', $value)));
     }
 
     private static function get_address($row) {
