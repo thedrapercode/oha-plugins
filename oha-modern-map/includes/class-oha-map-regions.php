@@ -157,6 +157,7 @@ class OHA_Map_Regions {
      */
     public static function get_county_region_map() {
         $default = [
+            'adams'      => 'southwest',
             'allen'      => 'northwest',
             'ashland'    => 'northeast',
             'ashtabula'  => 'northeast',
@@ -250,30 +251,140 @@ class OHA_Map_Regions {
     }
 
     /**
-     * Determine which region a point belongs to using ray-casting.
+     * Approximate geographic centroids for all 88 Ohio counties.
+     * Used by get_region_for_point() so haunt filtering uses the same
+     * county-based data as the visual county fills.
+     */
+    private static function get_county_centroids() {
+        return [
+            'adams'      => [38.83, -83.47],
+            'allen'      => [40.77, -84.11],
+            'ashland'    => [40.86, -82.31],
+            'ashtabula'  => [41.78, -80.78],
+            'athens'     => [39.33, -82.10],
+            'auglaize'   => [40.55, -84.23],
+            'belmont'    => [40.01, -81.00],
+            'brown'      => [38.94, -83.88],
+            'butler'     => [39.43, -84.56],
+            'carroll'    => [40.57, -81.08],
+            'champaign'  => [40.14, -83.76],
+            'clark'      => [39.93, -83.79],
+            'clermont'   => [39.07, -84.18],
+            'clinton'    => [39.41, -83.84],
+            'columbiana' => [40.77, -80.79],
+            'coshocton'  => [40.27, -81.84],
+            'crawford'   => [40.84, -82.97],
+            'cuyahoga'   => [41.45, -81.70],
+            'darke'      => [40.13, -84.62],
+            'defiance'   => [41.30, -84.35],
+            'delaware'   => [40.30, -83.00],
+            'erie'       => [41.43, -82.72],
+            'fairfield'  => [39.75, -82.63],
+            'fayette'    => [39.55, -83.43],
+            'franklin'   => [39.96, -82.99],
+            'fulton'     => [41.60, -84.13],
+            'gallia'     => [38.83, -82.30],
+            'geauga'     => [41.49, -81.18],
+            'greene'     => [39.67, -83.88],
+            'guernsey'   => [40.11, -81.49],
+            'hamilton'   => [39.20, -84.56],
+            'hancock'    => [41.00, -83.67],
+            'hardin'     => [40.66, -83.61],
+            'harrison'   => [40.29, -80.99],
+            'henry'      => [41.33, -84.07],
+            'highland'   => [39.18, -83.59],
+            'hocking'    => [39.52, -82.42],
+            'holmes'     => [40.55, -81.97],
+            'huron'      => [41.15, -82.60],
+            'jackson'    => [38.97, -82.64],
+            'jefferson'  => [40.37, -80.74],
+            'knox'       => [40.38, -82.38],
+            'lake'       => [41.72, -81.42],
+            'lawrence'   => [38.53, -82.55],
+            'licking'    => [40.10, -82.50],
+            'logan'      => [40.38, -83.72],
+            'lorain'     => [41.37, -82.16],
+            'lucas'      => [41.65, -83.67],
+            'madison'    => [39.89, -83.42],
+            'mahoning'   => [41.03, -80.76],
+            'marion'     => [40.60, -83.14],
+            'medina'     => [41.12, -81.87],
+            'meigs'      => [39.08, -82.02],
+            'mercer'     => [40.53, -84.63],
+            'miami'      => [40.03, -84.23],
+            'monroe'     => [39.69, -81.10],
+            'montgomery' => [39.76, -84.28],
+            'morgan'     => [39.62, -81.86],
+            'morrow'     => [40.54, -82.79],
+            'muskingum'  => [39.98, -81.98],
+            'noble'      => [39.74, -81.46],
+            'ottawa'     => [41.53, -83.14],
+            'paulding'   => [41.12, -84.56],
+            'perry'      => [39.74, -82.24],
+            'pickaway'   => [39.68, -82.79],
+            'pike'       => [39.07, -83.07],
+            'portage'    => [41.22, -81.20],
+            'preble'     => [39.73, -84.66],
+            'putnam'     => [41.01, -84.13],
+            'richland'   => [40.77, -82.52],
+            'ross'       => [39.34, -83.05],
+            'sandusky'   => [41.35, -83.11],
+            'scioto'     => [38.81, -82.96],
+            'seneca'     => [41.12, -83.12],
+            'shelby'     => [40.34, -84.20],
+            'stark'      => [40.80, -81.37],
+            'summit'     => [41.12, -81.52],
+            'trumbull'   => [41.32, -80.77],
+            'tuscarawas' => [40.44, -81.46],
+            'union'      => [40.28, -83.34],
+            'van wert'   => [40.86, -84.58],
+            'vinton'     => [39.25, -82.41],
+            'warren'     => [39.43, -84.19],
+            'washington' => [39.46, -81.51],
+            'wayne'      => [40.83, -81.88],
+            'williams'   => [41.55, -84.59],
+            'wood'       => [41.36, -83.63],
+            'wyandot'    => [40.84, -83.31],
+        ];
+    }
+
+    /**
+     * Determine which region a point belongs to.
+     * Uses nearest-county-centroid lookup so haunt filtering always
+     * matches the county fill colors shown on the map.
      * Falls back to nearest region centroid for out-of-state haunts.
      */
     public static function get_region_for_point($lat, $lng) {
-        $regions = self::get_regions();
-        foreach ($regions as $slug => $region) {
-            $polygon = isset($region['polygon']) ? $region['polygon'] : null;
-            if ($polygon && self::point_in_polygon($lat, $lng, $polygon)) {
-                return $slug;
+        $centroids  = self::get_county_centroids();
+        $county_map = self::get_county_region_map();
+
+        $min_dist = PHP_INT_MAX;
+        $nearest  = null;
+        foreach ($centroids as $county => $center) {
+            $d = ($lat - $center[0]) ** 2 + ($lng - $center[1]) ** 2;
+            if ($d < $min_dist) {
+                $min_dist = $d;
+                $nearest  = $county;
             }
         }
 
-        // Fallback: nearest region centroid (handles out-of-state haunts)
+        if ($nearest !== null && isset($county_map[$nearest])) {
+            return $county_map[$nearest];
+        }
+
+        // Fallback: nearest region centroid (truly out-of-state haunts)
+        $regions  = self::get_regions();
         $min_dist = PHP_INT_MAX;
-        $nearest  = false;
+        $fallback = 'central';
         foreach ($regions as $slug => $region) {
             if (empty($region['center'])) continue;
-            $d = pow($lat - $region['center'][0], 2) + pow($lng - $region['center'][1], 2);
+            $d = ($lat - $region['center'][0]) ** 2 + ($lng - $region['center'][1]) ** 2;
             if ($d < $min_dist) {
                 $min_dist = $d;
-                $nearest  = $slug;
+                $fallback = $slug;
             }
         }
-        return $nearest;
+        return $fallback;
     }
 
     /**

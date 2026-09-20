@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.16.0",
+    "version":  "2.16.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -981,6 +981,27 @@
                         "type":  "change",
                         "summary":  "Sidebar panel cards improved: 72px thumb, featured gold border, home-haunt purple border",
                         "notes":  "Thumb widened from 60px to 72px. oha-type-featured gets 3px gold left border. oha-type-home_haunt gets 3px purple left border."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.1",
+                        "type":  "fix",
+                        "summary":  "Add Adams County to county region map; was missing from default 88-county array",
+                        "notes":  "Adams County omitted alphabetically. Default assignment is southwest. Now appears in admin County Regions page."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.1",
+                        "type":  "fix",
+                        "summary":  "Replace old polygon ray-cast region lookup with county-centroid nearest-neighbor",
+                        "notes":  "get_region_for_point() was using hand-drawn polygon polygons (same broken regions as the old visual fills). Replaced with nearest-county-centroid using get_county_centroids() (88 Ohio county approx centroids) + get_county_region_map(). Haunt filter and visual county fills now use same data source -- no more mismatch."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.16.1",
+                        "type":  "fix",
+                        "summary":  "Fix overlay control icons invisible (black on black) on map",
+                        "notes":  "Theme CSS overrides fill on SVG elements. Added explicit fill:var(--oha-text-primary) and color:var(--oha-text-primary) to .oha-map-control svg in oha-modern-map.css."
                     }
                 ]
 }

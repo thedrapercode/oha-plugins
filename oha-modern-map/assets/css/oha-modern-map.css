@@ -301,6 +301,9 @@
 .oha-map-control svg {
     width:  16px;
     height: 16px;
+    fill:   var(--oha-text-primary);
+    color:  var(--oha-text-primary);
+    display: block;
 }
 
 .oha-map-control:hover {

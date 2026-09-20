@@ -3,7 +3,7 @@
  * Plugin Name: OHA Modern Map
  * Plugin URI: https://ohiohaunters.com
  * Description: Premium haunt map plugin for Ohio haunted attractions. MapLibre GL JS WebGL rendering, GeoDirectory + Events integration, region fills, convention mode indoor floor plan, mobile-first design. Requires GeoDirectory.
- * Version: 2.16.0
+ * Version: 2.16.1
  * Author: Ohio Haunters Association
  * Author URI: https://ohiohaunters.com
  * Text Domain: oha-modern-map
@@ -15,7 +15,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Plugin Constants
-define('OHA_MODERN_MAP_VERSION', '2.16.0');
+define('OHA_MODERN_MAP_VERSION', '2.16.1');
 define('OHA_MODERN_MAP_FILE', __FILE__);
 define('OHA_MODERN_MAP_PATH', plugin_dir_path(__FILE__));
 define('OHA_MODERN_MAP_URL', plugin_dir_url(__FILE__));
