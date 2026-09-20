@@ -289,7 +289,7 @@
     background:      rgba(0, 0, 0, 0.88);
     border:          1px solid var(--oha-border);
     border-radius:   var(--oha-radius-sm);
-    color:           var(--oha-text-primary);
+    color:           var(--oha-text-primary, #f7fafc) !important;
     cursor:          pointer;
     display:         flex;
     align-items:     center;
@@ -299,11 +299,18 @@
 }
 
 .oha-map-control svg {
-    width:  16px;
-    height: 16px;
-    fill:   var(--oha-text-primary);
-    color:  var(--oha-text-primary);
+    width:   16px;
+    height:  16px;
     display: block;
+    /* Kadence theme has a global SVG fill override — !important required */
+    fill:    var(--oha-text-primary, #f7fafc) !important;
+    color:   var(--oha-text-primary, #f7fafc) !important;
+}
+.oha-map-control svg path,
+.oha-map-control svg circle,
+.oha-map-control svg rect,
+.oha-map-control svg polygon {
+    fill: var(--oha-text-primary, #f7fafc) !important;
 }
 
 .oha-map-control:hover {
@@ -857,6 +864,7 @@
     .oha-map-control svg {
         width:  14px;
         height: 14px;
+        fill:   var(--oha-text-primary, #f7fafc) !important;
     }
 
     .oha-region-grid {
@@ -1761,6 +1769,143 @@ body.oha-sheet-open {
 .oha-fear-pill.oha-fear-intense.active  { background: #ad3119; border-color: #ad3119; }
 .oha-fear-pill.oha-fear-extreme.active  { background: #1a0a0a; border-color: #ff4444; color: #ff4444; }
 .oha-fear-pill[data-fear=""].active     { background: rgba(173,49,25,0.35); border-color: #ad3119; }
+
+/* ── Admission type badges (on card) ────────────────────────────────────── */
+.oha-badge-admission {
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.oha-admission-badge-free { background: #13612e; color: #fff; }
+.oha-admission-badge-paid { background: #ad3119; color: #fff; }
+
+/* ── Buy Tickets CTA button ─────────────────────────────────────────────── */
+.oha-btn-tickets {
+    display:         block;
+    background:      #13612e;
+    color:           #fff;
+    border:          none;
+    border-radius:   6px;
+    cursor:          pointer;
+    font-size:       13px;
+    font-weight:     700;
+    letter-spacing:  0.06em;
+    margin-top:      8px;
+    padding:         10px 16px;
+    text-align:      center;
+    text-decoration: none;
+    text-transform:  uppercase;
+    transition:      background 0.2s;
+    width:           100%;
+}
+
+.oha-btn-tickets:hover {
+    background: #0d4a20;
+    color:      #fff;
+}
+
+/* ── Admission filter pills (controls bar + mobile sheet) ───────────────── */
+.oha-admission-pills {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       6px;
+}
+
+.oha-admission-pill {
+    background:    rgba(255, 255, 255, 0.06);
+    border:        1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color:         var(--oha-text-muted, #cbd2d9);
+    cursor:        pointer;
+    font-size:     12px;
+    font-weight:   600;
+    padding:       5px 12px;
+    transition:    background 0.2s, border-color 0.2s, color 0.2s;
+    white-space:   nowrap;
+}
+
+.oha-admission-pill:hover {
+    background:   rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+    color:        #fff;
+}
+
+.oha-admission-pill.active                       { color: #fff; }
+.oha-admission-pill.oha-admission-free.active    { background: #13612e; border-color: #13612e; }
+.oha-admission-pill.oha-admission-paid.active    { background: #ad3119; border-color: #ad3119; }
+.oha-admission-pill[data-admission=""].active    { background: rgba(173,49,25,0.35); border-color: #ad3119; }
+
+/* ── Charity badges (on card) ───────────────────────────────────────────── */
+.oha-badge-charity {
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.oha-badge-charity-haunt     { background: #7b2d8b; color: #fff; }
+.oha-badge-supports-charity  { background: #1159af; color: #fff; }
+
+/* ── Charity name info row ───────────────────────────────────────────────── */
+.oha-info-charity svg path {
+    fill: #ad6edd !important;
+}
+
+/* ── Donate CTA button ───────────────────────────────────────────────────── */
+.oha-btn-donate {
+    display:         block;
+    background:      #7b2d8b;
+    color:           #fff;
+    border:          none;
+    border-radius:   6px;
+    cursor:          pointer;
+    font-size:       13px;
+    font-weight:     700;
+    letter-spacing:  0.06em;
+    margin-top:      8px;
+    padding:         10px 16px;
+    text-align:      center;
+    text-decoration: none;
+    text-transform:  uppercase;
+    transition:      background 0.2s;
+    width:           100%;
+}
+
+.oha-btn-donate:hover {
+    background: #601f6e;
+    color:      #fff;
+}
+
+/* ── Charity filter pills (controls bar + mobile sheet) ─────────────────── */
+.oha-charity-pills {
+    display:   flex;
+    flex-wrap: wrap;
+    gap:       6px;
+}
+
+.oha-charity-pill {
+    background:    rgba(255, 255, 255, 0.06);
+    border:        1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color:         var(--oha-text-muted, #cbd2d9);
+    cursor:        pointer;
+    font-size:     12px;
+    font-weight:   600;
+    padding:       5px 12px;
+    transition:    background 0.2s, border-color 0.2s, color 0.2s;
+    white-space:   nowrap;
+}
+
+.oha-charity-pill:hover {
+    background:   rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+    color:        #fff;
+}
+
+.oha-charity-pill.active                          { color: #fff; }
+.oha-charity-pill.oha-charity-haunt.active        { background: #7b2d8b; border-color: #7b2d8b; }
+.oha-charity-pill.oha-charity-supports.active     { background: #1159af; border-color: #1159af; }
+.oha-charity-pill[data-charity=""].active         { background: rgba(173,49,25,0.35); border-color: #ad3119; }
 
 /* ── Accessible toggle in filter groups ─────────────────────────────────── */
 .oha-accessible-toggle {

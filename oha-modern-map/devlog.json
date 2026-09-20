@@ -1121,6 +1121,27 @@
                         "type":  "change",
                         "summary":  "activeFilters extended with fearLevel and accessible; applyFilters and mobile badge count updated",
                         "notes":  "Mobile filter badge count now reflects 4 filter dimensions: region, type, fear level, accessible."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Added admission_type and ticket_url GD fields: Free/Paid badge, Buy Tickets CTA button, Admission filter pills",
+                        "notes":  "GD fields htmlvar_name: admission_type (Select: Free/Paid/Free with Paid Options Available), ticket_url (URL). Filter matches string-contains free or paid on admission_type value."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Added charity_type, charity_name, donation_url GD fields: charity badge, info row, Donate CTA, filter pills",
+                        "notes":  "GD fields htmlvar_name: charity_type (Select: Charity Haunt/Supports Charity), charity_name (Text), donation_url (URL). Badge: purple for Charity Haunt, blue for Supports Charity. Donate button purple matching badge."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.19.0",
+                        "type":  "fix",
+                        "summary":  "Map overlay control button icons now visible; Kadence global button color rule overridden with CSS !important",
+                        "notes":  "Kadence sets color: #000 on all button elements globally at equal specificity and loads after plugin stylesheet. Fix: color: !important on .oha-map-control, fill: !important on .oha-map-control svg and child shape elements (path/circle/rect/polygon)."
                     }
                 ]
 }

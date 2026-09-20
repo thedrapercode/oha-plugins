@@ -16,10 +16,12 @@
         allHaunts:   {},   // raw listings from AJAX, keyed by mapId
         allEvents:   {},   // raw events from AJAX, keyed by mapId
         activeFilters: {
-            region:     '',
-            types:      ['featured', 'professional', 'home_haunt', 'free'],
-            fearLevel:  '',
-            accessible: false,
+            region:        '',
+            types:         ['featured', 'professional', 'home_haunt', 'free'],
+            fearLevel:     '',
+            accessible:    false,
+            admissionType: '',
+            charityType:   '',
         },
         layerVisible: {
             haunts: true,
@@ -741,8 +743,10 @@
             const favsOnly   = this.favoritesActive[mapId];
             const favIds     = favsOnly ? this.getFavorites() : null;
 
-            const fearLevel     = this.activeFilters.fearLevel;
+            const fearLevel      = this.activeFilters.fearLevel;
             const accessibleOnly = this.activeFilters.accessible;
+            const admissionType  = this.activeFilters.admissionType;
+            const charityType    = this.activeFilters.charityType;
 
             const filtered = allHaunts.filter(listing => {
                 if (region && listing.region !== region) return false;
@@ -758,6 +762,12 @@
                     const wc = (listing.wheelchair_accessible || '').toLowerCase();
                     if (wc !== 'yes' && wc !== 'true' && wc !== '1') return false;
                 }
+                if (admissionType) {
+                    const at = (listing.admission_type || '').toLowerCase();
+                    if (admissionType === 'free' && !at.includes('free')) return false;
+                    if (admissionType === 'paid' && !at.includes('paid')) return false;
+                }
+                if (charityType && listing.charity_type !== charityType) return false;
                 return true;
             });
 
@@ -809,6 +819,11 @@
                         haunt_features: Array.isArray(listing.haunt_features) ? listing.haunt_features.join(',') : '',
                         wheelchair:     listing.wheelchair_accessible || '',
                         indoor_outdoor: listing.indoor_outdoor  || '',
+                        admission_type: listing.admission_type  || '',
+                        ticket_url:     listing.ticket_url      || '',
+                        charity_type:   listing.charity_type    || '',
+                        charity_name:   listing.charity_name    || '',
+                        donation_url:   listing.donation_url    || '',
                     },
                 };
             });
@@ -979,6 +994,14 @@
             if (props.indoor_outdoor) {
                 badgesHtml.push(`<span class="oha-badge oha-badge-venue">${this.escHtml(props.indoor_outdoor)}</span>`);
             }
+            if (props.admission_type) {
+                const ac = props.admission_type.toLowerCase().includes('free') ? 'free' : 'paid';
+                badgesHtml.push(`<span class="oha-badge oha-badge-admission oha-admission-badge-${ac}">${this.escHtml(props.admission_type)}</span>`);
+            }
+            if (props.charity_type) {
+                const cc = props.charity_type === 'Charity Haunt' ? 'charity-haunt' : 'supports-charity';
+                badgesHtml.push(`<span class="oha-badge oha-badge-charity oha-badge-${cc}">${this.escHtml(props.charity_type)}</span>`);
+            }
             if (badgesHtml.length) {
                 html += `<div class="oha-popup-badges">${badgesHtml.join('')}</div>`;
             }
@@ -996,9 +1019,17 @@
             html += `<button class="oha-fav-btn${this.isFavorite(props.id) ? ' is-fav' : ''}" data-id="${parseInt(props.id, 10)}" title="Save to favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>`;
             html += `</div>`;
 
-            // CTA button — placed before info so it's always visible even if card is partially off-screen
+            // CTA buttons — placed before info so they're always visible even if card is partially off-screen
             if (cardFields.view_details !== false && props.permalink) {
                 html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta">View Details</a>`;
+            }
+            if (props.ticket_url) {
+                const ticketHref = props.ticket_url.startsWith('http') ? props.ticket_url : `https://${props.ticket_url}`;
+                html += `<a href="${this.escHtml(ticketHref)}" class="oha-btn-tickets oha-popup-cta-tickets" target="_blank" rel="noopener">Buy Tickets</a>`;
+            }
+            if (props.donation_url) {
+                const donateHref = props.donation_url.startsWith('http') ? props.donation_url : `https://${props.donation_url}`;
+                html += `<a href="${this.escHtml(donateHref)}" class="oha-btn-donate oha-popup-cta-donate" target="_blank" rel="noopener">Donate</a>`;
             }
 
             // Info grid
@@ -1015,6 +1046,9 @@
             }
             if (cardFields.email !== false && props.email) {
                 html += `<div class="oha-info-row"><svg class="oha-info-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg><a href="mailto:${this.escHtml(props.email)}">${this.escHtml(props.email)}</a></div>`;
+            }
+            if (props.charity_name) {
+                html += `<div class="oha-info-row oha-info-charity"><svg class="oha-info-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>Supporting: ${this.escHtml(props.charity_name)}</span></div>`;
             }
             html += '</div>'; // .oha-popup-info
 
@@ -1104,6 +1138,24 @@
                 const checked = $(this).is(':checked');
                 $wrapper.find('.oha-accessible-filter').prop('checked', checked);
                 self.activeFilters.accessible = checked;
+                self.applyFilters(mapId, $wrapper);
+            });
+
+            // Admission type pills — synced between desktop and mobile sheet
+            $wrapper.on('click', '.oha-admission-pill', function () {
+                const admission = $(this).data('admission') || '';
+                $wrapper.find('.oha-admission-pill').removeClass('active');
+                $wrapper.find(`.oha-admission-pill[data-admission="${admission}"]`).addClass('active');
+                self.activeFilters.admissionType = admission;
+                self.applyFilters(mapId, $wrapper);
+            });
+
+            // Charity type pills — synced between desktop and mobile sheet
+            $wrapper.on('click', '.oha-charity-pill', function () {
+                const charity = $(this).data('charity') || '';
+                $wrapper.find('.oha-charity-pill').removeClass('active');
+                $wrapper.find(`.oha-charity-pill[data-charity="${charity}"]`).addClass('active');
+                self.activeFilters.charityType = charity;
                 self.applyFilters(mapId, $wrapper);
             });
 
@@ -1373,11 +1425,13 @@
         },
 
         updateMobileFilterBadge($wrapper) {
-            const hasRegion     = this.activeFilters.region     ? 1 : 0;
+            const hasRegion     = this.activeFilters.region         ? 1 : 0;
             const hasTypeFilter = this.activeFilters.types.length < 4 ? 1 : 0;
-            const hasFear       = this.activeFilters.fearLevel   ? 1 : 0;
-            const hasAccess     = this.activeFilters.accessible  ? 1 : 0;
-            const count         = hasRegion + hasTypeFilter + hasFear + hasAccess;
+            const hasFear       = this.activeFilters.fearLevel       ? 1 : 0;
+            const hasAccess     = this.activeFilters.accessible      ? 1 : 0;
+            const hasAdmission  = this.activeFilters.admissionType   ? 1 : 0;
+            const hasCharity    = this.activeFilters.charityType     ? 1 : 0;
+            const count         = hasRegion + hasTypeFilter + hasFear + hasAccess + hasAdmission + hasCharity;
             const $badge = $wrapper.find('.oha-mob-pill-badge');
             if (count > 0) {
                 $badge.text(count).show();

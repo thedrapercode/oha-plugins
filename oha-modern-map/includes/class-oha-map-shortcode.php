@@ -152,6 +152,22 @@ class OHA_Map_Shortcode {
                         </div>
                     </div>
                     <div class="oha-mob-filter-section">
+                        <p class="oha-mob-filter-label"><?php _e('Admission', 'oha-modern-map'); ?></p>
+                        <div class="oha-admission-pills">
+                            <button class="oha-admission-pill active" data-admission="" type="button"><?php _e('All', 'oha-modern-map'); ?></button>
+                            <button class="oha-admission-pill oha-admission-free" data-admission="free" type="button"><?php _e('Free', 'oha-modern-map'); ?></button>
+                            <button class="oha-admission-pill oha-admission-paid" data-admission="paid" type="button"><?php _e('Paid', 'oha-modern-map'); ?></button>
+                        </div>
+                    </div>
+                    <div class="oha-mob-filter-section">
+                        <p class="oha-mob-filter-label"><?php _e('Charity', 'oha-modern-map'); ?></p>
+                        <div class="oha-charity-pills">
+                            <button class="oha-charity-pill active" data-charity="" type="button"><?php _e('All', 'oha-modern-map'); ?></button>
+                            <button class="oha-charity-pill oha-charity-haunt" data-charity="Charity Haunt" type="button"><?php _e('Charity Haunt', 'oha-modern-map'); ?></button>
+                            <button class="oha-charity-pill oha-charity-supports" data-charity="Supports Charity" type="button"><?php _e('Supports Charity', 'oha-modern-map'); ?></button>
+                        </div>
+                    </div>
+                    <div class="oha-mob-filter-section">
                         <p class="oha-mob-filter-label"><?php _e('Accessibility', 'oha-modern-map'); ?></p>
                         <label class="oha-toggle oha-accessible-toggle">
                             <input type="checkbox" class="oha-accessible-filter">
@@ -258,6 +274,26 @@ class OHA_Map_Shortcode {
                             <button class="oha-fear-pill oha-fear-moderate" data-fear="Moderate" type="button"><?php _e('Moderate', 'oha-modern-map'); ?></button>
                             <button class="oha-fear-pill oha-fear-intense" data-fear="Intense" type="button"><?php _e('Intense', 'oha-modern-map'); ?></button>
                             <button class="oha-fear-pill oha-fear-extreme" data-fear="Extreme" type="button"><?php _e('Extreme', 'oha-modern-map'); ?></button>
+                        </div>
+                    </div>
+
+                    <!-- Admission Filter -->
+                    <div class="oha-filter-group oha-filter-admission">
+                        <label class="oha-filter-label"><?php _e('Admission', 'oha-modern-map'); ?></label>
+                        <div class="oha-admission-pills">
+                            <button class="oha-admission-pill active" data-admission="" type="button"><?php _e('All', 'oha-modern-map'); ?></button>
+                            <button class="oha-admission-pill oha-admission-free" data-admission="free" type="button"><?php _e('Free', 'oha-modern-map'); ?></button>
+                            <button class="oha-admission-pill oha-admission-paid" data-admission="paid" type="button"><?php _e('Paid', 'oha-modern-map'); ?></button>
+                        </div>
+                    </div>
+
+                    <!-- Charity Filter -->
+                    <div class="oha-filter-group oha-filter-charity">
+                        <label class="oha-filter-label"><?php _e('Charity', 'oha-modern-map'); ?></label>
+                        <div class="oha-charity-pills">
+                            <button class="oha-charity-pill active" data-charity="" type="button"><?php _e('All', 'oha-modern-map'); ?></button>
+                            <button class="oha-charity-pill oha-charity-haunt" data-charity="Charity Haunt" type="button"><?php _e('Charity Haunt', 'oha-modern-map'); ?></button>
+                            <button class="oha-charity-pill oha-charity-supports" data-charity="Supports Charity" type="button"><?php _e('Supports Charity', 'oha-modern-map'); ?></button>
                         </div>
                     </div>
 

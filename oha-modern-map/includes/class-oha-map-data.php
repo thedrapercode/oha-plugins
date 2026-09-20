@@ -224,6 +224,11 @@ class OHA_Map_Data {
                 'haunt_features'       => !empty($row->haunt_features)        ? self::parse_multiselect($row->haunt_features)    : [],
                 'wheelchair_accessible'=> !empty($row->wheelchair_accessible) ? sanitize_text_field($row->wheelchair_accessible) : '',
                 'indoor_outdoor'       => !empty($row->indoor_outdoor)        ? sanitize_text_field($row->indoor_outdoor)        : '',
+                'admission_type'       => !empty($row->admission_type)        ? sanitize_text_field($row->admission_type)        : '',
+                'ticket_url'           => !empty($row->ticket_url)            ? esc_url_raw($row->ticket_url)                    : '',
+                'charity_type'         => !empty($row->charity_type)          ? sanitize_text_field($row->charity_type)          : '',
+                'charity_name'         => !empty($row->charity_name)          ? sanitize_text_field($row->charity_name)          : '',
+                'donation_url'         => !empty($row->donation_url)          ? esc_url_raw($row->donation_url)                  : '',
             ];
         }
 
