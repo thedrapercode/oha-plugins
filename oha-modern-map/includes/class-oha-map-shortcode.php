@@ -49,16 +49,38 @@ class OHA_Map_Shortcode {
              data-clustering="<?php echo esc_attr($atts['clustering']); ?>"
              data-initial-view="<?php echo esc_attr($atts['initial_view']); ?>">
 
-            <!-- Mobile floating filter pill bar (shown below 640px via CSS) -->
+            <!-- Mobile floating pill bar (shown below 768px via CSS) -->
             <div class="oha-mob-map-pill-bar">
-                <button class="oha-mob-filter-pill" type="button">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
-                    <?php _e('Filters', 'oha-modern-map'); ?>
-                    <span class="oha-mob-pill-badge"></span>
-                </button>
-                <button class="oha-mob-reset-pill" type="button" title="<?php esc_attr_e('Reset view', 'oha-modern-map'); ?>">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-                </button>
+                <!-- Search row -->
+                <div class="oha-mob-search-row">
+                    <div class="oha-search-wrap">
+                        <svg class="oha-search-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <input type="text" class="oha-search-input" placeholder="<?php esc_attr_e('Search haunts or city...', 'oha-modern-map'); ?>" autocomplete="off" />
+                        <button class="oha-search-clear" style="display:none" title="<?php esc_attr_e('Clear', 'oha-modern-map'); ?>">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        </button>
+                        <div class="oha-autocomplete-list"></div>
+                    </div>
+                </div>
+                <!-- Quick actions row -->
+                <div class="oha-mob-actions-row">
+                    <button class="oha-near-me-btn oha-mob-action-pill" type="button">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+                        <?php _e('Near Me', 'oha-modern-map'); ?>
+                    </button>
+                    <button class="oha-mob-filter-pill" type="button">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                        <?php _e('Filters', 'oha-modern-map'); ?>
+                        <span class="oha-mob-pill-badge"></span>
+                    </button>
+                    <button class="oha-fav-filter-btn oha-mob-action-pill" type="button">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                        <?php _e('Saved', 'oha-modern-map'); ?>
+                    </button>
+                    <button class="oha-mob-reset-pill" type="button" title="<?php esc_attr_e('Reset', 'oha-modern-map'); ?>">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Mobile filter overlay -->

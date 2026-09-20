@@ -402,7 +402,7 @@
             }
 
             // Zoom to region using fitBounds for viewport-aware fitting
-            const pad = window.innerWidth < 640 ? 20 : 60;
+            const pad = window.innerWidth < 768 ? 20 : 60;
             if (slug) {
                 const regionData = this.getRegionData(slug);
                 if (regionData.bounds) {
@@ -965,6 +965,11 @@
             html += `<button class="oha-fav-btn${this.isFavorite(props.id) ? ' is-fav' : ''}" data-id="${parseInt(props.id, 10)}" title="Save to favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>`;
             html += `</div>`;
 
+            // CTA button — placed before info so it's always visible even if card is partially off-screen
+            if (cardFields.view_details !== false && props.permalink) {
+                html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta">View Details</a>`;
+            }
+
             // Info grid
             html += '<div class="oha-popup-info">';
             if (cardFields.address !== false && props.address) {
@@ -990,11 +995,6 @@
                     html += `<li><a href="${this.escHtml(ev.permalink)}" target="_blank">${this.escHtml(ev.title)}</a><span class="oha-event-date">${dateStr}</span></li>`;
                 });
                 html += '</ul></div>';
-            }
-
-            // CTA button
-            if (cardFields.view_details !== false && props.permalink) {
-                html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta">View Details</a>`;
             }
 
             html += '</div></div>'; // .oha-popup-body .oha-popup-card
@@ -1039,11 +1039,21 @@
                 self.selectRegion(mapId, slug, $wrapper);
             });
 
-            // Type checkboxes
+            // Type checkboxes — unified handler: reads only from the container that changed,
+            // then syncs the mirror set (desktop controls ↔ mobile filter sheet)
             $wrapper.on('change', '.oha-type-toggles input[type="checkbox"]', function () {
+                const inMobileSheet = $(this).closest('.oha-mob-filter-sheet').length > 0;
                 const types = [];
-                $wrapper.find('.oha-type-toggles input:checked').each(function () {
-                    types.push($(this).val());
+                const readSel = inMobileSheet
+                    ? '.oha-mob-filter-sheet .oha-type-toggles input:checked'
+                    : '.oha-map-controls .oha-type-toggles input:checked';
+                $wrapper.find(readSel).each(function () { types.push($(this).val()); });
+                // Sync the other set so state stays consistent
+                const syncSel = inMobileSheet
+                    ? '.oha-map-controls .oha-type-toggles input'
+                    : '.oha-mob-filter-sheet .oha-type-toggles input';
+                $wrapper.find(syncSel).each(function () {
+                    $(this).prop('checked', types.includes($(this).val()));
                 });
                 self.activeFilters.types = types;
                 self.applyFilters(mapId, $wrapper);
@@ -1100,16 +1110,6 @@
             $wrapper.on('click', '.oha-mob-filter-done', () => this.closeMobileFilterSheet($wrapper));
             $wrapper.on('click', '.oha-mob-filter-overlay', () => this.closeMobileFilterSheet($wrapper));
             $wrapper.on('click', '.oha-mob-reset-pill', () => this.selectRegion(mapId, '', $wrapper));
-
-            // Mobile type checkboxes (in the filter sheet) — same change handler
-            $wrapper.on('change', '.oha-mob-filter-sheet .oha-type-toggles input[type="checkbox"]', function () {
-                const types = [];
-                $wrapper.find('.oha-type-toggles input:checked').each(function () {
-                    types.push($(this).val());
-                });
-                self.activeFilters.types = types;
-                self.applyFilters(mapId, $wrapper);
-            });
 
             // Mobile region tabs — select region and close sheet
             $wrapper.on('click', '.oha-mob-region-tabs .oha-pill', function () {
@@ -1545,9 +1545,9 @@
             if (this.nearMeActive[mapId]) {
                 this.nearMeActive[mapId] = false;
                 $btn.removeClass('active');
-                if (this.userLocationMarker[mapId]) {
-                    this.userLocationMarker[mapId].remove();
-                    this.userLocationMarker[mapId] = null;
+                const mapOff = this.maps[mapId];
+                if (mapOff && mapOff.getLayer('user-location-dot')) {
+                    mapOff.setLayoutProperty('user-location-dot', 'visibility', 'none');
                 }
                 this.updateSidebarList(mapId, $wrapper);
                 return;
@@ -1560,21 +1560,36 @@
                     this.userLocation[mapId]  = { lat, lng };
                     this.nearMeActive[mapId]  = true;
                     $btn.addClass('active').removeClass('loading');
-                    if (this.userLocationMarker[mapId]) {
-                        this.userLocationMarker[mapId].remove();
-                    }
-                    const el = document.createElement('div');
-                    el.className = 'oha-user-location-dot';
                     const map = this.maps[mapId];
                     if (map) {
-                        this.userLocationMarker[mapId] = new maplibregl.Marker({ element: el })
-                            .setLngLat([lng, lat])
-                            .addTo(map);
+                        // Use a GeoJSON circle layer to avoid WebGL instability from DOM markers on Android
+                        const locData = { type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } };
+                        if (map.getSource('user-location')) {
+                            map.getSource('user-location').setData(locData);
+                            map.setLayoutProperty('user-location-dot', 'visibility', 'visible');
+                        } else {
+                            map.addSource('user-location', { type: 'geojson', data: locData });
+                            map.addLayer({
+                                id:     'user-location-dot',
+                                type:   'circle',
+                                source: 'user-location',
+                                paint: {
+                                    'circle-radius':         8,
+                                    'circle-color':          '#1159af',
+                                    'circle-stroke-width':   2.5,
+                                    'circle-stroke-color':   '#ffffff',
+                                    'circle-opacity':        0.92,
+                                    'circle-stroke-opacity': 1,
+                                },
+                            });
+                        }
                         map.easeTo({ center: [lng, lat], zoom: 10, speed: 1.2 });
                     }
-                    this.updateSidebarList(mapId, $wrapper);
-                    if (!this.sidebarOpen[mapId]) {
+                    // On desktop open sidebar for distance list; on mobile just refresh sidebar state
+                    if (window.innerWidth >= 768 && !this.sidebarOpen[mapId]) {
                         this.toggleSidebar(mapId, $wrapper);
+                    } else {
+                        this.updateSidebarList(mapId, $wrapper);
                     }
                 },
                 () => {

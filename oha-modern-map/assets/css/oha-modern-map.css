@@ -640,6 +640,7 @@
     text-transform:  uppercase;
     transition:      background var(--oha-transition), transform var(--oha-transition);
     margin-top:      2px;
+    margin-bottom:   12px;
 }
 
 .oha-popup-cta:hover {
@@ -828,39 +829,10 @@
 }
 
 /* ── Responsive — Mobile ───────────────────────────────────────────────── */
-@media (max-width: 640px) {
-    .oha-map-controls {
-        padding: 10px 12px;
-    }
-
-    .oha-map-controls-inner {
-        flex-direction: column;
-        gap:            10px;
-    }
-
-    .oha-region-pills {
-        flex-wrap:       nowrap;
-        overflow-x:      auto;
-        padding-bottom:  2px;
-        scrollbar-width: none;
-    }
-    .oha-region-pills::-webkit-scrollbar { display: none; }
-
-    .oha-pill { flex-shrink: 0; }
-
-    .oha-type-toggles {
-        flex-wrap:       nowrap;
-        overflow-x:      auto;
-        scrollbar-width: none;
-    }
-    .oha-type-toggles::-webkit-scrollbar { display: none; }
-
-    .oha-view-toggle,
-    .oha-layer-toggles { flex-wrap: nowrap; }
-
+@media (max-width: 767px) {
     .oha-popup-thumb { height: 170px; }
 
-    .oha-bottom-sheet-panel { max-height: 80vh; }
+    .oha-bottom-sheet-panel { max-height: 75vh; }
 
     .oha-results-counter {
         bottom:    14px;
@@ -919,13 +891,85 @@ body.oha-sheet-open {
 .oha-mob-map-pill-bar {
     display:         none;
     position:        absolute;
-    bottom:          80px;
-    left:            50%;
-    transform:       translateX(-50%);
+    bottom:          16px;
+    left:            12px;
+    right:           12px;
     z-index:         20;
+    flex-direction:  column;
     gap:             8px;
     pointer-events:  none;
+}
+
+/* Search row — full width */
+.oha-mob-search-row {
+    pointer-events: all;
+    width:          100%;
+}
+
+.oha-mob-search-row .oha-search-wrap {
+    width: 100%;
+}
+
+.oha-mob-search-row .oha-search-input {
+    background:   rgba(0, 0, 0, 0.92);
+    border-color: rgba(173, 49, 25, 0.6);
+    backdrop-filter: blur(8px);
+    width:        100%;
+    min-width:    0;
+    border-radius: 24px;
+    padding:      10px 36px 10px 36px;
+    font-size:    14px;
+    box-shadow:   0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.oha-mob-search-row .oha-autocomplete-list {
+    bottom: auto;
+    top:    calc(100% + 4px);
+}
+
+/* Actions row — centered flex */
+.oha-mob-actions-row {
+    display:         flex;
+    justify-content: center;
+    gap:             8px;
+    pointer-events:  all;
+    flex-wrap:       nowrap;
+}
+
+/* Action pills (Near Me, Saved) */
+.oha-mob-action-pill {
+    pointer-events:  all;
+    background:      rgba(0, 0, 0, 0.92);
+    border:          1px solid rgba(173, 49, 25, 0.6);
+    color:           var(--oha-text-primary, #f7fafc);
+    padding:         9px 14px;
+    border-radius:   24px;
+    font-size:       13px;
+    font-weight:     600;
+    cursor:          pointer;
+    display:         inline-flex;
+    align-items:     center;
+    gap:             5px;
+    backdrop-filter: blur(8px);
+    box-shadow:      0 4px 16px rgba(0, 0, 0, 0.5);
+    transition:      background 0.2s, border-color 0.2s, color 0.2s;
     white-space:     nowrap;
+}
+
+.oha-mob-action-pill svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.oha-mob-action-pill:hover,
+.oha-mob-action-pill.active {
+    background:   rgba(173, 49, 25, 0.5);
+    border-color: var(--oha-accent, #ad3119);
+}
+
+.oha-mob-action-pill.loading {
+    opacity: 0.6;
+    cursor:  wait;
 }
 
 .oha-mob-filter-pill,
@@ -999,14 +1043,19 @@ body.oha-sheet-open {
     border-top:     1px solid rgba(173, 49, 25, 0.45);
     z-index:        29;
     transform:      translateY(100%);
-    transition:     transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    visibility:     hidden;
+    transition:     transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+                    visibility 0s linear 0.3s;
     max-height:     80vh;
     overflow-y:     auto;
     padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .oha-mob-filter-sheet.open {
-    transform: translateY(0);
+    transform:  translateY(0);
+    visibility: visible;
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+                visibility 0s linear 0s;
 }
 
 .oha-mob-filter-handle {
@@ -1070,18 +1119,19 @@ body.oha-sheet-open {
     margin:      0;
 }
 
-/* Show pill bar, hide desktop controls on mobile */
-@media (max-width: 640px) {
+/* Show pill bar, hide desktop controls on mobile (covers all phones + tablet portrait) */
+@media (max-width: 767px) {
     .oha-mob-map-pill-bar { display: flex; }
 
     .oha-map-controls { display: none !important; }
 
+    /* Sensible fixed height: tall enough for good viewing, doesn't overflow the page */
     .oha-map-container {
-        height: calc(100vh - var(--oha-mobile-ui-offset, 80px)) !important;
+        height: 480px !important;
     }
 }
 
-@media (min-width: 641px) {
+@media (min-width: 768px) {
     .oha-mob-map-pill-bar { display: none !important; }
 
     .oha-mob-filter-sheet,

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.17.0",
+    "version":  "2.18.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -1030,6 +1030,62 @@
                         "type":  "fix",
                         "summary":  "View Details and View Event CTA buttons now open in same window instead of new tab",
                         "notes":  "Removed target=_blank from oha-popup-cta in buildHauntCardHTML, buildEventCardHTML, and buildListingCard; external website links in info grid keep target=_blank"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "fix",
+                        "summary":  "Raised mobile breakpoint from 640px to 767px; Samsung phones now correctly get mobile UI layout",
+                        "notes":  "Old 640px breakpoint caused Samsung landscape (800-900px CSS width) to render full desktop controls on mobile"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "fix",
+                        "summary":  "Filter sheet uses visibility:hidden + transition delay to prevent Android Chrome pre-render flash",
+                        "notes":  "overflow:hidden + CSS transform alone had edge cases on Android Chrome; belt-and-suspenders with visibility"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "fix",
+                        "summary":  "Type checkbox handler unified to read only from the triggering container (mobile or desktop)",
+                        "notes":  "Dual checkbox groups: reading all checked boxes across both containers caused hidden desktop boxes to override mobile unchecks"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "fix",
+                        "summary":  "Near Me user location dot switched from DOM Marker to GeoJSON circle layer",
+                        "notes":  "maplibregl.Marker with custom DOM element caused WebGL layer instability on Android Chrome; GeoJSON circle stays in WebGL pipeline"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "fix",
+                        "summary":  "Near Me no longer triggers sidebar toggle on mobile to avoid unwanted map resize",
+                        "notes":  "sidebar is desktop-only; calling toggleSidebar on mobile changed state without visible effect and triggered map.resize()"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "fix",
+                        "summary":  "CTA button moved before info grid in popup card HTML so it is always visible above fold",
+                        "notes":  "CTA was last element in card body; bottom sheet slides up from map edge so CTA fell off screen on short viewports"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "feature",
+                        "summary":  "Mobile pill bar redesigned to 2-row layout: search input row + Near Me, Filters, Saved, Reset action row",
+                        "notes":  "Previous pill bar had only Filter and Reset; search/Near Me/Favorites were inaccessible on mobile"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.18.0",
+                        "type":  "change",
+                        "summary":  "Mobile map container height changed from calc(100vh-80px) to fixed 480px",
+                        "notes":  "100vh on mobile caused overflow and layout issues; fixed height keeps map usable without full-screen mode"
                     }
                 ]
 }
