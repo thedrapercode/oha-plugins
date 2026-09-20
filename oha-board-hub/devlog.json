@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.16.0",
+    "version":  "2.16.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -736,6 +736,34 @@
                         "type":  "change",
                         "summary":  "Removed all WP admin backend links from overview; board hub is information-only",
                         "notes":  "Volunteer and haunts stat cards non-clickable. WooCommerce card link removed. Pending items show counts only."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.1",
+                        "type":  "fix",
+                        "summary":  "Fixed OHA Members total count excluding members with no oha_member_id",
+                        "notes":  "Removed oha_member_id EXISTS gate from count_oha_members. Two-condition check (form_id=1 + subscriber role) is sufficient. Aligns overview count with Members tab display."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.1",
+                        "type":  "feature",
+                        "summary":  "Added Awards Submissions stat card showing entry count for current award year",
+                        "notes":  "Only renders when oha_award_entry post type exists. Queries _oha_award_year meta. Links to ?tab=awards."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.1",
+                        "type":  "change",
+                        "summary":  "Removed Quick Links card from stats grid (redundant with existing stat cards)",
+                        "notes":  "Stats in the Quick Links list are already represented by individual stat cards."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.1",
+                        "type":  "change",
+                        "summary":  "Renamed WooCommerce Orders stat card to Checkout Orders",
+                        "notes":  "Removes vendor name from board hub display."
                     }
                 ]
 }

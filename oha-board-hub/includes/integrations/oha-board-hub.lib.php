@@ -801,6 +801,23 @@ private function render_overview_tab($range = '30d') {
             $woo_revenue_30d = floatval($woo_row->rev ?? 0);
         }
 
+        // Awards submissions for the current award year (if awards addon is active)
+        $awards_year       = 0;
+        $awards_total      = 0;
+        if (post_type_exists('oha_award_entry')) {
+            $awards_settings = get_option('oha_awards_settings', []);
+            $awards_year     = intval($awards_settings['award_year'] ?? date('Y'));
+            if ($awards_year <= 2000) $awards_year = (int) date('Y');
+            $awards_total = intval($wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+                 INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                 WHERE p.post_type = 'oha_award_entry'
+                 AND p.post_status IN ('publish','pending','draft')
+                 AND pm.meta_key = '_oha_award_year' AND pm.meta_value = %d",
+                $awards_year
+            )) ?: 0);
+        }
+
         // Haunts with active discounts
         $active_discounts = intval($wpdb->get_var(
             "SELECT COUNT(DISTINCT pm.post_id) FROM {$wpdb->postmeta} pm
@@ -957,27 +974,26 @@ private function render_overview_tab($range = '30d') {
                 '); ?>
 
                 <?php if (class_exists('WooCommerce')): ?>
-                <!-- WooCommerce Orders -->
+                <!-- Checkout Orders -->
                 <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
                     <div style="font-size:36px;margin-bottom:10px;">🛒</div>
                     <div style="font-size:32px;font-weight:bold;color:#7c3aed;margin:10px 0;"><?php echo intval($woo_orders_30d); ?></div>
-                    <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">WooCommerce Orders</div>
+                    <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Checkout Orders</div>
                     <div style="font-size:12px;color:#999;margin-top:5px;">$<?php echo number_format($woo_revenue_30d, 2); ?> revenue (30 days)</div>
                 </div>
                 <?php endif; ?>
 
-                <!-- Quick Links -->
-                <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                    <div style="font-size:14px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Quick Links</div>
-                    <ul style="margin:0;padding:0;list-style:none;font-size:13px;line-height:1.9;">
-                        <li>New OHA Members (30 days): <strong><?php echo intval($new_members); ?></strong></li>
-                        <li>New Listing Owners (30 days): <strong><?php echo intval($new_listing_owners); ?></strong></li>
-                        <li>Pending Listings: <strong><?php echo intval($pending_listings); ?></strong></li>
-                        <li>Pending Claims: <strong><?php echo intval($pending_claims); ?></strong></li>
-                        <li style="margin-top:8px;"><a href="<?php echo esc_url(add_query_arg(['tab'=>'members'])); ?>">Members dashboard →</a></li>
-                        <li><a href="<?php echo esc_url(add_query_arg(['tab'=>'discounts'])); ?>">Haunt Discounts →</a></li>
-                    </ul>
+                <?php if ($awards_year > 0): ?>
+                <!-- Awards Submissions -->
+                <?php echo $wrap_card('?tab=awards', '
+                <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);cursor:pointer;">
+                    <div style="font-size:36px;margin-bottom:10px;">🏆</div>
+                    <div style="font-size:32px;font-weight:bold;color:#b45309;margin:10px 0;">'.intval($awards_total).'</div>
+                    <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Awards Submissions</div>
+                    <div style="font-size:12px;color:#999;margin-top:5px;">'.intval($awards_year).' season</div>
                 </div>
+                '); ?>
+                <?php endif; ?>
             </div>
 
         </div>
@@ -1052,10 +1068,6 @@ private function render_overview_tab($range = '30d') {
                  AND EXISTS (
                      SELECT 1 FROM {$wpdb->usermeta}
                      WHERE user_id = u.ID AND meta_key = '{$cap_key}' AND meta_value LIKE '%\"subscriber\"%'
-                 )
-                 AND EXISTS (
-                     SELECT 1 FROM {$wpdb->usermeta}
-                     WHERE user_id = u.ID AND meta_key = 'oha_member_id'
                  )"
             ) ?: 0);
         } catch (\Throwable $e) { return 0; }
