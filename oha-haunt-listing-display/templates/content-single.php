@@ -312,6 +312,8 @@ $location_str  = implode( ', ', $address_parts );
 ?>
 <div class="oha-listing-wrap <?php echo $is_display_unclaimed ? 'oha-unclaimed' : 'oha-claimed'; ?>">
 
+    <?php include OHA_HLD_PATH . 'templates/partials/search-bar.php'; ?>
+
     <?php include OHA_HLD_PATH . 'templates/partials/hero.php'; ?>
 
     <?php if ( $show_discount || ( $has_members_only && $disc_active && $disc_date_ok ) ) : ?>
@@ -361,8 +363,6 @@ $location_str  = implode( ', ', $address_parts );
         <?php include OHA_HLD_PATH . 'templates/partials/main-content.php'; ?>
         <?php include OHA_HLD_PATH . 'templates/partials/sidebar.php'; ?>
     </div>
-
-    <?php include OHA_HLD_PATH . 'templates/partials/search-bar.php'; ?>
 
     <?php if ( $settings['enable_nearby'] ) : ?>
         <?php include OHA_HLD_PATH . 'templates/partials/nearby.php'; ?>

@@ -2001,25 +2001,20 @@
 
 /* ════════════════════════════════════════════════════════════════════════════
    LISTING PAGE SEARCH BAR
-   Compact GD-compatible search form injected on single listing pages.
-   Uses Kadence global palette vars so it adapts if the site palette changes.
+   Thin full-width bar injected above the hero on single listing pages.
+   Visually matches the GD search form on /places/ — consistent across both.
 ═══════════════════════════════════════════════════════════════════════════ */
 .oha-search-bar {
     background: var(--global-palette9, #000);
-    border: 1px solid rgba(173, 49, 25, 0.35);
-    border-radius: var(--oha-radius);
-    padding: 20px 24px;
-    margin: 32px 0;
+    border-bottom: 1px solid rgba(173, 49, 25, 0.4);
+    padding: 10px 16px;
+    margin: 0 0 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .oha-search-bar__label {
-    font-family: 'Cinzel', serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--global-palette6, #cbd2d9);
-    margin: 0 0 12px;
+    display: none;
 }
 
 .oha-search-bar__form {
@@ -2028,8 +2023,9 @@
 
 .oha-search-bar__row {
     display: flex;
-    gap: 8px;
-    align-items: stretch;
+    gap: 6px;
+    align-items: center;
+    max-width: 860px;
 }
 
 .oha-search-bar__field {
@@ -2045,10 +2041,10 @@
     border-radius: 4px;
     color: var(--global-palette4, #f7fafc);
     font-family: 'Rajdhani', sans-serif;
-    font-size: 15px;
-    padding: 10px 14px;
+    font-size: 14px;
+    padding: 7px 12px;
     outline: none;
-    height: 42px;
+    height: 36px;
     transition: border-color 0.15s;
 }
 
@@ -2064,7 +2060,7 @@
 .oha-search-bar__btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     background: var(--global-palette1, #ad3119);
     color: #fff;
     border: none;
@@ -2074,11 +2070,12 @@
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 0 20px;
-    height: 42px;
+    padding: 0 16px;
+    height: 36px;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s;
+    flex-shrink: 0;
 }
 
 .oha-search-bar__btn:hover {
@@ -2091,11 +2088,14 @@
 
 @media (max-width: 600px) {
     .oha-search-bar__row {
-        flex-direction: column;
+        flex-wrap: wrap;
+    }
+    .oha-search-bar__field {
+        flex: 1 1 100%;
     }
     .oha-search-bar__btn {
-        width: 100%;
+        flex: 1 1 100%;
         justify-content: center;
-        height: 44px;
+        height: 40px;
     }
 }

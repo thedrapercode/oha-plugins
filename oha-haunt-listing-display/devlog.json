@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.13.0",
+    "version":  "1.14.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -330,6 +330,41 @@
                         "type":  "change",
                         "summary":  "Enqueue archive.css and add oha-gd-archive body class on GD archive, search, and listing pages",
                         "notes":  "Two new hooks in oha-haunt-listing-display.php: wp_enqueue_scripts enqueues archive.css; body_class filter adds oha-gd-archive. Both check geodir_is_page archive/search/listing. Scoping via body class prevents bleed into non-GD pages."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.14.0",
+                        "type":  "fix",
+                        "summary":  "Fixed pagination CSS: a.page-numbers and span.page-numbers selectors now target links not the ul wrapper",
+                        "notes":  "GD paginate_links(type=list) outputs ul.page-numbers containing a.page-numbers and span.page-numbers; previous rule hit the ul causing no styling on links"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.14.0",
+                        "type":  "fix",
+                        "summary":  "Broadened archive search form CSS to cover form[name=geodir-listing-search] in addition to .geodir-loc-bar",
+                        "notes":  "GD block-based search widget may not use .geodir-loc-bar class; both selectors now targeted for consistent dark theme input styling"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.14.0",
+                        "type":  "change",
+                        "summary":  "Moved search bar above hero on single listing pages for consistent placement with /places/ search bar",
+                        "notes":  "search-bar.php include moved from after .oha-listing-body to before hero.php; bar is now first element inside .oha-listing-wrap"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.14.0",
+                        "type":  "change",
+                        "summary":  "Restyled listing page search bar as thin compact top bar to match /places/ page style",
+                        "notes":  "Removed card box and padding from .oha-search-bar; now a slim full-width bar with bottom border above the hero; label hidden"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.14.0",
+                        "type":  "fix",
+                        "summary":  "Forced 3-column CSS Grid layout on archive pages overriding Bootstrap row-cols-sm-2 default",
+                        "notes":  "Bootstrap md breakpoint (768px) fails when Kadence sidebar narrows content area; replaced with explicit CSS Grid on .geodir-category-list-view: 3col desktop, 2col tablet, 1col mobile"
                     }
                 ],
     "admin_settings":  {

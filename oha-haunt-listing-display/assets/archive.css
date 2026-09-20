@@ -34,10 +34,12 @@ body.oha-gd-archive {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   SEARCH FORM — .geodir-loc-bar
-   Targets the GD search form wrapper on archive/search pages.
+   SEARCH FORM
+   Targets .geodir-loc-bar (classic widget) and the broader form[name=geodir-listing-search]
+   so block-based GD search widgets are also covered.
 ══════════════════════════════════════════════════════════════════════════ */
-body.oha-gd-archive .geodir-loc-bar {
+body.oha-gd-archive .geodir-loc-bar,
+body.oha-gd-archive form[name="geodir-listing-search"] {
     background: var(--oha-arc-card-bg);
     border: 1px solid var(--oha-arc-border);
     border-radius: var(--oha-arc-radius);
@@ -46,7 +48,9 @@ body.oha-gd-archive .geodir-loc-bar {
 }
 
 body.oha-gd-archive .geodir-loc-bar input[type="text"],
-body.oha-gd-archive .geodir-loc-bar input[type="search"] {
+body.oha-gd-archive .geodir-loc-bar input[type="search"],
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="text"],
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="search"] {
     background: var(--oha-arc-bg) !important;
     border: 1px solid var(--oha-arc-border) !important;
     border-radius: 4px !important;
@@ -56,19 +60,25 @@ body.oha-gd-archive .geodir-loc-bar input[type="search"] {
 }
 
 body.oha-gd-archive .geodir-loc-bar input[type="text"]::placeholder,
-body.oha-gd-archive .geodir-loc-bar input[type="search"]::placeholder {
+body.oha-gd-archive .geodir-loc-bar input[type="search"]::placeholder,
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="text"]::placeholder,
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="search"]::placeholder {
     color: var(--oha-arc-text-muted) !important;
     opacity: 0.8;
 }
 
 body.oha-gd-archive .geodir-loc-bar input[type="text"]:focus,
-body.oha-gd-archive .geodir-loc-bar input[type="search"]:focus {
+body.oha-gd-archive .geodir-loc-bar input[type="search"]:focus,
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="text"]:focus,
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="search"]:focus {
     border-color: var(--oha-arc-primary) !important;
     outline: none !important;
 }
 
 body.oha-gd-archive .geodir-loc-bar button[type="submit"],
 body.oha-gd-archive .geodir-loc-bar input[type="submit"],
+body.oha-gd-archive form[name="geodir-listing-search"] button[type="submit"],
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="submit"],
 body.oha-gd-archive .geodir-search .btn-default,
 body.oha-gd-archive .geodir-search .btn-primary {
     background: var(--oha-arc-primary) !important;
@@ -82,6 +92,8 @@ body.oha-gd-archive .geodir-search .btn-primary {
 
 body.oha-gd-archive .geodir-loc-bar button[type="submit"]:hover,
 body.oha-gd-archive .geodir-loc-bar input[type="submit"]:hover,
+body.oha-gd-archive form[name="geodir-listing-search"] button[type="submit"]:hover,
+body.oha-gd-archive form[name="geodir-listing-search"] input[type="submit"]:hover,
 body.oha-gd-archive .geodir-search .btn-default:hover,
 body.oha-gd-archive .geodir-search .btn-primary:hover {
     background: var(--global-palette2, #ff0000) !important;
@@ -90,11 +102,41 @@ body.oha-gd-archive .geodir-search .btn-primary:hover {
 
 /* ══════════════════════════════════════════════════════════════════════════
    LISTING GRID WRAPPER
+   GD outputs Bootstrap row-cols-sm-2 / row-cols-md-3 classes, but Bootstrap's
+   md breakpoint (768px) can fail to fire when a sidebar narrows the content area.
+   We override with CSS Grid so column count is our own and not Bootstrap-dependent.
 ══════════════════════════════════════════════════════════════════════════ */
 body.oha-gd-archive .geodir-category-list-view {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    /* Reset Bootstrap flex-row behaviour */
+    flex-wrap: unset !important;
+}
+
+/* 2 columns on tablet */
+@media (max-width: 900px) {
+    body.oha-gd-archive .geodir-category-list-view {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* 1 column on mobile */
+@media (max-width: 576px) {
+    body.oha-gd-archive .geodir-category-list-view {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Reset Bootstrap col width on each item so grid controls sizing */
+body.oha-gd-archive .geodir-category-list-view > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    flex: unset !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -311,8 +353,18 @@ body.oha-gd-archive .gd-no-results {
 /* ══════════════════════════════════════════════════════════════════════════
    PAGINATION
 ══════════════════════════════════════════════════════════════════════════ */
-body.oha-gd-archive .geodir-pagination .page-numbers,
-body.oha-gd-archive .geodir-pagination a {
+body.oha-gd-archive .geodir-pagination ul.page-numbers {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+}
+
+body.oha-gd-archive .geodir-pagination a.page-numbers,
+body.oha-gd-archive .geodir-pagination span.page-numbers {
+    display: inline-block !important;
     background: var(--oha-arc-card-bg) !important;
     border: 1px solid var(--oha-arc-border) !important;
     color: var(--oha-arc-text) !important;
@@ -320,16 +372,16 @@ body.oha-gd-archive .geodir-pagination a {
     padding: 6px 12px !important;
     text-decoration: none !important;
     transition: background 0.15s, border-color 0.15s;
+    line-height: 1.4 !important;
 }
 
-body.oha-gd-archive .geodir-pagination .page-numbers:hover,
-body.oha-gd-archive .geodir-pagination a:hover {
+body.oha-gd-archive .geodir-pagination a.page-numbers:hover {
     background: var(--oha-arc-primary) !important;
     border-color: var(--oha-arc-primary) !important;
     color: #fff !important;
 }
 
-body.oha-gd-archive .geodir-pagination .current {
+body.oha-gd-archive .geodir-pagination span.page-numbers.current {
     background: var(--oha-arc-primary) !important;
     border-color: var(--oha-arc-primary) !important;
     color: #fff !important;
