@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.15.0",
+    "version":  "2.15.1",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -932,6 +932,20 @@
                         "type":  "feature",
                         "summary":  "County Regions admin page lets admin reassign individual counties between regions",
                         "notes":  "Slug: oha-map-county-regions. Saves to oha_county_region_map option. Saving auto-clears county transient cache. Default 88-county map matches original polygon intent exactly."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.1",
+                        "type":  "fix",
+                        "summary":  "Clicking a haunt pin no longer zooms the map; county-fills click handler now skips when a pin is under the cursor",
+                        "notes":  "addMapInteractions county-fills click handler was missing the queryRenderedFeatures haunt-hit guard that addRegionLayers has. Both handlers were firing on haunt clicks causing selectRegion to zoom to/from the region."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.1",
+                        "type":  "fix",
+                        "summary":  "Ohio state outline now uses real Census TIGER boundary (300+ pts) instead of hand-drawn 55-pt polygon",
+                        "notes":  "get_ohio_state_geojson() fetches from Census TIGER State_County MapServer layer 0 where NAME=Ohio. Cached 7 days as oha_ohio_state_v1. Returned alongside county GeoJSON in ajax_get_ohio_counties response. loadCounties JS updates ohio-outline source with the real boundary. Falls back to existing hand-drawn outline if Census fetch fails."
                     }
                 ]
 }

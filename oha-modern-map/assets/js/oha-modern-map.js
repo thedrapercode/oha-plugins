@@ -565,9 +565,11 @@
         // Map Interactions
         // ---------------------------------------------------------------
         addMapInteractions(map, mapId, $wrapper) {
-            // Click on county fill → toggle region selection
+            // Click on county fill → toggle region selection (skip if clicking on a haunt/cluster pin)
             map.on('click', 'county-fills', (e) => {
                 if (!e.features.length) return;
+                const markerHits = map.queryRenderedFeatures(e.point, { layers: ['haunts-unclustered', 'haunts-clusters'] });
+                if (markerHits.length) return;
                 const slug = e.features[0].properties.region;
                 const current = this.activeFilters.region;
                 this.selectRegion(mapId, current === slug ? '' : slug, $wrapper);
@@ -688,17 +690,28 @@
                     nonce:  ohaMapSettings.nonce,
                 },
             }).done((response) => {
-                if (response.success && response.data) {
-                    const map = this.maps[mapId];
-                    if (map && map.getSource('ohio-counties')) {
-                        map.getSource('ohio-counties').setData(response.data);
-                    }
-                    // If a region is already selected, apply the highlight now that data is loaded
-                    if (this.activeFilters.region && map && map.getLayer('county-fills-selected')) {
-                        map.setFilter('county-fills-selected', ['==', ['get', 'region'], this.activeFilters.region]);
-                    }
-                } else {
+                if (!response.success || !response.data) {
                     console.warn('OHA Map: county data unavailable', response);
+                    return;
+                }
+                const map = this.maps[mapId];
+                if (!map) return;
+
+                // Populate county fills
+                const countiesData = response.data.counties;
+                if (countiesData && map.getSource('ohio-counties')) {
+                    map.getSource('ohio-counties').setData(countiesData);
+                }
+
+                // Replace hand-drawn Ohio outline with Census TIGER boundary (if returned)
+                const outlineData = response.data.outline;
+                if (outlineData && map.getSource('ohio-outline')) {
+                    map.getSource('ohio-outline').setData(outlineData);
+                }
+
+                // Re-apply selected region highlight now that county data is loaded
+                if (this.activeFilters.region && map.getLayer('county-fills-selected')) {
+                    map.setFilter('county-fills-selected', ['==', ['get', 'region'], this.activeFilters.region]);
                 }
             }).fail((xhr, status, error) => {
                 console.warn('OHA Map: county AJAX failed', error);

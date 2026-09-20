@@ -975,7 +975,8 @@ class OHA_Map_Admin {
         // Handle cache clear
         if (isset($_POST['oha_clear_county_cache']) && check_admin_referer('oha_clear_county_cache')) {
             delete_transient('oha_ohio_counties_v1');
-            echo '<div class="updated notice"><p>County cache cleared. The next map load will re-fetch from Ohio GIS.</p></div>';
+            delete_transient('oha_ohio_state_v1');
+            echo '<div class="updated notice"><p>County and state outline cache cleared. The next map load will re-fetch from Ohio GIS and Census TIGER.</p></div>';
         }
 
         // Handle save

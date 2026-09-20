@@ -469,15 +469,15 @@ class OHA_Map_Data {
         unset($feature);
 
         wp_send_json_success([
-            'type'     => 'FeatureCollection',
-            'features' => $features,
+            'counties' => [
+                'type'     => 'FeatureCollection',
+                'features' => $features,
+            ],
+            'outline' => self::get_ohio_state_geojson(),
         ]);
     }
 
-    /**
-     * AJAX: clear county GeoJSON cache (admin only).
-     * Called via POST form on the County Regions admin page; nonce verified there.
-     */
+    /** AJAX: clear county GeoJSON cache (admin only). */
     public static function ajax_clear_county_cache() {
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Unauthorized');
@@ -485,7 +485,46 @@ class OHA_Map_Data {
         }
         check_ajax_referer('oha_map_nonce', 'nonce');
         delete_transient('oha_ohio_counties_v1');
-        wp_send_json_success('County cache cleared.');
+        delete_transient('oha_ohio_state_v1');
+        wp_send_json_success('County and state outline cache cleared.');
+    }
+
+    /**
+     * Fetch Ohio state boundary from Census TIGER, cached for 7 days.
+     * Returns a GeoJSON Feature on success, null on failure (JS keeps the hand-drawn fallback).
+     */
+    private static function get_ohio_state_geojson() {
+        $cache_key = 'oha_ohio_state_v1';
+        $cached    = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached ?: null;
+        }
+
+        $url = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/State_County/MapServer/0/query'
+             . '?where=NAME%3D%27Ohio%27&outFields=NAME&f=geojson&outSR=4326&maxAllowableOffset=0.005&geometryPrecision=4';
+
+        $response = wp_remote_get($url, ['timeout' => 30, 'sslverify' => true]);
+
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            set_transient($cache_key, '', HOUR_IN_SECONDS);
+            return null;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (empty($data['features'][0]['geometry'])) {
+            set_transient($cache_key, '', HOUR_IN_SECONDS);
+            return null;
+        }
+
+        $feature = [
+            'type'       => 'Feature',
+            'properties' => [],
+            'geometry'   => $data['features'][0]['geometry'],
+        ];
+        set_transient($cache_key, $feature, 7 * DAY_IN_SECONDS);
+        return $feature;
     }
 
     /**
