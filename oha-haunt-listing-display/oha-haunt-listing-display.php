@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.15.0
+ * Version:     1.15.1
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.15.0' );
+define( 'OHA_HLD_VERSION', '1.15.1' );
 define( 'OHA_HLD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_HLD_URL',  plugin_dir_url( __FILE__ ) );
 
@@ -102,6 +102,57 @@ add_filter( 'post_class', function( $classes, $class, $post_id ) {
     }
     return $classes;
 }, 10, 3 );
+
+/**
+ * Inject discount rate badge text onto archive cards.
+ *
+ * CSS ::after can only show hardcoded strings, so we output an inline script
+ * that builds a {post_id: rate} map from the current query, then appends a
+ * .oha-arc-disc-badge <span> to each .geodir-post.oha-has-discount .card-body.
+ * GD already outputs data-post-id on the outer card div, which is how we match.
+ */
+add_action( 'wp_footer', function() {
+    if ( ! function_exists( 'geodir_is_page' ) ) return;
+    if ( ! geodir_is_page( 'archive' ) && ! geodir_is_page( 'search' ) && ! geodir_is_page( 'listing' ) ) return;
+
+    global $wp_query;
+    if ( empty( $wp_query->posts ) ) return;
+
+    $rates = [];
+    $today = date( 'Y-m-d' );
+
+    foreach ( $wp_query->posts as $p ) {
+        if ( get_post_meta( $p->ID, '_oha_disc_active', true ) !== '1' ) continue;
+        $start = get_post_meta( $p->ID, '_oha_disc_start', true );
+        $end   = get_post_meta( $p->ID, '_oha_disc_end',   true );
+        if ( $start && $today < $start ) continue;
+        if ( $end   && $today > $end   ) continue;
+        $rate = get_post_meta( $p->ID, '_oha_disc_rate', true );
+        if ( $rate ) {
+            $rates[ (string) $p->ID ] = $rate;
+        }
+    }
+
+    if ( empty( $rates ) ) return;
+
+    ?>
+    <script>
+    (function(){
+        var d = <?php echo wp_json_encode( $rates ); ?>;
+        document.querySelectorAll('.geodir-post.oha-has-discount[data-post-id]').forEach(function(el){
+            var id = el.getAttribute('data-post-id');
+            if (!d[id]) return;
+            var body = el.querySelector('.card-body');
+            if (!body) return;
+            var badge = document.createElement('span');
+            badge.className = 'oha-arc-disc-badge';
+            badge.textContent = d[id] + ' Member Discount';
+            body.appendChild(badge);
+        });
+    })();
+    </script>
+    <?php
+}, 20 );
 
 /**
  * Override GeoDirectory single template content for gd_place.

@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.15.0",
+    "version":  "1.15.1",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -400,6 +400,13 @@
                         "type":  "change",
                         "summary":  "Listing page search bar now stretches full width; inputs have red border and focus glow",
                         "notes":  "Removed max-width:860px from .oha-search-bar__row; added hover and focus border+glow states for better visibility without looking retro"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.15.1",
+                        "type":  "feature",
+                        "summary":  "Show actual discount rate on archive cards instead of generic Member Discount text",
+                        "notes":  "wp_footer injects inline script with post-id to rate JSON map; JS appends .oha-arc-disc-badge span to .card-body on each .oha-has-discount card; GD data-post-id attr is the bridge; CSS ::after approach removed in archive.css"
                     }
                 ],
     "admin_settings":  {

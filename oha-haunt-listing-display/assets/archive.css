@@ -398,8 +398,10 @@ body.oha-gd-archive .geodir-post .gd-bh-open {
 }
 
 /* ── OHA Discount badge — matches oha-nearby__discount ──────────────── */
-body.oha-gd-archive .geodir-post.oha-has-discount .card-body::after {
-    content: 'Member Discount';
+/* Badge is injected by JS (wp_footer) with the actual rate + "Member Discount" text.
+   JS targets .geodir-post.oha-has-discount[data-post-id] and appends .oha-arc-disc-badge
+   to .card-body so the rate string is read from post meta, not hardcoded in CSS. */
+body.oha-gd-archive .oha-arc-disc-badge {
     display: inline-block;
     align-self: flex-start;
     font-family: 'Rajdhani', sans-serif;
@@ -413,7 +415,6 @@ body.oha-gd-archive .geodir-post.oha-has-discount .card-body::after {
     border-radius: 3px;
     padding: 3px 8px;
     margin-top: 4px;
-    order: 99;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
