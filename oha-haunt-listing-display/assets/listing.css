@@ -2025,7 +2025,7 @@
     display: flex;
     gap: 6px;
     align-items: center;
-    max-width: 860px;
+    width: 100%;
 }
 
 .oha-search-bar__field {
@@ -2036,8 +2036,8 @@
 .oha-search-bar__input {
     display: block;
     width: 100%;
-    background: var(--global-palette8, #680400);
-    border: 1px solid rgba(173, 49, 25, 0.5);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(173, 49, 25, 0.6);
     border-radius: 4px;
     color: var(--global-palette4, #f7fafc);
     font-family: 'Rajdhani', sans-serif;
@@ -2045,16 +2045,21 @@
     padding: 7px 12px;
     outline: none;
     height: 36px;
-    transition: border-color 0.15s;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
 .oha-search-bar__input::placeholder {
-    color: var(--global-palette6, #cbd2d9);
-    opacity: 0.8;
+    color: rgba(203, 210, 217, 0.7);
 }
 
 .oha-search-bar__input:focus {
     border-color: var(--global-palette1, #ad3119);
+    background: rgba(0, 0, 0, 0.75);
+    box-shadow: 0 0 0 2px rgba(173, 49, 25, 0.2);
+}
+
+.oha-search-bar__input:hover:not(:focus) {
+    border-color: rgba(173, 49, 25, 0.9);
 }
 
 .oha-search-bar__btn {

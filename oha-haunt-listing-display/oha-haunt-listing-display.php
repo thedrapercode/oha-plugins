@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.14.0
+ * Version:     1.15.0
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.14.0' );
+define( 'OHA_HLD_VERSION', '1.15.0' );
 define( 'OHA_HLD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_HLD_URL',  plugin_dir_url( __FILE__ ) );
 
@@ -79,6 +79,29 @@ add_filter( 'body_class', function( $classes ) {
     }
     return $classes;
 } );
+
+/**
+ * Add oha-has-discount class to archive card items that have an active OHA discount.
+ * archive.css uses this class to show the gold discount badge on the card.
+ */
+add_filter( 'post_class', function( $classes, $class, $post_id ) {
+    if ( ! function_exists( 'geodir_is_page' ) ) return $classes;
+    if ( ! geodir_is_page( 'archive' ) && ! geodir_is_page( 'search' ) && ! geodir_is_page( 'listing' ) ) {
+        return $classes;
+    }
+    if ( get_post_meta( $post_id, '_oha_disc_active', true ) !== '1' ) return $classes;
+    $today = date( 'Y-m-d' );
+    $start = get_post_meta( $post_id, '_oha_disc_start', true );
+    $end   = get_post_meta( $post_id, '_oha_disc_end',   true );
+    if ( $start && $today < $start ) return $classes;
+    if ( $end   && $today > $end   ) return $classes;
+    $classes[] = 'oha-has-discount';
+    $rate = get_post_meta( $post_id, '_oha_disc_rate', true );
+    if ( $rate ) {
+        $classes[] = 'oha-disc-' . sanitize_html_class( strtolower( preg_replace( '/[^a-zA-Z0-9]/', '', $rate ) ) );
+    }
+    return $classes;
+}, 10, 3 );
 
 /**
  * Override GeoDirectory single template content for gd_place.

@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.14.0",
+    "version":  "1.15.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -365,6 +365,41 @@
                         "type":  "fix",
                         "summary":  "Forced 3-column CSS Grid layout on archive pages overriding Bootstrap row-cols-sm-2 default",
                         "notes":  "Bootstrap md breakpoint (768px) fails when Kadence sidebar narrows content area; replaced with explicit CSS Grid on .geodir-category-list-view: 3col desktop, 2col tablet, 1col mobile"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.15.0",
+                        "type":  "feature",
+                        "summary":  "Archive cards restyled to match nearby-haunt card design: dark bg, gold hover, fixed 160px image, Cinzel title",
+                        "notes":  "Card bg changed from #000 to #111, border changed from red-tint to subtle light border, hover changed from red to gold, image fixed at 160px with object-fit cover, body uses flex-column with gap, matching oha-nearby__card layout"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.15.0",
+                        "type":  "feature",
+                        "summary":  "OHA Discount badge added to archive cards via post_class filter and CSS ::after on .card-body",
+                        "notes":  "PHP post_class filter adds oha-has-discount to archive posts with active in-date discount; CSS ::after on .card-body shows gold Member Discount badge matching oha-nearby__discount style"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.15.0",
+                        "type":  "fix",
+                        "summary":  "Fixed gap appearing between search form and card grid after performing a search",
+                        "notes":  "GD Gutenberg block wrappers carry white backgrounds by default; added background:transparent rule on [class*=wp-block-geodirectory] and related GD containers"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.15.0",
+                        "type":  "fix",
+                        "summary":  "Pagination text now explicitly white (#f7fafc) with li in selector chain for higher specificity",
+                        "notes":  "Previous selectors lacked li intermediate; theme or Bootstrap may override with dark text; added li a.page-numbers and explicit color:#f7fafc !important"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.15.0",
+                        "type":  "change",
+                        "summary":  "Listing page search bar now stretches full width; inputs have red border and focus glow",
+                        "notes":  "Removed max-width:860px from .oha-search-bar__row; added hover and focus border+glow states for better visibility without looking retro"
                     }
                 ],
     "admin_settings":  {

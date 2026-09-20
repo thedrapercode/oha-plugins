@@ -34,6 +34,22 @@ body.oha-gd-archive {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   GD BLOCK WRAPPER RESET
+   GD Gutenberg blocks can carry white backgrounds and block-editor margins
+   that create a visible "gap" between the search form and the card grid
+   after a search is performed. Force all GD block wrappers transparent.
+══════════════════════════════════════════════════════════════════════════ */
+body.oha-gd-archive [class*="wp-block-geodirectory"],
+body.oha-gd-archive .geodir-loop-actions,
+body.oha-gd-archive .geodir-loop-header,
+body.oha-gd-archive .geodir-loop-paging-container,
+body.oha-gd-archive .gd-search-input-wrapper,
+body.oha-gd-archive .geodir-archive-header {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    SEARCH FORM
    Targets .geodir-loc-bar (classic widget) and the broader form[name=geodir-listing-search]
    so block-based GD search widgets are also covered.
@@ -43,8 +59,8 @@ body.oha-gd-archive form[name="geodir-listing-search"] {
     background: var(--oha-arc-card-bg);
     border: 1px solid var(--oha-arc-border);
     border-radius: var(--oha-arc-radius);
-    padding: 16px 20px;
-    margin-bottom: 24px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
 }
 
 body.oha-gd-archive .geodir-loc-bar input[type="text"],
@@ -140,25 +156,31 @@ body.oha-gd-archive .geodir-category-list-view > * {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   INDIVIDUAL CARDS — .geodir-post
-   Covers both the legacy section-based layout and the Bootstrap card block.
+   INDIVIDUAL CARDS
+   Styled to match the "Featured Haunts Nearby" card design on HLD listing pages:
+   dark near-black bg, subtle border, gold hover, 160px image, Cinzel title,
+   gold category label, gold discount badge, muted location text.
 ══════════════════════════════════════════════════════════════════════════ */
 
-/* Card container: the <li> itself (legacy) and the .card inside it (block) */
+/* Card container and .card wrapper inside it */
 body.oha-gd-archive .geodir-post,
 body.oha-gd-archive .geodir-post .card {
-    background: var(--oha-arc-card-bg) !important;
-    border: 1px solid var(--oha-arc-border) !important;
+    background: #111 !important;
+    border: 1px solid rgba(224, 213, 197, 0.1) !important;
     border-radius: var(--oha-arc-radius) !important;
     overflow: hidden;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
     color: var(--oha-arc-text);
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
 }
 
 body.oha-gd-archive .geodir-post:hover,
 body.oha-gd-archive .geodir-post .card:hover {
-    border-color: var(--oha-arc-border-hov) !important;
-    box-shadow: 0 6px 24px rgba(173, 49, 25, 0.25);
+    border-color: rgba(201, 168, 76, 0.45) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
 /* ── Image section ──────────────────────────────────────────────────── */
@@ -166,26 +188,92 @@ body.oha-gd-archive .geodir-post .card-img-top {
     background: #1a0808;
     position: relative;
     overflow: hidden;
+    height: 160px !important;
+    flex-shrink: 0;
 }
 
 body.oha-gd-archive .geodir-post .card-img-top img {
-    width: 100%;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
     display: block;
     transition: transform 0.3s ease;
 }
 
 body.oha-gd-archive .geodir-post:hover .card-img-top img {
-    transform: scale(1.03);
+    transform: scale(1.04);
+}
+
+/* ── Featured badge (top-right of image) ───────────────────────────── */
+/* GD outputs .gd-badge-featured inside .card-img-top */
+body.oha-gd-archive .geodir-post .gd-badge,
+body.oha-gd-archive .geodir-post .badge {
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+body.oha-gd-archive .geodir-post .gd-badge-featured,
+body.oha-gd-archive .geodir-post .badge-featured {
+    background: var(--oha-arc-gold) !important;
+    color: #000 !important;
+    border: none !important;
+}
+
+/* Category type badges shown on the image — style as gold label overlay */
+body.oha-gd-archive .geodir-post .card-img-top .gd-p-tags,
+body.oha-gd-archive .geodir-post .card-img-top .gd-cat-tags {
+    position: absolute !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+}
+
+body.oha-gd-archive .geodir-post .card-img-top .gd-p-tags .badge,
+body.oha-gd-archive .geodir-post .card-img-top .gd-cat-tags .badge,
+body.oha-gd-archive .geodir-post .card-img-top .gd-p-tags span,
+body.oha-gd-archive .geodir-post .card-img-top .gd-cat-tags span {
+    background: rgba(0, 0, 0, 0.65) !important;
+    color: var(--oha-arc-gold) !important;
+    border: 1px solid rgba(201, 168, 76, 0.3) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+}
+
+/* Favorite/bookmark button on image */
+body.oha-gd-archive .geodir-post .gd-fav-btn,
+body.oha-gd-archive .geodir-post .geodir-fav {
+    color: rgba(255, 255, 255, 0.5) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    border-radius: 50% !important;
+}
+
+body.oha-gd-archive .geodir-post .gd-fav-btn.active,
+body.oha-gd-archive .geodir-post .geodir-fav.active {
+    color: var(--oha-arc-gold) !important;
 }
 
 /* ── Card body ──────────────────────────────────────────────────────── */
 body.oha-gd-archive .geodir-post .card-body {
-    background: var(--oha-arc-card-bg) !important;
+    background: #111 !important;
     color: var(--oha-arc-text) !important;
-    padding: 12px 14px !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    flex: 1 !important;
 }
 
-/* Card title / post title */
+/* Card title / post title — matches oha-nearby__title */
 body.oha-gd-archive .geodir-post .card-body .geodir-post-title,
 body.oha-gd-archive .geodir-post .card-body .card-title,
 body.oha-gd-archive .geodir-post .card-body h2,
@@ -193,10 +281,10 @@ body.oha-gd-archive .geodir-post .card-body h3,
 body.oha-gd-archive .geodir-post .card-body h4 {
     color: #fff !important;
     font-family: 'Cinzel', serif !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
     font-weight: 600 !important;
     line-height: 1.3 !important;
-    margin: 0 0 8px !important;
+    margin: 4px 0 !important;
 }
 
 body.oha-gd-archive .geodir-post .card-body .geodir-post-title a,
@@ -214,25 +302,57 @@ body.oha-gd-archive .geodir-post .card-body .card-title a:hover,
 body.oha-gd-archive .geodir-post .card-body h2 a:hover,
 body.oha-gd-archive .geodir-post .card-body h3 a:hover,
 body.oha-gd-archive .geodir-post .card-body h4 a:hover {
-    color: var(--oha-arc-accent) !important;
+    color: var(--oha-arc-gold) !important;
 }
 
-/* Meta text (address, distance, categories) */
+/* Category label in card body — matches oha-nearby__cat */
+body.oha-gd-archive .geodir-post .card-body .gd-p-tags,
+body.oha-gd-archive .geodir-post .card-body .gd-cat-tags,
+body.oha-gd-archive .geodir-post .card-body .geodir-category {
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: var(--oha-arc-gold) !important;
+    margin: 0 !important;
+}
+
+body.oha-gd-archive .geodir-post .card-body .gd-p-tags .badge,
+body.oha-gd-archive .geodir-post .card-body .gd-cat-tags .badge,
+body.oha-gd-archive .geodir-post .card-body .gd-p-tags span,
+body.oha-gd-archive .geodir-post .card-body .gd-cat-tags span {
+    background: transparent !important;
+    color: var(--oha-arc-gold) !important;
+    border: none !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    padding: 0 !important;
+}
+
+/* Address / location — matches oha-nearby__location */
 body.oha-gd-archive .geodir-post .card-body .geodir-post-meta,
 body.oha-gd-archive .geodir-post .card-body .gd-post-meta,
 body.oha-gd-archive .geodir-post .card-body .gd-address,
+body.oha-gd-archive .geodir-post .card-body address,
 body.oha-gd-archive .geodir-post .card-body small,
 body.oha-gd-archive .geodir-post .card-body p {
-    color: var(--oha-arc-text-muted) !important;
+    color: #8a9ab0 !important;
     font-size: 13px !important;
+    margin: 0 !important;
 }
 
-/* Post excerpt */
+/* Excerpt / content */
 body.oha-gd-archive .geodir-post .card-body .entry-content,
-body.oha-gd-archive .geodir-post .card-body .gd-post-content {
-    color: var(--oha-arc-text-muted) !important;
+body.oha-gd-archive .geodir-post .card-body .gd-post-content,
+body.oha-gd-archive .geodir-post .card-body .card-text {
+    color: #8a9ab0 !important;
     font-size: 13px !important;
     line-height: 1.5;
+    margin: 0 !important;
 }
 
 /* Links inside card body */
@@ -241,36 +361,20 @@ body.oha-gd-archive .geodir-post .card-body a {
 }
 
 body.oha-gd-archive .geodir-post .card-body a:hover {
-    color: var(--global-palette2, #ff0000) !important;
+    color: var(--oha-arc-gold) !important;
 }
 
 /* ── Card footer ────────────────────────────────────────────────────── */
 body.oha-gd-archive .geodir-post .card-footer {
-    background: rgba(0, 0, 0, 0.4) !important;
-    border-top: 1px solid var(--oha-arc-border) !important;
-    color: var(--oha-arc-text-muted) !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-top: 1px solid rgba(224, 213, 197, 0.06) !important;
+    color: #8a9ab0 !important;
     font-size: 12px !important;
-    padding: 8px 14px !important;
+    padding: 8px 16px !important;
 }
 
 body.oha-gd-archive .geodir-post .card-footer a {
-    color: var(--oha-arc-text-muted) !important;
-}
-
-/* ── GD Badges inside cards ────────────────────────────────────────── */
-body.oha-gd-archive .geodir-post .gd-badge,
-body.oha-gd-archive .geodir-post .badge {
-    font-family: 'Rajdhani', sans-serif !important;
-    font-size: 10px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.06em !important;
-    text-transform: uppercase !important;
-}
-
-/* Featured badge: keep existing GD color (typically orange) */
-body.oha-gd-archive .geodir-post .gd-badge-featured {
-    background: var(--oha-arc-primary) !important;
-    color: #fff !important;
+    color: #8a9ab0 !important;
 }
 
 /* ── Star rating ────────────────────────────────────────────────────── */
@@ -281,27 +385,35 @@ body.oha-gd-archive .geodir-post .gd-rating .gd-stars {
 
 body.oha-gd-archive .geodir-post .geodir-post-rating .gd-rating-count,
 body.oha-gd-archive .geodir-post .gd-rating .gd-rating-count {
-    color: var(--oha-arc-text-muted) !important;
+    color: #8a9ab0 !important;
 }
 
-/* ── Favorite/bookmark button ───────────────────────────────────────── */
-body.oha-gd-archive .geodir-post .gd-fav-btn,
-body.oha-gd-archive .geodir-post .geodir-fav {
-    color: var(--oha-arc-text-muted) !important;
-}
-
-body.oha-gd-archive .geodir-post .gd-fav-btn.active,
-body.oha-gd-archive .geodir-post .geodir-fav.active {
-    color: var(--oha-arc-primary) !important;
-}
-
-/* ── Business hours / open-close indicator ──────────────────────────── */
+/* ── Business hours ─────────────────────────────────────────────────── */
 body.oha-gd-archive .geodir-post .gd-bh-closed {
-    color: var(--oha-arc-text-muted) !important;
+    color: #8a9ab0 !important;
 }
 
 body.oha-gd-archive .geodir-post .gd-bh-open {
     color: var(--global-palette11, #13612e) !important;
+}
+
+/* ── OHA Discount badge — matches oha-nearby__discount ──────────────── */
+body.oha-gd-archive .geodir-post.oha-has-discount .card-body::after {
+    content: 'Member Discount';
+    display: inline-block;
+    align-self: flex-start;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--oha-arc-gold);
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+    border-radius: 3px;
+    padding: 3px 8px;
+    margin-top: 4px;
+    order: 99;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -362,25 +474,32 @@ body.oha-gd-archive .geodir-pagination ul.page-numbers {
     gap: 4px !important;
 }
 
+body.oha-gd-archive .geodir-pagination li a.page-numbers,
+body.oha-gd-archive .geodir-pagination li span.page-numbers,
 body.oha-gd-archive .geodir-pagination a.page-numbers,
 body.oha-gd-archive .geodir-pagination span.page-numbers {
     display: inline-block !important;
-    background: var(--oha-arc-card-bg) !important;
-    border: 1px solid var(--oha-arc-border) !important;
-    color: var(--oha-arc-text) !important;
+    background: #111 !important;
+    border: 1px solid rgba(224, 213, 197, 0.15) !important;
+    color: #f7fafc !important;
     border-radius: 4px !important;
     padding: 6px 12px !important;
     text-decoration: none !important;
     transition: background 0.15s, border-color 0.15s;
     line-height: 1.4 !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
 }
 
+body.oha-gd-archive .geodir-pagination li a.page-numbers:hover,
 body.oha-gd-archive .geodir-pagination a.page-numbers:hover {
     background: var(--oha-arc-primary) !important;
     border-color: var(--oha-arc-primary) !important;
     color: #fff !important;
 }
 
+body.oha-gd-archive .geodir-pagination li span.page-numbers.current,
 body.oha-gd-archive .geodir-pagination span.page-numbers.current {
     background: var(--oha-arc-primary) !important;
     border-color: var(--oha-arc-primary) !important;
