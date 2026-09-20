@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.16.0",
+    "version":  "1.16.1",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -421,6 +421,13 @@
                         "type":  "fix",
                         "summary":  "Reset white article/entry-content background on GD search results page to match archive layout",
                         "notes":  "Search results page uses default Kadence article template with white bg; archive page is full-width with no white box. Added background:transparent to article, .entry-content, .geodir-search, .gd-search-bar in archive.css scoped to body.oha-gd-archive."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.16.1",
+                        "type":  "fix",
+                        "summary":  "Hide GD grid/list view switcher dropdown on all archive and search pages",
+                        "notes":  "Selector: body.oha-gd-archive .btn-group:has(#gd-list-view-select-grid). Layout is always 3-col CSS grid so the view picker is irrelevant."
                     }
                 ],
     "admin_settings":  {

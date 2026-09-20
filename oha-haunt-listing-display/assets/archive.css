@@ -445,6 +445,12 @@ body.oha-gd-archive .geodir-post.gd_event .card-body .geodir-post-meta .gd-event
 /* ══════════════════════════════════════════════════════════════════════════
    SORT / LAYOUT CONTROLS
 ══════════════════════════════════════════════════════════════════════════ */
+
+/* Hide the GD grid/list view switcher dropdown — layout is always 3-col CSS grid */
+body.oha-gd-archive .btn-group:has(#gd-list-view-select-grid) {
+    display: none !important;
+}
+
 body.oha-gd-archive .geodir-loop-actions,
 body.oha-gd-archive .geodir-loop-header {
     color: var(--oha-arc-text-muted);
