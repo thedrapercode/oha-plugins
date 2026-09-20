@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.15.3",
+    "version":  "2.16.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -673,6 +673,69 @@
                         "type":  "change",
                         "summary":  "Revert checkout to trial_end; update shortcode copy to explain Stripe free-trial language to members",
                         "notes":  "billing_cycle_anchor with proration_behavior=none is blocked by Stripe when one-time prices exist. add_invoice_items is not supported in Checkout Session API. trial_end is the only working approach. Shortcode now shows a note warning members that the Stripe checkout page will say X days free and explains it is not a free trial."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "fix",
+                        "summary":  "Fixed OHA Members and New Listing Owners counts using abandoned uwp_member_type field",
+                        "notes":  "Replaced with canonical _uwp_register_form_id=1 + subscriber role query. New member date gate uses oha_paid_member_since not user_registered."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "fix",
+                        "summary":  "Fixed Quick Links Total New Members using stale SWPM legacy data",
+                        "notes":  "Replaced array_sum() from fetch_members_legacy_raw with direct canonical vars."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "fix",
+                        "summary":  "Fixed total OHA Members count using abandoned meta keys",
+                        "notes":  "count_oha_members rewritten to use _uwp_register_form_id=1 + subscriber role + oha_member_id EXISTS."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "feature",
+                        "summary":  "Added WooCommerce orders and revenue stat card to overview dashboard",
+                        "notes":  "Auto-detects HPOS (wc_orders table) vs legacy shop_order post type. Informational only, no backend link."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "feature",
+                        "summary":  "Added Active Discounts stat card showing haunts offering member discounts",
+                        "notes":  "Queries _oha_disc_active=1 on published gd_place posts. Links to ?tab=discounts."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "feature",
+                        "summary":  "Added new (7 days) and updated (30 days) sub-stats to Haunt Listings card",
+                        "notes":  "Updated count uses post_modified \u003e= 30d AND post_date \u003c 30d to exclude newly published."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "change",
+                        "summary":  "Removed Listings and Events tab from frontend shortcode navigation",
+                        "notes":  "render_gd_tab() still exists but is unreachable from the shortcode."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "change",
+                        "summary":  "Moved Quick Links into stats grid; removed old Quick Stats section",
+                        "notes":  "Eliminated the 4-card row below DevLog. DevLog now immediately follows stats grid."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "2.16.0",
+                        "type":  "change",
+                        "summary":  "Removed all WP admin backend links from overview; board hub is information-only",
+                        "notes":  "Volunteer and haunts stat cards non-clickable. WooCommerce card link removed. Pending items show counts only."
                     }
                 ]
 }

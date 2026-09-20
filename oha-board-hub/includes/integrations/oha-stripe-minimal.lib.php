@@ -402,7 +402,7 @@ add_shortcode('oha_membership_checkout', function($atts){
     $output .= '<p><strong>Due today:</strong> $20 (covers your 2026 membership and the one-time card creation and mailing fee)</p>';
     $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning January 1, 2027</p>';
     $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on January 1, 2027 - not a free trial. You are paying $20 today for your 2026 membership.</p>';
-    $output .= '<p><a class="button button-primary button-large" href="'.esc_url($url).'">Join OHA Membership</a></p>';
+    $output .= '<p><a class="button button-primary button-large" href="'.esc_url($url).'" target="_top">Join OHA Membership</a></p>';
     $output .= '</div>';
     
     return $output;
@@ -771,5 +771,5 @@ add_shortcode('oha_smart_membership_button', function($atts) {
     
     $style_attr = !empty($atts['style']) ? ' style="' . esc_attr($atts['style']) . '"' : '';
     
-    return '<a href="' . esc_url($url) . '" class="' . esc_attr($atts['class']) . '"' . $style_attr . '>' . esc_html($button_text) . '</a>';
+    return '<a href="' . esc_url($url) . '" class="' . esc_attr($atts['class']) . '"' . $style_attr . ' target="_top">' . esc_html($button_text) . '</a>';
 });

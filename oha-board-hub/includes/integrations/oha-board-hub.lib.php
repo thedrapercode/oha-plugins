@@ -305,7 +305,6 @@ const CAP = 'read_oha_board_hub';
         $builtin_tabs = [
             'overview' => ['title' => 'Overview', 'order' => 10, 'enabled' => true],
             'members'  => ['title' => 'Members', 'order' => 20, 'enabled' => true],
-            'gd'       => ['title' => 'Listings & Events', 'order' => 30, 'enabled' => true],
             'con'      => ['title' => get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y'))), 'order' => 40, 'enabled' => true],
             'sponsors' => ['title' => 'Sponsors', 'order' => 45, 'enabled' => true],
             'finance'  => ['title' => 'Finance', 'order' => 50, 'enabled' => true],
@@ -629,9 +628,6 @@ private function current_user_sm_level_equals($target_level) {
                 case 'members':
                     echo $this->render_members_tab($lvl_key, $range);
                     break;
-                case 'gd':
-                    echo $this->render_gd_tab();
-                    break;
                 case 'con':
                     echo $this->render_convention_tab();
                     break;
@@ -747,23 +743,82 @@ private function render_overview_tab($range = '30d') {
         $total_members = $this->count_oha_members();
         $new_members = $this->count_new_oha_members(30);
         
-        // Listing owners
-        $new_listing_owners = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->users} u
-             INNER JOIN {$wpdb->usermeta} m ON u.ID = m.user_id
-             WHERE m.meta_key = 'uwp_member_type'
-             AND m.meta_value = 'listing_owner'
-             AND u.user_registered >= %s",
+        // New listing owners in last 30 days (by WP role, not abandoned uwp_member_type field)
+        $cap_key_lo = $wpdb->prefix . 'capabilities';
+        $new_listing_owners = intval($wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT u.ID) FROM {$wpdb->users} u
+             WHERE u.user_registered >= %s
+             AND EXISTS (
+                 SELECT 1 FROM {$wpdb->usermeta}
+                 WHERE user_id = u.ID AND meta_key = '{$cap_key_lo}' AND meta_value LIKE '%\"listing_owner\"%'
+             )",
             date('Y-m-d H:i:s', strtotime('-30 days'))
-        ));
-        
+        )) ?: 0);
+
         // GeoDirectory haunts
         $haunts = $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->posts} 
-             WHERE post_type = 'gd_place' 
+            "SELECT COUNT(*) FROM {$wpdb->posts}
+             WHERE post_type = 'gd_place'
              AND post_status = 'publish'"
         );
-        
+
+        // New haunt listings published in last 7 days
+        $new_haunts_7d = intval($wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts}
+             WHERE post_type = 'gd_place' AND post_status = 'publish'
+             AND post_date >= %s",
+            date('Y-m-d H:i:s', strtotime('-7 days'))
+        )) ?: 0);
+
+        // WooCommerce orders and revenue for last 30 days
+        $woo_orders_30d  = 0;
+        $woo_revenue_30d = 0.0;
+        if (class_exists('WooCommerce')) {
+            $woo_since = date('Y-m-d H:i:s', strtotime('-30 days'));
+            $wc_tbl = $wpdb->prefix . 'wc_orders';
+            if ($wpdb->get_var("SHOW TABLES LIKE '{$wc_tbl}'") === $wc_tbl) {
+                $woo_row = $wpdb->get_row($wpdb->prepare(
+                    "SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount),0) as rev
+                     FROM {$wc_tbl}
+                     WHERE type = 'shop_order'
+                     AND status IN ('wc-completed','wc-processing')
+                     AND date_created_gmt >= %s",
+                    $woo_since
+                ));
+            } else {
+                $woo_row = $wpdb->get_row($wpdb->prepare(
+                    "SELECT COUNT(DISTINCT p.ID) as cnt,
+                     COALESCE(SUM(CAST(pm.meta_value AS DECIMAL(10,2))),0) as rev
+                     FROM {$wpdb->posts} p
+                     LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_order_total'
+                     WHERE p.post_type = 'shop_order'
+                     AND p.post_status IN ('wc-completed','wc-processing')
+                     AND p.post_date >= %s",
+                    $woo_since
+                ));
+            }
+            $woo_orders_30d  = intval($woo_row->cnt ?? 0);
+            $woo_revenue_30d = floatval($woo_row->rev ?? 0);
+        }
+
+        // Haunts with active discounts
+        $active_discounts = intval($wpdb->get_var(
+            "SELECT COUNT(DISTINCT pm.post_id) FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE pm.meta_key = '_oha_disc_active' AND pm.meta_value = '1'
+             AND p.post_type = 'gd_place' AND p.post_status = 'publish'"
+        ) ?: 0);
+
+        // Haunt listings updated in last 30 days (post_modified, excludes newly published)
+        $haunts_updated_30d = intval($wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts}
+             WHERE post_type = 'gd_place' AND post_status = 'publish'
+             AND post_modified >= %s
+             AND post_date < %s",
+            date('Y-m-d H:i:s', strtotime('-30 days')),
+            date('Y-m-d H:i:s', strtotime('-30 days'))
+        )) ?: 0);
+
         // Recent payments — active year only
         $recent_payments = $wpdb->get_results($wpdb->prepare(
             "SELECT p.ID, p.post_modified, m.meta_value as company_name
@@ -791,14 +846,15 @@ private function render_overview_tab($range = '30d') {
                 // Get stat card link settings
                 $settings = get_option(self::OPT, []);
                 $stat_links = [
-                    'vendors' => isset($settings['stat_vendors_link']) ? $settings['stat_vendors_link'] : '?tab=con',
-                    'paid' => isset($settings['stat_paid_vendors_link']) ? $settings['stat_paid_vendors_link'] : '?tab=con',
-                    'pending' => isset($settings['stat_pending_vendors_link']) ? $settings['stat_pending_vendors_link'] : '?tab=con',
-                    'booths' => isset($settings['stat_booths_link']) ? $settings['stat_booths_link'] : '?tab=con',
-                    'volunteers' => isset($settings['stat_volunteers_link']) ? $settings['stat_volunteers_link'] : admin_url('edit.php?post_type=volunteer'),
-                    'members' => isset($settings['stat_members_link']) ? $settings['stat_members_link'] : '?tab=members',
-                    'haunts' => isset($settings['stat_haunts_link']) ? $settings['stat_haunts_link'] : '?tab=gd',
-                    'listing_owners' => isset($settings['stat_listing_owners_link']) ? $settings['stat_listing_owners_link'] : '?tab=members&lvl=listing',
+                    'vendors'        => isset($settings['stat_vendors_link'])        ? $settings['stat_vendors_link']        : '?tab=con',
+                    'paid'           => isset($settings['stat_paid_vendors_link'])    ? $settings['stat_paid_vendors_link']    : '?tab=con',
+                    'pending'        => isset($settings['stat_pending_vendors_link']) ? $settings['stat_pending_vendors_link'] : '?tab=con',
+                    'booths'         => isset($settings['stat_booths_link'])          ? $settings['stat_booths_link']          : '?tab=con',
+                    'volunteers'     => isset($settings['stat_volunteers_link'])      ? $settings['stat_volunteers_link']      : '',
+                    'members'        => isset($settings['stat_members_link'])         ? $settings['stat_members_link']         : '?tab=members',
+                    'haunts'         => isset($settings['stat_haunts_link'])          ? $settings['stat_haunts_link']          : '',
+                    'listing_owners' => isset($settings['stat_listing_owners_link'])  ? $settings['stat_listing_owners_link']  : '?tab=members&lvl=listing',
+                    'discounts'      => isset($settings['stat_discounts_link'])       ? $settings['stat_discounts_link']       : '?tab=discounts',
                 ];
                 
                 // Helper function to wrap card in link if URL exists
@@ -876,7 +932,17 @@ private function render_overview_tab($range = '30d') {
                     <div style="font-size:36px;margin-bottom:10px;">🏚️</div>
                     <div style="font-size:32px;font-weight:bold;color:#059669;margin:10px 0;">'.intval($haunts).'</div>
                     <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Haunt Listings</div>
-                    <div style="font-size:12px;color:#999;margin-top:5px;">Published</div>
+                    <div style="font-size:12px;color:#999;margin-top:5px;">'.intval($new_haunts_7d).' new (7 days) &nbsp;|&nbsp; '.intval($haunts_updated_30d).' updated (30 days)</div>
+                </div>
+                '); ?>
+
+                <!-- Active Discounts -->
+                <?php echo $wrap_card($stat_links['discounts'], '
+                <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);cursor:'.(!empty($stat_links['discounts']) ? 'pointer' : 'default').';">
+                    <div style="font-size:36px;margin-bottom:10px;">🏷️</div>
+                    <div style="font-size:32px;font-weight:bold;color:#d97706;margin:10px 0;">'.intval($active_discounts).'</div>
+                    <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Active Discounts</div>
+                    <div style="font-size:12px;color:#999;margin-top:5px;">Haunts offering member discounts</div>
                 </div>
                 '); ?>
                 
@@ -889,8 +955,31 @@ private function render_overview_tab($range = '30d') {
                     <div style="font-size:12px;color:#999;margin-top:5px;">Last 30 days</div>
                 </div>
                 '); ?>
+
+                <?php if (class_exists('WooCommerce')): ?>
+                <!-- WooCommerce Orders -->
+                <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size:36px;margin-bottom:10px;">🛒</div>
+                    <div style="font-size:32px;font-weight:bold;color:#7c3aed;margin:10px 0;"><?php echo intval($woo_orders_30d); ?></div>
+                    <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">WooCommerce Orders</div>
+                    <div style="font-size:12px;color:#999;margin-top:5px;">$<?php echo number_format($woo_revenue_30d, 2); ?> revenue (30 days)</div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Quick Links -->
+                <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="font-size:14px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Quick Links</div>
+                    <ul style="margin:0;padding:0;list-style:none;font-size:13px;line-height:1.9;">
+                        <li>New OHA Members (30 days): <strong><?php echo intval($new_members); ?></strong></li>
+                        <li>New Listing Owners (30 days): <strong><?php echo intval($new_listing_owners); ?></strong></li>
+                        <li>Pending Listings: <strong><?php echo intval($pending_listings); ?></strong></li>
+                        <li>Pending Claims: <strong><?php echo intval($pending_claims); ?></strong></li>
+                        <li style="margin-top:8px;"><a href="<?php echo esc_url(add_query_arg(['tab'=>'members'])); ?>">Members dashboard →</a></li>
+                        <li><a href="<?php echo esc_url(add_query_arg(['tab'=>'discounts'])); ?>">Haunt Discounts →</a></li>
+                    </ul>
+                </div>
             </div>
-            
+
         </div>
 
         <?php
@@ -900,47 +989,6 @@ private function render_overview_tab($range = '30d') {
             echo '<div style="height:18px;"></div>';
         }
         ?>
-
-        <!-- Original Quick Stats Section (Preserved) -->
-        <div class="oha-grid">
-            <div class="oha-card">
-                <h3>Quick Links</h3>
-                <ul class="oha-list">
-                    <li>Total New Members (last <?php echo intval($this->get_setting('new_window_days',30)); ?> days): <strong><?php echo intval(array_sum($new_counts)); ?></strong></li>
-                    <li>Pending Listings: <strong><?php echo intval($pending_listings); ?></strong> — <a href="<?php echo esc_url( admin_url('edit.php?post_type=gd_place&post_status=pending') ); ?>">review →</a></li>
-                    <li>Pending Claims: <strong><?php echo intval($pending_claims); ?></strong> — <a href="<?php echo esc_url( admin_url('admin.php?page=gd-claim-reports') ); ?>">open claims →</a></li>
-                    <li><a href="<?php echo esc_url( add_query_arg(['tab'=>'members']) ); ?>">Members dashboard →</a></li>
-                </ul>
-            </div>
-
-            <div class="oha-card">
-                <h3>Listings & Events</h3>
-                <p>
-                    <a class="button" href="<?php echo admin_url('edit.php?post_type=gd_place'); ?>">Haunts (Admin)</a>
-                    <a class="button" href="<?php echo admin_url('edit.php?post_type=gd_event'); ?>">Haunt Events (Admin)</a>
-                    <a class="button" href="<?php echo admin_url('edit.php?post_type=gd_place&post_status=pending'); ?>">Pending Places</a>
-                    <a class="button" href="<?php echo admin_url('admin.php?page=gd-claim-reports'); ?>">Claim Request</a>
-                </p>
-            </div>
-
-            <div class="oha-card">
-                <h3>Members</h3>
-                <p>
-                    <a class="button" href="<?php echo esc_url( add_query_arg(['tab'=>'members']) ); ?>">Open Members Dashboard</a>
-                    <a class="button" href="<?php echo admin_url('admin.php?page=simple_wp_membership'); ?>">Open Simple Membership</a>
-                </p>
-            </div>
-
-            <div class="oha-card">
-                <h3><?php echo esc_html(get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y')))); ?></h3>
-                <?php if ($this->is_convention_enabled()): ?>
-                    <p>Convention tools are enabled. Open the tab to manage vendors, sponsors, and guests.</p>
-                    <p><a class="button" href="<?php echo esc_url( add_query_arg(['tab'=>'con']) ); ?>">Open Convention Tools</a></p>
-                <?php else: ?>
-                    <p><strong>Disabled:</strong> Convention tools are off by default for stability. You can enable them in <em>Settings → OHA Board Hub</em>.</p>
-                <?php endif; ?>
-            </div>
-        </div>
         <?php
         return ob_get_clean();
     }
@@ -991,84 +1039,50 @@ private function render_overview_tab($range = '30d') {
         } catch (\Throwable $e) { return 0; }
     }
 
-    // Enhanced OHA member counting with Stripe invoice support
     private function count_oha_members() {
         global $wpdb;
         try {
-            // Count UsersWP members
-            $uwp_members = $wpdb->get_var(
-                "SELECT COUNT(DISTINCT u.ID) FROM {$wpdb->users} u
-                 INNER JOIN {$wpdb->usermeta} m ON u.ID = m.user_id
-                 WHERE m.meta_key = 'uwp_member_type'
-                 AND m.meta_value = 'oha_member'"
-            ) ?: 0;
-            
-            // Count members from Stripe invoice payments (including auto-created accounts)
-            $stripe_members = $wpdb->get_var(
-                "SELECT COUNT(DISTINCT u.ID) FROM {$wpdb->users} u
-                 INNER JOIN {$wpdb->usermeta} m ON u.ID = m.user_id
-                 WHERE m.meta_key = 'oha_stripe_member_from_invoice'
-                 AND m.meta_value = '1'"
-            ) ?: 0;
-            
-            // Also check for users with successful membership Stripe payments
-            $stripe_payment_members = $wpdb->get_var(
-                "SELECT COUNT(DISTINCT u.ID) FROM {$wpdb->users} u
-                 INNER JOIN {$wpdb->usermeta} m ON u.ID = m.user_id
-                 WHERE (m.meta_key = 'stripe_customer_id' AND m.meta_value != '')
-                 AND EXISTS (
-                     SELECT 1 FROM {$wpdb->usermeta} m2
-                     WHERE m2.user_id = u.ID
-                     AND m2.meta_key = 'oha_membership_paid'
-                     AND m2.meta_value = '1'
-                 )"
-            ) ?: 0;
-            
-            // Get total distinct members (avoiding double-counting)
-            $total_distinct = $wpdb->get_var(
+            $cap_key = $wpdb->prefix . 'capabilities';
+            return intval($wpdb->get_var(
                 "SELECT COUNT(DISTINCT u.ID) FROM {$wpdb->users} u
                  WHERE EXISTS (
-                     SELECT 1 FROM {$wpdb->usermeta} m1
-                     WHERE m1.user_id = u.ID
-                     AND (
-                         (m1.meta_key = 'uwp_member_type' AND m1.meta_value = 'oha_member')
-                         OR (m1.meta_key = 'oha_stripe_member_from_invoice' AND m1.meta_value = '1')
-                         OR (m1.meta_key = 'oha_membership_paid' AND m1.meta_value = '1')
-                     )
+                     SELECT 1 FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = '_uwp_register_form_id' AND meta_value = '1'
+                 )
+                 AND EXISTS (
+                     SELECT 1 FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = '{$cap_key}' AND meta_value LIKE '%\"subscriber\"%'
+                 )
+                 AND EXISTS (
+                     SELECT 1 FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_member_id'
                  )"
-            ) ?: 0;
-            
-            return $total_distinct;
-        } catch (\Throwable $e) { 
-            return 0; 
-        }
+            ) ?: 0);
+        } catch (\Throwable $e) { return 0; }
     }
-    
+
     private function count_new_oha_members($days = 30) {
         global $wpdb;
         try {
+            $cap_key    = $wpdb->prefix . 'capabilities';
             $since_date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
-            
-            // Get all distinct new members from multiple sources
-            $new_members = $wpdb->get_var($wpdb->prepare(
+            return intval($wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(DISTINCT u.ID) FROM {$wpdb->users} u
-                 WHERE u.user_registered >= %s
+                 WHERE EXISTS (
+                     SELECT 1 FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = '_uwp_register_form_id' AND meta_value = '1'
+                 )
                  AND EXISTS (
-                     SELECT 1 FROM {$wpdb->usermeta} m
-                     WHERE m.user_id = u.ID
-                     AND (
-                         (m.meta_key = 'uwp_member_type' AND m.meta_value = 'oha_member')
-                         OR (m.meta_key = 'oha_stripe_member_from_invoice' AND m.meta_value = '1')
-                         OR (m.meta_key = 'oha_membership_paid' AND m.meta_value = '1')
-                     )
+                     SELECT 1 FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = '{$cap_key}' AND meta_value LIKE '%\"subscriber\"%'
+                 )
+                 AND EXISTS (
+                     SELECT 1 FROM {$wpdb->usermeta}
+                     WHERE user_id = u.ID AND meta_key = 'oha_paid_member_since' AND meta_value >= %s
                  )",
                 $since_date
-            )) ?: 0;
-            
-            return $new_members;
-        } catch (\Throwable $e) { 
-            return 0; 
-        }
+            )) ?: 0);
+        } catch (\Throwable $e) { return 0; }
     }
 
     private function render_gd_tab() {
