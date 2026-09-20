@@ -50,6 +50,20 @@ class OHA_HLD_Admin {
             'enable_autocomplete'  => 1,  // GD search autocomplete (keyword + location)
             'enable_place_count'   => 1,  // [gd_place_count] shortcode
             'enable_discount_sort' => 1,  // GD sort option: OHA Discount
+
+            // ── Unclaimed listing placeholder ──────────────────────────────
+            'enable_unclaimed_placeholders' => 1,
+            'unclaimed_placeholders'        => implode( "\n", [
+                '{name} is a haunted attraction located in {city}, Ohio. Visit this listing during the Halloween season for a night of fright.',
+                '{name} brings haunted experiences to {city}, Ohio. Additional details will be available as the season gets underway.',
+                '{name} is part of Ohio\'s haunted attraction community, proudly located in {city}. More information will be added ahead of the season.',
+                'Located in {city}, {name} is a featured haunted attraction on the Ohio Haunters Association directory. Check back for hours, pricing, and more details.',
+                '{name} calls {city} home and is listed as an OHA member attraction. Details including hours and admission pricing will be available closer to the season.',
+                '{name} is based in {city} and is among the haunted attractions featured on the OHA haunt list. Look for more information as the season approaches.',
+                'From {city}, {name} delivers haunted thrills as part of Ohio\'s annual Halloween season. Full details coming soon.',
+                '{name} is an Ohio Haunters Association member attraction located in {city}. Stay tuned for upcoming details on hours, admission, and what makes this haunt unique.',
+            ] ),
+            'unclaimed_discount_line' => '{name} is currently offering an OHA member discount: {rate}.',
         ];
     }
 
@@ -246,6 +260,10 @@ class OHA_HLD_Admin {
             $s['enable_nearby']     = isset( $_POST['enable_nearby'] )     ? 1 : 0;
             $s['enable_mobile_bar'] = isset( $_POST['enable_mobile_bar'] ) ? 1 : 0;
             $s['nearby_count']      = max( 1, min( 9, absint( $_POST['nearby_count'] ?? 3 ) ) );
+
+            $s['enable_unclaimed_placeholders'] = isset( $_POST['enable_unclaimed_placeholders'] ) ? 1 : 0;
+            $s['unclaimed_placeholders']        = sanitize_textarea_field( $_POST['unclaimed_placeholders'] ?? '' );
+            $s['unclaimed_discount_line']       = sanitize_text_field( $_POST['unclaimed_discount_line'] ?? '' );
         }
 
         if ( $tab === 'claim' ) {
@@ -398,6 +416,33 @@ class OHA_HLD_Admin {
                     </td>
                 </tr>
             </table>
+
+            <h2>Unclaimed Listing Placeholder</h2>
+            <p>When a listing has no description and has not been claimed, this text replaces the default "not claimed" placeholder box. Tokens: <code>{name}</code> (haunt name), <code>{city}</code> (city or "Ohio" if not set). The template chosen is determined by the listing ID — the same haunt always gets the same text.</p>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Enable Placeholder Text</th>
+                    <td>
+                        <label><input type="checkbox" name="enable_unclaimed_placeholders" <?php checked( $s['enable_unclaimed_placeholders'] ); ?>>
+                        Show generated placeholder text instead of the default "not claimed" notice</label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="unclaimed_placeholders">Placeholder Templates</label></th>
+                    <td>
+                        <textarea id="unclaimed_placeholders" name="unclaimed_placeholders" rows="12" class="large-text code"><?php echo esc_textarea( $s['unclaimed_placeholders'] ); ?></textarea>
+                        <p class="description">One template per line. Each listing is assigned a template based on its ID. Available tokens: <code>{name}</code>, <code>{city}</code>.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="unclaimed_discount_line">Discount Addition</label></th>
+                    <td>
+                        <input type="text" id="unclaimed_discount_line" name="unclaimed_discount_line" value="<?php echo esc_attr( $s['unclaimed_discount_line'] ); ?>" class="large-text">
+                        <p class="description">Appended as a second sentence when the listing has an active discount and no description. Available tokens: <code>{name}</code>, <code>{rate}</code> (the discount rate string, e.g. "20% off"). Leave blank to skip.</p>
+                    </td>
+                </tr>
+            </table>
+
             <p><button type="submit" name="oha_hld_save" class="button button-primary">Save Settings</button></p>
         </form>
         <?php

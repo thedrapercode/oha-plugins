@@ -41,6 +41,25 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <?php endif; ?>
         </div>
     </section>
+    <?php elseif ( $is_display_unclaimed && ! empty( $settings['enable_unclaimed_placeholders'] ) ) : ?>
+    <section class="oha-about">
+        <h2 class="oha-section-title">About This Haunt</h2>
+        <div class="oha-about__body">
+            <?php
+            $location_label = ! empty( $city ) ? $city : 'Ohio';
+            $raw_templates  = array_values( array_filter( array_map( 'trim', explode( "\n", $settings['unclaimed_placeholders'] ?? '' ) ) ) );
+            if ( ! empty( $raw_templates ) ) {
+                $idx  = absint( $listing_id ) % count( $raw_templates );
+                $text = str_replace( [ '{name}', '{city}' ], [ $title, $location_label ], $raw_templates[ $idx ] );
+                echo '<p>' . esc_html( $text ) . '</p>';
+            }
+            if ( $show_discount && $disc_rate && ! empty( $settings['unclaimed_discount_line'] ) ) {
+                $disc_text = str_replace( [ '{name}', '{rate}' ], [ $title, $disc_rate ], $settings['unclaimed_discount_line'] );
+                echo '<p>' . esc_html( $disc_text ) . '</p>';
+            }
+            ?>
+        </div>
+    </section>
     <?php elseif ( $is_display_unclaimed ) : ?>
     <section class="oha-about">
         <h2 class="oha-section-title">About This Haunt</h2>

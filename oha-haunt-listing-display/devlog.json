@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.11.1",
+    "version":  "1.12.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -281,6 +281,34 @@
                         "type":  "fix",
                         "summary":  "Remove post_type guard from discount_sort_join that blocked JOIN on GD search pages causing zero results",
                         "notes":  "GD search pages do not set post_type on WP_Query; guard caused JOIN to be skipped while ORDER BY still referenced oha_disc_pm alias, producing MySQL error and empty results. sort_by guard alone is sufficient."
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.12.0",
+                        "type":  "feature",
+                        "summary":  "Add unclaimed listing placeholder text system with 8 admin-editable templates and optional discount line",
+                        "notes":  "Templates use {name} and {city} tokens; selection is deterministic by listing ID mod count; discount line appended when show_discount is true and disc_rate is set; toggle and textarea in Display Settings tab of HLD admin"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.12.0",
+                        "type":  "fix",
+                        "summary":  "Fix attraction_website field key so haunt website URLs now display on listing pages",
+                        "notes":  "GD field htmlvar_name is attraction_website not website; content-single.php now reads attraction_website first with fallback to built-in website field"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.12.0",
+                        "type":  "fix",
+                        "summary":  "Fix attraction_phone_number field key so haunt phone numbers now display on listing pages",
+                        "notes":  "GD field htmlvar_name is attraction_phone_number not phone; content-single.php now reads attraction_phone_number first with fallback to built-in phone field"
+                    },
+                    {
+                        "date":  "2026-09-19",
+                        "version":  "1.12.0",
+                        "type":  "change",
+                        "summary":  "Move Visit Website from CTA button group to full-width red button below address in info card",
+                        "notes":  "Removed from oha-cta-buttons group and from info card text row; new oha-info-card__website-btn added to sidebar.php and listing.css"
                     }
                 ],
     "admin_settings":  {

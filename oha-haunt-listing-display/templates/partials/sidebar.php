@@ -27,14 +27,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 Call
             </a>
         <?php endif; ?>
-        <?php if ( $website ) : ?>
-            <a class="oha-cta-btn oha-cta-btn--website"
-               href="<?php echo esc_url( $website ); ?>"
-               target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm.01 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
-                Visit Website
-            </a>
-        <?php endif; ?>
     </div>
 
     <!-- ── Info card ─────────────────────────────────────────────────────── -->
@@ -190,20 +182,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         </div>
         <?php endif; ?>
 
-        <?php if ( $website ) : ?>
-        <div class="oha-info-card__row">
-            <span class="oha-info-card__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm.01 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
-            </span>
-            <span class="oha-info-card__label">Website</span>
-            <a class="oha-info-card__value oha-info-card__value--link"
-               href="<?php echo esc_url( $website ); ?>"
-               target="_blank" rel="noopener noreferrer">
-                <?php echo esc_html( wp_parse_url( $website, PHP_URL_HOST ) ?: $website ); ?>
-            </a>
-        </div>
-        <?php endif; ?>
-
         <?php if ( $address ) : ?>
         <div class="oha-info-card__row">
             <span class="oha-info-card__icon" aria-hidden="true">
@@ -228,6 +206,15 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <?php if ( $state ) echo ', ' . esc_html( $state ); ?>
             </span>
         </div>
+        <?php endif; ?>
+
+        <?php if ( $website ) : ?>
+        <a class="oha-info-card__website-btn"
+           href="<?php echo esc_url( $website ); ?>"
+           target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 11h-2.95a14.09 14.09 0 00-.38-2.75A5.95 5.95 0 0018.92 13zm-8.92 5.93A12.03 12.03 0 019.05 15h5.9a12.03 12.03 0 01-1.95 3.93A6.01 6.01 0 0110 18.93zm-3-3.93H4.08a5.95 5.95 0 003.33 2.25A14.09 14.09 0 017 15zm-2.92-2H7a14.09 14.09 0 00.38 2.75A5.95 5.95 0 015.08 13zM7 11H4.08a5.95 5.95 0 013.33-2.25A14.09 14.09 0 007 11zm1.05-4h.95a12.03 12.03 0 011.95-3.93A6.01 6.01 0 0110 3.07 12.03 12.03 0 018.05 7zM17 11h-2.95a14.09 14.09 0 00-.38-2.75A5.95 5.95 0 0117 11zm-4 2h-2v-2h2v2zm0-4h-2V7h2v2zm0-4h-2V3.07A6.01 6.01 0 0114.95 7H13zm0 14v-2h1.95A6.01 6.01 0 0113 20.93z"/></svg>
+            Visit Website
+        </a>
         <?php endif; ?>
 
     </div><!-- .oha-info-card -->

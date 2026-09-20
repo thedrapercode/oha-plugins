@@ -522,6 +522,38 @@
     color: var(--oha-gold2);
 }
 
+.oha-listing-wrap .oha-info-card__website-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 14px;
+    padding: 11px 16px;
+    border-radius: var(--oha-radius);
+    background: var(--oha-blood);
+    color: #fff;
+    border: 1px solid var(--oha-blood2);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.oha-listing-wrap .oha-info-card__website-btn svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+.oha-listing-wrap .oha-info-card__website-btn:hover {
+    background: var(--oha-blood2);
+    color: #fff;
+}
+
 /* ── Map ─────────────────────────────────────────────────────────────────── */
 .oha-listing-wrap .oha-map__frame {
     border-radius: var(--oha-radius);
@@ -974,6 +1006,46 @@
 .oha-listing-wrap .oha-report-post a:hover,
 .oha-listing-wrap .oha-report-post .geodir-report-post-action:hover {
     color: var(--oha-muted) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   GEODIRECTORY REPORT MODAL — dark-on-white text fix
+   The site theme sets white text globally; Bootstrap modal has white bg.
+   Scope all overrides to .geodir-report-post-form to avoid bleed.
+═══════════════════════════════════════════════════════════════════════════ */
+.modal-content:has(.geodir-report-post-form),
+.modal-content:has(.geodir-report-post-form) .modal-header,
+.modal-content:has(.geodir-report-post-form) .modal-body {
+    background: #ffffff;
+    color: #212529;
+}
+
+.modal-content:has(.geodir-report-post-form) .modal-title {
+    color: #212529;
+}
+
+.geodir-report-post-form .form-label {
+    color: #212529 !important;
+}
+
+.geodir-report-post-form .form-control,
+.geodir-report-post-form .form-select {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border-color: #ced4da !important;
+}
+
+.geodir-report-post-form .form-control:focus,
+.geodir-report-post-form .form-select:focus {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.geodir-report-post-form .form-control:disabled {
+    background-color: #e9ecef !important;
+    color: #6c757d !important;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

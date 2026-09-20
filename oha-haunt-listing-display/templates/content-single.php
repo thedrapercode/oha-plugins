@@ -31,9 +31,13 @@ $address  = isset( $gd->street )    ? $gd->street    : '';
 $city     = isset( $gd->city )      ? $gd->city      : '';
 $state    = isset( $gd->region )    ? $gd->region    : '';
 $zip      = isset( $gd->zip )       ? $gd->zip       : '';
-$phone    = isset( $gd->phone )     ? $gd->phone     : '';
+$phone    = ( isset( $gd->attraction_phone_number ) && $gd->attraction_phone_number )
+    ? $gd->attraction_phone_number
+    : ( isset( $gd->phone ) ? $gd->phone : '' );
 $email    = isset( $gd->email )     ? trim( (string) $gd->email )   : '';
-$website  = isset( $gd->website )   ? $gd->website   : '';
+$website  = ( isset( $gd->attraction_website ) && $gd->attraction_website )
+    ? $gd->attraction_website
+    : ( isset( $gd->website ) ? $gd->website : '' );
 $facebook = isset( $gd->facebook )  ? $gd->facebook  : '';
 $lat      = isset( $gd->latitude )  ? (float) $gd->latitude  : 0;
 $lng      = isset( $gd->longitude ) ? (float) $gd->longitude : 0;
