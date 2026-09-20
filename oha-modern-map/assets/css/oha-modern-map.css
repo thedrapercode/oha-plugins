@@ -1360,3 +1360,269 @@ body.oha-sheet-open {
     width:         100%;
     margin-bottom: 16px;
 }
+
+/* ---------------------------------------------------------------
+   Search
+   --------------------------------------------------------------- */
+.oha-filter-search .oha-search-wrap {
+    position: relative;
+    display:  flex;
+    align-items: center;
+}
+
+.oha-search-icon {
+    position:    absolute;
+    left:        10px;
+    width:       16px;
+    height:      16px;
+    fill:        var(--oha-text-muted, #cbd2d9);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.oha-search-input {
+    width:            100%;
+    min-width:        180px;
+    background:       var(--oha-card-bg, #000);
+    border:           1px solid rgba(173,49,25,0.35);
+    border-radius:    var(--oha-radius-sm, 4px);
+    color:            var(--oha-text-primary, #f7fafc);
+    font-size:        13px;
+    padding:          7px 32px 7px 32px;
+    outline:          none;
+    transition:       border-color 0.2s;
+}
+
+.oha-search-input::placeholder {
+    color: var(--oha-text-muted, #cbd2d9);
+}
+
+.oha-search-input:focus {
+    border-color: var(--oha-primary, #ad3119);
+}
+
+.oha-search-clear {
+    position:    absolute;
+    right:       6px;
+    background:  none;
+    border:      none;
+    cursor:      pointer;
+    padding:     2px;
+    display:     flex;
+    align-items: center;
+    color:       var(--oha-text-muted, #cbd2d9);
+    transition:  color 0.15s;
+}
+
+.oha-search-clear svg {
+    width:  14px;
+    height: 14px;
+    fill:   currentColor;
+}
+
+.oha-search-clear:hover {
+    color: var(--oha-text-primary, #f7fafc);
+}
+
+/* Autocomplete dropdown */
+.oha-autocomplete-list {
+    display:          none;
+    position:         absolute;
+    top:              calc(100% + 4px);
+    left:             0;
+    right:            0;
+    background:       var(--oha-card-bg, #000);
+    border:           1px solid rgba(173,49,25,0.45);
+    border-radius:    var(--oha-radius-sm, 4px);
+    box-shadow:       0 6px 20px rgba(0,0,0,0.5);
+    z-index:          200;
+    overflow:         hidden;
+}
+
+.oha-autocomplete-item {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+    padding:     9px 12px;
+    cursor:      pointer;
+    font-size:   13px;
+    color:       var(--oha-text-primary, #f7fafc);
+    transition:  background 0.15s;
+}
+
+.oha-autocomplete-item:hover {
+    background: rgba(173,49,25,0.18);
+}
+
+.oha-autocomplete-city {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    color:      var(--oha-text-muted, #cbd2d9);
+}
+
+.oha-ac-icon {
+    width:       14px;
+    height:      14px;
+    fill:        var(--oha-text-muted, #cbd2d9);
+    flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------
+   Quick filter buttons (Near Me + Favorites)
+   --------------------------------------------------------------- */
+.oha-filter-quick .oha-quick-btns {
+    display: flex;
+    gap:     6px;
+}
+
+.oha-quick-btn {
+    display:       flex;
+    align-items:   center;
+    gap:           5px;
+    background:    var(--oha-card-bg, #000);
+    border:        1px solid rgba(173,49,25,0.35);
+    border-radius: var(--oha-radius-sm, 4px);
+    color:         var(--oha-text-muted, #cbd2d9);
+    cursor:        pointer;
+    font-size:     12px;
+    font-weight:   600;
+    padding:       6px 10px;
+    transition:    background 0.2s, border-color 0.2s, color 0.2s;
+    white-space:   nowrap;
+}
+
+.oha-quick-btn svg {
+    width:  14px;
+    height: 14px;
+    fill:   currentColor;
+    flex-shrink: 0;
+}
+
+.oha-quick-btn:hover {
+    border-color: var(--oha-primary, #ad3119);
+    color:        var(--oha-text-primary, #f7fafc);
+}
+
+.oha-quick-btn.active {
+    background:   var(--oha-primary, #ad3119);
+    border-color: var(--oha-primary, #ad3119);
+    color:        #fff;
+}
+
+.oha-quick-btn.loading {
+    opacity: 0.6;
+    cursor:  wait;
+}
+
+/* ---------------------------------------------------------------
+   Fav button (popup card)
+   --------------------------------------------------------------- */
+.oha-popup-title-row {
+    display:     flex;
+    align-items: flex-start;
+    gap:         8px;
+    margin-bottom: 10px;
+}
+
+.oha-popup-title-row .oha-popup-title {
+    flex:   1;
+    margin: 0;
+}
+
+.oha-fav-btn {
+    flex-shrink: 0;
+    background:  none;
+    border:      none;
+    cursor:      pointer;
+    padding:     4px;
+    color:       var(--oha-text-muted, #cbd2d9);
+    transition:  color 0.2s, transform 0.15s;
+    line-height: 1;
+}
+
+.oha-fav-btn svg {
+    width:  20px;
+    height: 20px;
+    fill:   currentColor;
+    display: block;
+}
+
+.oha-fav-btn:hover {
+    color:     var(--oha-primary, #ad3119);
+    transform: scale(1.15);
+}
+
+.oha-fav-btn.is-fav {
+    color: var(--oha-primary, #ad3119);
+}
+
+/* ---------------------------------------------------------------
+   Panel card header (badge + dist + fav)
+   --------------------------------------------------------------- */
+.oha-panel-card-header {
+    display:     flex;
+    align-items: center;
+    gap:         6px;
+    margin-bottom: 4px;
+}
+
+.oha-panel-fav-btn {
+    margin-left: auto;
+    background:  none;
+    border:      none;
+    cursor:      pointer;
+    padding:     2px;
+    color:       rgba(203,210,217,0.45);
+    transition:  color 0.2s, transform 0.15s;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.oha-panel-fav-btn svg {
+    width:   14px;
+    height:  14px;
+    fill:    currentColor;
+    display: block;
+}
+
+.oha-panel-fav-btn:hover {
+    color:     var(--oha-primary, #ad3119);
+    transform: scale(1.2);
+}
+
+.oha-panel-fav-btn.is-fav {
+    color: var(--oha-primary, #ad3119);
+}
+
+/* ---------------------------------------------------------------
+   Distance badge
+   --------------------------------------------------------------- */
+.oha-distance-badge {
+    background:    rgba(173,49,25,0.18);
+    border:        1px solid rgba(173,49,25,0.35);
+    border-radius: 10px;
+    color:         var(--oha-text-muted, #cbd2d9);
+    font-size:     10px;
+    font-weight:   700;
+    letter-spacing: 0.03em;
+    padding:       1px 7px;
+    white-space:   nowrap;
+}
+
+/* ---------------------------------------------------------------
+   User location dot (pulsing)
+   --------------------------------------------------------------- */
+.oha-user-location-dot {
+    width:         16px;
+    height:        16px;
+    background:    #1159af;
+    border:        2px solid #fff;
+    border-radius: 50%;
+    box-shadow:    0 0 0 rgba(17,89,175,0.5);
+    animation:     oha-location-pulse 2s infinite;
+}
+
+@keyframes oha-location-pulse {
+    0%   { box-shadow: 0 0 0 0   rgba(17,89,175,0.5); }
+    70%  { box-shadow: 0 0 0 12px rgba(17,89,175,0); }
+    100% { box-shadow: 0 0 0 0   rgba(17,89,175,0); }
+}

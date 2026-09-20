@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.16.1",
+    "version":  "2.17.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -1002,6 +1002,34 @@
                         "type":  "fix",
                         "summary":  "Fix overlay control icons invisible (black on black) on map",
                         "notes":  "Theme CSS overrides fill on SVG elements. Added explicit fill:var(--oha-text-primary) and color:var(--oha-text-primary) to .oha-map-control svg in oha-modern-map.css."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.17.0",
+                        "type":  "feature",
+                        "summary":  "Search box with autocomplete for haunt names and city names",
+                        "notes":  "Client-side filtering of allHaunts array; haunt click flies to pin + opens bottom sheet; city click filters + zooms; city field added to PHP get_listings() output"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.17.0",
+                        "type":  "feature",
+                        "summary":  "Near Me geolocation button - sorts sidebar by distance, shows distance badges on panel cards",
+                        "notes":  "Haversine formula (R=3958.8 miles); pulsing blue dot marker via MapLibre custom Marker; toggles off on second click; auto-opens sidebar on first activation"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.17.0",
+                        "type":  "feature",
+                        "summary":  "Favorites heart button on popup and panel cards with localStorage persistence and filter toggle",
+                        "notes":  "oha_map_favorites localStorage key stores array of haunt IDs; filter toggle btn hides non-favorites from map source and list views; heart state synced across popup + panel card simultaneously"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.17.0",
+                        "type":  "fix",
+                        "summary":  "View Details and View Event CTA buttons now open in same window instead of new tab",
+                        "notes":  "Removed target=_blank from oha-popup-cta in buildHauntCardHTML, buildEventCardHTML, and buildListingCard; external website links in info grid keep target=_blank"
                     }
                 ]
 }

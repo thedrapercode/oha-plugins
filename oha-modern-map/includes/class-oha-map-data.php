@@ -211,6 +211,7 @@ class OHA_Map_Data {
                 'type'        => $listing_type,
                 'permalink'   => get_permalink($row->ID),
                 'address'     => self::get_address($row),
+                'city'        => !empty($row->city) ? $row->city : '',
                 'phone'       => $phone,
                 'email'       => $email,
                 'website'     => $website,

@@ -26,6 +26,11 @@
         iconsLoaded: {},   // keyed by mapId, bool
         sidebarOpen: {},   // keyed by mapId, bool
         clusterEnabled: {}, // keyed by mapId, bool
+        userLocation:    {}, // keyed by mapId, {lat, lng} or null
+        nearMeActive:    {}, // keyed by mapId, bool
+        favoritesActive: {}, // keyed by mapId, bool
+        searchQuery:     {}, // keyed by mapId, string
+        userLocationMarker: {}, // keyed by mapId, MapLibre Marker instance
 
         // ---------------------------------------------------------------
         // Init
@@ -57,6 +62,11 @@
                 this.iconsLoaded[mapId] = false;
                 this.sidebarOpen[mapId] = false;
                 this.clusterEnabled[mapId] = true;
+                this.userLocation[mapId]    = null;
+                this.nearMeActive[mapId]    = false;
+                this.favoritesActive[mapId] = false;
+                this.searchQuery[mapId]     = '';
+                this.userLocationMarker[mapId] = null;
 
                 // Override region from wrapper data attribute
                 const wrapperRegion = $wrapper.data('region');
@@ -725,10 +735,20 @@
             const region     = this.activeFilters.region;
             const types      = this.activeFilters.types;
             const allHaunts  = this.allHaunts[mapId] || [];
+            const query      = (this.searchQuery[mapId] || '').toLowerCase().trim();
+            const favsOnly   = this.favoritesActive[mapId];
+            const favIds     = favsOnly ? this.getFavorites() : null;
 
             const filtered = allHaunts.filter(listing => {
                 if (region && listing.region !== region) return false;
-                return types.includes(listing.type);
+                if (!types.includes(listing.type)) return false;
+                if (favsOnly && favIds && !favIds.includes(listing.id)) return false;
+                if (query) {
+                    const titleMatch = listing.title.toLowerCase().includes(query);
+                    const cityMatch  = listing.city && listing.city.toLowerCase().includes(query);
+                    if (!titleMatch && !cityMatch) return false;
+                }
+                return true;
             });
 
             this.updateHauntsSource(mapId, filtered);
@@ -879,7 +899,7 @@
                     </div>
                     <h3 class="oha-card-title">${this.escHtml(listing.title)}</h3>
                     ${listing.address ? `<p class="oha-card-address">${this.escHtml(listing.address)}</p>` : ''}
-                    <a href="${this.escHtml(listing.permalink)}" class="oha-btn-primary oha-card-btn" target="_blank">View Details</a>
+                    <a href="${this.escHtml(listing.permalink)}" class="oha-btn-primary oha-card-btn">View Details</a>
                 </div>
             </div>`;
         },
@@ -939,8 +959,11 @@
                 html += `<div class="oha-popup-badges">${badgesHtml.join('')}</div>`;
             }
 
-            // Title
+            // Title + fav button row
+            html += `<div class="oha-popup-title-row">`;
             html += `<h3 class="oha-popup-title">${this.escHtml(props.title)}</h3>`;
+            html += `<button class="oha-fav-btn${this.isFavorite(props.id) ? ' is-fav' : ''}" data-id="${parseInt(props.id, 10)}" title="Save to favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>`;
+            html += `</div>`;
 
             // Info grid
             html += '<div class="oha-popup-info">';
@@ -971,7 +994,7 @@
 
             // CTA button
             if (cardFields.view_details !== false && props.permalink) {
-                html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta" target="_blank">View Details</a>`;
+                html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta">View Details</a>`;
             }
 
             html += '</div></div>'; // .oha-popup-body .oha-popup-card
@@ -998,7 +1021,7 @@
             }
             html += '</div>';
             if (props.permalink) {
-                html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta" target="_blank">View Event</a>`;
+                html += `<a href="${this.escHtml(props.permalink)}" class="oha-btn-primary oha-popup-cta">View Event</a>`;
             }
             html += '</div></div>';
             return html;
@@ -1120,6 +1143,34 @@
                 self.showBottomSheet($wrapper, listing, 'haunt');
             });
 
+            // Near Me button
+            $wrapper.on('click', '.oha-near-me-btn', function () {
+                self.getUserLocation(mapId, $wrapper);
+            });
+
+            // Favorites filter toggle
+            $wrapper.on('click', '.oha-fav-filter-btn', function () {
+                self.favoritesActive[mapId] = !self.favoritesActive[mapId];
+                $(this).toggleClass('active', self.favoritesActive[mapId]);
+                self.applyFilters(mapId, $wrapper);
+            });
+
+            // Heart/fav toggle on popup card or panel card
+            $wrapper.on('click', '.oha-fav-btn, .oha-panel-fav-btn', function (e) {
+                e.stopPropagation();
+                const id = parseInt($(this).data('id'), 10);
+                self.toggleFavorite(id);
+                const isFav = self.isFavorite(id);
+                $wrapper.find(`.oha-fav-btn[data-id="${id}"], .oha-panel-fav-btn[data-id="${id}"]`)
+                    .toggleClass('is-fav', isFav);
+                if (self.favoritesActive[mapId]) {
+                    self.applyFilters(mapId, $wrapper);
+                }
+            });
+
+            // Initialize search
+            self.initSearch($wrapper, mapId);
+
             // Sidebar card hover → highlight map pin via hover ring
             $wrapper.on('mouseenter', '.oha-panel-card', function () {
                 const id  = parseInt($(this).data('id'), 10);
@@ -1192,31 +1243,55 @@
             const region    = this.activeFilters.region;
             const types     = this.activeFilters.types;
             const allHaunts = this.allHaunts[mapId] || [];
+            const query     = (this.searchQuery[mapId] || '').toLowerCase().trim();
+            const favsOnly  = this.favoritesActive[mapId];
+            const favIds    = favsOnly ? this.getFavorites() : null;
+            const userLoc   = this.userLocation[mapId];
+            const nearMe    = this.nearMeActive[mapId];
 
             const inView = allHaunts.filter(h => {
                 if (region && h.region !== region) return false;
                 if (!types.includes(h.type)) return false;
+                if (favsOnly && favIds && !favIds.includes(h.id)) return false;
+                if (query) {
+                    const titleMatch = h.title.toLowerCase().includes(query);
+                    const cityMatch  = h.city && h.city.toLowerCase().includes(query);
+                    if (!titleMatch && !cityMatch) return false;
+                }
                 return h.lng >= bounds.getWest() && h.lng <= bounds.getEast()
                     && h.lat >= bounds.getSouth() && h.lat <= bounds.getNorth();
             });
 
             $wrapper.find('.oha-panel-haunt-count').text(inView.length);
 
-            inView.sort((a, b) => {
-                if (a.featured && !b.featured) return -1;
-                if (!a.featured && b.featured) return 1;
-                return a.title.localeCompare(b.title);
-            });
+            if (nearMe && userLoc) {
+                inView.sort((a, b) => {
+                    const da = this.haversineDistance(userLoc.lat, userLoc.lng, a.lat, a.lng);
+                    const db = this.haversineDistance(userLoc.lat, userLoc.lng, b.lat, b.lng);
+                    return da - db;
+                });
+            } else {
+                inView.sort((a, b) => {
+                    if (a.featured && !b.featured) return -1;
+                    if (!a.featured && b.featured) return 1;
+                    return a.title.localeCompare(b.title);
+                });
+            }
 
             $panel.empty();
             if (!inView.length) {
                 $panel.html('<div class="oha-panel-empty"><p>No haunts in view. Pan the map to explore.</p></div>');
                 return;
             }
-            inView.forEach(h => $panel.append(this.buildPanelCard(h)));
+            inView.forEach(h => {
+                const dist = (nearMe && userLoc)
+                    ? this.haversineDistance(userLoc.lat, userLoc.lng, h.lat, h.lng)
+                    : null;
+                $panel.append(this.buildPanelCard(h, dist));
+            });
         },
 
-        buildPanelCard(listing) {
+        buildPanelCard(listing, distMiles) {
             const typeLabel = {
                 featured:     'Featured',
                 professional: 'Professional',
@@ -1228,10 +1303,20 @@
                 ? `<div class="oha-panel-card-thumb" style="background-image:url('${this.escHtml(listing.thumbnail)}')"></div>`
                 : '';
 
+            const distHtml = (distMiles != null)
+                ? `<span class="oha-distance-badge">${this.formatDistance(distMiles)}</span>`
+                : '';
+
+            const favClass = this.isFavorite(listing.id) ? ' is-fav' : '';
+
             return `<div class="oha-panel-card oha-type-${this.escHtml(listing.type)}" data-id="${parseInt(listing.id, 10)}" data-lat="${parseFloat(listing.lat)}" data-lng="${parseFloat(listing.lng)}">
                 ${thumb}
                 <div class="oha-panel-card-body">
-                    <span class="oha-badge oha-badge-${this.escHtml(listing.type)}">${this.escHtml(typeLabel)}</span>
+                    <div class="oha-panel-card-header">
+                        <span class="oha-badge oha-badge-${this.escHtml(listing.type)}">${this.escHtml(typeLabel)}</span>
+                        ${distHtml}
+                        <button class="oha-panel-fav-btn${favClass}" data-id="${parseInt(listing.id, 10)}" title="Save to favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                    </div>
                     <h4 class="oha-panel-card-title">${this.escHtml(listing.title)}</h4>
                     ${listing.address ? `<p class="oha-panel-card-addr">${this.escHtml(listing.address)}</p>` : ''}
                 </div>
@@ -1445,6 +1530,210 @@
         updateCounter($wrapper, count) {
             $wrapper.find('.oha-count').text(count);
             $wrapper.find('.oha-results-counter').toggleClass('has-results', count > 0);
+        },
+
+        // ---------------------------------------------------------------
+        // Near Me / Geolocation
+        // ---------------------------------------------------------------
+        getUserLocation(mapId, $wrapper) {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+            const $btn = $wrapper.find('.oha-near-me-btn');
+            // Toggle off if already active
+            if (this.nearMeActive[mapId]) {
+                this.nearMeActive[mapId] = false;
+                $btn.removeClass('active');
+                if (this.userLocationMarker[mapId]) {
+                    this.userLocationMarker[mapId].remove();
+                    this.userLocationMarker[mapId] = null;
+                }
+                this.updateSidebarList(mapId, $wrapper);
+                return;
+            }
+            $btn.addClass('loading');
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    this.userLocation[mapId]  = { lat, lng };
+                    this.nearMeActive[mapId]  = true;
+                    $btn.addClass('active').removeClass('loading');
+                    if (this.userLocationMarker[mapId]) {
+                        this.userLocationMarker[mapId].remove();
+                    }
+                    const el = document.createElement('div');
+                    el.className = 'oha-user-location-dot';
+                    const map = this.maps[mapId];
+                    if (map) {
+                        this.userLocationMarker[mapId] = new maplibregl.Marker({ element: el })
+                            .setLngLat([lng, lat])
+                            .addTo(map);
+                        map.easeTo({ center: [lng, lat], zoom: 10, speed: 1.2 });
+                    }
+                    this.updateSidebarList(mapId, $wrapper);
+                    if (!this.sidebarOpen[mapId]) {
+                        this.toggleSidebar(mapId, $wrapper);
+                    }
+                },
+                () => {
+                    $btn.removeClass('loading');
+                    alert('Unable to get your location. Please allow location access and try again.');
+                },
+                { enableHighAccuracy: false, timeout: 10000 }
+            );
+        },
+
+        haversineDistance(lat1, lng1, lat2, lng2) {
+            const R    = 3958.8;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a    = Math.sin(dLat / 2) ** 2
+                       + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+                       * Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        },
+
+        formatDistance(miles) {
+            if (miles < 1) return `${(Math.round(miles * 10) / 10)} mi`;
+            return `${Math.round(miles)} mi`;
+        },
+
+        // ---------------------------------------------------------------
+        // Favorites (localStorage)
+        // ---------------------------------------------------------------
+        getFavorites() {
+            try {
+                return JSON.parse(localStorage.getItem('oha_map_favorites') || '[]');
+            } catch (e) {
+                return [];
+            }
+        },
+
+        toggleFavorite(id) {
+            const favs = this.getFavorites();
+            const idx  = favs.indexOf(id);
+            if (idx === -1) { favs.push(id); } else { favs.splice(idx, 1); }
+            localStorage.setItem('oha_map_favorites', JSON.stringify(favs));
+        },
+
+        isFavorite(id) {
+            return this.getFavorites().includes(parseInt(id, 10));
+        },
+
+        // ---------------------------------------------------------------
+        // Search + Autocomplete
+        // ---------------------------------------------------------------
+        initSearch($wrapper, mapId) {
+            const self   = this;
+            const $input = $wrapper.find('.oha-search-input');
+            const $clear = $wrapper.find('.oha-search-clear');
+            const $list  = $wrapper.find('.oha-autocomplete-list');
+
+            $input.on('input', function () {
+                const q = $(this).val().trim();
+                self.searchQuery[mapId] = q;
+                $clear.toggle(q.length > 0);
+                if (q.length >= 2) {
+                    self.showAutocomplete($wrapper, mapId, q);
+                } else {
+                    $list.empty().hide();
+                }
+                if (!q) {
+                    self.applyFilters(mapId, $wrapper);
+                }
+            });
+
+            $input.on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    $list.empty().hide();
+                    self.applyFilters(mapId, $wrapper);
+                }
+                if (e.key === 'Escape') {
+                    $(this).val('');
+                    self.searchQuery[mapId] = '';
+                    $clear.hide();
+                    $list.empty().hide();
+                    self.applyFilters(mapId, $wrapper);
+                }
+            });
+
+            $clear.on('click', function () {
+                $input.val('');
+                self.searchQuery[mapId] = '';
+                $(this).hide();
+                $list.empty().hide();
+                self.applyFilters(mapId, $wrapper);
+            });
+
+            $(document).on('click.oha-search-' + mapId, function (e) {
+                if (!$(e.target).closest('.oha-search-wrap').length) {
+                    $list.empty().hide();
+                }
+            });
+        },
+
+        showAutocomplete($wrapper, mapId, query) {
+            const q      = query.toLowerCase();
+            const haunts = this.allHaunts[mapId] || [];
+            const $list  = $wrapper.find('.oha-autocomplete-list');
+
+            const hauntMatches = haunts.filter(h => h.title.toLowerCase().includes(q)).slice(0, 5);
+
+            const citySet = new Set();
+            haunts.forEach(h => {
+                if (h.city && h.city.toLowerCase().includes(q)) citySet.add(h.city);
+            });
+            const cityMatches = [...citySet].slice(0, 3);
+
+            if (!hauntMatches.length && !cityMatches.length) {
+                $list.empty().hide();
+                return;
+            }
+
+            let html = '';
+            hauntMatches.forEach(h => {
+                html += `<div class="oha-autocomplete-item oha-autocomplete-haunt" data-id="${parseInt(h.id, 10)}" data-lat="${parseFloat(h.lat)}" data-lng="${parseFloat(h.lng)}">`;
+                html += `<svg class="oha-ac-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+                html += `<span>${this.escHtml(h.title)}</span>`;
+                html += `</div>`;
+            });
+            cityMatches.forEach(city => {
+                html += `<div class="oha-autocomplete-item oha-autocomplete-city" data-city="${this.escHtml(city)}">`;
+                html += `<svg class="oha-ac-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>`;
+                html += `<span>${this.escHtml(city)}</span>`;
+                html += `</div>`;
+            });
+            $list.html(html).show();
+
+            $list.find('.oha-autocomplete-haunt').on('click', (e) => {
+                const $item = $(e.currentTarget);
+                const id    = parseInt($item.data('id'), 10);
+                const lat   = parseFloat($item.data('lat'));
+                const lng   = parseFloat($item.data('lng'));
+                const h     = haunts.find(x => x.id == id);
+                $wrapper.find('.oha-search-input').val(h ? h.title : '');
+                this.searchQuery[mapId] = h ? h.title : '';
+                $list.empty().hide();
+                const map = this.maps[mapId];
+                if (map) map.easeTo({ center: [lng, lat], zoom: 13, speed: 1.2 });
+                if (h) this.showBottomSheet($wrapper, h, 'haunt');
+                this.applyFilters(mapId, $wrapper);
+            });
+
+            $list.find('.oha-autocomplete-city').on('click', (e) => {
+                const city = $(e.currentTarget).data('city');
+                $wrapper.find('.oha-search-input').val(city);
+                this.searchQuery[mapId] = city;
+                $list.empty().hide();
+                this.applyFilters(mapId, $wrapper);
+                const first = haunts.find(h => h.city && h.city.toLowerCase() === city.toLowerCase());
+                if (first) {
+                    const map = this.maps[mapId];
+                    if (map) map.easeTo({ center: [first.lng, first.lat], zoom: 10, speed: 1.2 });
+                }
+            });
         },
 
         escHtml(str) {
