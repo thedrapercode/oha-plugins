@@ -160,7 +160,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         </div>
         <?php endif; ?>
 
-        <?php if ( $email ) :
+        <?php if ( $email && strtolower( $email ) !== 'do-not-reply@ohiohaunters.com' ) :
             // Split email at @ so no full address appears in source HTML — stops basic harvesters.
             $email_parts  = explode( '@', $email, 2 );
             $email_user   = $email_parts[0] ?? '';

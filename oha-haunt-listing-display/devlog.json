@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.16.1",
+    "version":  "1.16.2",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -428,6 +428,20 @@
                         "type":  "fix",
                         "summary":  "Hide GD grid/list view switcher dropdown on all archive and search pages",
                         "notes":  "Selector: body.oha-gd-archive .btn-group:has(#gd-list-view-select-grid). Layout is always 3-col CSS grid so the view picker is irrelevant."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.16.2",
+                        "type":  "fix",
+                        "summary":  "Suppress filler email do-not-reply@ohiohaunters.com from showing on listing sidebar",
+                        "notes":  "Case-insensitive strtolower check added to email display condition in sidebar.php. Use this email when adding haunts manually so it is auto-hidden."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.16.2",
+                        "type":  "change",
+                        "summary":  "Match listing page search bar to archive page style: icons in inputs, icon-only button",
+                        "notes":  "Added SVG magnifying glass and location pin icons inside each input via .oha-search-bar__field--icon wrapper. Button changed to 38x38 icon-only square. Placeholders updated to Haunt Name / City, State to match GD archive form."
                     }
                 ],
     "admin_settings":  {
