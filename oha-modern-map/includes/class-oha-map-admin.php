@@ -60,6 +60,15 @@ class OHA_Map_Admin {
 
         add_submenu_page(
             'oha-modern-map',
+            __('County Regions', 'oha-modern-map'),
+            __('County Regions', 'oha-modern-map'),
+            'manage_options',
+            'oha-map-county-regions',
+            [__CLASS__, 'render_county_regions_page']
+        );
+
+        add_submenu_page(
+            'oha-modern-map',
             __('Region Colors', 'oha-modern-map'),
             __('Region Colors', 'oha-modern-map'),
             'manage_options',
@@ -959,6 +968,120 @@ class OHA_Map_Admin {
         <?php
     }
     
+    /**
+     * Render county-to-region assignment page
+     */
+    public static function render_county_regions_page() {
+        // Handle cache clear
+        if (isset($_POST['oha_clear_county_cache']) && check_admin_referer('oha_clear_county_cache')) {
+            delete_transient('oha_ohio_counties_v1');
+            echo '<div class="updated notice"><p>County cache cleared. The next map load will re-fetch from Ohio GIS.</p></div>';
+        }
+
+        // Handle save
+        if (isset($_POST['oha_county_regions_save']) && check_admin_referer('oha_county_regions_save')) {
+            if (isset($_POST['county_region']) && is_array($_POST['county_region'])) {
+                $valid_regions = ['northwest', 'northeast', 'central', 'southwest', 'southeast'];
+                $map = [];
+                foreach ($_POST['county_region'] as $county => $region) {
+                    $county = sanitize_key($county);
+                    $region = sanitize_key($region);
+                    if ($county && in_array($region, $valid_regions, true)) {
+                        $map[$county] = $region;
+                    }
+                }
+                update_option('oha_county_region_map', $map);
+                // Clear cache so new assignments take effect on next map load
+                delete_transient('oha_ohio_counties_v1');
+                echo '<div class="updated notice"><p>County region assignments saved. Cache cleared so changes appear on the next map load.</p></div>';
+            }
+        }
+
+        $county_map   = OHA_Map_Regions::get_county_region_map();
+        $region_names = OHA_Map_Regions::get_region_names();
+        $slugs        = ['northwest', 'northeast', 'central', 'southwest', 'southeast'];
+
+        $cached       = get_transient('oha_ohio_counties_v1');
+        $cache_status = $cached ? count($cached['features']) . ' counties cached' : 'Not yet cached';
+
+        // Sort counties alphabetically within each region for readability
+        $by_region = array_fill_keys($slugs, []);
+        foreach ($county_map as $county => $region) {
+            if (isset($by_region[$region])) {
+                $by_region[$region][] = $county;
+            }
+        }
+        foreach ($by_region as &$list) {
+            sort($list);
+        }
+        unset($list);
+        ?>
+        <div class="wrap">
+            <h1>County Region Assignments</h1>
+            <p>The map fetches real county boundaries from Ohio's state GIS service (maps.ohio.gov) and draws county polygon fills instead of the old hand-drawn region shapes. This eliminates all region gaps and overlaps. Assign each county to the region it should belong to.</p>
+
+            <form method="post" action="" style="margin-bottom:16px;">
+                <?php wp_nonce_field('oha_clear_county_cache'); ?>
+                <table class="form-table" style="width:auto;">
+                    <tr>
+                        <th scope="row">County GeoJSON Cache</th>
+                        <td>
+                            <strong><?php echo esc_html($cache_status); ?></strong>
+                            &nbsp;&nbsp;
+                            <input type="submit" name="oha_clear_county_cache" class="button" value="Clear Cache and Re-fetch">
+                            <p class="description">Cached for 7 days. Clear to pull updated boundaries from Ohio GIS.</p>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+
+            <form method="post" action="">
+                <?php wp_nonce_field('oha_county_regions_save'); ?>
+                <p>
+                    <input type="submit" name="oha_county_regions_save" class="button button-primary" value="Save County Assignments">
+                    <span class="description" style="margin-left:12px;">Saving automatically clears the county cache so changes appear immediately.</span>
+                </p>
+
+                <?php foreach ($slugs as $region_slug) :
+                    $region_label = $region_names[$region_slug] ?? ucfirst($region_slug);
+                    $counties     = $by_region[$region_slug] ?? [];
+                    if (empty($counties)) continue;
+                ?>
+                <h2 style="margin-top:28px;"><?php echo esc_html($region_label); ?> <span class="description">(<?php echo count($counties); ?>)</span></h2>
+                <table class="widefat striped" style="max-width:600px;margin-bottom:16px;">
+                    <thead>
+                        <tr>
+                            <th style="width:220px;">County</th>
+                            <th>Assigned Region</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($counties as $county) :
+                            $current = $county_map[$county] ?? 'central';
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html(ucwords($county)); ?></td>
+                            <td>
+                                <select name="county_region[<?php echo esc_attr($county); ?>]">
+                                    <?php foreach ($slugs as $s) : ?>
+                                    <option value="<?php echo esc_attr($s); ?>"<?php selected($current, $s); ?>>
+                                        <?php echo esc_html($region_names[$s] ?? ucfirst($s)); ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php endforeach; ?>
+
+                <p><input type="submit" name="oha_county_regions_save" class="button button-primary" value="Save County Assignments"></p>
+            </form>
+        </div>
+        <?php
+    }
+
     /**
      * Save settings
      */

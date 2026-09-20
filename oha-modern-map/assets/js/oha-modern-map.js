@@ -24,6 +24,8 @@
             events: true,
         },
         iconsLoaded: {},   // keyed by mapId, bool
+        sidebarOpen: {},   // keyed by mapId, bool
+        clusterEnabled: {}, // keyed by mapId, bool
 
         // ---------------------------------------------------------------
         // Init
@@ -53,6 +55,8 @@
                 this.allHaunts[mapId] = [];
                 this.allEvents[mapId] = [];
                 this.iconsLoaded[mapId] = false;
+                this.sidebarOpen[mapId] = false;
+                this.clusterEnabled[mapId] = true;
 
                 // Override region from wrapper data attribute
                 const wrapperRegion = $wrapper.data('region');
@@ -80,19 +84,21 @@
             const settings    = ohaMapSettings;
             const regionSlug  = this.activeFilters.region;
             const regionData  = this.getRegionData(regionSlug);
-            const center      = [regionData.centerLng || -82.7, regionData.centerLat || 40.2];
-            const zoom        = regionData.zoom || 7;
             const elementId   = `${mapId}-map`;
             const tileStyle   = settings.tileStyle || 'https://tiles.openfreemap.org/styles/dark';
 
+            // Use fitBounds so Ohio always fills the viewport regardless of screen size.
+            // If a region is pre-selected via shortcode attr, fit to that region instead.
+            const ohioBounds    = [[-84.82, 38.40], [-80.52, 42.40]];
+            const initialBounds = (regionSlug && regionData.bounds) ? regionData.bounds : ohioBounds;
+
             const map = new maplibregl.Map({
-                container:       elementId,
-                style:           tileStyle,
-                center:          center,
-                zoom:            zoom,
+                container:          elementId,
+                style:              tileStyle,
+                bounds:             initialBounds,
+                fitBoundsOptions:   { padding: regionSlug ? 40 : 20, duration: 0 },
                 attributionControl: false,
-                pitchWithRotate: false,
-                maxBounds:       [[-89.0, 36.5], [-78.5, 43.5]], // Ohio + buffer
+                pitchWithRotate:    false,
             });
 
             // Minimal attribution
@@ -102,6 +108,7 @@
 
             map.on('load', () => {
                 this.addRegionLayers(map, mapId);
+                this.loadCounties($wrapper, mapId);
                 this.loadIcons(map, mapId).then(() => {
                     this.addHauntLayers(map, mapId);
                     this.addEventLayers(map, mapId);
@@ -113,6 +120,10 @@
                     // Apply initial layer visibility for events
                     this.setLayerVisibility(map, 'events', this.layerVisible.events);
                     this.updateLayerButtonState($wrapper);
+                    // Update sidebar list whenever the map pans or zooms
+                    map.on('moveend', () => {
+                        this.updateSidebarList(mapId, $wrapper);
+                    });
                 });
             });
 
@@ -203,16 +214,23 @@
                 return;
             }
 
+            // Region centroid source — used only for region name labels
             map.addSource('ohio-regions', {
                 type: 'geojson',
                 data: data,
             });
 
-            // Subtle always-on fill (unselected state) — fades out when zoomed in
+            // County fill source — populated via AJAX after map loads (see loadCounties)
+            map.addSource('ohio-counties', {
+                type: 'geojson',
+                data: { type: 'FeatureCollection', features: [] },
+            });
+
+            // Subtle always-on county fill — fades out when zoomed in
             map.addLayer({
-                id:     'region-fills',
+                id:     'county-fills',
                 type:   'fill',
-                source: 'ohio-regions',
+                source: 'ohio-counties',
                 paint: {
                     'fill-color':   ['get', 'fillColor'],
                     'fill-opacity': ['interpolate', ['linear'], ['zoom'],
@@ -223,12 +241,12 @@
                 },
             });
 
-            // Highlighted fill when a region is selected — fades later than base fill
+            // Highlighted county fill when a region is selected
             map.addLayer({
-                id:     'region-fills-selected',
+                id:     'county-fills-selected',
                 type:   'fill',
-                source: 'ohio-regions',
-                filter: ['==', ['get', 'slug'], ''],
+                source: 'ohio-counties',
+                filter: ['==', ['get', 'region'], ''],
                 paint: {
                     'fill-color':   ['get', 'fillColor'],
                     'fill-opacity': ['interpolate', ['linear'], ['zoom'],
@@ -239,12 +257,12 @@
                 },
             });
 
-            // Hover highlight — fades with fills
+            // Hover highlight — all counties in the hovered region
             map.addLayer({
-                id:     'region-fills-hover',
+                id:     'county-fills-hover',
                 type:   'fill',
-                source: 'ohio-regions',
-                filter: ['==', ['get', 'slug'], ''],
+                source: 'ohio-counties',
+                filter: ['==', ['get', 'region'], ''],
                 paint: {
                     'fill-color':   ['get', 'fillColor'],
                     'fill-opacity': ['interpolate', ['linear'], ['zoom'],
@@ -254,23 +272,23 @@
                 },
             });
 
-            // Region divider outlines — fade out when zoomed past county level
+            // County divider outlines
             map.addLayer({
-                id:     'region-outlines',
+                id:     'county-outlines',
                 type:   'line',
-                source: 'ohio-regions',
+                source: 'ohio-counties',
                 paint: {
                     'line-color':   ['get', 'outlineColor'],
-                    'line-width':   1.5,
+                    'line-width':   0.8,
                     'line-opacity': ['interpolate', ['linear'], ['zoom'],
-                        7,  0.70,
-                        9,  0.35,
+                        7,  0.45,
+                        9,  0.25,
                         10, 0,
                     ],
                 },
             });
 
-            // Region name labels — visible only when zoomed out
+            // Region name labels — placed at polygon centroids from ohio-regions source
             map.addLayer({
                 id:   'region-labels',
                 type: 'symbol',
@@ -299,28 +317,28 @@
                 maxzoom: 10,
             });
 
-            // Region hover events
+            // County hover events — highlight all counties in the hovered region
             let hoveredRegion = null;
-            map.on('mousemove', 'region-fills', (e) => {
-                const slug = e.features[0].properties.slug;
+            map.on('mousemove', 'county-fills', (e) => {
+                const slug = e.features[0].properties.region;
                 if (hoveredRegion !== slug) {
                     hoveredRegion = slug;
                     if (this.activeFilters.region !== slug) {
-                        map.setFilter('region-fills-hover', ['==', ['get', 'slug'], slug]);
+                        map.setFilter('county-fills-hover', ['==', ['get', 'region'], slug]);
                     }
                     map.getCanvas().style.cursor = 'pointer';
                 }
             });
-            map.on('mouseleave', 'region-fills', () => {
+            map.on('mouseleave', 'county-fills', () => {
                 hoveredRegion = null;
-                map.setFilter('region-fills-hover', ['==', ['get', 'slug'], '']);
+                map.setFilter('county-fills-hover', ['==', ['get', 'region'], '']);
                 map.getCanvas().style.cursor = '';
             });
 
-            // Click on region fill (not on a haunt marker) -> zoom into that region
-            map.on('click', 'region-fills', (e) => {
+            // Click on county fill (not on a haunt marker) → select that region
+            map.on('click', 'county-fills', (e) => {
                 if (!e.features || !e.features.length) return;
-                const slug = e.features[0].properties.slug;
+                const slug = e.features[0].properties.region;
                 const hauntHits = map.queryRenderedFeatures(e.point, { layers: ['haunts-unclustered'] });
                 if (!hauntHits.length) {
                     const $wrapper = $('#' + mapId);
@@ -365,9 +383,13 @@
             const map = this.maps[mapId];
             if (!map) return;
 
-            // Update fill highlight
-            map.setFilter('region-fills-selected', ['==', ['get', 'slug'], slug || '']);
-            map.setFilter('region-fills-hover',    ['==', ['get', 'slug'], '']);
+            // Update county fill highlight
+            if (map.getLayer('county-fills-selected')) {
+                map.setFilter('county-fills-selected', ['==', ['get', 'region'], slug || '']);
+            }
+            if (map.getLayer('county-fills-hover')) {
+                map.setFilter('county-fills-hover',    ['==', ['get', 'region'], '']);
+            }
 
             // Zoom to region using fitBounds for viewport-aware fitting
             const pad = window.innerWidth < 640 ? 20 : 60;
@@ -384,8 +406,8 @@
                     });
                 }
             } else {
-                // Reset to all Ohio — bounds match the state outline extent
-                map.fitBounds([[-84.82, 38.40], [-80.52, 42.40]], { padding: pad, speed: 1.2 });
+                // Reset to all Ohio
+                map.fitBounds([[-84.82, 38.40], [-80.52, 42.40]], { padding: 20, speed: 1.2 });
             }
 
             // Sync pill UI (both desktop and mobile sheet)
@@ -404,8 +426,9 @@
         addHauntLayers(map, mapId) {
             const clusterSettings = ohaMapSettings.clustering || {};
             const clusterEnabled  = clusterSettings.enabled !== false;
+            this.clusterEnabled[mapId] = clusterEnabled;
             const clusterRadius   = parseInt(clusterSettings.radius || 50, 10);
-            const clusterMaxZoom  = parseInt(clusterSettings.max_zoom || 14, 10);
+            const clusterMaxZoom  = parseInt(clusterSettings.disable_at_zoom || clusterSettings.max_zoom || 14, 10);
 
             map.addSource('haunts', {
                 type:           'geojson',
@@ -450,6 +473,24 @@
                     paint: { 'text-color': '#ffffff' },
                 });
             }
+
+            // Hover ring — white circle stroke shown when a sidebar card is hovered
+            map.addLayer({
+                id:     'haunts-hover-ring',
+                type:   'circle',
+                source: 'haunts',
+                filter: ['all',
+                    clusterEnabled ? ['!', ['has', 'point_count']] : ['has', 'type'],
+                    ['==', ['get', 'id'], 0],
+                ],
+                paint: {
+                    'circle-radius':         20,
+                    'circle-color':          'rgba(255,255,255,0)',
+                    'circle-stroke-color':   '#ffffff',
+                    'circle-stroke-width':   2.5,
+                    'circle-stroke-opacity': 0.85,
+                },
+            });
 
             // Individual haunt markers
             map.addLayer({
@@ -524,10 +565,10 @@
         // Map Interactions
         // ---------------------------------------------------------------
         addMapInteractions(map, mapId, $wrapper) {
-            // Click on region fill → select region
-            map.on('click', 'region-fills', (e) => {
+            // Click on county fill → toggle region selection
+            map.on('click', 'county-fills', (e) => {
                 if (!e.features.length) return;
-                const slug = e.features[0].properties.slug;
+                const slug = e.features[0].properties.region;
                 const current = this.activeFilters.region;
                 this.selectRegion(mapId, current === slug ? '' : slug, $wrapper);
             });
@@ -574,6 +615,17 @@
             interactiveLayers.forEach(layer => {
                 map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
                 map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
+            });
+
+            // Pin hover → highlight matching sidebar card
+            map.on('mousemove', 'haunts-unclustered', (e) => {
+                if (!this.sidebarOpen[mapId] || !e.features.length) return;
+                const id = e.features[0].properties.id;
+                $wrapper.find('.oha-panel-card').removeClass('is-pin-hovered');
+                $wrapper.find(`.oha-panel-card[data-id="${id}"]`).addClass('is-pin-hovered');
+            });
+            map.on('mouseleave', 'haunts-unclustered', () => {
+                $wrapper.find('.oha-panel-card').removeClass('is-pin-hovered');
             });
 
             // Close bottom sheet on map click (outside marker)
@@ -627,6 +679,32 @@
             });
         },
 
+        loadCounties($wrapper, mapId) {
+            $.ajax({
+                url:    ohaMapSettings.ajaxUrl,
+                method: 'GET',
+                data: {
+                    action: 'oha_get_ohio_counties',
+                    nonce:  ohaMapSettings.nonce,
+                },
+            }).done((response) => {
+                if (response.success && response.data) {
+                    const map = this.maps[mapId];
+                    if (map && map.getSource('ohio-counties')) {
+                        map.getSource('ohio-counties').setData(response.data);
+                    }
+                    // If a region is already selected, apply the highlight now that data is loaded
+                    if (this.activeFilters.region && map && map.getLayer('county-fills-selected')) {
+                        map.setFilter('county-fills-selected', ['==', ['get', 'region'], this.activeFilters.region]);
+                    }
+                } else {
+                    console.warn('OHA Map: county data unavailable', response);
+                }
+            }).fail((xhr, status, error) => {
+                console.warn('OHA Map: county AJAX failed', error);
+            });
+        },
+
         // ---------------------------------------------------------------
         // Filter & Render
         // ---------------------------------------------------------------
@@ -644,6 +722,7 @@
             this.renderListView($wrapper, filtered);
             this.updateCounter($wrapper, filtered.length);
             this.updateMobileFilterBadge($wrapper);
+            this.updateSidebarList(mapId, $wrapper);
         },
 
         updateHauntsSource(mapId, listings) {
@@ -997,6 +1076,45 @@
                 self.hideRegionInfoPanel($wrapper);
                 self.selectRegion(mapId, slug, $wrapper);
             });
+
+            // Side panel toggle button
+            $wrapper.on('click', '.oha-panel-toggle', function () {
+                self.toggleSidebar(mapId, $wrapper);
+            });
+
+            // Sidebar card click → fly to pin + open bottom sheet
+            $wrapper.on('click', '.oha-panel-card', function () {
+                const id      = parseInt($(this).data('id'), 10);
+                const listing = (self.allHaunts[mapId] || []).find(h => h.id == id);
+                if (!listing) return;
+                const map = self.maps[mapId];
+                if (map) {
+                    const targetZoom = Math.max(map.getZoom(), 10);
+                    map.easeTo({ center: [listing.lng, listing.lat], zoom: targetZoom, speed: 1.2 });
+                }
+                self.showBottomSheet($wrapper, listing, 'haunt');
+            });
+
+            // Sidebar card hover → highlight map pin via hover ring
+            $wrapper.on('mouseenter', '.oha-panel-card', function () {
+                const id  = parseInt($(this).data('id'), 10);
+                const map = self.maps[mapId];
+                if (!map || !map.getLayer('haunts-hover-ring')) return;
+                const ce = self.clusterEnabled[mapId] !== false;
+                map.setFilter('haunts-hover-ring', ['all',
+                    ce ? ['!', ['has', 'point_count']] : ['has', 'type'],
+                    ['==', ['get', 'id'], id],
+                ]);
+            });
+            $wrapper.on('mouseleave', '.oha-panel-card', function () {
+                const map = self.maps[mapId];
+                if (!map || !map.getLayer('haunts-hover-ring')) return;
+                const ce = self.clusterEnabled[mapId] !== false;
+                map.setFilter('haunts-hover-ring', ['all',
+                    ce ? ['!', ['has', 'point_count']] : ['has', 'type'],
+                    ['==', ['get', 'id'], 0],
+                ]);
+            });
         },
 
         // ---------------------------------------------------------------
@@ -1012,6 +1130,82 @@
             $wrapper.find('.oha-mob-filter-sheet').removeClass('open');
             $wrapper.find('.oha-mob-filter-overlay').removeClass('visible');
             $('body').removeClass('oha-sheet-open');
+        },
+
+        // ---------------------------------------------------------------
+        // Side Panel
+        // ---------------------------------------------------------------
+        toggleSidebar(mapId, $wrapper) {
+            this.sidebarOpen[mapId] = !this.sidebarOpen[mapId];
+            const isOpen = this.sidebarOpen[mapId];
+            $wrapper.toggleClass('oha-sidebar-open', isOpen);
+            $wrapper.find('.oha-panel-toggle').toggleClass('active', isOpen);
+            const map = this.maps[mapId];
+            if (map) setTimeout(() => map.resize(), 50);
+            if (!isOpen && map && map.getLayer('haunts-hover-ring')) {
+                const ce = this.clusterEnabled[mapId] !== false;
+                map.setFilter('haunts-hover-ring', ['all',
+                    ce ? ['!', ['has', 'point_count']] : ['has', 'type'],
+                    ['==', ['get', 'id'], 0],
+                ]);
+            }
+            if (isOpen) this.updateSidebarList(mapId, $wrapper);
+        },
+
+        updateSidebarList(mapId, $wrapper) {
+            if (!this.sidebarOpen[mapId]) return;
+            const map    = this.maps[mapId];
+            const $panel = $wrapper.find('.oha-panel-list');
+            if (!map || !$panel.length) return;
+
+            const bounds    = map.getBounds();
+            const region    = this.activeFilters.region;
+            const types     = this.activeFilters.types;
+            const allHaunts = this.allHaunts[mapId] || [];
+
+            const inView = allHaunts.filter(h => {
+                if (region && h.region !== region) return false;
+                if (!types.includes(h.type)) return false;
+                return h.lng >= bounds.getWest() && h.lng <= bounds.getEast()
+                    && h.lat >= bounds.getSouth() && h.lat <= bounds.getNorth();
+            });
+
+            $wrapper.find('.oha-panel-haunt-count').text(inView.length);
+
+            inView.sort((a, b) => {
+                if (a.featured && !b.featured) return -1;
+                if (!a.featured && b.featured) return 1;
+                return a.title.localeCompare(b.title);
+            });
+
+            $panel.empty();
+            if (!inView.length) {
+                $panel.html('<div class="oha-panel-empty"><p>No haunts in view. Pan the map to explore.</p></div>');
+                return;
+            }
+            inView.forEach(h => $panel.append(this.buildPanelCard(h)));
+        },
+
+        buildPanelCard(listing) {
+            const typeLabel = {
+                featured:     'Featured',
+                professional: 'Professional',
+                home_haunt:   'Home Haunt',
+                free:         'Listing',
+            }[listing.type] || listing.type;
+
+            const thumb = listing.thumbnail
+                ? `<div class="oha-panel-card-thumb" style="background-image:url('${this.escHtml(listing.thumbnail)}')"></div>`
+                : '';
+
+            return `<div class="oha-panel-card oha-type-${this.escHtml(listing.type)}" data-id="${parseInt(listing.id, 10)}" data-lat="${parseFloat(listing.lat)}" data-lng="${parseFloat(listing.lng)}">
+                ${thumb}
+                <div class="oha-panel-card-body">
+                    <span class="oha-badge oha-badge-${this.escHtml(listing.type)}">${this.escHtml(typeLabel)}</span>
+                    <h4 class="oha-panel-card-title">${this.escHtml(listing.title)}</h4>
+                    ${listing.address ? `<p class="oha-panel-card-addr">${this.escHtml(listing.address)}</p>` : ''}
+                </div>
+            </div>`;
         },
 
         updateMobileFilterBadge($wrapper) {

@@ -1028,6 +1028,148 @@ body.oha-sheet-open {
     pointer-events: all;
 }
 
+/* ==========================================================================
+   SIDE PANEL (v2.14.0)
+   Desktop-only list panel alongside the map — toggled by the panel button
+   ========================================================================== */
+
+.oha-map-side-panel {
+    display: none;
+}
+
+@media (min-width: 900px) {
+    .oha-map-wrapper.oha-sidebar-open .oha-map-content {
+        display:     flex;
+        align-items: stretch;
+    }
+
+    .oha-map-wrapper.oha-sidebar-open .oha-map-view {
+        flex:      1;
+        min-width: 0;
+    }
+
+    .oha-map-wrapper.oha-sidebar-open .oha-map-side-panel {
+        display:        flex;
+        flex-direction: column;
+        width:          320px;
+        flex-shrink:    0;
+        border-left:    1px solid var(--oha-border);
+        background:     var(--oha-bg-card);
+        overflow:       hidden;
+    }
+}
+
+@media (max-width: 899px) {
+    .oha-panel-toggle { display: none !important; }
+}
+
+/* ── Panel Header ───────────────────────────────────────────────────────── */
+.oha-panel-header {
+    display:         flex;
+    justify-content: space-between;
+    align-items:     center;
+    padding:         10px 14px;
+    border-bottom:   1px solid var(--oha-border);
+    flex-shrink:     0;
+}
+
+.oha-panel-header-label {
+    font-size:      10px;
+    font-weight:    700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color:          var(--oha-text-secondary);
+}
+
+.oha-panel-count {
+    font-size: 12px;
+    color:     var(--oha-text-secondary);
+}
+
+.oha-panel-haunt-count {
+    color:       var(--oha-accent-light);
+    font-weight: 700;
+}
+
+/* ── Panel List ─────────────────────────────────────────────────────────── */
+.oha-panel-list {
+    flex:            1;
+    overflow-y:      auto;
+    padding:         8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--oha-accent) transparent;
+}
+
+.oha-panel-list::-webkit-scrollbar       { width: 4px; }
+.oha-panel-list::-webkit-scrollbar-track { background: transparent; }
+.oha-panel-list::-webkit-scrollbar-thumb { background: var(--oha-accent); border-radius: 2px; }
+
+/* ── Panel Cards ────────────────────────────────────────────────────────── */
+.oha-panel-card {
+    background:    var(--oha-bg-card);
+    border:        1px solid var(--oha-border);
+    border-radius: var(--oha-radius-sm);
+    cursor:        pointer;
+    display:       flex;
+    align-items:   stretch;
+    margin-bottom: 6px;
+    overflow:      hidden;
+    transition:    border-color var(--oha-transition), box-shadow var(--oha-transition);
+}
+
+.oha-panel-card:hover,
+.oha-panel-card.is-pin-hovered {
+    border-color: var(--oha-border-hover);
+    box-shadow:   var(--oha-glow);
+}
+
+.oha-panel-card-thumb {
+    width:               60px;
+    flex-shrink:         0;
+    background-size:     cover;
+    background-position: center;
+    background-color:    var(--oha-bg-dark);
+}
+
+.oha-panel-card-body {
+    flex:      1;
+    min-width: 0;
+    padding:   8px 10px;
+}
+
+.oha-panel-card-title {
+    color:         var(--oha-text-primary);
+    font-size:     13px;
+    font-weight:   700;
+    line-height:   1.3;
+    margin:        4px 0 2px;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+    white-space:   nowrap;
+}
+
+.oha-panel-card-addr {
+    color:         var(--oha-text-secondary);
+    font-size:     11px;
+    margin:        0;
+    overflow:      hidden;
+    text-overflow: ellipsis;
+    white-space:   nowrap;
+}
+
+.oha-panel-empty {
+    color:      var(--oha-text-secondary);
+    font-size:  13px;
+    padding:    24px 16px;
+    text-align: center;
+}
+
+/* ── Panel Toggle Active State ──────────────────────────────────────────── */
+.oha-panel-toggle.active {
+    background:   rgba(173, 49, 25, 0.25);
+    border-color: var(--oha-accent);
+}
+
 .oha-region-info-sheet .oha-bottom-sheet-overlay {
     position:       absolute;
     inset:          0;

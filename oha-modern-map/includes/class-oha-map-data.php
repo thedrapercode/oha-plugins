@@ -19,6 +19,9 @@ class OHA_Map_Data {
         add_action('wp_ajax_oha_get_map_events', [__CLASS__, 'ajax_get_events']);
         add_action('wp_ajax_nopriv_oha_get_map_events', [__CLASS__, 'ajax_get_events']);
         add_action('wp_ajax_oha_map_debug', [__CLASS__, 'ajax_debug']);
+        add_action('wp_ajax_oha_get_ohio_counties',        [__CLASS__, 'ajax_get_ohio_counties']);
+        add_action('wp_ajax_nopriv_oha_get_ohio_counties', [__CLASS__, 'ajax_get_ohio_counties']);
+        add_action('wp_ajax_oha_clear_county_cache',       [__CLASS__, 'ajax_clear_county_cache']);
     }
 
     public static function ajax_get_listings() {
@@ -427,6 +430,111 @@ class OHA_Map_Data {
         }
 
         return apply_filters('oha_map_events', $events, $region);
+    }
+
+    // ---------------------------------------------------------------
+    // Ohio County GeoJSON (ArcGIS-backed, 7-day cache)
+    // ---------------------------------------------------------------
+
+    /**
+     * AJAX: return all 88 Ohio county polygons with region + color properties injected.
+     * Raw geometry is cached for 7 days; region/color assignments are applied fresh each call.
+     */
+    public static function ajax_get_ohio_counties() {
+        check_ajax_referer('oha_map_nonce', 'nonce');
+
+        $raw = self::get_ohio_county_geojson();
+        if (is_wp_error($raw)) {
+            wp_send_json_error($raw->get_error_message());
+            return;
+        }
+
+        $county_map   = OHA_Map_Regions::get_county_region_map();
+        $color_option = get_option('oha_map_region_colors', []);
+        $defaults     = OHA_Map_Regions::get_default_region_colors();
+
+        $features = $raw['features'];
+        foreach ($features as &$feature) {
+            $name   = strtolower(trim($feature['properties']['name'] ?? ''));
+            $region = $county_map[$name] ?? 'central';
+
+            $colors        = $color_option[$region] ?? [];
+            $fill_color    = !empty($colors['fill'])    ? $colors['fill']    : ($defaults[$region]['fill']    ?? '#c0392b');
+            $outline_color = !empty($colors['outline']) ? $colors['outline'] : ($defaults[$region]['outline'] ?? '#e74c3c');
+
+            $feature['properties']['region']       = $region;
+            $feature['properties']['fillColor']    = $fill_color;
+            $feature['properties']['outlineColor'] = $outline_color;
+        }
+        unset($feature);
+
+        wp_send_json_success([
+            'type'     => 'FeatureCollection',
+            'features' => $features,
+        ]);
+    }
+
+    /**
+     * AJAX: clear county GeoJSON cache (admin only).
+     * Called via POST form on the County Regions admin page; nonce verified there.
+     */
+    public static function ajax_clear_county_cache() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Unauthorized');
+            return;
+        }
+        check_ajax_referer('oha_map_nonce', 'nonce');
+        delete_transient('oha_ohio_counties_v1');
+        wp_send_json_success('County cache cleared.');
+    }
+
+    /**
+     * Fetch raw county GeoJSON from Ohio state ArcGIS portal, caching for 7 days.
+     * Returns an associative array (FeatureCollection) on success, WP_Error on failure.
+     */
+    private static function get_ohio_county_geojson() {
+        $cache_key = 'oha_ohio_counties_v1';
+        $cached    = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        $url = 'https://maps.ohio.gov/arcgis/rest/services/Hosted/Ohio_County_Boundaries_Land_Only/FeatureServer/0/query'
+             . '?where=1%3D1&outFields=name&f=geojson&outSR=4326&maxAllowableOffset=0.005&geometryPrecision=4';
+
+        $response = wp_remote_get($url, [
+            'timeout'   => 30,
+            'sslverify' => true,
+        ]);
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            return new WP_Error('arcgis_error', "ArcGIS returned HTTP {$code}");
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        if (!$data || empty($data['features'])) {
+            return new WP_Error('arcgis_empty', 'County GeoJSON returned no features');
+        }
+
+        // Store only geometry + name to keep the cached blob small
+        $clean = [];
+        foreach ($data['features'] as $f) {
+            $clean[] = [
+                'type'       => 'Feature',
+                'geometry'   => $f['geometry'],
+                'properties' => ['name' => $f['properties']['name'] ?? ''],
+            ];
+        }
+
+        $geojson = ['type' => 'FeatureCollection', 'features' => $clean];
+        set_transient($cache_key, $geojson, 7 * DAY_IN_SECONDS);
+        return $geojson;
     }
 }
 

@@ -236,6 +236,9 @@ class OHA_Map_Shortcode {
                         <button class="oha-map-control oha-reset-view" title="<?php _e('Reset View', 'oha-modern-map'); ?>">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
                         </button>
+                        <button class="oha-map-control oha-panel-toggle" title="<?php esc_attr_e('Toggle list panel', 'oha-modern-map'); ?>">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+                        </button>
                     </div>
 
                     <!-- Loading Indicator -->
@@ -251,6 +254,15 @@ class OHA_Map_Shortcode {
                     <div class="oha-list-container" style="max-height: <?php echo esc_attr($atts['height']); ?>"></div>
                 </div>
                 <?php endif; ?>
+
+                <!-- Side Panel — desktop only, toggled by panel-toggle button -->
+                <div class="oha-map-side-panel">
+                    <div class="oha-panel-header">
+                        <span class="oha-panel-header-label"><?php _e('In View', 'oha-modern-map'); ?></span>
+                        <span class="oha-panel-count"><span class="oha-panel-haunt-count">0</span> <?php _e('haunts', 'oha-modern-map'); ?></span>
+                    </div>
+                    <div class="oha-panel-list"></div>
+                </div>
             </div>
 
             <!-- Bottom Sheet — Google Maps-style slide-up card -->

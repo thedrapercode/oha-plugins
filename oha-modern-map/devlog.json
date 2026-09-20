@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.13.0",
+    "version":  "2.15.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -897,6 +897,41 @@
                         "type":  "fix",
                         "summary":  "All Ohio fitBounds north bound corrected to 42.40 to include Lake Erie / PA corner",
                         "notes":  "Previous bound was 41.98 which cut off the NE corner of Ohio at the PA border."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.0",
+                        "type":  "feature",
+                        "summary":  "Split-screen sidebar panel shows haunts in current viewport; bidirectional pin/card hover highlight",
+                        "notes":  "Desktop-only (hidden below 900px). Populated by map.on(moveend). Panel toggle button in overlay controls. State keyed by mapId in sidebarOpen{}."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.0",
+                        "type":  "fix",
+                        "summary":  "Initial view now uses fitBounds so Ohio always fills the viewport on any screen size",
+                        "notes":  "Replaced center+zoom constructor with bounds+fitBoundsOptions. Removed maxBounds which caused snap/off-center behavior on zoom-out."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.0",
+                        "type":  "fix",
+                        "summary":  "Clustering disable_at_zoom admin setting was silently ignored due to wrong JS key",
+                        "notes":  "JS was reading clusterSettings.max_zoom (undefined); corrected to read disable_at_zoom || max_zoom || 14."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.0",
+                        "type":  "feature",
+                        "summary":  "County-based region fills replace hand-drawn polygons; fetches 88 official county boundaries from Ohio state GIS",
+                        "notes":  "ArcGIS endpoint: maps.ohio.gov Ohio_County_Boundaries_Land_Only FeatureServer. Cached 7 days as transient oha_ohio_counties_v1. AJAX: oha_get_ohio_counties. JS source ohio-counties populated by loadCounties after map load."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "2.15.0",
+                        "type":  "feature",
+                        "summary":  "County Regions admin page lets admin reassign individual counties between regions",
+                        "notes":  "Slug: oha-map-county-regions. Saves to oha_county_region_map option. Saving auto-clears county transient cache. Default 88-county map matches original polygon intent exactly."
                     }
                 ]
 }
