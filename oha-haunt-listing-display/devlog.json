@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.12.0",
+    "version":  "1.13.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -309,6 +309,27 @@
                         "type":  "change",
                         "summary":  "Move Visit Website from CTA button group to full-width red button below address in info card",
                         "notes":  "Removed from oha-cta-buttons group and from info card text row; new oha-info-card__website-btn added to sidebar.php and listing.css"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.13.0",
+                        "type":  "feature",
+                        "summary":  "Add search bar partial to single listing pages with OHA dark theme and autocomplete support",
+                        "notes":  "New templates/partials/search-bar.php outputs compact GD-compatible form (input[name=s] + input[name=snear]). Submits to geodir_search_page_base_url(). Autocomplete attaches automatically via existing gd-autocomplete.js. CSS in listing.css uses Kadence global palette vars."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.13.0",
+                        "type":  "feature",
+                        "summary":  "Add archive.css OHA dark theme layer for GD archive and search results pages (places + events)",
+                        "notes":  "New assets/archive.css. All rules scoped to body.oha-gd-archive. Targets .geodir-post cards (both legacy section layout and Bootstrap block-based .card wrapper). Styles: card bg/border/hover, image, body, title, meta, footer, badges, rating, sort controls, pagination, no-results, autocomplete dropdown. Covers gd_place and gd_event."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.13.0",
+                        "type":  "change",
+                        "summary":  "Enqueue archive.css and add oha-gd-archive body class on GD archive, search, and listing pages",
+                        "notes":  "Two new hooks in oha-haunt-listing-display.php: wp_enqueue_scripts enqueues archive.css; body_class filter adds oha-gd-archive. Both check geodir_is_page archive/search/listing. Scoping via body class prevents bleed into non-GD pages."
                     }
                 ],
     "admin_settings":  {

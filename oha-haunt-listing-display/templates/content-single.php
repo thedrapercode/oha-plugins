@@ -362,6 +362,8 @@ $location_str  = implode( ', ', $address_parts );
         <?php include OHA_HLD_PATH . 'templates/partials/sidebar.php'; ?>
     </div>
 
+    <?php include OHA_HLD_PATH . 'templates/partials/search-bar.php'; ?>
+
     <?php if ( $settings['enable_nearby'] ) : ?>
         <?php include OHA_HLD_PATH . 'templates/partials/nearby.php'; ?>
     <?php endif; ?>

@@ -1998,3 +1998,104 @@
     height: 100%;
     border: none;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LISTING PAGE SEARCH BAR
+   Compact GD-compatible search form injected on single listing pages.
+   Uses Kadence global palette vars so it adapts if the site palette changes.
+═══════════════════════════════════════════════════════════════════════════ */
+.oha-search-bar {
+    background: var(--global-palette9, #000);
+    border: 1px solid rgba(173, 49, 25, 0.35);
+    border-radius: var(--oha-radius);
+    padding: 20px 24px;
+    margin: 32px 0;
+}
+
+.oha-search-bar__label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--global-palette6, #cbd2d9);
+    margin: 0 0 12px;
+}
+
+.oha-search-bar__form {
+    margin: 0;
+}
+
+.oha-search-bar__row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.oha-search-bar__field {
+    flex: 1;
+    min-width: 0;
+}
+
+.oha-search-bar__input {
+    display: block;
+    width: 100%;
+    background: var(--global-palette8, #680400);
+    border: 1px solid rgba(173, 49, 25, 0.5);
+    border-radius: 4px;
+    color: var(--global-palette4, #f7fafc);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    padding: 10px 14px;
+    outline: none;
+    height: 42px;
+    transition: border-color 0.15s;
+}
+
+.oha-search-bar__input::placeholder {
+    color: var(--global-palette6, #cbd2d9);
+    opacity: 0.8;
+}
+
+.oha-search-bar__input:focus {
+    border-color: var(--global-palette1, #ad3119);
+}
+
+.oha-search-bar__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--global-palette1, #ad3119);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 20px;
+    height: 42px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.oha-search-bar__btn:hover {
+    background: var(--global-palette2, #ff0000);
+}
+
+.oha-search-bar__btn svg {
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .oha-search-bar__row {
+        flex-direction: column;
+    }
+    .oha-search-bar__btn {
+        width: 100%;
+        justify-content: center;
+        height: 44px;
+    }
+}

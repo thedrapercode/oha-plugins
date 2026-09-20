@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.12.0
+ * Version:     1.13.0
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.12.0' );
+define( 'OHA_HLD_VERSION', '1.13.0' );
 define( 'OHA_HLD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_HLD_URL',  plugin_dir_url( __FILE__ ) );
 
@@ -49,6 +49,35 @@ add_action( 'wp_enqueue_scripts', function() {
         'isLoggedIn' => is_user_logged_in(),
         'nonce'      => wp_create_nonce( 'oha_hld_claim_nonce_action' ),
     ] );
+} );
+
+/**
+ * Enqueue OHA dark-theme CSS on GeoDirectory archive and search pages.
+ * Also loads on GD category/listing pages so the same theme applies sitewide
+ * wherever GD renders its card grid.
+ */
+add_action( 'wp_enqueue_scripts', function() {
+    if ( ! function_exists( 'geodir_is_page' ) ) return;
+    if ( geodir_is_page( 'archive' ) || geodir_is_page( 'search' ) || geodir_is_page( 'listing' ) ) {
+        wp_enqueue_style(
+            'oha-hld-archive',
+            OHA_HLD_URL . 'assets/archive.css',
+            [],
+            OHA_HLD_VERSION
+        );
+    }
+} );
+
+/**
+ * Add oha-gd-archive body class on GeoDirectory archive and search pages.
+ * archive.css scopes all rules to this class to prevent bleed into other pages.
+ */
+add_filter( 'body_class', function( $classes ) {
+    if ( ! function_exists( 'geodir_is_page' ) ) return $classes;
+    if ( geodir_is_page( 'archive' ) || geodir_is_page( 'search' ) || geodir_is_page( 'listing' ) ) {
+        $classes[] = 'oha-gd-archive';
+    }
+    return $classes;
 } );
 
 /**
