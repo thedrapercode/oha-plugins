@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.15.1",
+    "version":  "1.16.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -407,6 +407,20 @@
                         "type":  "feature",
                         "summary":  "Show actual discount rate on archive cards instead of generic Member Discount text",
                         "notes":  "wp_footer injects inline script with post-id to rate JSON map; JS appends .oha-arc-disc-badge span to .card-body on each .oha-has-discount card; GD data-post-id attr is the bridge; CSS ::after approach removed in archive.css"
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.16.0",
+                        "type":  "fix",
+                        "summary":  "Set 12 posts per page on GD place pages so 3-column grid fills evenly (was 10)",
+                        "notes":  "geodir_posts_per_page filter covers GD block queries; pre_get_posts covers main query on search results page. Both hooks needed since GD uses two different query paths."
+                    },
+                    {
+                        "date":  "2026-09-20",
+                        "version":  "1.16.0",
+                        "type":  "fix",
+                        "summary":  "Reset white article/entry-content background on GD search results page to match archive layout",
+                        "notes":  "Search results page uses default Kadence article template with white bg; archive page is full-width with no white box. Added background:transparent to article, .entry-content, .geodir-search, .gd-search-bar in archive.css scoped to body.oha-gd-archive."
                     }
                 ],
     "admin_settings":  {

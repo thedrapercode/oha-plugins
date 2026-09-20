@@ -49,6 +49,17 @@ body.oha-gd-archive .geodir-archive-header {
     background-color: transparent !important;
 }
 
+/* The GD search results page uses a default Kadence page template which wraps content
+   in article/.entry-content with a white background (vs /places/ which is full-width).
+   Also reset the .geodir-search div wrapper GD adds around the search form on that page. */
+body.oha-gd-archive article,
+body.oha-gd-archive .entry-content,
+body.oha-gd-archive .geodir-search,
+body.oha-gd-archive .gd-search-bar {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    SEARCH FORM
    Targets .geodir-loc-bar (classic widget) and the broader form[name=geodir-listing-search]

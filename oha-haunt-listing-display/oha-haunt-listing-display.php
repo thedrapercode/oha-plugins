@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.15.1
+ * Version:     1.16.0
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.15.1' );
+define( 'OHA_HLD_VERSION', '1.16.0' );
 define( 'OHA_HLD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_HLD_URL',  plugin_dir_url( __FILE__ ) );
 
@@ -152,6 +152,25 @@ add_action( 'wp_footer', function() {
     })();
     </script>
     <?php
+}, 20 );
+
+/**
+ * Set 12 posts per page on GD place archive and search pages.
+ *
+ * Default of 10 leaves one card alone on the bottom row of the 3-column grid.
+ * Two hooks cover both paths GD uses: the main WP_Query (search results page)
+ * and GD's block-based secondary query (geodir_posts_per_page filter).
+ */
+add_filter( 'geodir_posts_per_page', function( $per_page, $post_type = '', $defaults = [] ) {
+    if ( $post_type === 'gd_place' ) return 12;
+    return $per_page;
+}, 10, 3 );
+
+add_action( 'pre_get_posts', function( $query ) {
+    if ( is_admin() || ! $query->is_main_query() ) return;
+    if ( ! function_exists( 'geodir_is_page' ) ) return;
+    if ( ! geodir_is_page( 'archive' ) && ! geodir_is_page( 'search' ) ) return;
+    $query->set( 'posts_per_page', 12 );
 }, 20 );
 
 /**
