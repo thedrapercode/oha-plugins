@@ -62,7 +62,7 @@ class OHA_VE_Zoom_API {
 
     /** Private constructor - use get_instance(). */
     private function __construct() {
-        add_action( 'publish_gd_event',                     [ $this, 'maybe_create_meeting_on_publish' ], 20,  2 );
+        add_action( 'transition_post_status',               [ $this, 'maybe_create_meeting_on_publish' ], 20,  3 );
         add_action( 'geodir_event_handle_past_event_after', [ $this, 'mark_ended_on_expire' ],            10,  3 );
         add_action( 'admin_notices',                        [ $this, 'show_api_error_notice' ] );
         add_filter( 'cron_schedules',                       [ $this, 'add_cron_interval' ] );
@@ -86,13 +86,32 @@ class OHA_VE_Zoom_API {
     // =========================================================
 
     /**
-     * Fires when a gd_event transitions to published status.
-     * Auto-creates a Zoom meeting when all conditions are met.
+     * Fires on post status transition. Auto-creates a Zoom meeting only when a
+     * gd_event is published for the first time (old_status != publish).
+     * Using transition_post_status instead of publish_gd_event prevents this
+     * from firing on every routine Update of an already-published event.
      *
-     * @param int     $post_id
+     * @param string  $new_status
+     * @param string  $old_status
      * @param WP_Post $post
      */
-    public function maybe_create_meeting_on_publish( $post_id, $post ) {
+    public function maybe_create_meeting_on_publish( $new_status, $old_status, $post ) {
+
+        // Only care about transitions TO publish
+        if ( 'publish' !== $new_status ) {
+            return;
+        }
+
+        // Already published = routine update, not a first publish
+        if ( 'publish' === $old_status ) {
+            return;
+        }
+
+        if ( 'gd_event' !== $post->post_type ) {
+            return;
+        }
+
+        $post_id = $post->ID;
 
         if ( wp_is_post_revision( $post_id ) ) {
             return;
@@ -407,6 +426,9 @@ class OHA_VE_Zoom_API {
             // Start URL contains a ZAK token (~90 day expiry).
             // Frontend falls back to zoom.us/s/{ID} if this has expired.
             update_post_meta( $event_id, 'oha_ve_zoom_start_url', esc_url_raw( $data['start_url'] ) );
+        }
+        if ( ! empty( $data['password'] ) ) {
+            update_post_meta( $event_id, 'oha_ve_zoom_passcode', sanitize_text_field( $data['password'] ) );
         }
 
         // Store the start time we sent so reschedule-sync can detect future changes.

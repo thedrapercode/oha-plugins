@@ -147,10 +147,10 @@ class OHA_VE_Admin {
         //   prerecorded - Pre-recorded YouTube unlisted video, no live session
         $platforms = [
             ''             => '- Select Platform -',
-            'zoom'         => 'Zoom (live interactive session)',
-            'youtube'      => 'YouTube Live (broadcast / simulcast)',
-            'both'         => 'Both - Zoom streams to YouTube',
-            'prerecorded'  => 'Pre-Recorded Video (YouTube Unlisted - no live session)',
+            'zoom'         => 'Zoom - Live meeting (upload recording to YouTube after)',
+            'youtube'      => 'YouTube Live - Broadcast only, no Zoom',
+            'both'         => 'Zoom + YouTube Live simultaneously',
+            'prerecorded'  => 'Pre-Recorded - YouTube upload only, no live session',
         ];
 
         $access_levels = [
@@ -411,48 +411,35 @@ class OHA_VE_Admin {
             <?php endif; ?>
         </div>
 
-        <!-- Section 5: YouTube -->
+        <!-- Section 5: Archive & Replay -->
         <div class="oha-ve-section" id="oha-ve-section-youtube">
-            <h4>YouTube Video</h4>
-            <p class="oha-ve-tip">
-                Enter only the <strong>video ID</strong> - the part after <code>?v=</code> in the YouTube URL.
-                Example: from <code>youtube.com/watch?v=dQw4w9WgXcQ</code> enter <code>dQw4w9WgXcQ</code>.
-                Always use <strong>unlisted</strong> videos so only people with the link can find them.
-            </p>
-            <p class="oha-ve-note">
-                <strong>Pre-Recorded Video workflow:</strong> Upload your video to YouTube as unlisted &rarr; copy the video ID &rarr; paste it into the <em>Replay/Recording ID</em> field below &rarr; in Archive &amp; Replay below, check both <em>Archive this recording</em> and <em>Replay is Ready</em> &rarr; set Status (above) to <em>Replay / On Demand</em>. The video will appear in the member On Demand library immediately. Leave the Live Stream ID blank.
-            </p>
-            <div class="oha-ve-grid">
-                <div class="oha-ve-field">
-                    <label for="oha_ve_yt_live_id">YouTube Live Stream Video ID</label>
-                    <input type="text" name="oha_ve_yt_live_id" id="oha_ve_yt_live_id"
-                           value="<?php echo esc_attr( $yt_live_id ); ?>"
-                           placeholder="Video ID for the active live stream" />
-                </div>
-                <div class="oha-ve-field">
-                    <label for="oha_ve_yt_replay_id">YouTube Replay/Recording Video ID</label>
-                    <input type="text" name="oha_ve_yt_replay_id" id="oha_ve_yt_replay_id"
-                           value="<?php echo esc_attr( $yt_replay_id ); ?>"
-                           placeholder="Video ID for the recorded replay" />
-                </div>
+            <h4>Archive &amp; Replay</h4>
+            <div class="oha-ve-field" id="oha-ve-yt-live-wrap">
+                <label for="oha_ve_yt_live_id">YouTube Live Stream ID <span style="font-weight:400;color:#888;">(only for YouTube Live / simulcast platform)</span></label>
+                <input type="text" name="oha_ve_yt_live_id" id="oha_ve_yt_live_id"
+                       value="<?php echo esc_attr( $yt_live_id ); ?>"
+                       placeholder="Video ID for the active live stream" />
             </div>
-        </div>
-
-        <!-- Section 6: Replay -->
-        <div class="oha-ve-section">
-            <h4>Replay</h4>
-            <p class="oha-ve-tip">
-                After the session ends, add the YouTube replay video ID above, then check <strong>Replay is Ready</strong>
-                and change the Status (above) to <strong>Replay / On Demand</strong>. The recording will appear
-                in the member On Demand library immediately.
-            </p>
-            <?php if ( ! empty( $zoom_id ) && OHA_VE_Settings::is_api_configured() ) : ?>
-            <div class="oha-ve-field oha-ve-recording-fetch-wrap" style="background:#f0f5fa;border:1px solid #c3d9ee;border-radius:4px;padding:10px 14px;margin-bottom:12px;">
-                <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#2271b1;">Fetch Recording from Zoom</p>
-                <p style="margin:0 0 8px;font-size:12px;color:#555;">
-                    Zoom cloud recordings take 15-60 minutes to process after a session ends.
-                    Click below to pull the recording files directly from Zoom.
+            <div class="oha-ve-field">
+                <label for="oha_ve_yt_replay_id">YouTube Recording Video ID <span style="font-weight:400;color:#d63638;">&#9679; Paste here after uploading</span></label>
+                <input type="text" name="oha_ve_yt_replay_id" id="oha_ve_yt_replay_id"
+                       value="<?php echo esc_attr( $yt_replay_id ); ?>"
+                       placeholder="The part after ?v= in the YouTube URL" />
+                <p style="font-size:12px;color:#666;margin:4px 0 0;">
+                    After the class: download from Zoom &rarr; edit if needed &rarr; upload to YouTube as <strong>Unlisted</strong> &rarr; copy the video ID (the part after <code>?v=</code>) &rarr; paste here &rarr; check <em>Replay is ready</em> below.
                 </p>
+            </div>
+            <div class="oha-ve-field" style="border-top:1px solid #e0e0e0;padding-top:10px;margin-top:4px;">
+                <label>
+                    <input type="checkbox" name="oha_ve_replay_available" id="oha_ve_replay_available" value="1" <?php checked( $replay_available, '1' ); ?> />
+                    <span class="inline"><strong>Replay is ready</strong> - publish recording to the member On Demand library</span>
+                </label>
+                <p style="font-size:12px;color:#666;margin:4px 0 0 22px;">Checking this automatically sets Status to Replay / On Demand.</p>
+            </div>
+            <?php if ( ! empty( $zoom_id ) && OHA_VE_Settings::is_api_configured() ) : ?>
+            <div class="oha-ve-field oha-ve-recording-fetch-wrap" style="background:#f0f5fa;border:1px solid #c3d9ee;border-radius:4px;padding:10px 14px;margin-top:12px;">
+                <p style="margin:0 0 6px;font-size:13px;font-weight:600;color:#2271b1;">Fetch Recording from Zoom</p>
+                <p style="margin:0 0 8px;font-size:12px;color:#555;">Zoom cloud recordings take 15-60 minutes to process after a session ends.</p>
                 <button type="button"
                         class="button button-small oha-ve-fetch-recording-btn"
                         data-event-id="<?php echo (int) $post->ID; ?>"
@@ -463,14 +450,8 @@ class OHA_VE_Admin {
                 <div class="oha-ve-recording-results" style="display:none;margin-top:12px;"></div>
             </div>
             <?php endif; ?>
-            <div class="oha-ve-field">
-                <label>
-                    <input type="checkbox" name="oha_ve_replay_available" value="1" <?php checked( $replay_available, '1' ); ?> />
-                    <span class="inline">Replay is ready - show recording to members now</span>
-                </label>
-            </div>
-            <div class="oha-ve-field">
-                <label for="oha_ve_resources_url">Downloadable Resources URL (optional)</label>
+            <div class="oha-ve-field" style="margin-top:12px;">
+                <label for="oha_ve_resources_url">Downloadable Resources URL <span style="font-weight:400;color:#888;">(slides, handouts - optional)</span></label>
                 <input type="url" name="oha_ve_resources_url" id="oha_ve_resources_url"
                        value="<?php echo esc_url( $resources_url ); ?>"
                        placeholder="https://... (slides, handouts, PDFs)" />
@@ -490,10 +471,12 @@ class OHA_VE_Admin {
         (function($) {
             function updatePlatformSections() {
                 var p = $('#oha_ve_platform').val();
-                var showZoom = (p === '' || p === 'zoom' || p === 'both');
-                var showYT   = (p === '' || p === 'youtube' || p === 'both' || p === 'prerecorded');
+                var showZoom    = (p === '' || p === 'zoom' || p === 'both');
+                var showYT      = (p === '' || p === 'youtube' || p === 'both' || p === 'prerecorded');
+                var showLiveId  = (p === 'youtube' || p === 'both');
                 $('#oha-ve-section-zoom').toggle(showZoom);
                 $('#oha-ve-section-youtube').toggle(showYT);
+                $('#oha-ve-yt-live-wrap').toggle(showLiveId);
             }
             function updateInstructorNotes() {
                 var hasInstructor = $('#oha_ve_instructor_user_id').val() !== '';
@@ -504,6 +487,18 @@ class OHA_VE_Admin {
                 updateInstructorNotes();
                 $('#oha_ve_platform').on('change', updatePlatformSections);
                 $('#oha_ve_instructor_user_id').on('change', updateInstructorNotes);
+
+                // Sync Status <-> Replay is Ready so the admin only needs to do one action.
+                $('#oha_ve_event_status').on('change', function() {
+                    if ( $(this).val() === 'replay' ) {
+                        $('#oha_ve_replay_available').prop('checked', true);
+                    }
+                });
+                $('#oha_ve_replay_available').on('change', function() {
+                    if ( $(this).is(':checked') ) {
+                        $('#oha_ve_event_status').val('replay');
+                    }
+                });
 
                 // --- Sync Date/Time to Zoom ---
                 $(document).on('click', '.oha-ve-sync-time-btn', function() {
@@ -658,7 +653,6 @@ class OHA_VE_Admin {
 
         // Free-text fields (no fixed value set).
         $text_fields = [
-            'oha_ve_zoom_id',
             'oha_ve_zoom_passcode',
             'oha_ve_zoom_btn_label',
             'oha_ve_yt_live_id',
@@ -667,6 +661,16 @@ class OHA_VE_Admin {
         foreach ( $text_fields as $field ) {
             if ( isset( $_POST[ $field ] ) ) {
                 update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) );
+            }
+        }
+
+        // API-managed field: only overwrite if the admin is actively providing a value.
+        // Submitting blank preserves whatever the Zoom API wrote so a routine save
+        // cannot accidentally erase the meeting ID.
+        if ( isset( $_POST['oha_ve_zoom_id'] ) ) {
+            $val = sanitize_text_field( $_POST['oha_ve_zoom_id'] );
+            if ( '' !== $val ) {
+                update_post_meta( $post_id, 'oha_ve_zoom_id', $val );
             }
         }
 
@@ -691,9 +695,17 @@ class OHA_VE_Admin {
         }
 
         // URLs
-        foreach ( [ 'oha_ve_zoom_join_url', 'oha_ve_resources_url' ] as $field ) {
+        foreach ( [ 'oha_ve_resources_url' ] as $field ) {
             if ( isset( $_POST[ $field ] ) ) {
                 update_post_meta( $post_id, $field, esc_url_raw( $_POST[ $field ] ) );
+            }
+        }
+
+        // API-managed URL: only overwrite if the admin is actively providing a value.
+        if ( isset( $_POST['oha_ve_zoom_join_url'] ) ) {
+            $val = esc_url_raw( $_POST['oha_ve_zoom_join_url'] );
+            if ( '' !== $val ) {
+                update_post_meta( $post_id, 'oha_ve_zoom_join_url', $val );
             }
         }
 
@@ -702,6 +714,11 @@ class OHA_VE_Admin {
             if ( isset( $_POST[ $field ] ) ) {
                 update_post_meta( $post_id, $field, sanitize_textarea_field( $_POST[ $field ] ) );
             }
+        }
+
+        // If status is replay, force replay_available on regardless of checkbox state.
+        if ( 'replay' === get_post_meta( $post_id, 'oha_ve_event_status', true ) ) {
+            update_post_meta( $post_id, 'oha_ve_replay_available', '1' );
         }
     }
 

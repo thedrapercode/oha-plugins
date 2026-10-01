@@ -286,7 +286,20 @@ class OHA_VE_Create {
         }
 
         // Create Zoom meeting via API.
-        $api        = OHA_VE_Zoom_API::get_instance();
+        // Guard: the publish_gd_event hook (maybe_create_meeting_on_publish) fires
+        // synchronously inside wp_insert_post above. If auto-create is enabled it
+        // already called create_meeting() and wrote oha_ve_zoom_id. Skip the explicit
+        // call here to prevent a second (duplicate) meeting being created.
+        $api = OHA_VE_Zoom_API::get_instance();
+        if ( ! empty( get_post_meta( $post_id, 'oha_ve_zoom_id', true ) ) ) {
+            $event_url = get_permalink( $post_id );
+            wp_send_json_success( [
+                'message' => '<strong>Event created and Zoom meeting scheduled.</strong> '
+                           . '<a href="' . esc_url( $event_url ) . '">View the event</a> '
+                           . 'or <a href="' . esc_url( get_edit_post_link( $post_id ) ) . '">edit it</a>.',
+            ] );
+        }
+
         $start_time = $event_date . 'T' . $event_time . ':00';
         $result     = $api->create_meeting( $post_id, [
             'start_time' => $start_time,
