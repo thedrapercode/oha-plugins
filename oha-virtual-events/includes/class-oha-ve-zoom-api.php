@@ -158,8 +158,9 @@ class OHA_VE_Zoom_API {
     // =========================================================
 
     /**
-     * When GeoDirectory marks a gd_event as past, flip oha_ve_event_status to
-     * 'ended' so the event page stops showing join/launch buttons.
+     * When GeoDirectory marks a gd_event as past, flag the virtual event as ended.
+     * GD can do what it wants with the post_status. On-demand replays now live in
+     * the oha_ve_replay CPT and are not affected by this hook.
      *
      * @param int    $post_id
      * @param string $status  Status GD applied (pending, draft, trash, delete).

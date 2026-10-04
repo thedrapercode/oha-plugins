@@ -189,13 +189,14 @@ class OHA_VE_Shortcodes {
         $atts  = shortcode_atts( [ 'limit' => -1 ], $atts, 'oha_education_ondemand' );
         $limit = intval( $atts['limit'] );
 
-        $events = $this->query_events( [
-            'status'       => 'replay',
-            'replay_ready' => true,
-            'limit'        => $limit,
-        ] );
-
-        $accessible = $this->filter_accessible( $events );
+        $replays    = OHA_VE_Replay_CPT::query_replays( [ 'limit' => $limit ] );
+        $accessible = [];
+        foreach ( $replays as $replay ) {
+            $access = get_post_meta( $replay->ID, 'oha_ve_replay_access', true ) ?: 'subscriber_only';
+            if ( OHA_VE_Frontend::user_has_access( $access ) ) {
+                $accessible[] = $replay;
+            }
+        }
 
         $out  = '<div class="oha-edu-section">';
         $out .= '<h3 class="oha-edu-section-title">&#127902; On Demand</h3>';
@@ -203,9 +204,21 @@ class OHA_VE_Shortcodes {
         if ( empty( $accessible ) ) {
             $out .= '<p class="oha-edu-empty">No recordings are available yet. Check back after the next session.</p>';
         } else {
-            foreach ( $accessible as $event ) {
-                $out .= $this->render_event_card( $event, 'replay' );
+            foreach ( $accessible as $replay ) {
+                $out .= OHA_VE_Replay_CPT::render_replay_card( $replay );
             }
+            // Toggle script for Watch Now expand/collapse -- emitted once per page
+            $out .= '<script>'
+                  . 'if(!window.ohaReplayToggleInit){'
+                  . 'window.ohaReplayToggleInit=true;'
+                  . 'function ohaReplayToggle(b){'
+                  . 'var t=document.getElementById(b.getAttribute("data-target"));'
+                  . 'if(!t)return;'
+                  . 'var o=t.style.display!=="none";'
+                  . 't.style.display=o?"none":"block";'
+                  . 'b.textContent=o?"Watch Now":"Close Video";'
+                  . '}}'
+                  . '</script>';
         }
 
         $out .= '</div>';

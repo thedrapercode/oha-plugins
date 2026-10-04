@@ -8,7 +8,7 @@
  *              displays upcoming events on haunt venue listing pages (replaces
  *              the gd_show_events_on_place_page code snippet - remove that
  *              snippet after activating this plugin).
- * Version:     1.6.3
+ * Version:     1.7.0
  * Author:      OHA Development
  * License:     GPLv3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -112,7 +112,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'OHA_VE_VERSION',    '1.6.3' );
+define( 'OHA_VE_VERSION',    '1.7.0' );
 define( 'OHA_VE_PLUGIN_FILE', __FILE__ );
 define( 'OHA_VE_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'OHA_VE_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
@@ -162,11 +162,13 @@ function oha_ve_init() {
     require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-zoom-api.php';
     require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-zoom-webhooks.php';
 
+    require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-replay-cpt.php';
     require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-admin.php';
     require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-frontend.php';
     require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-shortcodes.php';
     require_once OHA_VE_PLUGIN_DIR . 'includes/class-oha-ve-create.php';
 
+    new OHA_VE_Replay_CPT();
     new OHA_VE_Settings();
     OHA_VE_Zoom_API::get_instance(); // Registers publish hook and error notice
     new OHA_VE_Zoom_Webhooks();
