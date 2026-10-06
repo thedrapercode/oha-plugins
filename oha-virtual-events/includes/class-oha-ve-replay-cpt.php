@@ -391,17 +391,6 @@ class OHA_VE_Replay_CPT {
         $yt_safe        = $yt_id ? esc_attr( $yt_id ) : '';
         $presenter_date = implode( ' · ', array_filter( [ $presenter, $date_display ] ) );
 
-        // Build JSON payload for the More Info modal (plain text only -- no HTML tags)
-        $modal_data = esc_attr( wp_json_encode( [
-            'title'       => $title,
-            'type'        => $type_label,
-            'presenter'   => $presenter,
-            'date'        => $date_display,
-            'duration'    => $duration,
-            'description' => wp_strip_all_tags( $post->post_content ),
-            'resources'   => $resources,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
-
         $out = '<div class="oha-replay-card">';
 
         // ── Thumbnail (16:9 padding-bottom ratio) ──────────────
@@ -440,11 +429,31 @@ class OHA_VE_Replay_CPT {
             $out .= '<button type="button" class="oha-replay-watch-btn oha-replay-toggle"'
                   . ' data-target="' . esc_attr( $embed_id ) . '">Watch Now</button>';
         }
-        $out .= '<button type="button" class="oha-replay-info-btn"'
-              . ' data-info="' . $modal_data . '">More Info</button>';
+        $out .= '<button type="button" class="oha-replay-info-btn">More Info</button>';
         $out .= '</div>'; // .oha-replay-card__actions
 
-        // ── Expandable YouTube embed (toggled by Watch Now / play button) ──
+        // ── Inline info panel (toggled by More Info button) ──────
+        $info_meta_parts = array_filter( [
+            $type_label   ? '<span class="oha-replay-card__info-type">'    . esc_html( $type_label )   . '</span>' : '',
+            $duration     ? '<span class="oha-replay-card__info-duration">' . esc_html( $duration )    . '</span>' : '',
+            $presenter    ? '<span>By ' . esc_html( $presenter ) . '</span>' : '',
+            $date_display ? '<span>' . esc_html( $date_display ) . '</span>' : '',
+        ] );
+        $out .= '<div class="oha-replay-card__info-panel" style="display:none;">';
+        if ( $info_meta_parts ) {
+            $out .= '<div class="oha-replay-card__info-meta">' . implode( '', $info_meta_parts ) . '</div>';
+        }
+        $desc = wp_strip_all_tags( $post->post_content );
+        if ( $desc ) {
+            $out .= '<div class="oha-replay-card__info-desc">' . nl2br( esc_html( $desc ) ) . '</div>';
+        }
+        if ( $resources ) {
+            $out .= '<a href="' . esc_url( $resources ) . '" class="oha-replay-card__info-resources"'
+                  . ' target="_blank" rel="noopener noreferrer">Download Resources</a>';
+        }
+        $out .= '</div>'; // .oha-replay-card__info-panel
+
+        // ── Expandable YouTube embed (toggled by Watch Now) ───────
         if ( $yt_safe ) {
             $out .= '<div class="oha-replay-embed" id="' . esc_attr( $embed_id ) . '" style="display:none;">';
             $out .= '<div class="oha-replay-video-wrap">';

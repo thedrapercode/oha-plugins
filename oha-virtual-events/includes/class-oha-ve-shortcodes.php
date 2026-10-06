@@ -222,19 +222,6 @@ class OHA_VE_Shortcodes {
                 $out .= OHA_VE_Replay_CPT::render_replay_card( $replay );
             }
             $out .= '</div>';
-            // Modal HTML -- emitted once per page load.
-            static $modal_output = false;
-            if ( ! $modal_output ) {
-                $modal_output = true;
-                $out .= '<div id="oha-replay-modal" class="oha-replay-modal" style="display:none;" role="dialog" aria-modal="true">'
-                      . '<div class="oha-replay-modal__box">'
-                      . '<button type="button" class="oha-replay-modal__close" aria-label="Close">&#x2715;</button>'
-                      . '<h2 class="oha-replay-modal__title"></h2>'
-                      . '<div class="oha-replay-modal__meta"></div>'
-                      . '<div class="oha-replay-modal__description"></div>'
-                      . '<div class="oha-replay-modal__footer"></div>'
-                      . '</div></div>';
-            }
             // JS lives in assets/js/oha-ve-replay.js (enqueued via wp_enqueue_script).
         }
 

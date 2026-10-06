@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.8.1",
+    "version":  "1.8.2",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -574,6 +574,27 @@
                         "type":  "change",
                         "summary":  "Remove redundant thumbnail play button from replay cards",
                         "notes":  "The hover-reveal SVG play button on the card thumbnail did the same thing as the Watch Now button in the footer. Removed the .oha-replay-card__play button element from render_replay_card() and its CSS rules. Watch Now in the footer is the sole toggle trigger."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.2",
+                        "type":  "fix",
+                        "summary":  "Replace More Info floating modal with inline card panel -- modal breaks inside auto-height iframes",
+                        "notes":  "position:fixed inside an iframe that auto-sizes its height is relative to the iframe content area, not the browser viewport. The modal appeared stretched across the full iframe height and got cut off. Fix: removed modal entirely. More Info now toggles a .oha-replay-card__info-panel div that expands below card actions in normal document flow. Button label toggles More Info / Less Info. No fixed positioning used. JS simplified -- modal open/close and ESC/backdrop handlers removed."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.2",
+                        "type":  "fix",
+                        "summary":  "Replace WP nonce with HMAC token on Zoom join redirect URL to fix link-has-expired error",
+                        "notes":  "wp_verify_nonce() is user-session-dependent. WordPress REST API does not authenticate users from cookies without X-WP-Nonce header (removed in v1.5.1 to prevent 403), so get_current_user_id() returns 0 in the REST callback and nonces created for the logged-in admin fail. Fix: get_protected_join_url() now builds a token as {expires}|{16-char-hmac-sig} using wp_hash() with WP secret salts. verify_zoom_token() checks expiry and hash_equals the signature. No user session dependency. Token valid for 1 hour from page render."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.2",
+                        "type":  "fix",
+                        "summary":  "Skip meeting acknowledgment page for board/admin/instructor on Zoom join redirect",
+                        "notes":  "Board members and instructors now redirect straight to Zoom without the acknowledgment step. Members still see the acknowledgment page. Change in zoom_join_redirect(): the ack page block is gated on ! \u0026\u0026 !."
                     }
                 ]
 }

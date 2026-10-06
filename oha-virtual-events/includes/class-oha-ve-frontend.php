@@ -69,8 +69,12 @@ class OHA_VE_Frontend {
         $nonce    = sanitize_text_field( (string) $request->get_param( '_token' ) );
         $agreed   = (bool) $request->get_param( 'agreed' );
 
-        // Verify time-limited nonce.
-        if ( ! wp_verify_nonce( $nonce, 'oha_ve_zoom_join_' . $event_id ) ) {
+        // Verify HMAC token.
+        // wp_verify_nonce() is user-session-dependent. In a REST API GET request (window.open),
+        // WordPress does not authenticate the user from cookies without X-WP-Nonce, so
+        // get_current_user_id() returns 0 and nonces created for the logged-in user fail.
+        // Using an HMAC token keyed to WP secret salts avoids that entirely.
+        if ( ! self::verify_zoom_token( $nonce, $event_id ) ) {
             wp_die(
                 'This join link has expired or is invalid. Please reload the event page and click the button again.',
                 'Link Expired',
@@ -124,8 +128,9 @@ class OHA_VE_Frontend {
             );
         }
 
-        // Show acknowledgment page on first visit - redirect to Zoom after agreement.
-        if ( ! $agreed ) {
+        // Board/admin and instructors go straight to Zoom -- no acknowledgment step.
+        // Members see the acknowledgment page on first visit.
+        if ( ! $agreed && ! $is_board_admin && ! $is_instructor ) {
             $agree_url = add_query_arg(
                 [ '_token' => $nonce, 'agreed' => '1' ],
                 rest_url( 'oha-ve/v1/zoom-join/' . $event_id )
@@ -230,11 +235,41 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
      * @return string  Full URL to the protected redirect endpoint.
      */
     public static function get_protected_join_url( $event_id ) {
+        $expires = time() + 3600; // 1-hour window
         return add_query_arg(
             '_token',
-            wp_create_nonce( 'oha_ve_zoom_join_' . absint( $event_id ) ),
+            self::make_zoom_token( absint( $event_id ), $expires ),
             rest_url( 'oha-ve/v1/zoom-join/' . absint( $event_id ) )
         );
+    }
+
+    /**
+     * Build a time-limited HMAC token for a Zoom redirect URL.
+     * Format: {expires}|{16-char hex signature}
+     */
+    private static function make_zoom_token( $event_id, $expires ) {
+        $data = absint( $event_id ) . '|' . $expires;
+        $sig  = substr( wp_hash( $data . '|oha_ve_zoom_join' ), 0, 16 );
+        return $expires . '|' . $sig;
+    }
+
+    /**
+     * Verify a token produced by make_zoom_token().
+     * Returns true only if the token is well-formed, unexpired, and HMAC-valid.
+     */
+    private static function verify_zoom_token( $token, $event_id ) {
+        $parts = explode( '|', (string) $token, 2 );
+        if ( count( $parts ) !== 2 ) {
+            return false;
+        }
+        $expires_ts   = (int) $parts[0];
+        $provided_sig = $parts[1];
+        if ( time() > $expires_ts ) {
+            return false; // expired
+        }
+        $data         = absint( $event_id ) . '|' . $expires_ts;
+        $expected_sig = substr( wp_hash( $data . '|oha_ve_zoom_join' ), 0, 16 );
+        return hash_equals( $expected_sig, $provided_sig );
     }
 
     // =========================================================

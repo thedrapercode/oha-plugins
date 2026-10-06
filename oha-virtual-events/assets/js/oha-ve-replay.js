@@ -35,83 +35,25 @@
             }
 
             /* --------------------------------------------------
-               More Info button (.oha-replay-info-btn)
+               More Info / Less Info button (.oha-replay-info-btn)
+               Toggles an inline panel below the card -- avoids
+               position:fixed which breaks inside auto-height iframes.
                -------------------------------------------------- */
             var ib = (typeof e.target.closest === 'function')
                 ? e.target.closest('.oha-replay-info-btn')
                 : null;
             if (ib) {
-                ohaReplayOpenModal(ib);
+                var card = ib.closest('.oha-replay-card');
+                if (!card) { return; }
+                var panel = card.querySelector('.oha-replay-card__info-panel');
+                if (!panel) { return; }
+                var isOpen = (panel.style.display !== 'none');
+                panel.style.display = isOpen ? 'none' : 'block';
+                ib.textContent = isOpen ? 'More Info' : 'Less Info';
                 return;
             }
-
-            /* --------------------------------------------------
-               Modal close button (.oha-replay-modal__close)
-               -------------------------------------------------- */
-            var cb = (typeof e.target.closest === 'function')
-                ? e.target.closest('.oha-replay-modal__close')
-                : null;
-            if (cb) {
-                ohaReplayCloseModal();
-                return;
-            }
-
-            /* --------------------------------------------------
-               Backdrop click closes modal
-               -------------------------------------------------- */
-            var mo = document.getElementById('oha-replay-modal');
-            if (mo && e.target === mo) {
-                ohaReplayCloseModal();
-            }
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') { ohaReplayCloseModal(); }
         });
     }
-
-    window.ohaReplayOpenModal = function (btn) {
-        var mo = document.getElementById('oha-replay-modal');
-        if (!mo) { return; }
-
-        var info;
-        try {
-            info = JSON.parse(btn.getAttribute('data-info'));
-        } catch (x) {
-            return;
-        }
-
-        function esc(s) {
-            return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-
-        mo.querySelector('.oha-replay-modal__title').textContent = info.title || '';
-
-        var m = '';
-        if (info.type)      { m += '<span class="oha-replay-modal__meta-type">'     + esc(info.type)      + '</span>'; }
-        if (info.duration)  { m += '<span class="oha-replay-modal__meta-duration">' + esc(info.duration)  + '</span>'; }
-        if (info.presenter) { m += '<span>By ' + esc(info.presenter) + '</span>'; }
-        if (info.date)      { m += '<span>'    + esc(info.date)      + '</span>'; }
-        mo.querySelector('.oha-replay-modal__meta').innerHTML = m;
-
-        mo.querySelector('.oha-replay-modal__description').textContent = info.description || '';
-
-        var f    = '';
-        var rurl = info.resources || '';
-        if (rurl && /^https?:\/\//i.test(rurl)) {
-            f += '<a href="' + esc(rurl) + '" target="_blank" rel="noopener">Download Resources</a>';
-        }
-        mo.querySelector('.oha-replay-modal__footer').innerHTML = f;
-
-        mo.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    };
-
-    window.ohaReplayCloseModal = function () {
-        var mo = document.getElementById('oha-replay-modal');
-        if (mo) { mo.style.display = 'none'; }
-        document.body.style.overflow = '';
-    };
 
     ohaReplayInit();
 
