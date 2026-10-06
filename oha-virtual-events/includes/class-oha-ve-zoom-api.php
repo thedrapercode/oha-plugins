@@ -62,7 +62,7 @@ class OHA_VE_Zoom_API {
 
     /** Private constructor - use get_instance(). */
     private function __construct() {
-        add_action( 'transition_post_status',               [ $this, 'maybe_create_meeting_on_publish' ], 20,  3 );
+        add_action( 'save_post_gd_event',                   [ $this, 'maybe_create_meeting_on_publish' ], 30,  2 );
         add_action( 'geodir_event_handle_past_event_after', [ $this, 'mark_ended_on_expire' ],            10,  3 );
         add_action( 'admin_notices',                        [ $this, 'show_api_error_notice' ] );
         add_filter( 'cron_schedules',                       [ $this, 'add_cron_interval' ] );
@@ -86,24 +86,17 @@ class OHA_VE_Zoom_API {
     // =========================================================
 
     /**
-     * Fires on post status transition. Auto-creates a Zoom meeting only when a
-     * gd_event is published for the first time (old_status != publish).
-     * Using transition_post_status instead of publish_gd_event prevents this
-     * from firing on every routine Update of an already-published event.
+     * Hooked at save_post_gd_event priority 30, which runs AFTER OHA_VE_Admin::save_meta()
+     * at priority 20. This guarantees oha_ve_enabled and oha_ve_platform are already in
+     * the DB when we read them, regardless of whether the event is a new publish or an
+     * update. The zoom_id guard prevents duplicate meetings on routine saves.
      *
-     * @param string  $new_status
-     * @param string  $old_status
+     * @param int     $post_id
      * @param WP_Post $post
      */
-    public function maybe_create_meeting_on_publish( $new_status, $old_status, $post ) {
+    public function maybe_create_meeting_on_publish( $post_id, $post ) {
 
-        // Only care about transitions TO publish
-        if ( 'publish' !== $new_status ) {
-            return;
-        }
-
-        // Already published = routine update, not a first publish
-        if ( 'publish' === $old_status ) {
+        if ( 'publish' !== $post->post_status ) {
             return;
         }
 
@@ -111,9 +104,11 @@ class OHA_VE_Zoom_API {
             return;
         }
 
-        $post_id = $post->ID;
-
         if ( wp_is_post_revision( $post_id ) ) {
+            return;
+        }
+
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
             return;
         }
 

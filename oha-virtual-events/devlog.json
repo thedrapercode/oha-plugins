@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.7.0",
+    "version":  "1.7.1",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -483,6 +483,34 @@
                         "type":  "fix",
                         "summary":  "Removed GD expiry re-publish hack from mark_ended_on_expire; GD events now expire naturally",
                         "notes":  "mark_ended_on_expire() in class-oha-ve-zoom-api.php previously re-published GD events when oha_ve_replay_available=1 to keep them visible in the on-demand library. This required a private republishing guard flag and wp_update_post() to override GD. Now that replays live in oha_ve_replay CPT, GD events can expire normally. Simplified to: if oha_ve_enabled, set oha_ve_event_status=ended. Removed the republishing property from OHA_VE_Zoom_API class."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.7.1",
+                        "type":  "feature",
+                        "summary":  "New oha_ve_replay CPT for standalone on-demand video entries, independent of GeoDirectory events",
+                        "notes":  "Registers post type with show_ui=true, public=false. WP Admin \u003e Replays \u003e Add New. Meta box fields: YouTube video ID, presenter/instructor name, date recorded, access level (subscriber_only/all_members/board_only/public), event type, resources URL, admin notes. Convention session recordings and education replays go here -- no GD event stub needed. Queries ordered by oha_ve_replay_date DESC."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.7.1",
+                        "type":  "change",
+                        "summary":  "On Demand shortcode queries oha_ve_replay CPT instead of gd_events with replay_available flag",
+                        "notes":  "sc_ondemand() in class-oha-ve-shortcodes.php now calls OHA_VE_Replay_CPT::query_replays(). Cards use render_replay_card() with a Watch Now button that expands an inline YouTube iframe (toggle JS emitted once per page via window.ohaReplayToggleInit guard). Access control reads oha_ve_replay_access via OHA_VE_Frontend::user_has_access(). Existing gd_event replay entries (e.g. Sept 29 class) must be re-created as oha_ve_replay posts to appear in the library."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.7.1",
+                        "type":  "fix",
+                        "summary":  "Removed GD expiry re-publish hack from mark_ended_on_expire; GD events now expire naturally",
+                        "notes":  "mark_ended_on_expire() in class-oha-ve-zoom-api.php previously re-published GD events when oha_ve_replay_available=1 to keep them visible in the on-demand library. This required a private republishing guard flag and wp_update_post() to override GD. Now that replays live in oha_ve_replay CPT, GD events can expire normally. Simplified to: if oha_ve_enabled, set oha_ve_event_status=ended. Removed the republishing property from OHA_VE_Zoom_API class."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.7.1",
+                        "type":  "fix",
+                        "summary":  "Fixed Zoom auto-create not firing when event is published or saved via WP admin",
+                        "notes":  "Moved auto-create hook from transition_post_status (fires during wp_insert_post before meta is saved) to save_post_gd_event priority 30 (fires after OHA_VE_Admin::save_meta() at priority 20). This ensures oha_ve_enabled and oha_ve_platform are already in the DB when the auto-create check runs. The zoom_id guard prevents duplicate meetings on routine saves. The board create form explicit create_meeting() call is unaffected. Added DOING_AUTOSAVE guard."
                     }
                 ]
 }
