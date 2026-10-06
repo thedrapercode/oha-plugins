@@ -1,0 +1,162 @@
+/* JEmail Admin Styles */
+
+.jemail-wrap { max-width: 1200px; }
+
+/* Editor Grid Layout */
+.jemail-editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    margin-top: 15px;
+}
+@media (max-width: 960px) {
+    .jemail-editor-grid { grid-template-columns: 1fr; }
+}
+
+.jemail-editor-main {}
+.jemail-editor-sidebar {}
+
+/* Fields */
+.jemail-field { margin-bottom: 15px; }
+.jemail-field > label { display: block; font-weight: 600; margin-bottom: 4px; }
+.jemail-field input.widefat { padding: 8px 10px; font-size: 14px; }
+.jemail-radio { display: inline-block; margin-right: 16px; font-weight: normal; cursor: pointer; }
+.jemail-radio input { margin-right: 4px; }
+
+/* Merge Tags */
+.jemail-merge-tags {
+    background: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+.jemail-merge-tags code {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin: 2px 3px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.jemail-merge-tags code:hover { background: #e8f0fe; }
+
+/* Sidebar Boxes */
+.jemail-sidebar-box {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 15px;
+}
+.jemail-sidebar-box h3 {
+    margin: 0 0 8px;
+    padding: 0 0 6px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+/* Checkbox Lists */
+.jemail-checkbox-list { max-height: 200px; overflow-y: auto; }
+.jemail-checkbox-list label {
+    display: block;
+    padding: 3px 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+.jemail-checkbox-list label:hover { background: #f0f6fc; }
+.jemail-checkbox-list label small { color: #888; }
+
+/* Recipient Count */
+.jemail-recipient-count {
+    text-align: center;
+    padding: 10px 0;
+}
+#jemail-count-number {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0073aa;
+    line-height: 1.2;
+}
+.jemail-count-label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+}
+#jemail-count-btn { width: 100%; }
+
+/* Send Box */
+.jemail-send-box { border-color: #0073aa; }
+.jemail-send-box h3 { color: #0073aa; border-bottom-color: #0073aa; }
+
+/* Schedule Box */
+.jemail-schedule-box { border-color: #0073aa; }
+.jemail-schedule-box h3 { color: #0073aa; border-bottom-color: #0073aa; }
+
+/* Scheduled Info Box */
+.jemail-scheduled-info-box { border-color: #004085; background: #d0e8ff; }
+.jemail-scheduled-info-box h3 { color: #004085; border-bottom-color: #a0c4f0; }
+
+/* Status Badges */
+.jemail-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.jemail-status-draft      { background: #f0f0f0; color: #666; }
+.jemail-status-scheduled  { background: #d0e8ff; color: #004085; }
+.jemail-status-sending    { background: #fff3cd; color: #856404; }
+.jemail-status-sent       { background: #d4edda; color: #155724; }
+.jemail-status-queued     { background: #e2e3e5; color: #383d41; }
+.jemail-status-failed     { background: #f8d7da; color: #721c24; }
+
+/* Campaign Report */
+.jemail-report { margin-top: 10px; }
+.jemail-report h2 { margin-bottom: 5px; }
+.jemail-report-subject { color: #666; font-size: 14px; margin-top: 0; }
+
+.jemail-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+.jemail-stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 16px;
+    text-align: center;
+}
+.jemail-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    line-height: 1.2;
+}
+.jemail-stat-value small { font-size: 14px; color: #888; font-weight: 400; }
+.jemail-stat-label { font-size: 12px; color: #888; margin-top: 4px; text-transform: uppercase; }
+
+/* Actions */
+.jemail-actions .button { margin-top: 5px; }
+.jemail-delete { color: #a00 !important; }
+.jemail-delete:hover { color: #dc3232 !important; }
+
+/* Test Email Feedback */
+#jemail-test-feedback {
+    margin-top: 6px;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 3px;
+}
+#jemail-test-feedback.success { background: #d4edda; color: #155724; }
+#jemail-test-feedback.error   { background: #f8d7da; color: #721c24; }

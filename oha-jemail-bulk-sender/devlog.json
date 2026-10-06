@@ -1,0 +1,62 @@
+{
+    "plugin":  "JEmail Bulk Sender",
+    "version":  "1.5.0",
+    "entries":  [
+                    {
+                        "date":  "2026-02-26",
+                        "version":  "1.4.0",
+                        "type":  "fix",
+                        "summary":  "Fixed role filter being silently ignored, causing emails to go to all users instead of the selected role.",
+                        "notes":  "get_recipients() was calling get_users() with \u0027fields\u0027 =\u003e array(\u0027ID\u0027,\u0027user_email\u0027,\u0027display_name\u0027,\u0027user_login\u0027). When fields is a column-name array, WordPress\u0027s WP_User_Query can silently drop the role meta JOIN, making role__in return all users. Fixed by changing to \u0027fields\u0027 =\u003e \u0027all\u0027 which guarantees the role filter is applied. Full WP_User objects are returned and all downstream code already uses -\u003eID and -\u003euser_email which are present on both WP_User and the synthetic stdClass vendor/volunteer objects."
+                    },
+                    {
+                        "date":  "2026-02-26",
+                        "version":  "1.4.0",
+                        "type":  "fix",
+                        "summary":  "Fixed \u0027Send Now\u0027 using stale saved campaign data instead of the current form state.",
+                        "notes":  "The \u0027Send Now\u0027 button was a plain \u003ca\u003e link pointing directly to jemail_start_campaign. It read from the database regardless of any unsaved form changes, so role selections or subject edits made after the last Save Draft were silently ignored. Changed Send Now to a type=submit button inside the campaign form. It sets start_after_save=1, which causes save_campaign() to save all current form data first, then immediately redirect to jemail_start_campaign. This guarantees what the user sees on screen is exactly what gets sent."
+                    },
+                    {
+                        "date":  "2026-02-26",
+                        "version":  "1.4.0",
+                        "type":  "fix",
+                        "summary":  "Fixed missing email subject on bulk sends due to subject not being saved before sending.",
+                        "notes":  "The Send Test button reads the subject from the live form field via JS, so test emails always showed the correct subject even when the DB had an empty value. Bulk sends read $campaign-\u003esubject from the database, so if the user typed a subject but never clicked Save Draft before Send Now, bulk emails went out with no subject. Resolved by the Send Now save-first fix above. Additionally added wp_unslash() to subject/title/html_content/text_content in save_campaign() (required before sanitize_text_field to avoid WordPress magic-quote backslashes being stored literally). Added server-side guard: if subject is empty when start_after_save=1, redirect back with empty_subject error notice instead of sending."
+                    },
+                    {
+                        "date":  "2026-02-26",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Added UI warning that the WordPress \u0027Subscriber\u0027 role is not the same as OHA membership subscribers.",
+                        "notes":  "WordPress assigns the \u0027subscriber\u0027 role to all newly registered users by default via UsersWP, meaning selecting it targets every site user (213 on the OHA site), not OHA paid members (87). Added a descriptive note in the WordPress Roles section directing admins to use the SWPM Membership Level filter instead. Also added required asterisk and hint text to the Email Subject field, and a description explaining that Send Test reads the live form while Send Now always saves first."
+                    },
+                    {
+                        "date":  "2026-02-26",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Added \u0027Preview Who Gets This\u0027 button showing up to 25 matched recipients before sending.",
+                        "notes":  "New AJAX endpoint jemail_preview_recipients calls get_recipients() with the current filter state and returns the first 25 results (name + email). Results display inline in the Recipients sidebar box in a scrollable list. Shows \u002787 total recipients — showing first 25\u0027 summary line. Warns with a red notice if no recipients match. Clears and reloads on each click. This is the primary safety check: admins should always preview before sending to confirm the right people are targeted."
+                    },
+                    {
+                        "date":  "2026-02-26",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Added full pagination and status filter tabs to the campaign recipient log.",
+                        "notes":  "Previously the campaign report showed only the first 50 recipients with no way to see the rest. Replaced with: (1) status filter tabs — All / Opened / Sent / Failed — each showing a live count. Opened recipients are highlighted green. (2) WordPress-style pagination nav with first/prev/next/last buttons, 50 per page. Filter and page number stay in sync. Added count_campaign_logs(campaign_id, status=\u0027\u0027) method to JEmail_DB to support per-status counts efficiently without loading full result sets."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Added scheduled send: pick a date/time in the editor and the campaign sends automatically at that time.",
+                        "notes":  "New scheduled status between draft and sending. DB scheduled_at column was already present unused. process_batch() now auto-starts due scheduled campaigns on every cron tick and admin page load. Scheduling saves subject first and blocks if empty. Saving as draft from a scheduled campaign cancels the schedule."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.5.0",
+                        "type":  "note",
+                        "summary":  "Migrated plugin source to _working/oha-jemail-bulk-sender/ from Unzipped/; version.txt created.",
+                        "notes":  "Plugin was previously developed in Unzipped/ without a _working/ folder. Moved all source files to _working/oha-jemail-bulk-sender/ this session. version.txt initialized at 1.4.0 (pre-bump)."
+                    }
+                ]
+}
