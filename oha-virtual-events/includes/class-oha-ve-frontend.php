@@ -82,6 +82,20 @@ class OHA_VE_Frontend {
             );
         }
 
+        // WP REST API does not set up cookie-based user auth without X-WP-Nonce.
+        // Explicitly validate the logged_in auth cookie so is_user_logged_in() works.
+        if ( ! is_user_logged_in() ) {
+            foreach ( $_COOKIE as $cookie_name => $cookie_value ) {
+                if ( 0 === strpos( $cookie_name, 'wordpress_logged_in_' ) ) {
+                    $uid = wp_validate_auth_cookie( $cookie_value, 'logged_in' );
+                    if ( $uid ) {
+                        wp_set_current_user( $uid );
+                        break;
+                    }
+                }
+            }
+        }
+
         // Must be logged in.
         if ( ! is_user_logged_in() ) {
             wp_safe_redirect( wp_login_url( get_permalink( $event_id ) ) );
@@ -248,17 +262,18 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
      * Format: {expires}|{16-char hex signature}
      */
     private static function make_zoom_token( $event_id, $expires ) {
-        $data = absint( $event_id ) . '|' . $expires;
-        $sig  = substr( wp_hash( $data . '|oha_ve_zoom_join' ), 0, 16 );
-        return $expires . '|' . $sig;
+        $data = absint( $event_id ) . '.' . $expires;
+        $sig  = substr( wp_hash( $data . '.oha_ve_zoom_join' ), 0, 16 );
+        return $expires . '.' . $sig;
     }
 
     /**
      * Verify a token produced by make_zoom_token().
      * Returns true only if the token is well-formed, unexpired, and HMAC-valid.
+     * Separator is dot (.) -- safe in URL query strings, no esc_url encoding issues.
      */
     private static function verify_zoom_token( $token, $event_id ) {
-        $parts = explode( '|', (string) $token, 2 );
+        $parts = explode( '.', (string) $token, 2 );
         if ( count( $parts ) !== 2 ) {
             return false;
         }
@@ -267,8 +282,8 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
         if ( time() > $expires_ts ) {
             return false; // expired
         }
-        $data         = absint( $event_id ) . '|' . $expires_ts;
-        $expected_sig = substr( wp_hash( $data . '|oha_ve_zoom_join' ), 0, 16 );
+        $data         = absint( $event_id ) . '.' . $expires_ts;
+        $expected_sig = substr( wp_hash( $data . '.oha_ve_zoom_join' ), 0, 16 );
         return hash_equals( $expected_sig, $provided_sig );
     }
 
@@ -405,10 +420,10 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
                 $html .= '<h3 class="oha-ve-card-title">You are hosting this session</h3>';
                 if ( ! empty( $zoom_join ) ) {
                     $html .= '<p>Click the button below. Your host key will be copied to your clipboard and Zoom will open in a new tab.</p>';
-                    $html .= '<button class="oha-ve-btn oha-ve-btn-host oha-ve-host-launch-btn"'
-                           . ' data-join-url="' . esc_attr( esc_url( $protected_url ) ) . '"'
-                           . ' data-host-key="' . esc_attr( $host_key ) . '"'
-                           . ' onclick="ohaVeHostLaunch(this)">Open Meeting + Copy Host Key</button>';
+                    $html .= '<a href="' . esc_url( $protected_url ) . '" target="_blank"'
+                           . ' class="oha-ve-btn oha-ve-btn-host oha-ve-host-launch-btn"'
+                           . ' data-host-key="' . esc_attr( $host_key ) . '">'
+                           . 'Open Meeting + Copy Host Key</a>';
                     $html .= '<ol class="oha-ve-host-steps">'
                            . '<li>Zoom opens in a new tab - join as a participant</li>'
                            . '<li>In Zoom, click <strong>Participants</strong></li>'
@@ -748,23 +763,28 @@ body{background:#680400;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
      * @return string  <script> block.
      */
     private function get_host_launch_js() {
+        // The host button is an <a href target="_blank"> so the browser handles
+        // tab opening natively. This script only handles clipboard copy on click.
         return '<script>
-function ohaVeHostLaunch(btn) {
-    var joinUrl = btn.getAttribute("data-join-url");
-    var hostKey = btn.getAttribute("data-host-key");
-    window.open(joinUrl, "_blank", "noopener,noreferrer");
-    if (hostKey && navigator.clipboard) {
-        navigator.clipboard.writeText(hostKey).then(function() {
-            btn.textContent = "Zoom Opened + Host Key Copied";
-            btn.style.background = "#155724";
-        }).catch(function() {
-            btn.textContent = "Zoom Opened - Use Backup Key Below";
+(function() {
+    var btns = document.querySelectorAll(".oha-ve-host-launch-btn");
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].addEventListener("click", function() {
+            var btn = this;
+            var hostKey = btn.getAttribute("data-host-key");
+            if (hostKey && navigator.clipboard) {
+                navigator.clipboard.writeText(hostKey).then(function() {
+                    btn.textContent = "Zoom Opened + Host Key Copied";
+                    btn.style.background = "#155724";
+                }).catch(function() {
+                    btn.textContent = "Zoom Opened - Use Backup Key Below";
+                });
+            } else {
+                btn.textContent = "Zoom Opened - Use Backup Key Below";
+            }
         });
-    } else {
-        btn.textContent = "Zoom Opened - Use Backup Key Below";
     }
-    btn.disabled = true;
-}
+}());
 </script>';
     }
 

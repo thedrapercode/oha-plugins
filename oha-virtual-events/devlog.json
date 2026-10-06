@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.8.2",
+    "version":  "1.8.3",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -595,6 +595,27 @@
                         "type":  "fix",
                         "summary":  "Skip meeting acknowledgment page for board/admin/instructor on Zoom join redirect",
                         "notes":  "Board members and instructors now redirect straight to Zoom without the acknowledgment step. Members still see the acknowledgment page. Change in zoom_join_redirect(): the ack page block is gated on ! \u0026\u0026 !."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.3",
+                        "type":  "fix",
+                        "summary":  "Fix Zoom join redirect -- manual auth cookie fallback so is_user_logged_in works in REST context",
+                        "notes":  "WP REST API does not authenticate users from session cookies without X-WP-Nonce. After the HMAC token check passes, if is_user_logged_in returns false the callback now manually iterates $_COOKIE for wordpress_logged_in_* entries and calls wp_validate_auth_cookie + wp_set_current_user to restore the session. Without this the login redirect bounced users to the event page instead of Zoom."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.3",
+                        "type":  "fix",
+                        "summary":  "Change host button from button+onclick to anchor with target=_blank for reliable tab opening",
+                        "notes":  "Replaced button with onclick=\"ohaVeHostLaunch\" with an a href pointing to REST URL with target=_blank. Browser-native target=_blank is not subject to popup blocker rules and always sends cookies. window.open removed entirely. get_host_launch_js now attaches a click event listener that only handles clipboard copy as a side effect. data-join-url attribute removed from element -- URL is now in href."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.3",
+                        "type":  "fix",
+                        "summary":  "Change HMAC token separator from pipe to dot to avoid esc_url percent-encoding edge cases",
+                        "notes":  "add_query_arg encodes | as %7C. esc_url then decodes %7C back to | since pipe is in its allowed set. The literal | in the URL worked but was fragile. Changed make_zoom_token and verify_zoom_token to use dot as separator. Token format is now {expires}.{16-char-hex-sig}. Existing v1.8.2 tokens are invalidated but v1.8.2 was never uploaded to the live site."
                     }
                 ]
 }
