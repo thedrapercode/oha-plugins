@@ -1,4 +1,6 @@
-﻿/* =============================================================
+﻿@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+/* =============================================================
    OHA Virtual Events -- Frontend Styles v1.3.3
    Covers: gd_event pages, gd_place pages, My Account shortcodes,
            Live Banner homepage shortcode
@@ -685,31 +687,156 @@ button.oha-ve-btn:disabled {
 
 /* =============================================================
    ON-DEMAND REPLAY CARDS (oha_ve_replay CPT)
+   Styled to match HLD archive cards: dark bg, warm border,
+   Cinzel title, gold hover, 160px image, Rajdhani labels.
    ============================================================= */
 
-/* Replay card -- left border accent */
-.oha-edu-card--replay {
-    border-left: 4px solid #cc0000;
+/* ── Grid: 3-col / 2-col / 1-col ─────────────────────────── */
+.oha-replay-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 12px;
+}
+@media (max-width: 900px) {
+    .oha-replay-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 576px) {
+    .oha-replay-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Card wrapper ─────────────────────────────────────────── */
+.oha-replay-card {
+    background: #111;
+    border: 1px solid rgba(224, 213, 197, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.oha-replay-card:hover {
+    border-color: rgba(201, 168, 76, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Image section (160px, cover-fit) ────────────────────── */
+.oha-replay-card__img {
+    position: relative;
+    height: 160px;
+    background: #1a0808;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.oha-replay-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+.oha-replay-card:hover .oha-replay-card__img img {
+    transform: scale(1.04);
+}
+.oha-replay-card__img-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a0808 0%, #2d0f0f 100%);
+}
+
+/* Type label — bottom-left overlay on image */
+.oha-replay-card__type-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #C9A84C;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* ── Card body ────────────────────────────────────────────── */
+.oha-replay-card__body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+.oha-replay-card__title {
+    color: #fff !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+    margin: 0 0 2px !important;
+}
+.oha-replay-card__presenter,
+.oha-replay-card__date {
+    color: #8a9ab0;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* ── Footer (action buttons) ─────────────────────────────── */
+.oha-replay-card__footer {
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(224, 213, 197, 0.06);
+    padding: 10px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
     flex-wrap: wrap;
 }
-
-/* Expandable embed area -- full width row below card header */
-.oha-replay-embed {
-    flex-basis: 100%;
-    width: 100%;
-    padding-top: 12px;
-    border-top: 1px solid rgba(200, 0, 0, 0.18);
-    margin-top: 4px;
+.oha-replay-watch-btn {
+    background: var(--global-palette1, #ad3119);
+    color: #fff !important;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1.4;
+}
+.oha-replay-watch-btn:hover {
+    background: var(--global-palette2, #ff0000);
+    color: #fff !important;
+}
+.oha-replay-resources-btn {
+    color: #8a9ab0 !important;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none !important;
+    transition: color 0.15s;
+}
+.oha-replay-resources-btn:hover {
+    color: #C9A84C !important;
 }
 
-/* Responsive 16:9 wrapper for the YouTube iframe */
+/* ── Expandable embed ────────────────────────────────────── */
+.oha-replay-embed {
+    background: #000;
+}
 .oha-replay-video-wrap {
     position: relative;
     padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
-    border-radius: 6px;
-    background: #000;
 }
 .oha-replay-video-wrap iframe {
     position: absolute;

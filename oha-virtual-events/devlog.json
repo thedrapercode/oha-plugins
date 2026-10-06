@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.7.1",
+    "version":  "1.7.2",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -511,6 +511,20 @@
                         "type":  "fix",
                         "summary":  "Fixed Zoom auto-create not firing when event is published or saved via WP admin",
                         "notes":  "Moved auto-create hook from transition_post_status (fires during wp_insert_post before meta is saved) to save_post_gd_event priority 30 (fires after OHA_VE_Admin::save_meta() at priority 20). This ensures oha_ve_enabled and oha_ve_platform are already in the DB when the auto-create check runs. The zoom_id guard prevents duplicate meetings on routine saves. The board create form explicit create_meeting() call is unaffected. Added DOING_AUTOSAVE guard."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.7.2",
+                        "type":  "feature",
+                        "summary":  "Import from event now pulls featured image and post content (description)",
+                        "notes":  "ajax_get_event_data() returns thumbnail_id, thumbnail_url, and description (wp_kses_post of post_content). JS fills the WP classic editor (#content / TinyMCE) with the event description. Thumbnail preview shown in import section. Hidden oha_ve_replay_import_thumb field carries the attachment ID to save_meta(). On save: if field is set and replay has no existing featured image, set_post_thumbnail() is called. User can freely override both after import."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.7.2",
+                        "type":  "change",
+                        "summary":  "Replay cards redesigned to match HLD archive card style",
+                        "notes":  "render_replay_card() rebuilt with .oha-replay-card structure: 160px featured image (cover-fit, scale on hover), dark #111 bg, warm rgba border with gold hover glow, Cinzel title, Rajdhani type badge overlay on image, muted #8a9ab0 presenter/date. Watch Now button (red) and Resources link in card footer. sc_ondemand() wraps cards in .oha-replay-grid CSS grid (3-col/2-col/1-col responsive). oha-virtual-events.css gets Google Fonts import for Cinzel + Rajdhani; old .oha-edu-card--replay rules replaced."
                     }
                 ]
 }

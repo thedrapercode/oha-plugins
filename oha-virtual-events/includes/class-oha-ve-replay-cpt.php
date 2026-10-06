@@ -124,6 +124,8 @@ class OHA_VE_Replay_CPT {
             </div>
             <input type="hidden" name="oha_ve_replay_event_id" id="oha-ve-replay-event-id"
                    value="<?php echo esc_attr( $linked_event_id ?: '' ); ?>" />
+            <input type="hidden" name="oha_ve_replay_import_thumb" id="oha-ve-replay-import-thumb" value="" />
+            <div id="oha-ve-import-thumb-preview"></div>
             <p id="oha-ve-import-status" style="font-size:12px;color:#555;margin:6px 0 0;min-height:16px;"></p>
         </div>
 
@@ -218,6 +220,27 @@ class OHA_VE_Replay_CPT {
                     if ( d.access )    { $('#oha-ve-replay-access').val(d.access); }
                     if ( d.type )      { $('#oha-ve-replay-type').val(d.type); }
                     if ( d.resources ) { $('#oha-ve-replay-resources').val(d.resources); }
+
+                    // Fill the WP editor (post_content) with the event description
+                    if ( d.description ) {
+                        if ( typeof tinymce !== 'undefined' && tinymce.get('content') ) {
+                            tinymce.get('content').setContent(d.description);
+                        } else if ( document.getElementById('content') ) {
+                            document.getElementById('content').value = d.description;
+                        }
+                    }
+
+                    // Show thumbnail preview; will be applied as featured image on save if none set
+                    if ( d.thumbnail_id && d.thumbnail_url ) {
+                        $('#oha-ve-replay-import-thumb').val(d.thumbnail_id);
+                        $('#oha-ve-import-thumb-preview').html(
+                            '<div style="margin-top:8px;display:flex;align-items:center;gap:10px;">' +
+                            '<img src="' + d.thumbnail_url + '" style="width:90px;height:60px;object-fit:cover;border-radius:3px;border:1px solid #ccc;" />' +
+                            '<span style="font-size:11px;color:#555;">Thumbnail from event. Will be set as featured image on save (if none currently set).</span>' +
+                            '</div>'
+                        );
+                    }
+
                     $('#oha-ve-import-status').css('color','#1e7e34').text('Fields filled from event. Review and publish when ready.');
                 }).fail(function() {
                     btn.prop('disabled', false).text('Fill from Event');
@@ -273,6 +296,14 @@ class OHA_VE_Replay_CPT {
 
         if ( isset( $_POST['oha_ve_replay_resources'] ) ) {
             update_post_meta( $post_id, 'oha_ve_replay_resources', esc_url_raw( $_POST['oha_ve_replay_resources'] ) );
+        }
+
+        // Apply imported thumbnail as featured image if one was provided and none is set yet
+        if ( ! empty( $_POST['oha_ve_replay_import_thumb'] ) ) {
+            $thumb_id = absint( $_POST['oha_ve_replay_import_thumb'] );
+            if ( $thumb_id && ! has_post_thumbnail( $post_id ) ) {
+                set_post_thumbnail( $post_id, $thumb_id );
+            }
         }
     }
 
@@ -336,7 +367,7 @@ class OHA_VE_Replay_CPT {
             'convention_session' => 'Convention Session',
             'other_virtual'      => 'Other',
         ];
-        $type_label = isset( $type_labels[ $type ] ) ? $type_labels[ $type ] : '';
+        $type_label = $type_labels[ $type ] ?? '';
 
         $date_display = '';
         if ( $date ) {
@@ -346,53 +377,64 @@ class OHA_VE_Replay_CPT {
             }
         }
 
+        // Featured image
+        $thumb_id  = get_post_thumbnail_id( $post_id );
+        $thumb_url = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'medium_large' ) : '';
+
         $embed_id = 'oha-replay-embed-' . intval( $post_id );
 
-        $out  = '<div class="oha-edu-card oha-edu-card--replay">';
-        $out .= '<div class="oha-edu-card-body">';
+        $out  = '<div class="oha-replay-card">';
 
+        // Image section
+        $out .= '<div class="oha-replay-card__img">';
+        if ( $thumb_url ) {
+            $out .= '<img src="' . esc_url( $thumb_url ) . '" alt="' . esc_attr( $title ) . '" loading="lazy" />';
+        } else {
+            $out .= '<div class="oha-replay-card__img-placeholder"></div>';
+        }
         if ( $type_label ) {
-            $out .= '<span class="oha-edu-type-badge">' . esc_html( $type_label ) . '</span>';
+            $out .= '<span class="oha-replay-card__type-badge">' . esc_html( $type_label ) . '</span>';
         }
+        $out .= '</div>';
 
-        $out .= '<h4 class="oha-edu-card-title">' . esc_html( $title ) . '</h4>';
-
-        if ( $date_display ) {
-            $out .= '<p class="oha-edu-card-date">' . esc_html( $date_display ) . '</p>';
-        }
-
+        // Body
+        $out .= '<div class="oha-replay-card__body">';
+        $out .= '<h3 class="oha-replay-card__title">' . esc_html( $title ) . '</h3>';
         if ( $presenter ) {
-            $out .= '<p class="oha-edu-card-instructor">Presenter: <strong>'
-                  . esc_html( $presenter ) . '</strong></p>';
+            $out .= '<p class="oha-replay-card__presenter">' . esc_html( $presenter ) . '</p>';
         }
+        if ( $date_display ) {
+            $out .= '<p class="oha-replay-card__date">' . esc_html( $date_display ) . '</p>';
+        }
+        $out .= '</div>';
 
-        $out .= '</div>'; // .oha-edu-card-body
-
-        $out .= '<div class="oha-edu-card-actions">';
+        // Footer (action buttons)
+        $out .= '<div class="oha-replay-card__footer">';
         if ( $yt_id ) {
-            $out .= '<button type="button" class="oha-ve-btn oha-ve-btn-replay oha-replay-toggle"'
+            $out .= '<button type="button" class="oha-replay-watch-btn"'
                   . ' onclick="ohaReplayToggle(this)"'
                   . ' data-target="' . esc_attr( $embed_id ) . '">Watch Now</button>';
         }
         if ( $resources ) {
-            $out .= '<a href="' . esc_url( $resources ) . '" class="oha-ve-btn oha-ve-btn-outline"'
+            $out .= '<a href="' . esc_url( $resources ) . '" class="oha-replay-resources-btn"'
                   . ' target="_blank" rel="noopener noreferrer">Resources</a>';
         }
-        $out .= '</div>'; // .oha-edu-card-actions
+        $out .= '</div>';
 
+        // Expandable YouTube embed
         if ( $yt_id ) {
-            $out .= '<div class="oha-replay-embed" id="' . esc_attr( $embed_id ) . '">';
+            $out .= '<div class="oha-replay-embed" id="' . esc_attr( $embed_id ) . '" style="display:none;">';
             $out .= '<div class="oha-replay-video-wrap">';
             $out .= '<iframe'
                   . ' src="https://www.youtube.com/embed/' . esc_attr( $yt_id ) . '?rel=0"'
                   . ' frameborder="0" allowfullscreen loading="lazy"'
                   . ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
                   . '></iframe>';
-            $out .= '</div>'; // .oha-replay-video-wrap
-            $out .= '</div>'; // .oha-replay-embed
+            $out .= '</div>';
+            $out .= '</div>';
         }
 
-        $out .= '</div>'; // .oha-edu-card
+        $out .= '</div>'; // .oha-replay-card
 
         return $out;
     }
@@ -455,14 +497,20 @@ class OHA_VE_Replay_CPT {
         ];
         $replay_type = $type_map[ $event_type ] ?? '';
 
+        $thumb_id  = (int) get_post_thumbnail_id( $event_id );
+        $thumb_url = $thumb_id ? (string) get_the_post_thumbnail_url( $event_id, 'medium' ) : '';
+
         wp_send_json_success( [
-            'title'     => $event->post_title,
-            'presenter' => $presenter,
-            'date'      => $date,
-            'access'    => get_post_meta( $event_id, 'oha_ve_access_level',   true ),
-            'type'      => $replay_type,
-            'yt_id'     => get_post_meta( $event_id, 'oha_ve_yt_replay_id',  true ),
-            'resources' => get_post_meta( $event_id, 'oha_ve_resources_url', true ),
+            'title'         => $event->post_title,
+            'presenter'     => $presenter,
+            'date'          => $date,
+            'access'        => get_post_meta( $event_id, 'oha_ve_access_level',   true ),
+            'type'          => $replay_type,
+            'yt_id'         => get_post_meta( $event_id, 'oha_ve_yt_replay_id',  true ),
+            'resources'     => get_post_meta( $event_id, 'oha_ve_resources_url', true ),
+            'description'   => wp_kses_post( $event->post_content ),
+            'thumbnail_id'  => $thumb_id,
+            'thumbnail_url' => $thumb_url,
         ] );
     }
 }

@@ -204,9 +204,11 @@ class OHA_VE_Shortcodes {
         if ( empty( $accessible ) ) {
             $out .= '<p class="oha-edu-empty">No recordings are available yet. Check back after the next session.</p>';
         } else {
+            $out .= '<div class="oha-replay-grid">';
             foreach ( $accessible as $replay ) {
                 $out .= OHA_VE_Replay_CPT::render_replay_card( $replay );
             }
+            $out .= '</div>';
             // Toggle script for Watch Now expand/collapse -- emitted once per page
             $out .= '<script>'
                   . 'if(!window.ohaReplayToggleInit){'
