@@ -209,17 +209,71 @@ class OHA_VE_Shortcodes {
                 $out .= OHA_VE_Replay_CPT::render_replay_card( $replay );
             }
             $out .= '</div>';
-            // Toggle script for Watch Now expand/collapse -- emitted once per page
+            // Modal HTML -- emitted once per page load.
+            static $modal_output = false;
+            if ( ! $modal_output ) {
+                $modal_output = true;
+                $out .= '<div id="oha-replay-modal" class="oha-replay-modal" style="display:none;" role="dialog" aria-modal="true">'
+                      . '<div class="oha-replay-modal__box">'
+                      . '<button type="button" class="oha-replay-modal__close" aria-label="Close">&#x2715;</button>'
+                      . '<h2 class="oha-replay-modal__title"></h2>'
+                      . '<div class="oha-replay-modal__meta"></div>'
+                      . '<div class="oha-replay-modal__description"></div>'
+                      . '<div class="oha-replay-modal__footer"></div>'
+                      . '</div></div>';
+            }
+            // Event delegation for card interactions -- registered once per page.
+            // Uses class-based delegation so no onclick attributes are needed on card elements.
             $out .= '<script>'
-                  . 'if(!window.ohaReplayToggleInit){'
-                  . 'window.ohaReplayToggleInit=true;'
-                  . 'function ohaReplayToggle(b){'
-                  . 'var t=document.getElementById(b.getAttribute("data-target"));'
-                  . 'if(!t)return;'
-                  . 'var o=t.style.display!=="none";'
-                  . 't.style.display=o?"none":"block";'
-                  . 'b.textContent=o?"Watch Now":"Close Video";'
-                  . '}}'
+                  . 'if(!window.ohaReplayEventsInit){'
+                  . 'window.ohaReplayEventsInit=true;'
+                  . 'document.addEventListener("click",function(e){'
+                  // Watch Now button OR thumbnail play button (both carry class oha-replay-toggle)
+                  . 'var tb=e.target.closest(".oha-replay-toggle");'
+                  . 'if(tb){'
+                  . 'var id=tb.getAttribute("data-target");'
+                  . 'var em=document.getElementById(id);'
+                  . 'if(!em)return;'
+                  . 'var vis=em.style.display!=="none";'
+                  . 'em.style.display=vis?"none":"block";'
+                  . 'var wb=document.querySelectorAll(".oha-replay-watch-btn[data-target=\""+id+"\"]");'
+                  . 'for(var i=0;i<wb.length;i++){wb[i].textContent=vis?"Watch Now":"Close Video";}'
+                  . 'return;}'
+                  // More Info button
+                  . 'var ib=e.target.closest(".oha-replay-info-btn");'
+                  . 'if(ib){ohaReplayOpenModal(ib);return;}'
+                  // Backdrop click closes modal
+                  . 'var mo=document.getElementById("oha-replay-modal");'
+                  . 'if(mo&&e.target===mo)ohaReplayCloseModal();'
+                  . '});'
+                  . 'document.addEventListener("keydown",function(e){'
+                  . 'if(e.key==="Escape")ohaReplayCloseModal();'
+                  . '});'
+                  . 'window.ohaReplayOpenModal=function(btn){'
+                  . 'var mo=document.getElementById("oha-replay-modal");'
+                  . 'if(!mo)return;'
+                  . 'var info;try{info=JSON.parse(btn.getAttribute("data-info"));}catch(x){return;}'
+                  . 'var esc=function(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};'
+                  . 'mo.querySelector(".oha-replay-modal__title").textContent=info.title||"";'
+                  . 'var m="";'
+                  . 'if(info.type)m+="<span class=\"oha-replay-modal__meta-type\">"+esc(info.type)+"</span>";'
+                  . 'if(info.duration)m+="<span class=\"oha-replay-modal__meta-duration\">"+esc(info.duration)+"</span>";'
+                  . 'if(info.presenter)m+="<span>By "+esc(info.presenter)+"</span>";'
+                  . 'if(info.date)m+="<span>"+esc(info.date)+"</span>";'
+                  . 'mo.querySelector(".oha-replay-modal__meta").innerHTML=m;'
+                  . 'mo.querySelector(".oha-replay-modal__description").textContent=info.description||"";'
+                  . 'var f="";'
+                  . 'var rurl=info.resources||"";'
+                  . 'if(rurl&&/^https?:\/\//i.test(rurl))f+="<a href=\""+esc(rurl)+"\" target=\"_blank\" rel=\"noopener\">Download Resources</a>";'
+                  . 'mo.querySelector(".oha-replay-modal__footer").innerHTML=f;'
+                  . 'mo.style.display="flex";'
+                  . 'document.body.style.overflow="hidden";'
+                  . '};'
+                  . 'window.ohaReplayCloseModal=function(){'
+                  . 'var mo=document.getElementById("oha-replay-modal");'
+                  . 'if(mo)mo.style.display="none";'
+                  . 'document.body.style.overflow="";'
+                  . '};}'
                   . '</script>';
         }
 

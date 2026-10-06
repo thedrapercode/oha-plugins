@@ -18,6 +18,7 @@
  *   oha_ve_replay_access     - Access: subscriber_only, all_members, board_only, public
  *   oha_ve_replay_type       - Category: member_education, actor_meetup, etc.
  *   oha_ve_replay_resources  - URL for handouts or slides
+ *   oha_ve_replay_duration   - Video duration (manual, e.g. "1h 23m" or "45 min")
  *   oha_ve_replay_notes      - Admin-only notes (not shown to members)
  */
 
@@ -92,6 +93,7 @@ class OHA_VE_Replay_CPT {
         $type            = get_post_meta( $post->ID, 'oha_ve_replay_type',       true );
         $resources       = get_post_meta( $post->ID, 'oha_ve_replay_resources',  true );
         $notes           = get_post_meta( $post->ID, 'oha_ve_replay_notes',      true );
+        $duration        = get_post_meta( $post->ID, 'oha_ve_replay_duration',   true );
         $linked_event_id = (int) get_post_meta( $post->ID, 'oha_ve_replay_event_id', true );
 
         // Fetch past virtual events for the import dropdown (most recent 100).
@@ -150,6 +152,12 @@ class OHA_VE_Replay_CPT {
                 <input type="date" name="oha_ve_replay_date" id="oha-ve-replay-date"
                        value="<?php echo esc_attr( $date ); ?>"
                        style="width:100%;margin-top:4px;" />
+            </div>
+            <div style="flex:0 0 130px;">
+                <label><strong>Duration</strong> <span style="color:#999;">(e.g. 1h 23m)</span></label><br>
+                <input type="text" name="oha_ve_replay_duration" id="oha-ve-replay-duration"
+                       value="<?php echo esc_attr( $duration ); ?>"
+                       style="width:100%;margin-top:4px;" placeholder="e.g. 45 min" />
             </div>
         </div>
 
@@ -286,6 +294,7 @@ class OHA_VE_Replay_CPT {
             'oha_ve_replay_date',
             'oha_ve_replay_access',
             'oha_ve_replay_type',
+            'oha_ve_replay_duration',
             'oha_ve_replay_notes',
         ];
         foreach ( $text_fields as $field ) {
@@ -358,6 +367,7 @@ class OHA_VE_Replay_CPT {
         $date      = get_post_meta( $post_id, 'oha_ve_replay_date',      true );
         $type      = get_post_meta( $post_id, 'oha_ve_replay_type',      true );
         $resources = get_post_meta( $post_id, 'oha_ve_replay_resources', true );
+        $duration  = get_post_meta( $post_id, 'oha_ve_replay_duration',  true );
         $title     = get_the_title( $post_id );
 
         $type_labels = [
@@ -377,61 +387,82 @@ class OHA_VE_Replay_CPT {
             }
         }
 
-        // Featured image
-        $thumb_id  = get_post_thumbnail_id( $post_id );
-        $thumb_url = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'medium_large' ) : '';
+        $embed_id       = 'oha-replay-embed-' . intval( $post_id );
+        $yt_safe        = $yt_id ? esc_attr( $yt_id ) : '';
+        $presenter_date = implode( ' · ', array_filter( [ $presenter, $date_display ] ) );
 
-        $embed_id = 'oha-replay-embed-' . intval( $post_id );
+        // Build JSON payload for the More Info modal (plain text only -- no HTML tags)
+        $modal_data = esc_attr( wp_json_encode( [
+            'title'       => $title,
+            'type'        => $type_label,
+            'presenter'   => $presenter,
+            'date'        => $date_display,
+            'duration'    => $duration,
+            'description' => wp_strip_all_tags( $post->post_content ),
+            'resources'   => $resources,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 
-        $out  = '<div class="oha-replay-card">';
+        $out = '<div class="oha-replay-card">';
 
-        // Image section
-        $out .= '<div class="oha-replay-card__img">';
-        if ( $thumb_url ) {
-            $out .= '<img src="' . esc_url( $thumb_url ) . '" alt="' . esc_attr( $title ) . '" loading="lazy" />';
-        } else {
-            $out .= '<div class="oha-replay-card__img-placeholder"></div>';
+        // ── Thumbnail (16:9 padding-bottom ratio) ──────────────
+        $out .= '<div class="oha-replay-card__thumb">';
+
+        if ( $yt_safe ) {
+            // Auto-pull YouTube thumbnail; no API key required.
+            // maxresdefault (1280x720) may not exist for older videos; falls back to hqdefault (480x360).
+            $out .= '<img'
+                  . ' src="https://img.youtube.com/vi/' . $yt_safe . '/maxresdefault.jpg"'
+                  . ' onerror="this.onerror=null;this.src=\'https://img.youtube.com/vi/' . $yt_safe . '/hqdefault.jpg\';"'
+                  . ' alt="' . esc_attr( $title ) . '" loading="lazy" />';
         }
+
+        // Dark gradient overlay -- type badge, title, presenter/date at bottom
+        $out .= '<div class="oha-replay-card__overlay">';
         if ( $type_label ) {
             $out .= '<span class="oha-replay-card__type-badge">' . esc_html( $type_label ) . '</span>';
         }
-        $out .= '</div>';
-
-        // Body
-        $out .= '<div class="oha-replay-card__body">';
         $out .= '<h3 class="oha-replay-card__title">' . esc_html( $title ) . '</h3>';
-        if ( $presenter ) {
-            $out .= '<p class="oha-replay-card__presenter">' . esc_html( $presenter ) . '</p>';
+        if ( $presenter_date ) {
+            $out .= '<p class="oha-replay-card__presenter-date">' . esc_html( $presenter_date ) . '</p>';
         }
-        if ( $date_display ) {
-            $out .= '<p class="oha-replay-card__date">' . esc_html( $date_display ) . '</p>';
-        }
-        $out .= '</div>';
+        $out .= '</div>'; // .oha-replay-card__overlay
 
-        // Footer (action buttons)
-        $out .= '<div class="oha-replay-card__footer">';
-        if ( $yt_id ) {
-            $out .= '<button type="button" class="oha-replay-watch-btn"'
-                  . ' onclick="ohaReplayToggle(this)"'
+        // Duration badge top-right
+        if ( $duration ) {
+            $out .= '<span class="oha-replay-card__duration">' . esc_html( $duration ) . '</span>';
+        }
+
+        // Play button (hover-reveal, triggers same embed toggle as Watch Now)
+        if ( $yt_safe ) {
+            $out .= '<button type="button" class="oha-replay-card__play oha-replay-toggle"'
+                  . ' data-target="' . esc_attr( $embed_id ) . '" aria-label="Watch Now">'
+                  . '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">'
+                  . '<path d="M8 5v14l11-7z"/></svg>'
+                  . '</button>';
+        }
+
+        $out .= '</div>'; // .oha-replay-card__thumb
+
+        // ── Action buttons footer ──────────────────────────────
+        $out .= '<div class="oha-replay-card__actions">';
+        if ( $yt_safe ) {
+            $out .= '<button type="button" class="oha-replay-watch-btn oha-replay-toggle"'
                   . ' data-target="' . esc_attr( $embed_id ) . '">Watch Now</button>';
         }
-        if ( $resources ) {
-            $out .= '<a href="' . esc_url( $resources ) . '" class="oha-replay-resources-btn"'
-                  . ' target="_blank" rel="noopener noreferrer">Resources</a>';
-        }
-        $out .= '</div>';
+        $out .= '<button type="button" class="oha-replay-info-btn"'
+              . ' data-info="' . $modal_data . '">More Info</button>';
+        $out .= '</div>'; // .oha-replay-card__actions
 
-        // Expandable YouTube embed
-        if ( $yt_id ) {
+        // ── Expandable YouTube embed (toggled by Watch Now / play button) ──
+        if ( $yt_safe ) {
             $out .= '<div class="oha-replay-embed" id="' . esc_attr( $embed_id ) . '" style="display:none;">';
             $out .= '<div class="oha-replay-video-wrap">';
             $out .= '<iframe'
-                  . ' src="https://www.youtube.com/embed/' . esc_attr( $yt_id ) . '?rel=0"'
+                  . ' src="https://www.youtube.com/embed/' . $yt_safe . '?rel=0"'
                   . ' frameborder="0" allowfullscreen loading="lazy"'
                   . ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
                   . '></iframe>';
-            $out .= '</div>';
-            $out .= '</div>';
+            $out .= '</div></div>';
         }
 
         $out .= '</div>'; // .oha-replay-card
