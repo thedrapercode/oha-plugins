@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.16.2
+ * Version:     1.17.0
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.16.2' );
+define( 'OHA_HLD_VERSION', '1.17.0' );
 define( 'OHA_HLD_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_HLD_URL',  plugin_dir_url( __FILE__ ) );
 
@@ -52,13 +52,37 @@ add_action( 'wp_enqueue_scripts', function() {
 } );
 
 /**
+ * Returns true on any page where GD renders a card listing grid:
+ * - Post type archive URLs (geodir_is_page('archive'))
+ * - GD search results (geodir_is_page('search'))
+ * - WordPress pages configured as GD archive pages (e.g. /places/, /events/)
+ *
+ * geodir_is_page('archive') misses the last group because it only matches
+ * is_post_type_archive() URLs, not WordPress pages with GD blocks.
+ * We cover them by comparing the current page ID against every registered
+ * GD post type's configured archive page via geodir_archive_page_id().
+ */
+function oha_hld_is_gd_listing_context() {
+    if ( ! function_exists( 'geodir_is_page' ) ) return false;
+    if ( geodir_is_page( 'archive' ) || geodir_is_page( 'search' ) ) return true;
+    if ( is_page() && function_exists( 'geodir_get_posttypes' ) && function_exists( 'geodir_archive_page_id' ) ) {
+        $current_id = (int) get_the_ID();
+        foreach ( geodir_get_posttypes() as $pt ) {
+            if ( $current_id && $current_id === (int) geodir_archive_page_id( $pt ) ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
  * Enqueue OHA dark-theme CSS on GeoDirectory archive and search pages.
  * Also loads on GD category/listing pages so the same theme applies sitewide
  * wherever GD renders its card grid.
  */
 add_action( 'wp_enqueue_scripts', function() {
-    if ( ! function_exists( 'geodir_is_page' ) ) return;
-    if ( geodir_is_page( 'archive' ) || geodir_is_page( 'search' ) || geodir_is_page( 'listing' ) ) {
+    if ( oha_hld_is_gd_listing_context() ) {
         wp_enqueue_style(
             'oha-hld-archive',
             OHA_HLD_URL . 'assets/archive.css',
@@ -73,8 +97,7 @@ add_action( 'wp_enqueue_scripts', function() {
  * archive.css scopes all rules to this class to prevent bleed into other pages.
  */
 add_filter( 'body_class', function( $classes ) {
-    if ( ! function_exists( 'geodir_is_page' ) ) return $classes;
-    if ( geodir_is_page( 'archive' ) || geodir_is_page( 'search' ) || geodir_is_page( 'listing' ) ) {
+    if ( oha_hld_is_gd_listing_context() ) {
         $classes[] = 'oha-gd-archive';
     }
     return $classes;
@@ -85,8 +108,7 @@ add_filter( 'body_class', function( $classes ) {
  * archive.css uses this class to show the gold discount badge on the card.
  */
 add_filter( 'post_class', function( $classes, $class, $post_id ) {
-    if ( ! function_exists( 'geodir_is_page' ) ) return $classes;
-    if ( ! geodir_is_page( 'archive' ) && ! geodir_is_page( 'search' ) && ! geodir_is_page( 'listing' ) ) {
+    if ( ! oha_hld_is_gd_listing_context() ) {
         return $classes;
     }
     if ( get_post_meta( $post_id, '_oha_disc_active', true ) !== '1' ) return $classes;
@@ -112,8 +134,7 @@ add_filter( 'post_class', function( $classes, $class, $post_id ) {
  * GD already outputs data-post-id on the outer card div, which is how we match.
  */
 add_action( 'wp_footer', function() {
-    if ( ! function_exists( 'geodir_is_page' ) ) return;
-    if ( ! geodir_is_page( 'archive' ) && ! geodir_is_page( 'search' ) && ! geodir_is_page( 'listing' ) ) return;
+    if ( ! oha_hld_is_gd_listing_context() ) return;
 
     global $wp_query;
     if ( empty( $wp_query->posts ) ) return;
@@ -162,7 +183,7 @@ add_action( 'wp_footer', function() {
  * and GD's block-based secondary query (geodir_posts_per_page filter).
  */
 add_filter( 'geodir_posts_per_page', function( $per_page, $post_type = '', $defaults = [] ) {
-    if ( $post_type === 'gd_place' ) return 12;
+    if ( $post_type === 'gd_place' || $post_type === 'gd_event' ) return 12;
     return $per_page;
 }, 10, 3 );
 

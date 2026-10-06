@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.16.2",
+    "version":  "1.17.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -442,6 +442,13 @@
                         "type":  "change",
                         "summary":  "Match listing page search bar to archive page style: icons in inputs, icon-only button",
                         "notes":  "Added SVG magnifying glass and location pin icons inside each input via .oha-search-bar__field--icon wrapper. Button changed to 38x38 icon-only square. Placeholders updated to Haunt Name / City, State to match GD archive form."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.17.0",
+                        "type":  "fix",
+                        "summary":  "OHA dark theme now applies to /events/ page and any GD archive WordPress page",
+                        "notes":  "geodir_is_page(archive) only fires on post_type_archive URLs and taxonomy pages -- it misses WordPress pages configured as GD archive pages (e.g. /events/). Added oha_hld_is_gd_listing_context() helper that also loops through geodir_get_posttypes() and checks geodir_archive_page_id() for each. All four hooks (enqueue, body_class, post_class, wp_footer) now use the helper. geodir_posts_per_page filter extended to also cover gd_event (12 per page)."
                     }
                 ],
     "admin_settings":  {
