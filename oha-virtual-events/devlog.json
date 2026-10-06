@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.8.0",
+    "version":  "1.8.1",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -560,6 +560,20 @@
                         "type":  "feature",
                         "summary":  "Duration meta field added to replay post (oha_ve_replay_duration)",
                         "notes":  "Manual text field in replay admin meta box next to Date Recorded, e.g. \"1h 23m\" or \"45 min\". Saved via existing text_fields sanitize loop in save_meta(). Displayed as a dark pill badge top-right corner of thumbnail on card. Also shown in the More Info modal meta row."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.1",
+                        "type":  "fix",
+                        "summary":  "Move replay JS to enqueued file so it works inside UsersWP iframe + AJAX tabs",
+                        "notes":  "Root cause: [oha_uwp_account_inline] loads My Account in an iframe; UsersWP loads tab content via AJAX. Inline script tags in shortcode output do not reliably execute in AJAX-injected content. Fix: all toggle and modal logic moved to assets/js/oha-ve-replay.js, enqueued via wp_enqueue_script (in_footer=true) on every frontend page. The file loads during the iframe initial page render, attaches document-level event delegation, and is already active when UsersWP injects tab content. Inline \u003cscript\u003e block removed from sc_ondemand(); modal HTML (static $modal_output flag) stays in shortcode output as plain HTML."
+                    },
+                    {
+                        "date":  "2026-10-06",
+                        "version":  "1.8.1",
+                        "type":  "change",
+                        "summary":  "Remove redundant thumbnail play button from replay cards",
+                        "notes":  "The hover-reveal SVG play button on the card thumbnail did the same thing as the Watch Now button in the footer. Removed the .oha-replay-card__play button element from render_replay_card() and its CSS rules. Watch Now in the footer is the sole toggle trigger."
                     }
                 ]
 }

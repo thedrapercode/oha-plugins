@@ -47,6 +47,19 @@ class OHA_VE_Shortcodes {
         add_shortcode( 'oha_live_banner',         [ $this, 'sc_live_banner' ] );
         // Ensure CSS loads on pages that use shortcodes.
         add_action( 'wp_enqueue_scripts', [ $this, 'maybe_enqueue_styles' ] );
+        // Replay JS in a dedicated file so it loads on the initial page render,
+        // even when My Account content is injected later via AJAX tab switching.
+        add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_replay_script' ] );
+    }
+
+    public function enqueue_replay_script() {
+        wp_enqueue_script(
+            'oha-ve-replay',
+            OHA_VE_PLUGIN_URL . 'assets/js/oha-ve-replay.js',
+            [],
+            OHA_VE_VERSION,
+            true
+        );
     }
 
     // =========================================================
@@ -222,59 +235,7 @@ class OHA_VE_Shortcodes {
                       . '<div class="oha-replay-modal__footer"></div>'
                       . '</div></div>';
             }
-            // Event delegation for card interactions -- registered once per page.
-            // Uses class-based delegation so no onclick attributes are needed on card elements.
-            $out .= '<script>'
-                  . 'if(!window.ohaReplayEventsInit){'
-                  . 'window.ohaReplayEventsInit=true;'
-                  . 'document.addEventListener("click",function(e){'
-                  // Watch Now button OR thumbnail play button (both carry class oha-replay-toggle)
-                  . 'var tb=e.target.closest(".oha-replay-toggle");'
-                  . 'if(tb){'
-                  . 'var id=tb.getAttribute("data-target");'
-                  . 'var em=document.getElementById(id);'
-                  . 'if(!em)return;'
-                  . 'var vis=em.style.display!=="none";'
-                  . 'em.style.display=vis?"none":"block";'
-                  . 'var wb=document.querySelectorAll(".oha-replay-watch-btn[data-target=\""+id+"\"]");'
-                  . 'for(var i=0;i<wb.length;i++){wb[i].textContent=vis?"Watch Now":"Close Video";}'
-                  . 'return;}'
-                  // More Info button
-                  . 'var ib=e.target.closest(".oha-replay-info-btn");'
-                  . 'if(ib){ohaReplayOpenModal(ib);return;}'
-                  // Backdrop click closes modal
-                  . 'var mo=document.getElementById("oha-replay-modal");'
-                  . 'if(mo&&e.target===mo)ohaReplayCloseModal();'
-                  . '});'
-                  . 'document.addEventListener("keydown",function(e){'
-                  . 'if(e.key==="Escape")ohaReplayCloseModal();'
-                  . '});'
-                  . 'window.ohaReplayOpenModal=function(btn){'
-                  . 'var mo=document.getElementById("oha-replay-modal");'
-                  . 'if(!mo)return;'
-                  . 'var info;try{info=JSON.parse(btn.getAttribute("data-info"));}catch(x){return;}'
-                  . 'var esc=function(s){return(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};'
-                  . 'mo.querySelector(".oha-replay-modal__title").textContent=info.title||"";'
-                  . 'var m="";'
-                  . 'if(info.type)m+="<span class=\"oha-replay-modal__meta-type\">"+esc(info.type)+"</span>";'
-                  . 'if(info.duration)m+="<span class=\"oha-replay-modal__meta-duration\">"+esc(info.duration)+"</span>";'
-                  . 'if(info.presenter)m+="<span>By "+esc(info.presenter)+"</span>";'
-                  . 'if(info.date)m+="<span>"+esc(info.date)+"</span>";'
-                  . 'mo.querySelector(".oha-replay-modal__meta").innerHTML=m;'
-                  . 'mo.querySelector(".oha-replay-modal__description").textContent=info.description||"";'
-                  . 'var f="";'
-                  . 'var rurl=info.resources||"";'
-                  . 'if(rurl&&/^https?:\/\//i.test(rurl))f+="<a href=\""+esc(rurl)+"\" target=\"_blank\" rel=\"noopener\">Download Resources</a>";'
-                  . 'mo.querySelector(".oha-replay-modal__footer").innerHTML=f;'
-                  . 'mo.style.display="flex";'
-                  . 'document.body.style.overflow="hidden";'
-                  . '};'
-                  . 'window.ohaReplayCloseModal=function(){'
-                  . 'var mo=document.getElementById("oha-replay-modal");'
-                  . 'if(mo)mo.style.display="none";'
-                  . 'document.body.style.overflow="";'
-                  . '};}'
-                  . '</script>';
+            // JS lives in assets/js/oha-ve-replay.js (enqueued via wp_enqueue_script).
         }
 
         $out .= '</div>';

@@ -804,36 +804,6 @@ button.oha-ve-btn:disabled {
     border-radius: 3px;
 }
 
-/* Play button: centered, appears on card hover */
-.oha-replay-card__play {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.7);
-    width: 56px;
-    height: 56px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.7);
-    border-radius: 50%;
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.25s, background 0.2s, border-color 0.2s;
-    backdrop-filter: blur(4px);
-    padding: 0;
-}
-.oha-replay-card:hover .oha-replay-card__play {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
-.oha-replay-card__play:hover {
-    background: rgba(173, 49, 25, 0.7);
-    border-color: var(--global-palette1, #ad3119);
-}
-
 /* ── Action buttons footer ────────────────────────────────── */
 .oha-replay-card__actions {
     background: rgba(0, 0, 0, 0.5);

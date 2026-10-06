@@ -432,15 +432,6 @@ class OHA_VE_Replay_CPT {
             $out .= '<span class="oha-replay-card__duration">' . esc_html( $duration ) . '</span>';
         }
 
-        // Play button (hover-reveal, triggers same embed toggle as Watch Now)
-        if ( $yt_safe ) {
-            $out .= '<button type="button" class="oha-replay-card__play oha-replay-toggle"'
-                  . ' data-target="' . esc_attr( $embed_id ) . '" aria-label="Watch Now">'
-                  . '<svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">'
-                  . '<path d="M8 5v14l11-7z"/></svg>'
-                  . '</button>';
-        }
-
         $out .= '</div>'; // .oha-replay-card__thumb
 
         // ── Action buttons footer ──────────────────────────────
