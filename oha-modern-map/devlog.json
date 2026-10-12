@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.19.0",
+    "version":  "2.20.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -1142,6 +1142,48 @@
                         "type":  "fix",
                         "summary":  "Map overlay control button icons now visible; Kadence global button color rule overridden with CSS !important",
                         "notes":  "Kadence sets color: #000 on all button elements globally at equal specificity and loads after plugin stylesheet. Fix: color: !important on .oha-map-control, fill: !important on .oha-map-control svg and child shape elements (path/circle/rect/polygon)."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "2.20.0",
+                        "type":  "fix",
+                        "summary":  "Dynamic JS height fills viewport on all mobile devices; removes hardcoded 480px CSS",
+                        "notes":  "setMobileHeight() runs before initMap so MapLibre sees correct canvas on first render. visualViewport listener handles iOS Safari URL bar."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "2.20.0",
+                        "type":  "fix",
+                        "summary":  "Overlay control button icons now display correctly on mobile",
+                        "notes":  "Scoped rules under .oha-map-overlay-controls .oha-map-control to beat Kadence button[type=button] specificity."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "2.20.0",
+                        "type":  "fix",
+                        "summary":  "Filter pill text no longer wraps on small screens",
+                        "notes":  "Added white-space: nowrap to .oha-mob-filter-pill (separate from .oha-mob-action-pill which already had it)."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "2.20.0",
+                        "type":  "feature",
+                        "summary":  "PWA standalone mode detection adds oha-in-pwa class; safe-area-inset-bottom applied to pill bar",
+                        "notes":  "Uses display-mode: standalone + navigator.standalone. Forward-compatible hook for future app shell."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "2.20.0",
+                        "type":  "feature",
+                        "summary":  "Member discount badge on map cards reads existing discount plugin meta via batch SQL query",
+                        "notes":  "get_discount_map() does one query for all listing IDs. Date range aware. Shows rate if available."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "2.20.0",
+                        "type":  "feature",
+                        "summary":  "GeoDirectory claimed field exposed on map cards as Verified Listing badge",
+                        "notes":  "claimed is a native GD column in SELECT pd.* - zero extra query cost."
                     }
                 ]
 }

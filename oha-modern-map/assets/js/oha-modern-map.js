@@ -85,10 +85,27 @@
                     $wrapper.find(`.oha-pill[data-region="${urlRegion}"]`).addClass('active');
                 }
 
+                this.detectContext($wrapper);
+                this.setMobileHeight($wrapper);
                 this.initMap($wrapper, mapId);
                 this.initControls($wrapper, mapId);
                 this.initBottomSheet($wrapper);
             });
+
+            // Re-measure height when viewport changes (orientation, browser bar hide/show)
+            const resizeAll = () => {
+                clearTimeout(this._heightResizeTimer);
+                this._heightResizeTimer = setTimeout(() => {
+                    $('.oha-map-wrapper').each((i, el) => {
+                        this.setMobileHeight($(el));
+                    });
+                }, 120);
+            };
+            $(window).on('resize.oha-map orientationchange.oha-map', resizeAll);
+            // visualViewport fires when iOS Safari URL bar hides/shows
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', resizeAll);
+            }
         },
 
         // ---------------------------------------------------------------
@@ -824,6 +841,9 @@
                         charity_type:   listing.charity_type    || '',
                         charity_name:   listing.charity_name    || '',
                         donation_url:   listing.donation_url    || '',
+                        has_discount:   listing.has_discount    ? 'yes' : 'no',
+                        discount_rate:  listing.discount_rate   || '',
+                        claimed:        listing.claimed         ? 'yes' : 'no',
                     },
                 };
             });
@@ -1001,6 +1021,13 @@
             if (props.charity_type) {
                 const cc = props.charity_type === 'Charity Haunt' ? 'charity-haunt' : 'supports-charity';
                 badgesHtml.push(`<span class="oha-badge oha-badge-charity oha-badge-${cc}">${this.escHtml(props.charity_type)}</span>`);
+            }
+            if (props.has_discount === 'yes') {
+                const rateText = props.discount_rate ? ` - ${this.escHtml(props.discount_rate)}` : '';
+                badgesHtml.push(`<span class="oha-badge oha-badge-discount">Member Discount${rateText}</span>`);
+            }
+            if (props.claimed === 'yes') {
+                badgesHtml.push(`<span class="oha-badge oha-badge-verified">Verified Listing</span>`);
             }
             if (badgesHtml.length) {
                 html += `<div class="oha-popup-badges">${badgesHtml.join('')}</div>`;
@@ -1415,6 +1442,8 @@
                     <div class="oha-panel-card-header">
                         <span class="oha-badge oha-badge-${this.escHtml(listing.type)}">${this.escHtml(typeLabel)}</span>
                         ${listing.fear_level ? `<span class="oha-badge oha-badge-fear oha-fear-${this.getFearLevelClass(listing.fear_level)}">${this.escHtml(listing.fear_level)}</span>` : ''}
+                        ${listing.has_discount ? `<span class="oha-badge oha-badge-discount oha-badge-sm">Discount</span>` : ''}
+                        ${listing.claimed     ? `<span class="oha-badge oha-badge-verified oha-badge-sm">Verified</span>` : ''}
                         ${distHtml}
                         <button class="oha-panel-fav-btn${favClass}" data-id="${parseInt(listing.id, 10)}" title="Save to favorites"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
                     </div>
@@ -1479,6 +1508,46 @@
             const eventsEnabled = !!(ohaMapSettings && ohaMapSettings.eventsEnabled);
             if (!eventsEnabled) {
                 $wrapper.find('.oha-layer-btn[data-layer="events"]').closest('.oha-filter-layers').hide();
+            }
+        },
+
+        // ---------------------------------------------------------------
+        // Context Detection + Mobile Height
+        // ---------------------------------------------------------------
+
+        /**
+         * Detect PWA standalone mode and tag the wrapper.
+         * CSS uses .oha-in-pwa to remove widget chrome (border-radius, box-shadow)
+         * and apply safe-area insets. Forward-compatible with the combined OHA app shell.
+         */
+        detectContext($wrapper) {
+            const isPwa = window.matchMedia('(display-mode: standalone)').matches ||
+                          (typeof window.navigator.standalone === 'boolean' && window.navigator.standalone);
+            if (isPwa) {
+                $wrapper.addClass('oha-in-pwa');
+            }
+        },
+
+        /**
+         * Set the map container height to fill from the top of the wrapper to the
+         * bottom of the viewport. This works in any browser (accounts for URL bars,
+         * theme headers, admin bar, etc.) and in PWA standalone mode without magic numbers.
+         * Only applies on screens ≤767px; desktop uses the shortcode height attribute.
+         */
+        setMobileHeight($wrapper) {
+            if (window.innerWidth > 767) return;
+
+            const $container = $wrapper.find('.oha-map-container');
+            if (!$container.length) return;
+
+            const rect    = $wrapper[0].getBoundingClientRect();
+            const height  = Math.max(Math.floor(window.innerHeight - rect.top), 320);
+            $container.css('height', height + 'px');
+
+            // Notify MapLibre of the size change if the map is already initialised
+            const mapId = $wrapper.attr('id');
+            if (mapId && this.maps[mapId]) {
+                this.maps[mapId].resize();
             }
         },
 

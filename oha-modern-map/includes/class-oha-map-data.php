@@ -122,6 +122,29 @@ class OHA_Map_Data {
     }
 
     /**
+     * Batch-load discount meta for a list of listing post IDs.
+     * Returns array keyed by post_id => ['_oha_disc_active' => ..., ...].
+     *
+     * @param  int[]  $post_ids
+     * @return array
+     */
+    private static function get_discount_map(array $post_ids) {
+        if (empty($post_ids)) return [];
+        global $wpdb;
+        $ids_placeholder = implode(',', array_map('intval', $post_ids));
+        $rows = $wpdb->get_results(
+            "SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta}
+             WHERE post_id IN ({$ids_placeholder})
+             AND meta_key IN ('_oha_disc_active', '_oha_disc_rate', '_oha_disc_start', '_oha_disc_end')"
+        );
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row->post_id][$row->meta_key] = $row->meta_value;
+        }
+        return $map;
+    }
+
+    /**
      * Get listings from GeoDirectory via a single JOIN query.
      *
      * Uses SELECT pd.* so the query never fails due to non-standard optional column
@@ -172,6 +195,11 @@ class OHA_Map_Data {
         $cat_ids      = array_column($rows, 'default_category');
         $cat_icon_map = self::get_gd_cat_icons($cat_ids);
 
+        // Pre-load discount meta in a single batch query
+        $post_ids     = array_column($rows, 'ID');
+        $discount_map = self::get_discount_map($post_ids);
+
+        $today       = date('Y-m-d');
         $region_data = $region ? OHA_Map_Regions::get_region($region) : null;
         $listings    = [];
 
@@ -197,6 +225,16 @@ class OHA_Map_Data {
             $phone   = !empty($row->{$phone_field})   ? $row->{$phone_field}   : '';
             $email   = !empty($row->{$email_field})   ? $row->{$email_field}   : '';
             $website = !empty($row->{$website_field}) ? $row->{$website_field} : '';
+
+            // Discount: active flag + optional date range
+            $disc        = $discount_map[$row->ID] ?? [];
+            $disc_active = ($disc['_oha_disc_active'] ?? '') === '1';
+            if ($disc_active) {
+                $d_start = $disc['_oha_disc_start'] ?? '';
+                $d_end   = $disc['_oha_disc_end']   ?? '';
+                if (!empty($d_start) && $today < $d_start) $disc_active = false;
+                if (!empty($d_end)   && $today > $d_end)   $disc_active = false;
+            }
 
             // GD category icon — used by JS as fallback when no Modern Map custom icon is set
             $gd_icon_url = !empty($row->default_category) && isset($cat_icon_map[(int) $row->default_category])
@@ -229,6 +267,9 @@ class OHA_Map_Data {
                 'charity_type'         => !empty($row->charity_type)          ? sanitize_text_field($row->charity_type)          : '',
                 'charity_name'         => !empty($row->charity_name)          ? sanitize_text_field($row->charity_name)          : '',
                 'donation_url'         => !empty($row->donation_url)          ? esc_url_raw($row->donation_url)                  : '',
+                'has_discount'         => $disc_active,
+                'discount_rate'        => $disc_active ? sanitize_text_field($disc['_oha_disc_rate'] ?? '') : '',
+                'claimed'              => !empty($row->claimed) && (int) $row->claimed === 1,
             ];
         }
 

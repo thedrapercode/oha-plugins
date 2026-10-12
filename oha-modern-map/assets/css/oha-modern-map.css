@@ -289,7 +289,6 @@
     background:      rgba(0, 0, 0, 0.88);
     border:          1px solid var(--oha-border);
     border-radius:   var(--oha-radius-sm);
-    color:           var(--oha-text-primary, #f7fafc) !important;
     cursor:          pointer;
     display:         flex;
     align-items:     center;
@@ -298,18 +297,24 @@
     backdrop-filter: blur(6px);
 }
 
-.oha-map-control svg {
+/* Scoped to .oha-map-overlay-controls so specificity beats Kadence's
+   button[type="button"] global color rule regardless of stylesheet load order. */
+.oha-map-overlay-controls .oha-map-control {
+    color: var(--oha-text-primary, #f7fafc) !important;
+}
+
+.oha-map-overlay-controls .oha-map-control svg {
     width:   16px;
     height:  16px;
     display: block;
-    /* Kadence theme has a global SVG fill override — !important required */
     fill:    var(--oha-text-primary, #f7fafc) !important;
     color:   var(--oha-text-primary, #f7fafc) !important;
 }
-.oha-map-control svg path,
-.oha-map-control svg circle,
-.oha-map-control svg rect,
-.oha-map-control svg polygon {
+
+.oha-map-overlay-controls .oha-map-control svg path,
+.oha-map-overlay-controls .oha-map-control svg circle,
+.oha-map-overlay-controls .oha-map-control svg rect,
+.oha-map-overlay-controls .oha-map-control svg polygon {
     fill: var(--oha-text-primary, #f7fafc) !important;
 }
 
@@ -861,7 +866,7 @@
         height: 32px;
     }
 
-    .oha-map-control svg {
+    .oha-map-overlay-controls .oha-map-control svg {
         width:  14px;
         height: 14px;
         fill:   var(--oha-text-primary, #f7fafc) !important;
@@ -997,6 +1002,7 @@ body.oha-sheet-open {
     backdrop-filter: blur(8px);
     box-shadow:      0 4px 16px rgba(0, 0, 0, 0.5);
     transition:      background 0.2s, border-color 0.2s;
+    white-space:     nowrap;
 }
 
 .oha-mob-filter-pill:hover,
@@ -1133,9 +1139,11 @@ body.oha-sheet-open {
 
     .oha-map-controls { display: none !important; }
 
-    /* Sensible fixed height: tall enough for good viewing, doesn't overflow the page */
+    /* Height is set dynamically by JS (setMobileHeight) to fill viewport minus page chrome.
+       The inline style written by JS will always win over this fallback. */
     .oha-map-container {
-        height: 480px !important;
+        height: 60vh;
+        min-height: 320px;
     }
 }
 
@@ -1846,6 +1854,25 @@ body.oha-sheet-open {
 .oha-badge-charity-haunt     { background: #7b2d8b; color: #fff; }
 .oha-badge-supports-charity  { background: #1159af; color: #fff; }
 
+/* ── Member discount + verified listing badges ───────────────────────────── */
+.oha-badge-discount {
+    background:  rgba(19, 97, 46,  0.2);
+    color:       var(--global-palette11, #13612e);
+    border:      1px solid rgba(19, 97, 46, 0.45);
+    font-weight: 700;
+}
+.oha-badge-verified {
+    background:  rgba(17, 89, 175, 0.18);
+    color:       var(--global-palette12, #1159af);
+    border:      1px solid rgba(17, 89, 175, 0.35);
+    font-weight: 700;
+}
+.oha-badge-sm {
+    font-size:     0.65rem;
+    padding:       2px 6px;
+    border-radius: 8px;
+}
+
 /* ── Charity name info row ───────────────────────────────────────────────── */
 .oha-info-charity svg path {
     fill: #ad6edd !important;
@@ -1910,4 +1937,25 @@ body.oha-sheet-open {
 /* ── Accessible toggle in filter groups ─────────────────────────────────── */
 .oha-accessible-toggle {
     width: 100%;
+}
+
+/* ==========================================================================
+   PWA STANDALONE MODE (oha-in-pwa class added by JS when display-mode: standalone)
+   Removes widget chrome so the map fills the app shell edge-to-edge.
+   Forward-compatible with the future combined OHA app shell.
+   ========================================================================== */
+.oha-map-wrapper.oha-in-pwa {
+    border-radius: 0;
+    box-shadow:    none;
+}
+
+/* In PWA, respect device safe areas (notch / home indicator) */
+@media (max-width: 767px) {
+    .oha-map-wrapper.oha-in-pwa .oha-mob-map-pill-bar {
+        bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    }
+
+    .oha-map-wrapper.oha-in-pwa .oha-mob-filter-sheet {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
 }
