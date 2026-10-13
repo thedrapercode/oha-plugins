@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Board Hub — Awards Addon
  * Description: Haunt Awards capture via Kadence (free bridge), Board Hub review, bulk certificates, and owner downloads/print.
- * Version: 6.7.1
+ * Version: 6.8.0
  * Author: OHA
  * Text Domain: oha-awards
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('OHA_AWARDS_VER', '6.7.1');
+define('OHA_AWARDS_VER', '6.8.0');
 define('OHA_AWARDS_DIR', plugin_dir_path(__FILE__));
 define('OHA_AWARDS_URL', plugin_dir_url(__FILE__));
 
@@ -23,6 +23,7 @@ require_once OHA_AWARDS_DIR . 'includes/class-frontend-admin.php';
 require_once OHA_AWARDS_DIR . 'includes/class-bulk-certificates.php';
 require_once OHA_AWARDS_DIR . 'includes/class-email.php';
 require_once OHA_AWARDS_DIR . 'includes/class-frontend-form.php';
+require_once OHA_AWARDS_DIR . 'includes/class-campsite-form.php';
 require_once OHA_AWARDS_DIR . 'includes/class-awards-debug.php';
 require_once OHA_AWARDS_DIR . 'includes/class-stripe-stub.php';
 
@@ -37,7 +38,7 @@ function oha_awards_enqueue_assets() {
         global $post;
         if ($post) {
             $content = $post->post_content;
-            if (has_shortcode($content, 'oha_awards_submit') || has_shortcode($content, 'oha_awards_admin') || has_shortcode($content, 'oha_award_admin')) {
+            if (has_shortcode($content, 'oha_awards_submit') || has_shortcode($content, 'oha_campsite_award_submit') || has_shortcode($content, 'oha_awards_admin') || has_shortcode($content, 'oha_award_admin')) {
                 $load = true;
             }
         }
@@ -62,6 +63,7 @@ add_action('plugins_loaded', function() {
     OHA_Awards_Shortcodes::init();
     OHA_Awards_Front_Admin::init();
     OHA_Awards_Front_Submit::init();
+    OHA_Campsite_Awards_Front_Submit::init();
     OHA_Awards_Stripe_Stub::init();
 });
 

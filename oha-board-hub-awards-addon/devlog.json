@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.7.1",
+    "version":  "6.8.0",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -15,6 +15,48 @@
                         "type":  "fix",
                         "summary":  "No-submission message now includes the active award year for context",
                         "notes":  "Was: No award submission found. Now: No submissions found for the 2026 haunt award season."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "6.8.0",
+                        "type":  "feature",
+                        "summary":  "Added Most Outstanding Haunted Campsite award category with [oha_campsite_award_submit] shortcode",
+                        "notes":  "New class-campsite-form.php. Open to non-logged-in submitters. Fields: campground name, location, contact name/email, description, optional photo. Stamps _oha_award_type=campsite and _oha_award_year on every entry. Uses same CPT, status flow, year isolation, and cert workflow as actor awards."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "6.8.0",
+                        "type":  "feature",
+                        "summary":  "Campsite award has its own independent open/close, bypass token, and email settings in Awards \u003e Settings",
+                        "notes":  "is_submissions_open() now accepts a  param (actor or campsite). Campsite section added to register() with its own fields. Does not share toggle/date/token with actor award."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "6.8.0",
+                        "type":  "feature",
+                        "summary":  "Admin table now has Type column and Type filter (All / Haunt Actor / Campsite)",
+                        "notes":  "get_view_type() added. prepare_items() and export_csv() both respect type filter. Actor filter includes legacy entries with no _oha_award_type meta (NOT EXISTS OR actor). Column methods (haunt_name, owner, actor_name, character_name, reason) are all type-aware."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "6.8.0",
+                        "type":  "fix",
+                        "summary":  "CSV export now correctly reads the year filter",
+                        "notes":  "get_view_year() previously only checked  but the export form POSTs the year. Now checks  as fallback. Same fix applied to type filter via get_view_type()."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "6.8.0",
+                        "type":  "feature",
+                        "summary":  "Email templates are type-aware - campsite entries use campsite-specific templates and placeholders",
+                        "notes":  "build_replacements() adds {campground_name}, {contact_name}, {contact_email}, {location}, {award_type}. send_cert_ready, send_admin_notice, and send_submitter_confirm all check _oha_award_type and select the right template."
+                    },
+                    {
+                        "date":  "2026-10-12",
+                        "version":  "6.8.0",
+                        "type":  "change",
+                        "summary":  "Owner dashboard [oha_awards] shows type badge and type-appropriate fields per entry",
+                        "notes":  "Red badge for Haunt Actor, blue for Campsite. Campsite cards show campground name and location instead of actor name."
                     }
                 ]
 }

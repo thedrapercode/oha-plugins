@@ -48,22 +48,34 @@ class OHA_Awards_Settings {
      * Checks the global closed toggle, then the close date if set.
      * Pass the raw bypass token from the request to skip the check.
      */
-    public static function is_submissions_open($bypass_token = '') {
+    /**
+     * @param string $bypass_token  Value of ?oha_open= param from the request.
+     * @param string $type          'actor' (default) or 'campsite' — each category has its own settings.
+     */
+    public static function is_submissions_open($bypass_token = '', $type = 'actor') {
         $opts = get_option('oha_awards_settings', []);
 
+        if ($type === 'campsite') {
+            $stored_token = trim($opts['campsite_bypass_token'] ?? '');
+            $closed_flag  = !empty($opts['campsite_submissions_closed']);
+            $close_date   = trim($opts['campsite_close_date'] ?? '');
+        } else {
+            $stored_token = trim($opts['bypass_token'] ?? '');
+            $closed_flag  = !empty($opts['submissions_closed']);
+            $close_date   = trim($opts['close_date'] ?? '');
+        }
+
         // Bypass token check — if provided and matches, always open
-        $stored_token = trim($opts['bypass_token'] ?? '');
         if ($stored_token !== '' && $bypass_token !== '' && hash_equals($stored_token, $bypass_token)) {
             return true;
         }
 
         // Global closed toggle
-        if (!empty($opts['submissions_closed'])) {
+        if ($closed_flag) {
             return false;
         }
 
         // Auto-close by date
-        $close_date = trim($opts['close_date'] ?? '');
         if ($close_date !== '') {
             $close_ts = strtotime($close_date . ' 23:59:59');
             if ($close_ts && time() > $close_ts) {
@@ -93,6 +105,17 @@ class OHA_Awards_Settings {
                 $arr['email_submitter_body']    = wp_kses_post($arr['email_submitter_body'] ?? '');
                 $arr['email_admin_subject']     = sanitize_text_field($arr['email_admin_subject'] ?? '');
                 $arr['email_admin_body']        = wp_kses_post($arr['email_admin_body'] ?? '');
+                // Campsite award settings
+                $arr['campsite_submissions_closed']      = !empty($arr['campsite_submissions_closed']) ? 1 : 0;
+                $arr['campsite_close_date']              = sanitize_text_field($arr['campsite_close_date'] ?? '');
+                $arr['campsite_bypass_token']            = sanitize_text_field($arr['campsite_bypass_token'] ?? '');
+                $arr['campsite_notification_email']      = sanitize_email($arr['campsite_notification_email'] ?? '');
+                $arr['email_campsite_cert_subject']      = sanitize_text_field($arr['email_campsite_cert_subject'] ?? '');
+                $arr['email_campsite_cert_body']         = wp_kses_post($arr['email_campsite_cert_body'] ?? '');
+                $arr['email_campsite_admin_subject']     = sanitize_text_field($arr['email_campsite_admin_subject'] ?? '');
+                $arr['email_campsite_admin_body']        = wp_kses_post($arr['email_campsite_admin_body'] ?? '');
+                $arr['email_campsite_submitter_subject'] = sanitize_text_field($arr['email_campsite_submitter_subject'] ?? '');
+                $arr['email_campsite_submitter_body']    = wp_kses_post($arr['email_campsite_submitter_body'] ?? '');
                 return $arr;
             }
         ]);
@@ -110,6 +133,16 @@ class OHA_Awards_Settings {
         // Kadence field map kept for backwards compatibility
         add_settings_field('field_map','Legacy Field Map (optional)',[__CLASS__,'field_map'],'oha_awards','oha_awards_main');
         add_settings_field('listing_post_type','GeoDirectory Listing Post Type',[__CLASS__,'field_listing_pt'],'oha_awards','oha_awards_main');
+
+        // Campsite Award — separate section so each category can be managed independently
+        add_settings_section('oha_awards_campsite', 'Campsite Award Settings', function(){
+            echo '<p>Settings for the Most Outstanding Haunted Campsite award. These controls are independent of the Haunt Actor award above.</p>';
+        }, 'oha_awards');
+        add_settings_field('campsite_submissions_closed','Campsite Submissions Closed',[__CLASS__,'field_campsite_closed'],'oha_awards','oha_awards_campsite');
+        add_settings_field('campsite_close_date','Campsite Auto-Close Date',[__CLASS__,'field_campsite_close_date'],'oha_awards','oha_awards_campsite');
+        add_settings_field('campsite_bypass_token','Campsite Bypass Token',[__CLASS__,'field_campsite_bypass'],'oha_awards','oha_awards_campsite');
+        add_settings_field('campsite_notification_email','Campsite Notification Email',[__CLASS__,'field_campsite_email'],'oha_awards','oha_awards_campsite');
+        add_settings_field('email_campsite_cert_ready','Campsite Certificate Ready Email',[__CLASS__,'field_campsite_cert_email'],'oha_awards','oha_awards_campsite');
     }
 
     public static function render() {
@@ -209,6 +242,47 @@ class OHA_Awards_Settings {
         echo '<h4>Admin Email</h4>';
         echo '<p>Subject<br/><input type="text" name="oha_awards_settings[email_admin_subject]" value="'.$asub.'" class="regular-text" style="width:600px" /></p>';
         echo '<p>Body<br/><textarea name="oha_awards_settings[email_admin_body]" rows="6" class="large-text" style="max-width:800px">'.$abod.'</textarea></p>';
+    }
+
+    public static function field_campsite_closed() {
+        $opts    = get_option('oha_awards_settings', []);
+        $checked = !empty($opts['campsite_submissions_closed']) ? 'checked' : '';
+        echo '<label><input type="checkbox" name="oha_awards_settings[campsite_submissions_closed]" value="1" ' . $checked . ' /> Close campsite submissions immediately</label>';
+        echo '<p class="description">Check to stop accepting new campsite submissions. Uncheck to reopen.</p>';
+    }
+
+    public static function field_campsite_close_date() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_attr($opts['campsite_close_date'] ?? '');
+        echo '<input type="date" name="oha_awards_settings[campsite_close_date]" value="' . $val . '" />';
+        echo '<p class="description">Optional. Campsite submissions auto-close at the end of this date.</p>';
+    }
+
+    public static function field_campsite_bypass() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_attr($opts['campsite_bypass_token'] ?? '');
+        $url  = home_url('/') . '?oha_open=' . ($val ?: 'your-token-here');
+        echo '<input type="text" name="oha_awards_settings[campsite_bypass_token]" value="' . $val . '" class="regular-text" placeholder="e.g. ohacamp2026" />';
+        echo '<p class="description">Append <code>?oha_open=YOURTOKEN</code> to the campsite submission URL to allow submissions after closing.</p>';
+        if ($val) {
+            echo '<p class="description">Current bypass URL: <code>' . esc_html($url) . '</code></p>';
+        }
+    }
+
+    public static function field_campsite_email() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_attr($opts['campsite_notification_email'] ?? get_option('admin_email'));
+        echo '<input type="email" name="oha_awards_settings[campsite_notification_email]" value="' . $val . '" class="regular-text" />';
+        echo '<p class="description">Board notification email for new campsite submissions. Defaults to site admin email if blank.</p>';
+    }
+
+    public static function field_campsite_cert_email() {
+        $opts = get_option('oha_awards_settings', []);
+        $subj = esc_attr($opts['email_campsite_cert_subject'] ?? 'Your Haunted Campsite Award certificate is ready');
+        $body = esc_textarea($opts['email_campsite_cert_body'] ?? "Hi {contact_name},\n\nGreat news! Your Haunted Campsite Award certificate for {campground_name} is ready.\n\nYou can download it here: {dashboard_url}\n\nThank you for participating in the OHA Haunted Campsite Awards.");
+        echo '<p><strong>Placeholders:</strong> {entry_id}, {campground_name}, {contact_name}, {contact_email}, {location}, {dashboard_url}</p>';
+        echo '<p>Subject<br/><input type="text" name="oha_awards_settings[email_campsite_cert_subject]" value="' . $subj . '" class="regular-text" style="width:500px" /></p>';
+        echo '<p>Body<br/><textarea name="oha_awards_settings[email_campsite_cert_body]" rows="6" class="large-text" style="max-width:700px">' . $body . '</textarea></p>';
     }
 
     public static function field_map() {

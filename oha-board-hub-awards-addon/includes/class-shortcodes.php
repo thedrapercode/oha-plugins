@@ -51,20 +51,34 @@ class OHA_Awards_Shortcodes {
 
         echo '<div class="oha-awards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">';
         while($q->have_posts()){ $q->the_post();
-            $id           = get_the_ID();
-            $name         = esc_html(get_post_meta($id,'_oha_actor_name',true));
-            $raw_status   = (string) get_post_meta($id,'_oha_status',true);
-            $status_label = esc_html($status_labels[$raw_status] ?? ucwords(str_replace('_',' ',$raw_status)));
-            $low  = get_post_meta($id,'_oha_cert_lowres_id',true);
+            $id          = get_the_ID();
+            $award_type  = (string) get_post_meta($id, '_oha_award_type', true);
+            $is_campsite = ($award_type === 'campsite');
+            $raw_status  = (string) get_post_meta($id, '_oha_status', true);
+            $status_label = esc_html($status_labels[$raw_status] ?? ucwords(str_replace('_', ' ', $raw_status)));
+            $low  = get_post_meta($id, '_oha_cert_lowres_id', true);
             $lowu = $low ? esc_url(wp_get_attachment_url($low)) : '';
-            $print_requested = get_post_meta($id,'_oha_print_requested',true);
+            $print_requested = get_post_meta($id, '_oha_print_requested', true);
+
+            $type_badge = $is_campsite
+                ? '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;background:#1159af;color:#fff;margin-bottom:6px;">Campsite Award</span>'
+                : '<span style="display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;background:#ad3119;color:#fff;margin-bottom:6px;">Haunt Actor Award</span>';
+
+            if ($is_campsite) {
+                $display_name  = esc_html(get_post_meta($id, '_oha_campground_name', true) ?: get_the_title());
+                $detail_line   = '<strong>Location:</strong> ' . esc_html(get_post_meta($id, '_oha_location', true));
+            } else {
+                $display_name  = esc_html(get_the_title());
+                $detail_line   = '<strong>Actor:</strong> ' . esc_html(get_post_meta($id, '_oha_actor_name', true));
+            }
 
             echo '<div class="card" style="border:1px solid #e3e3e3;border-radius:12px;padding:12px;">';
-            echo '<h4 style="margin-top:0;">'.get_the_title().'</h4>';
-            echo '<p><strong>Actor:</strong> '.$name.'<br/><strong>Status:</strong> '.$status_label.'</p>';
+            echo $type_badge;
+            echo '<h4 style="margin-top:4px;">' . $display_name . '</h4>';
+            echo '<p>' . $detail_line . '<br/><strong>Status:</strong> ' . $status_label . '</p>';
             if ($raw_status === 'completed' && $lowu) {
-                echo '<p><a class="button" href="'.$lowu.'" download>Download Certificate (Free)</a></p>';
-                echo '<p><button class="button print-btn" data-entry="'.$id.'">Order Printed Copy ($10)</button></p>';
+                echo '<p><a class="button" href="' . $lowu . '" download>Download Certificate (Free)</a></p>';
+                echo '<p><button class="button print-btn" data-entry="' . $id . '">Order Printed Copy ($10)</button></p>';
                 if ($print_requested) echo '<p><em>Print ordered.</em></p>';
             } else {
                 echo '<p><em>Your certificate will appear here when completed.</em></p>';
