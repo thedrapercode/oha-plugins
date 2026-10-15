@@ -86,7 +86,10 @@ class OHA_Campsite_Awards_Front_Submit {
     }
 
     public static function handle_submit() {
-        check_admin_referer('oha_campsite_submit');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'oha_campsite_submit')) {
+            wp_safe_redirect(wp_get_referer() ?: home_url('/'));
+            exit;
+        }
 
         $campground_name = sanitize_text_field($_POST['campground_name'] ?? '');
         $location        = sanitize_text_field($_POST['location'] ?? '');
@@ -95,7 +98,9 @@ class OHA_Campsite_Awards_Front_Submit {
         $description     = wp_kses_post($_POST['description'] ?? '');
 
         if (!$campground_name || !$contact_name || !$contact_email || !$description) {
-            wp_die('Missing required fields. Please go back and complete the form.');
+            $back = wp_get_referer() ?: home_url('/');
+            wp_safe_redirect(add_query_arg('oha_campsite_error', '1', $back));
+            exit;
         }
 
         $user_id     = is_user_logged_in() ? get_current_user_id() : 0;

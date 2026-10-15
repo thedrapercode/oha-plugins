@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.8.0",
+    "version":  "6.8.1",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -57,6 +57,20 @@
                         "type":  "change",
                         "summary":  "Owner dashboard [oha_awards] shows type badge and type-appropriate fields per entry",
                         "notes":  "Red badge for Haunt Actor, blue for Campsite. Campsite cards show campground name and location instead of actor name."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.8.1",
+                        "type":  "fix",
+                        "summary":  "Replace check_admin_referer with wp_verify_nonce to prevent wp_die on nonce failure",
+                        "notes":  "check_admin_referer calls wp_die if nonce is missing or expired - bots/crawlers hitting admin-post.php triggered this and the error page got cached site-wide causing white screen. Now redirects back to referer or home_url on failure."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.8.1",
+                        "type":  "fix",
+                        "summary":  "Replace wp_die on missing required fields with redirect in campsite form handler",
+                        "notes":  "Avoids any wp_die call path in handle_submit - redirects with oha_campsite_error=1 param instead."
                     }
                 ]
 }
