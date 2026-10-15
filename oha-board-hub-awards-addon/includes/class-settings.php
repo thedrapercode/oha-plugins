@@ -116,6 +116,9 @@ class OHA_Awards_Settings {
                 $arr['email_campsite_admin_body']        = wp_kses_post($arr['email_campsite_admin_body'] ?? '');
                 $arr['email_campsite_submitter_subject'] = sanitize_text_field($arr['email_campsite_submitter_subject'] ?? '');
                 $arr['email_campsite_submitter_body']    = wp_kses_post($arr['email_campsite_submitter_body'] ?? '');
+                // Landing page text
+                $arr['actor_landing_text']    = wp_kses_post($arr['actor_landing_text'] ?? '');
+                $arr['campsite_landing_text'] = wp_kses_post($arr['campsite_landing_text'] ?? '');
                 return $arr;
             }
         ]);
@@ -130,6 +133,7 @@ class OHA_Awards_Settings {
         add_settings_field('notification_email','Notification Email',[__CLASS__,'field_email'],'oha_awards','oha_awards_main');
         add_settings_field('one_per_haunt','Enforce One Submission per Haunt',[__CLASS__,'field_one_per'],'oha_awards','oha_awards_main');
         add_settings_field('email_cert_ready','Certificate Ready Email',[__CLASS__,'field_cert_email'],'oha_awards','oha_awards_main');
+        add_settings_field('actor_landing_text','Actor Award Page Text',[__CLASS__,'field_actor_landing_text'],'oha_awards','oha_awards_main');
         // Kadence field map kept for backwards compatibility
         add_settings_field('field_map','Legacy Field Map (optional)',[__CLASS__,'field_map'],'oha_awards','oha_awards_main');
         add_settings_field('listing_post_type','GeoDirectory Listing Post Type',[__CLASS__,'field_listing_pt'],'oha_awards','oha_awards_main');
@@ -143,6 +147,7 @@ class OHA_Awards_Settings {
         add_settings_field('campsite_bypass_token','Campsite Bypass Token',[__CLASS__,'field_campsite_bypass'],'oha_awards','oha_awards_campsite');
         add_settings_field('campsite_notification_email','Campsite Notification Email',[__CLASS__,'field_campsite_email'],'oha_awards','oha_awards_campsite');
         add_settings_field('email_campsite_cert_ready','Campsite Certificate Ready Email',[__CLASS__,'field_campsite_cert_email'],'oha_awards','oha_awards_campsite');
+        add_settings_field('campsite_landing_text','Campsite Award Page Text',[__CLASS__,'field_campsite_landing_text'],'oha_awards','oha_awards_campsite');
     }
 
     public static function render() {
@@ -283,6 +288,22 @@ class OHA_Awards_Settings {
         echo '<p><strong>Placeholders:</strong> {entry_id}, {campground_name}, {contact_name}, {contact_email}, {location}, {dashboard_url}</p>';
         echo '<p>Subject<br/><input type="text" name="oha_awards_settings[email_campsite_cert_subject]" value="' . $subj . '" class="regular-text" style="width:500px" /></p>';
         echo '<p>Body<br/><textarea name="oha_awards_settings[email_campsite_cert_body]" rows="6" class="large-text" style="max-width:700px">' . $body . '</textarea></p>';
+    }
+
+    public static function field_actor_landing_text() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_textarea($opts['actor_landing_text'] ?? '');
+        $yr   = self::get_year();
+        echo '<textarea name="oha_awards_settings[actor_landing_text]" rows="10" class="large-text" style="max-width:800px;font-family:monospace;">' . $val . '</textarea>';
+        echo '<p class="description">Text shown above the actor award submission form (used by the [oha_awards_landing] shortcode). Use {year} as a placeholder for the active award year (currently ' . esc_html($yr) . '). Leave blank to use the built-in default text.</p>';
+    }
+
+    public static function field_campsite_landing_text() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_textarea($opts['campsite_landing_text'] ?? '');
+        $yr   = self::get_year();
+        echo '<textarea name="oha_awards_settings[campsite_landing_text]" rows="10" class="large-text" style="max-width:800px;font-family:monospace;">' . $val . '</textarea>';
+        echo '<p class="description">Text shown above the campsite award submission form (used by the [oha_awards_landing] shortcode). Use {year} as a placeholder for the active award year (currently ' . esc_html($yr) . '). Leave blank to use the built-in default text.</p>';
     }
 
     public static function field_map() {

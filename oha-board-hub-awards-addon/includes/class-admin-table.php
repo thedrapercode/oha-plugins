@@ -10,7 +10,6 @@ class OHA_Awards_Admin_Table extends WP_List_Table {
         add_action('admin_menu', [__CLASS__,'admin_page']);
         add_action('admin_post_oha_awards_set_status', [__CLASS__,'handle_set_status']);
         add_action('admin_post_oha_awards_export_csv', [__CLASS__,'export_csv']);
-        add_action('oha_awards_admin_sections', [__CLASS__,'render_bulk_section']);
     }
 
     public static function admin_page() {

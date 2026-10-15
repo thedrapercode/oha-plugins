@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.8.3",
+    "version":  "6.9.0",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -85,6 +85,20 @@
                         "type":  "fix",
                         "summary":  "Fix apostrophe in single-quoted string causing PHP syntax error in class-settings.php line 235",
                         "notes":  "Contraction inside single quotes: previous smart-quote fix converted curly apostrophe to straight quote, which terminated the PHP string early. Changed to double-quoted string and replaced contraction with We will, removed exclamation point per writing style rules."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.0",
+                        "type":  "feature",
+                        "summary":  "Add [oha_awards_landing] combined shortcode with two-card category chooser",
+                        "notes":  "New class-landing.php. Shows Haunt Actor and Campsite cards with open/closed state. ?award=actor or ?award=campsite switches to form view with back link. Cards use OHA Kadence palette vars and stack on mobile below 640px."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.0",
+                        "type":  "feature",
+                        "summary":  "Add editable landing page text for both award types in Awards Settings",
+                        "notes":  "New settings fields actor_landing_text and campsite_landing_text in their respective sections. {year} placeholder replaced with active award year at render time. Defaults to built-in text if left blank."
                     }
                 ]
 }
