@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.4",
+    "version":  "6.9.5",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -127,6 +127,13 @@
                         "type":  "change",
                         "summary":  "Replace \"Please log in\" text with embedded wp_login_form() on actor form and cert dashboard",
                         "notes":  "class-frontend-form.php: login_form_html() helper wraps wp_login_form() in .oha-awards-login + .oha-awards-form div; redirects back to same page after login. class-shortcodes.php: same treatment for [oha_awards] cert dashboard. must_login() now redirects to wp_login_url instead of wp_die. Added input[type=password] to CSS border rules and .oha-awards-login block styles including OHA red submit button."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.5",
+                        "type":  "fix",
+                        "summary":  "Add !important to form input border rules to override Kadence theme styles",
+                        "notes":  "Kadence theme has higher-specificity selectors (e.g. .entry-content input) that were overriding the white border. Added !important to border, border-radius, background, color, padding, box-sizing, width on .oha-awards-form inputs and textareas."
                     }
                 ]
 }

@@ -9,13 +9,13 @@
 .oha-awards-form input[type="file"],
 .oha-awards-form textarea,
 .oha-awards-form select {
-  border: 1px solid #ffffff;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.05);
-  color: var(--global-palette4, #f7fafc);
-  padding: 8px 10px;
-  box-sizing: border-box;
-  width: 100%;
+  border: 1px solid #ffffff !important;
+  border-radius: 4px !important;
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--global-palette4, #f7fafc) !important;
+  padding: 8px 10px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
 .oha-awards-form input[type="text"]:focus,
@@ -26,9 +26,9 @@
 .oha-awards-form input[type="password"]:focus,
 .oha-awards-form textarea:focus,
 .oha-awards-form select:focus {
-  border-color: #ffffff;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(255,255,255,0.12);
+  border-color: #ffffff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.12) !important;
 }
 
 .oha-awards-form input[type="file"] {
