@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.8.2",
+    "version":  "6.8.3",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -78,6 +78,13 @@
                         "type":  "fix",
                         "summary":  "Replace all smart/curly quotes with ASCII straight quotes in class-email.php and class-settings.php",
                         "notes":  "LLM generated code with Unicode curly quotes (U+2018/U+2019) instead of ASCII apostrophes - PHP cannot use these as string delimiters, causing fatal syntax error on activation. 155 in class-email.php, 1 in class-settings.php."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.8.3",
+                        "type":  "fix",
+                        "summary":  "Fix apostrophe in single-quoted string causing PHP syntax error in class-settings.php line 235",
+                        "notes":  "Contraction inside single quotes: previous smart-quote fix converted curly apostrophe to straight quote, which terminated the PHP string early. Changed to double-quoted string and replaced contraction with We will, removed exclamation point per writing style rules."
                     }
                 ]
 }
