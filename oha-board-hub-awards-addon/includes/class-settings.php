@@ -292,18 +292,28 @@ class OHA_Awards_Settings {
 
     public static function field_actor_landing_text() {
         $opts = get_option('oha_awards_settings', []);
-        $val  = esc_textarea($opts['actor_landing_text'] ?? '');
+        $val  = $opts['actor_landing_text'] ?? '';
         $yr   = self::get_year();
-        echo '<textarea name="oha_awards_settings[actor_landing_text]" rows="10" class="large-text" style="max-width:800px;font-family:monospace;">' . $val . '</textarea>';
-        echo '<p class="description">Text shown above the actor award submission form (used by the [oha_awards_landing] shortcode). Use {year} as a placeholder for the active award year (currently ' . esc_html($yr) . '). Leave blank to use the built-in default text.</p>';
+        wp_editor($val, 'oha_actor_landing_text', [
+            'textarea_name' => 'oha_awards_settings[actor_landing_text]',
+            'textarea_rows' => 12,
+            'media_buttons' => false,
+            'teeny'         => false,
+        ]);
+        echo '<p class="description">Text shown above the actor award submission form ([oha_awards_landing] shortcode). Use {year} for the active award year (currently ' . esc_html($yr) . '). Leave blank to use the built-in default.</p>';
     }
 
     public static function field_campsite_landing_text() {
         $opts = get_option('oha_awards_settings', []);
-        $val  = esc_textarea($opts['campsite_landing_text'] ?? '');
+        $val  = $opts['campsite_landing_text'] ?? '';
         $yr   = self::get_year();
-        echo '<textarea name="oha_awards_settings[campsite_landing_text]" rows="10" class="large-text" style="max-width:800px;font-family:monospace;">' . $val . '</textarea>';
-        echo '<p class="description">Text shown above the campsite award submission form (used by the [oha_awards_landing] shortcode). Use {year} as a placeholder for the active award year (currently ' . esc_html($yr) . '). Leave blank to use the built-in default text.</p>';
+        wp_editor($val, 'oha_campsite_landing_text', [
+            'textarea_name' => 'oha_awards_settings[campsite_landing_text]',
+            'textarea_rows' => 12,
+            'media_buttons' => false,
+            'teeny'         => false,
+        ]);
+        echo '<p class="description">Text shown above the campsite award submission form ([oha_awards_landing] shortcode). Use {year} for the active award year (currently ' . esc_html($yr) . '). Leave blank to use the built-in default.</p>';
     }
 
     public static function field_map() {

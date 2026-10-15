@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.0",
+    "version":  "6.9.1",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -99,6 +99,13 @@
                         "type":  "feature",
                         "summary":  "Add editable landing page text for both award types in Awards Settings",
                         "notes":  "New settings fields actor_landing_text and campsite_landing_text in their respective sections. {year} placeholder replaced with active award year at render time. Defaults to built-in text if left blank."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.1",
+                        "type":  "change",
+                        "summary":  "Replace plain textarea with wp_editor for actor and campsite landing text fields in settings",
+                        "notes":  "Gives TinyMCE visual editor for both page text fields. Save side already used wp_kses_post so HTML was always allowed; this just makes it editable visually. Render side uses wpautop(wp_kses_post()) which handles both plain text and editor HTML correctly."
                     }
                 ]
 }
