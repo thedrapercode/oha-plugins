@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.8.1",
+    "version":  "6.8.2",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -71,6 +71,13 @@
                         "type":  "fix",
                         "summary":  "Replace wp_die on missing required fields with redirect in campsite form handler",
                         "notes":  "Avoids any wp_die call path in handle_submit - redirects with oha_campsite_error=1 param instead."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.8.2",
+                        "type":  "fix",
+                        "summary":  "Replace all smart/curly quotes with ASCII straight quotes in class-email.php and class-settings.php",
+                        "notes":  "LLM generated code with Unicode curly quotes (U+2018/U+2019) instead of ASCII apostrophes - PHP cannot use these as string delimiters, causing fatal syntax error on activation. 155 in class-email.php, 1 in class-settings.php."
                     }
                 ]
 }

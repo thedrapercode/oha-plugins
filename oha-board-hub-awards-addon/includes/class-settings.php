@@ -232,7 +232,7 @@ class OHA_Awards_Settings {
     public static function field_emails() {
         $opts = get_option('oha_awards_settings', []);
         $esub = esc_attr($opts['email_submitter_subject'] ?? 'We received your Haunt Award submission');
-        $ebod = esc_textarea($opts['email_submitter_body'] ?? 'Thanks, {owner_name}!\n\nWe received your nomination for {actor_name} at {haunt_title}.\nEntry #{entry_id}\n\nWe’ll review it and notify you when the certificate is ready.\n\nView your awards: {dashboard_url}');
+        $ebod = esc_textarea($opts['email_submitter_body'] ?? 'Thanks, {owner_name}!\n\nWe received your nomination for {actor_name} at {haunt_title}.\nEntry #{entry_id}\n\nWe'll review it and notify you when the certificate is ready.\n\nView your awards: {dashboard_url}');
         $asub = esc_attr($opts['email_admin_subject'] ?? 'New Haunt Award Submission #{entry_id}');
         $abod = esc_textarea($opts['email_admin_body'] ?? 'A new award entry was submitted.\n\nEntry #{entry_id}\nActor: {actor_name}\nHaunt: {haunt_title}\nOwner: {owner_name} ({owner_email})\n\nView in admin: {admin_url}');
         echo '<p><strong>Placeholders:</strong> {entry_id}, {actor_name}, {character_name}, {reason}, {haunt_title}, {owner_name}, {owner_email}, {admin_url}, {dashboard_url}</p>';
