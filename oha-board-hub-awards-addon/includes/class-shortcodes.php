@@ -9,7 +9,14 @@ class OHA_Awards_Shortcodes {
     }
 
     public static function my_award($atts) {
-        if (!is_user_logged_in()) return '<p>Please log in.</p>';
+        if (!is_user_logged_in()) {
+            $redirect   = get_permalink() ?: home_url('/');
+            $login_form = wp_login_form(['echo' => false, 'redirect' => $redirect, 'remember' => true]);
+            return '<div class="oha-awards-login">'
+                . '<p>Log in to view your award submissions and download your certificate.</p>'
+                . '<div class="oha-awards-form">' . $login_form . '</div>'
+                . '</div>';
+        }
         $user_id = get_current_user_id();
         $atts    = shortcode_atts(['haunt_id' => 0], $atts);
         $year    = OHA_Awards_Settings::get_year();

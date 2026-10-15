@@ -11,7 +11,17 @@ class OHA_Awards_Front_Submit {
     }
 
     public static function must_login() {
-        wp_die('Please log in to submit.');
+        wp_safe_redirect(wp_login_url(wp_get_referer() ?: home_url('/')));
+        exit;
+    }
+
+    private static function login_form_html() {
+        $redirect   = get_permalink() ?: home_url('/');
+        $login_form = wp_login_form(['echo' => false, 'redirect' => $redirect, 'remember' => true]);
+        return '<div class="oha-awards-login">'
+            . '<p>You must be logged in as an OHA member to submit a Haunt Actor Award nomination. Log in below, then return to this page.</p>'
+            . '<div class="oha-awards-form">' . $login_form . '</div>'
+            . '</div>';
     }
 
     protected static function get_user_listings($user_id) {
@@ -64,7 +74,7 @@ class OHA_Awards_Front_Submit {
         if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
         if (function_exists('nocache_headers')) { nocache_headers(); }
 
-        if (!is_user_logged_in()) return '<p>Please log in.</p>';
+        if (!is_user_logged_in()) return self::login_form_html();
 
         // Submissions open check (bypass token via ?oha_open=TOKEN)
         $bypass = isset($_GET['oha_open']) ? sanitize_text_field($_GET['oha_open']) : '';

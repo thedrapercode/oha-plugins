@@ -5,6 +5,7 @@
 .oha-awards-form input[type="url"],
 .oha-awards-form input[type="number"],
 .oha-awards-form input[type="tel"],
+.oha-awards-form input[type="password"],
 .oha-awards-form input[type="file"],
 .oha-awards-form textarea,
 .oha-awards-form select {
@@ -22,6 +23,7 @@
 .oha-awards-form input[type="url"]:focus,
 .oha-awards-form input[type="number"]:focus,
 .oha-awards-form input[type="tel"]:focus,
+.oha-awards-form input[type="password"]:focus,
 .oha-awards-form textarea:focus,
 .oha-awards-form select:focus {
   border-color: #ffffff;
@@ -71,6 +73,16 @@
 .oha-awards-form #oha-haunt-results .oha-haunt-dropdown > div:hover {
   background: #222;
 }
+/* Login prompt block */
+.oha-awards-login { max-width:420px; }
+.oha-awards-login > p { color:var(--global-palette4,#f7fafc); margin-bottom:18px; }
+.oha-awards-login .oha-awards-form { padding:20px; background:var(--global-palette9,#000); border:1px solid rgba(173,49,25,0.45); border-radius:10px; }
+.oha-awards-login .oha-awards-form label { color:var(--global-palette4,#f7fafc); }
+.oha-awards-login .login-submit input[type="submit"],
+.oha-awards-login .login-submit .button { background:var(--global-palette1,#ad3119); color:#fff; border:none; border-radius:6px; padding:10px 24px; font-weight:600; cursor:pointer; width:100%; }
+.oha-awards-login .login-submit input[type="submit"]:hover,
+.oha-awards-login .login-submit .button:hover { background:var(--global-palette2,#ff0000); }
+
 /* Frontend success notice contrast fix */
 .oha-awards-form .notice.notice-success{color:#000!important;background:#f6fff7!important;border-left-color:#46b450!important}
 .oha-awards-form .notice.notice-success a{color:#c00!important;font-weight:700;text-decoration:none}

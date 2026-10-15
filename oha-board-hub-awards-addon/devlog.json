@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.3",
+    "version":  "6.9.4",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -120,6 +120,13 @@
                         "type":  "change",
                         "summary":  "Solid white input borders; fix campsite card text; add editable card descriptions in settings",
                         "notes":  "Changed border from rgba(255,255,255,0.55) to solid #ffffff. Default campsite card text updated to \"Submit your haunted campsite for recognition.\" New settings fields actor_card_text and campsite_card_text control the landing page card descriptions. Leave blank to use built-in defaults."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.4",
+                        "type":  "change",
+                        "summary":  "Replace \"Please log in\" text with embedded wp_login_form() on actor form and cert dashboard",
+                        "notes":  "class-frontend-form.php: login_form_html() helper wraps wp_login_form() in .oha-awards-login + .oha-awards-form div; redirects back to same page after login. class-shortcodes.php: same treatment for [oha_awards] cert dashboard. must_login() now redirects to wp_login_url instead of wp_die. Added input[type=password] to CSS border rules and .oha-awards-login block styles including OHA red submit button."
                     }
                 ]
 }
