@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.2",
+    "version":  "6.9.3",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -113,6 +113,13 @@
                         "type":  "change",
                         "summary":  "Add white border styles to all form inputs and textareas in oha-awards-form.css",
                         "notes":  "Scoped to .oha-awards-form. Semi-transparent white border (rgba 255,255,255,0.55), slightly brighter on focus with faint glow. Also adds label styling and box-sizing:border-box. Applies to both actor and campsite submission forms."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.3",
+                        "type":  "change",
+                        "summary":  "Solid white input borders; fix campsite card text; add editable card descriptions in settings",
+                        "notes":  "Changed border from rgba(255,255,255,0.55) to solid #ffffff. Default campsite card text updated to \"Submit your haunted campsite for recognition.\" New settings fields actor_card_text and campsite_card_text control the landing page card descriptions. Leave blank to use built-in defaults."
                     }
                 ]
 }

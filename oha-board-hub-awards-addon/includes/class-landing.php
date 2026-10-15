@@ -29,6 +29,12 @@ class OHA_Awards_Landing {
         $campsite_open = OHA_Awards_Settings::is_submissions_open('', 'campsite');
         $actor_url     = esc_url(add_query_arg('award', 'actor', $page_url));
         $campsite_url  = esc_url(add_query_arg('award', 'campsite', $page_url));
+        $actor_desc    = !empty($opts['actor_card_text'])
+            ? esc_html($opts['actor_card_text'])
+            : 'Recognize a member of your haunt staff who went above and beyond this season. Submitted by haunt owners on behalf of their performers.';
+        $campsite_desc = !empty($opts['campsite_card_text'])
+            ? esc_html($opts['campsite_card_text'])
+            : 'Submit your haunted campsite for recognition. Open to all campground operators - no OHA account required.';
         ob_start();
         ?>
         <style>
@@ -45,7 +51,7 @@ class OHA_Awards_Landing {
         <div class="oha-awards-choice">
             <div class="oha-awards-choice-card">
                 <h3>Haunt Actor Award</h3>
-                <p>Recognize a member of your haunt staff who went above and beyond this season. Submitted by haunt owners on behalf of their performers.</p>
+                <p><?php echo $actor_desc; ?></p>
                 <?php if ($actor_open): ?>
                     <a href="<?php echo $actor_url; ?>" class="oha-awards-choice-btn">Submit Actor Nomination</a>
                 <?php else: ?>
@@ -54,7 +60,7 @@ class OHA_Awards_Landing {
             </div>
             <div class="oha-awards-choice-card">
                 <h3>Campsite Award</h3>
-                <p>Submit your haunted campsite competition for recognition. Open to all campground operators - no OHA account required.</p>
+                <p><?php echo $campsite_desc; ?></p>
                 <?php if ($campsite_open): ?>
                     <a href="<?php echo $campsite_url; ?>" class="oha-awards-choice-btn">Submit Campsite Nomination</a>
                 <?php else: ?>
