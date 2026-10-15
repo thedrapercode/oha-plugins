@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.1",
+    "version":  "6.9.2",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -106,6 +106,13 @@
                         "type":  "change",
                         "summary":  "Replace plain textarea with wp_editor for actor and campsite landing text fields in settings",
                         "notes":  "Gives TinyMCE visual editor for both page text fields. Save side already used wp_kses_post so HTML was always allowed; this just makes it editable visually. Render side uses wpautop(wp_kses_post()) which handles both plain text and editor HTML correctly."
+                    },
+                    {
+                        "date":  "2026-10-14",
+                        "version":  "6.9.2",
+                        "type":  "change",
+                        "summary":  "Add white border styles to all form inputs and textareas in oha-awards-form.css",
+                        "notes":  "Scoped to .oha-awards-form. Semi-transparent white border (rgba 255,255,255,0.55), slightly brighter on focus with faint glow. Also adds label styling and box-sizing:border-box. Applies to both actor and campsite submission forms."
                     }
                 ]
 }

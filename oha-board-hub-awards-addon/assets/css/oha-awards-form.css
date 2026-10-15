@@ -1,3 +1,46 @@
+/* OHA Awards Form - field borders */
+
+.oha-awards-form input[type="text"],
+.oha-awards-form input[type="email"],
+.oha-awards-form input[type="url"],
+.oha-awards-form input[type="number"],
+.oha-awards-form input[type="tel"],
+.oha-awards-form input[type="file"],
+.oha-awards-form textarea,
+.oha-awards-form select {
+  border: 1px solid rgba(255,255,255,0.55);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  color: var(--global-palette4, #f7fafc);
+  padding: 8px 10px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.oha-awards-form input[type="text"]:focus,
+.oha-awards-form input[type="email"]:focus,
+.oha-awards-form input[type="url"]:focus,
+.oha-awards-form input[type="number"]:focus,
+.oha-awards-form input[type="tel"]:focus,
+.oha-awards-form textarea:focus,
+.oha-awards-form select:focus {
+  border-color: rgba(255,255,255,0.9);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.12);
+}
+
+.oha-awards-form input[type="file"] {
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.oha-awards-form label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--global-palette4, #f7fafc);
+  font-weight: 600;
+}
+
 /* OHA Awards Form - autocomplete dropdown fix */
 
 .oha-awards-form #oha-haunt-results {
