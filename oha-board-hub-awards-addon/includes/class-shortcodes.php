@@ -44,7 +44,7 @@ class OHA_Awards_Shortcodes {
         // Confirmation notice (10 min transient)
         $notice = get_transient('oha_awards_notice_' . $user_id);
         if ($notice) {
-            echo '<div class="notice notice-success" style="margin-bottom:12px;padding:8px;border-left:4px solid #46b450;background:#f6fff7;">' . esc_html($notice) . '</div>';
+            echo '<div class="notice notice-success" style="margin-bottom:12px;padding:8px;border-left:4px solid #46b450;background:#f6fff7;color:#1a5218;">' . esc_html($notice) . '</div>';
             delete_transient('oha_awards_notice_' . $user_id);
         }
 

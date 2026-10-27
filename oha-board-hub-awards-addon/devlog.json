@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.5",
+    "version":  "6.9.6",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -134,6 +134,34 @@
                         "type":  "fix",
                         "summary":  "Add !important to form input border rules to override Kadence theme styles",
                         "notes":  "Kadence theme has higher-specificity selectors (e.g. .entry-content input) that were overriding the white border. Added !important to border, border-radius, background, color, padding, box-sizing, width on .oha-awards-form inputs and textareas."
+                    },
+                    {
+                        "date":  "2026-10-27",
+                        "version":  "6.9.6",
+                        "type":  "fix",
+                        "summary":  "Broaden success notice selector so color applies outside .oha-awards-form wrapper",
+                        "notes":  "Notice in class-frontend-form.php renders before the form tag opens, so the old scoped selector never matched. New selector is .notice.notice-success (CSS only loads on awards pages via conditional enqueue)."
+                    },
+                    {
+                        "date":  "2026-10-27",
+                        "version":  "6.9.6",
+                        "type":  "fix",
+                        "summary":  "Add inline color to cert dashboard success notice for pages where form CSS is not loaded",
+                        "notes":  "oha-awards-form.css is not enqueued on [oha_awards] cert dashboard pages. Inline color:#1a5218 ensures readable dark green text without relying on external CSS."
+                    },
+                    {
+                        "date":  "2026-10-27",
+                        "version":  "6.9.6",
+                        "type":  "change",
+                        "summary":  "Login form inputs use white background and dark text on OHA dark background",
+                        "notes":  "wp_login_form() inputs inside .oha-awards-login were getting the dark theme styles from the global .oha-awards-form rule. New rule at .oha-awards-login .oha-awards-form overrides with white bg and dark text."
+                    },
+                    {
+                        "date":  "2026-10-27",
+                        "version":  "6.9.6",
+                        "type":  "change",
+                        "summary":  "Style nomination submit button with OHA red background and white text",
+                        "notes":  "button[type=submit] inside .oha-awards-form now gets --global-palette1 red background, white text, and red hover state. Targets both actor and campsite submission forms."
                     }
                 ]
 }

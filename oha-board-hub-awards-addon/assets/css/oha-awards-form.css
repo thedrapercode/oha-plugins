@@ -83,7 +83,33 @@
 .oha-awards-login .login-submit input[type="submit"]:hover,
 .oha-awards-login .login-submit .button:hover { background:var(--global-palette2,#ff0000); }
 
-/* Frontend success notice contrast fix */
-.oha-awards-form .notice.notice-success{color:#000!important;background:#f6fff7!important;border-left-color:#46b450!important}
-.oha-awards-form .notice.notice-success a{color:#c00!important;font-weight:700;text-decoration:none}
-.oha-awards-form .notice.notice-success a:hover{text-decoration:underline}
+/* Frontend success notice contrast fix — notice renders outside .oha-awards-form so selector is broad */
+.notice.notice-success{color:#1a5218!important;background:#f6fff7!important;border-left-color:#46b450!important}
+.notice.notice-success a{color:#c00!important;font-weight:700;text-decoration:none}
+.notice.notice-success a:hover{text-decoration:underline}
+
+/* Login form inputs — white box on dark background */
+.oha-awards-login .oha-awards-form input[type="text"],
+.oha-awards-login .oha-awards-form input[type="password"],
+.oha-awards-login .oha-awards-form input.input {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #ccc !important;
+}
+
+/* Nomination submit button */
+.oha-awards-form button[type="submit"].button-primary,
+.oha-awards-form button[type="submit"] {
+  background: var(--global-palette1, #ad3119) !important;
+  color: #fff !important;
+  border: 1px solid var(--global-palette1, #ad3119) !important;
+  padding: 10px 24px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+}
+.oha-awards-form button[type="submit"].button-primary:hover,
+.oha-awards-form button[type="submit"]:hover {
+  background: var(--global-palette2, #ff0000) !important;
+  border-color: var(--global-palette2, #ff0000) !important;
+}
