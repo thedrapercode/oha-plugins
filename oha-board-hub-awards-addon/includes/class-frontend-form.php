@@ -16,11 +16,20 @@ class OHA_Awards_Front_Submit {
     }
 
     private static function login_form_html() {
-        $redirect   = get_permalink() ?: home_url('/');
-        $login_form = wp_login_form(['echo' => false, 'redirect' => $redirect, 'remember' => true]);
+        $opts      = get_option('oha_awards_settings', []);
+        $shortcode = trim($opts['login_shortcode'] ?? '[uwp_login]');
+        if (!$shortcode) $shortcode = '[uwp_login]';
+
+        // Inject redirect_to so the user lands back on this page after login
+        $redirect = esc_url(get_permalink() ?: home_url('/'));
+        if (strpos($shortcode, 'redirect_to') === false) {
+            $shortcode = rtrim($shortcode, ']') . ' redirect_to="' . $redirect . '"]';
+        }
+
+        wp_enqueue_style('oha-awards-form', OHA_AWARDS_URL . 'assets/css/oha-awards-form.css', [], OHA_AWARDS_VER);
         return '<div class="oha-awards-login">'
-            . '<p>You must be logged in as an OHA member to submit a Haunt Actor Award nomination. Log in below, then return to this page.</p>'
-            . '<div class="oha-awards-form">' . $login_form . '</div>'
+            . '<p>You must be logged in as an OHA member to submit a Haunt Actor Award nomination.</p>'
+            . '<div class="oha-awards-form">' . do_shortcode($shortcode) . '</div>'
             . '</div>';
     }
 
@@ -93,6 +102,19 @@ class OHA_Awards_Front_Submit {
             $html = '';
         }
 
+        if (isset($_GET['oha_awards_error'])) {
+            $err_code = sanitize_key($_GET['oha_awards_error']);
+            $err_messages = [
+                'nonce'     => 'Your session expired. Please try submitting again.',
+                'fields'    => 'Please fill in all required fields.',
+                'duplicate' => 'An award nomination for this haunt has already been submitted this season.',
+                'save'      => 'Unable to save your submission. Please try again.',
+            ];
+            $html .= '<div class="notice notice-error" style="margin-bottom:12px;padding:8px;border-left:4px solid #dc3232;background:#fdecea;color:#8c1700;">'
+                . esc_html($err_messages[$err_code] ?? 'There was an error processing your submission. Please try again.')
+                . '</div>';
+        }
+
         $listings = self::get_user_listings($user_id);
         $default_haunt_id = 0;
         if (!empty($listings)) { $ids = array_keys($listings); $default_haunt_id = intval(reset($ids)); }
@@ -100,8 +122,13 @@ class OHA_Awards_Front_Submit {
             $html .= '<p><em>No listings found for your account. Please make sure your haunt listing is created and assigned to you.</em></p>';
         }
 
-        $action = esc_url(admin_url('admin-post.php'));
-        $nonce  = wp_create_nonce('oha_awards_front_submit');
+        $current_user = wp_get_current_user();
+        $default_name  = trim(($current_user->first_name ?? '') . ' ' . ($current_user->last_name ?? '')) ?: ($current_user->display_name ?? '');
+        $default_email = $current_user->user_email ?? '';
+
+        $action      = esc_url(admin_url('admin-post.php'));
+        $nonce       = wp_create_nonce('oha_awards_front_submit');
+        $current_url = esc_attr(get_permalink() ?: home_url('/'));
                 wp_enqueue_style('oha-awards-form', OHA_AWARDS_URL . 'assets/css/oha-awards-form.css', [], OHA_AWARDS_VER);
 ob_start();
         ?>
@@ -109,16 +136,17 @@ ob_start();
         <script>window.ohaAwardsDefaultHaunt = {id: <?php echo intval($default_haunt_id); ?>, text: <?php echo json_encode($listings[$default_haunt_id] ?? ''); ?>};</script>
         <?php endif; ?>
         <form method="post" action="<?php echo $action; ?>" enctype="multipart/form-data" class="oha-awards-form" style="max-width:900px;">
-            <input type="hidden" name="action" value="oha_awards_front_submit" />
-            <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce); ?>" />
+            <input type="hidden" name="action"      value="oha_awards_front_submit" />
+            <input type="hidden" name="_wpnonce"    value="<?php echo esc_attr($nonce); ?>" />
+            <input type="hidden" name="redirect_to" value="<?php echo $current_url; ?>" />
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                 <div>
                     <label>Your Name*</label>
-                    <input type="text" name="submitter_name" required class="regular-text" />
+                    <input type="text" name="submitter_name" required class="regular-text" value="<?php echo esc_attr($default_name); ?>" />
                 </div>
                 <div>
                     <label>Your Email*</label>
-                    <input type="email" name="submitter_email" required class="regular-text" />
+                    <input type="email" name="submitter_email" required class="regular-text" value="<?php echo esc_attr($default_email); ?>" />
                 </div>
             </div>
 
@@ -167,7 +195,7 @@ ob_start();
             <p style="margin-top:18px;">
                 <button class="button button-primary" type="submit">Submit Award Nomination</button>
             </p>
-        </form></div>
+        </form>
         <?php
         $html .= ob_get_clean();
         // Client-side 10MB guard
@@ -177,7 +205,11 @@ ob_start();
 
     public static function handle_submit() {
         if (!is_user_logged_in()) self::must_login();
-        check_admin_referer('oha_awards_front_submit');
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'oha_awards_front_submit')) {
+            $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+            wp_safe_redirect(add_query_arg('oha_awards_error', 'nonce', $back));
+            exit;
+        }
 
         $user_id = get_current_user_id();
         $submitter_name  = sanitize_text_field($_POST['submitter_name'] ?? '');
@@ -189,7 +221,9 @@ ob_start();
         $reason          = wp_kses_post($_POST['reason'] ?? '');
 
         if (!$submitter_name || !$submitter_email || !$actor_name || (!$haunt_id && !$haunt_name_free) || !$reason) {
-            wp_die('Missing required fields.');
+            $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+            wp_safe_redirect(add_query_arg('oha_awards_error', 'fields', $back));
+            exit;
         }
 
         // Ownership check: allow non-owners (we will file a GD claim later if needed)
@@ -293,8 +327,8 @@ ob_start();
                 ],
             ]);
             if ($q->have_posts()) {
-                set_transient('oha_awards_notice_' . $user_id, 'You have already submitted an award entry for this haunt.', 60*10);
-                wp_redirect(wp_get_referer() ?: home_url('/'));
+                $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+                wp_safe_redirect(add_query_arg('oha_awards_error', 'duplicate', $back));
                 exit;
             }
         }
@@ -321,7 +355,9 @@ ob_start();
         ]);
 
         if (is_wp_error($post_id) || !$post_id) {
-            wp_die('Unable to save submission.');
+            $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+            wp_safe_redirect(add_query_arg('oha_awards_error', 'save', $back));
+            exit;
         }
 
         // Log

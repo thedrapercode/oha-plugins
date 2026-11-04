@@ -83,8 +83,9 @@
 .oha-awards-login .login-submit input[type="submit"]:hover,
 .oha-awards-login .login-submit .button:hover { background:var(--global-palette2,#ff0000); }
 
-/* Frontend success notice contrast fix — notice renders outside .oha-awards-form so selector is broad */
+/* Frontend success/error notice contrast fix — notices render outside .oha-awards-form so selectors are broad */
 .notice.notice-success{color:#1a5218!important;background:#f6fff7!important;border-left-color:#46b450!important}
+.notice.notice-error{color:#8c1700!important;background:#fdecea!important;border-left-color:#dc3232!important}
 .notice.notice-success a{color:#c00!important;font-weight:700;text-decoration:none}
 .notice.notice-success a:hover{text-decoration:underline}
 

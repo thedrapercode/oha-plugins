@@ -121,6 +121,7 @@ class OHA_Awards_Settings {
                 $arr['campsite_landing_text'] = wp_kses_post($arr['campsite_landing_text'] ?? '');
                 $arr['actor_card_text']       = sanitize_text_field($arr['actor_card_text'] ?? '');
                 $arr['campsite_card_text']    = sanitize_text_field($arr['campsite_card_text'] ?? '');
+                $arr['login_shortcode']       = sanitize_text_field($arr['login_shortcode'] ?? '[uwp_login]');
                 return $arr;
             }
         ]);
@@ -135,6 +136,7 @@ class OHA_Awards_Settings {
         add_settings_field('notification_email','Notification Email',[__CLASS__,'field_email'],'oha_awards','oha_awards_main');
         add_settings_field('one_per_haunt','Enforce One Submission per Haunt',[__CLASS__,'field_one_per'],'oha_awards','oha_awards_main');
         add_settings_field('email_cert_ready','Certificate Ready Email',[__CLASS__,'field_cert_email'],'oha_awards','oha_awards_main');
+        add_settings_field('login_shortcode','Login Form Shortcode',[__CLASS__,'field_login_shortcode'],'oha_awards','oha_awards_main');
         add_settings_field('actor_card_text','Actor Award Card Description',[__CLASS__,'field_actor_card_text'],'oha_awards','oha_awards_main');
         add_settings_field('actor_landing_text','Actor Award Page Text',[__CLASS__,'field_actor_landing_text'],'oha_awards','oha_awards_main');
         // Kadence field map kept for backwards compatibility
@@ -292,6 +294,13 @@ class OHA_Awards_Settings {
         echo '<p><strong>Placeholders:</strong> {entry_id}, {campground_name}, {contact_name}, {contact_email}, {location}, {dashboard_url}</p>';
         echo '<p>Subject<br/><input type="text" name="oha_awards_settings[email_campsite_cert_subject]" value="' . $subj . '" class="regular-text" style="width:500px" /></p>';
         echo '<p>Body<br/><textarea name="oha_awards_settings[email_campsite_cert_body]" rows="6" class="large-text" style="max-width:700px">' . $body . '</textarea></p>';
+    }
+
+    public static function field_login_shortcode() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_attr($opts['login_shortcode'] ?? '[uwp_login]');
+        echo '<input type="text" name="oha_awards_settings[login_shortcode]" value="' . $val . '" class="regular-text" />';
+        echo '<p class="description">Shortcode rendered as the login form for logged-out visitors on the actor award submission page. Include the full shortcode with brackets. Default: <code>[uwp_login]</code></p>';
     }
 
     public static function field_actor_card_text() {

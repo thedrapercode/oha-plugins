@@ -31,17 +31,30 @@ class OHA_Campsite_Awards_Front_Submit {
         $html = '';
         if ($notice) {
             $html .= '<div class="notice notice-success" style="margin-bottom:12px;padding:8px;border-left:4px solid #46b450;background:#f6fff7;">' . esc_html($notice) . '</div>';
+        } elseif (isset($_GET['oha_campsite_error'])) {
+            $err_code = sanitize_key($_GET['oha_campsite_error']);
+            $err_messages = [
+                '1'      => 'There was a problem processing your submission. Please try again.',
+                'nonce'  => 'Your session expired. Please try submitting again.',
+                'fields' => 'Please fill in all required fields.',
+                'save'   => 'Unable to save your submission. Please try again.',
+            ];
+            $html .= '<div class="notice notice-error" style="margin-bottom:12px;padding:8px;border-left:4px solid #dc3232;background:#fdecea;color:#8c1700;">'
+                . esc_html($err_messages[$err_code] ?? 'There was an error processing your submission. Please try again.')
+                . '</div>';
         }
 
-        $action = esc_url(admin_url('admin-post.php'));
-        $nonce  = wp_create_nonce('oha_campsite_submit');
+        $action      = esc_url(admin_url('admin-post.php'));
+        $nonce       = wp_create_nonce('oha_campsite_submit');
+        $current_url = esc_attr(get_permalink() ?: home_url('/'));
         wp_enqueue_style('oha-awards-form', OHA_AWARDS_URL . 'assets/css/oha-awards-form.css', [], OHA_AWARDS_VER);
 
         ob_start();
         ?>
         <form method="post" action="<?php echo $action; ?>" enctype="multipart/form-data" class="oha-awards-form" style="max-width:900px;">
-            <input type="hidden" name="action"   value="oha_campsite_submit" />
-            <input type="hidden" name="_wpnonce" value="<?php echo esc_attr($nonce); ?>" />
+            <input type="hidden" name="action"      value="oha_campsite_submit" />
+            <input type="hidden" name="_wpnonce"    value="<?php echo esc_attr($nonce); ?>" />
+            <input type="hidden" name="redirect_to" value="<?php echo $current_url; ?>" />
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                 <div>
@@ -87,7 +100,8 @@ class OHA_Campsite_Awards_Front_Submit {
 
     public static function handle_submit() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'oha_campsite_submit')) {
-            wp_safe_redirect(wp_get_referer() ?: home_url('/'));
+            $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+            wp_safe_redirect(add_query_arg('oha_campsite_error', 'nonce', $back));
             exit;
         }
 
@@ -98,8 +112,8 @@ class OHA_Campsite_Awards_Front_Submit {
         $description     = wp_kses_post($_POST['description'] ?? '');
 
         if (!$campground_name || !$contact_name || !$contact_email || !$description) {
-            $back = wp_get_referer() ?: home_url('/');
-            wp_safe_redirect(add_query_arg('oha_campsite_error', '1', $back));
+            $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+            wp_safe_redirect(add_query_arg('oha_campsite_error', 'fields', $back));
             exit;
         }
 
@@ -129,7 +143,9 @@ class OHA_Campsite_Awards_Front_Submit {
         }
 
         if (is_wp_error($post_id) || !$post_id) {
-            wp_die('Unable to save submission. Please try again.');
+            $back = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
+            wp_safe_redirect(add_query_arg('oha_campsite_error', 'save', $back));
+            exit;
         }
 
         OHA_Awards_Helpers::log_status($post_id, 'in_review', 'Campsite front-end form submission');
@@ -161,12 +177,11 @@ class OHA_Campsite_Awards_Front_Submit {
         OHA_Awards_Email::send_admin_notice($post_id);
         OHA_Awards_Email::send_submitter_confirm($post_id, $contact_email);
 
-        $redir = wp_get_referer() ?: home_url('/');
-        $sep   = (strpos($redir, '?') === false) ? '?' : '&';
+        $redir = !empty($_POST['redirect_to']) ? esc_url_raw($_POST['redirect_to']) : (wp_get_referer() ?: home_url('/'));
         if ($user_id) {
             set_transient('oha_campsite_notice_' . $user_id, 'Your campsite award submission has been received.', 600);
         }
-        wp_safe_redirect($redir . $sep . 'oha_campsite_success=1');
+        wp_safe_redirect(add_query_arg('oha_campsite_success', '1', $redir));
         exit;
     }
 }

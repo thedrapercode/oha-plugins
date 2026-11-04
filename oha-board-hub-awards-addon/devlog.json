@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.9.6",
+    "version":  "6.10.0",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -162,6 +162,48 @@
                         "type":  "change",
                         "summary":  "Style nomination submit button with OHA red background and white text",
                         "notes":  "button[type=submit] inside .oha-awards-form now gets --global-palette1 red background, white text, and red hover state. Targets both actor and campsite submission forms."
+                    },
+                    {
+                        "date":  "2026-11-04",
+                        "version":  "6.10.0",
+                        "type":  "fix",
+                        "summary":  "Fixed all silent-redirect-to-home failure modes on both actor and campsite award forms",
+                        "notes":  "Root causes: check_admin_referer wp_die on nonce fail, one_per_haunt using wp_get_referer which returned empty on some browsers/hosts. Added redirect_to hidden field to both forms. Added error display in both render() methods for nonce/fields/duplicate/save error codes."
+                    },
+                    {
+                        "date":  "2026-11-04",
+                        "version":  "6.10.0",
+                        "type":  "fix",
+                        "summary":  "Campsite form error GET param was never read in render(); all error codes now display a message",
+                        "notes":  "render() was redirecting with ?oha_campsite_error=1 but had no code to read and display it. Fixed by adding elseif block after the success notice check."
+                    },
+                    {
+                        "date":  "2026-11-04",
+                        "version":  "6.10.0",
+                        "type":  "fix",
+                        "summary":  "Replaced check_admin_referer() with wp_verify_nonce() on actor form handler",
+                        "notes":  "check_admin_referer calls wp_die on failure which could get cached and cause site-wide blank pages. Now redirects gracefully back to form with error code."
+                    },
+                    {
+                        "date":  "2026-11-04",
+                        "version":  "6.10.0",
+                        "type":  "feature",
+                        "summary":  "Login form uses configurable shortcode (default [uwp_login]) with auto redirect_to injection",
+                        "notes":  "wp_login_form() was not working on UWP sites because UWP ignores its redirect param. New setting login_shortcode in oha_awards_settings. redirect_to is injected into the shortcode automatically at render time so users return to the awards page after login."
+                    },
+                    {
+                        "date":  "2026-11-04",
+                        "version":  "6.10.0",
+                        "type":  "feature",
+                        "summary":  "Actor award form pre-fills submitter name and email from the logged-in users WP profile",
+                        "notes":  "Uses first_name + last_name, falls back to display_name. Email from user_email."
+                    },
+                    {
+                        "date":  "2026-11-04",
+                        "version":  "6.10.0",
+                        "type":  "fix",
+                        "summary":  "Added notice-error CSS rule; removed stray closing div after actor form; fixed campsite success redirect to use add_query_arg()",
+                        "notes":  "notice-error was missing from oha-awards-form.css so error messages had no styling. Stray \u003c/div\u003e after \u003c/form\u003e was closing an ancestor div in the page layout."
                     }
                 ]
 }
