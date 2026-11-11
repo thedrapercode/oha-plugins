@@ -1,0 +1,215 @@
+/* OHA Site PWA — UI Styles */
+
+/* ==========================================================================
+   Content Visibility Utilities
+   Use via "Additional CSS class(es)" on any Kadence block or section.
+   ========================================================================== */
+
+/* PWA standalone mode vs browser */
+html:not(.pwa-mode) .pwa-show { display: none !important; }
+.pwa-mode .pwa-hide           { display: none !important; }
+
+/* Offline state — useful on map, listings, virtual events pages */
+html:not(.pwa-offline) .offline-show { display: none !important; }
+.pwa-offline .offline-hide           { display: none !important; }
+
+/* Logged-in members — WordPress adds .logged-in to <body> automatically */
+body:not(.logged-in) .member-show { display: none !important; }
+body.logged-in .member-hide       { display: none !important; }
+
+/* Paid OHA members — requires is-oha-member PHP body class (oha_member_id meta) */
+body:not(.is-oha-member) .oha-member-show { display: none !important; }
+body.is-oha-member .oha-member-hide       { display: none !important; }
+
+/* Board members — requires is-board PHP body class (manage_options or edit_posts) */
+body:not(.is-board) .board-show { display: none !important; }
+body.is-board .board-hide       { display: none !important; }
+
+
+/* --- Update Banner --- */
+#oha-spwa-update-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: var(--global-palette9, #000);
+    color: var(--global-palette4, #f7fafc);
+    border-top: 2px solid var(--global-palette1, #ad3119);
+    font-size: .875rem;
+}
+
+#oha-spwa-update-banner span {
+    flex: 1;
+}
+
+#oha-spwa-update-btn {
+    background: var(--global-palette1, #ad3119);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: .4rem .9rem;
+    cursor: pointer;
+    font-size: .875rem;
+    white-space: nowrap;
+}
+
+#oha-spwa-update-btn:hover {
+    background: var(--global-palette2, #ff0000);
+}
+
+#oha-spwa-update-dismiss {
+    background: transparent;
+    border: none;
+    color: var(--global-palette6, #cbd2d9);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: .25rem;
+    line-height: 1;
+}
+
+/* --- Android Install Sheet --- */
+#oha-spwa-install-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .6);
+    z-index: 99998;
+}
+
+#oha-spwa-install-card {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: var(--global-palette9, #000);
+    border-top: 2px solid var(--global-palette1, #ad3119);
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem 1.25rem 2rem;
+    color: var(--global-palette4, #f7fafc);
+    animation: oha-slide-up .25s ease-out;
+}
+
+@keyframes oha-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+#oha-spwa-install-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .75rem;
+}
+
+#oha-spwa-install-header strong {
+    font-size: 1.1rem;
+    color: var(--global-palette3, #fff);
+}
+
+#oha-spwa-install-close {
+    background: transparent;
+    border: none;
+    color: var(--global-palette6, #cbd2d9);
+    cursor: pointer;
+    padding: .25rem;
+    line-height: 1;
+}
+
+#oha-spwa-install-body {
+    font-size: .9rem;
+    color: var(--global-palette6, #cbd2d9);
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+}
+
+#oha-spwa-install-actions {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+#oha-spwa-install-btn {
+    flex: 1;
+    background: var(--global-palette1, #ad3119);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .75rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 160px;
+}
+
+#oha-spwa-install-btn:hover {
+    background: var(--global-palette2, #ff0000);
+}
+
+#oha-spwa-install-later {
+    background: transparent;
+    border: 1px solid rgba(173, 49, 25, .45);
+    color: var(--global-palette6, #cbd2d9);
+    border-radius: 8px;
+    padding: .75rem 1.25rem;
+    font-size: .9rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#oha-spwa-install-later:hover {
+    border-color: var(--global-palette1, #ad3119);
+    color: var(--global-palette4, #f7fafc);
+}
+
+/* --- iOS Install Guide --- */
+#oha-spwa-ios-guide {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .875rem 1rem;
+    background: var(--global-palette9, #000);
+    color: var(--global-palette4, #f7fafc);
+    border-top: 2px solid var(--global-palette1, #ad3119);
+    font-size: .875rem;
+    line-height: 1.4;
+    animation: oha-slide-up .25s ease-out;
+}
+
+#oha-spwa-ios-guide span {
+    flex: 1;
+}
+
+#oha-spwa-ios-guide strong {
+    color: var(--global-palette3, #fff);
+}
+
+#oha-spwa-ios-arrow {
+    color: var(--global-palette7, #e76653);
+    flex-shrink: 0;
+    animation: oha-bounce .8s ease-in-out infinite alternate;
+}
+
+@keyframes oha-bounce {
+    from { transform: translateY(0); }
+    to   { transform: translateY(4px); }
+}
+
+#oha-spwa-ios-close {
+    background: transparent;
+    border: none;
+    color: var(--global-palette6, #cbd2d9);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: .25rem;
+    flex-shrink: 0;
+}
