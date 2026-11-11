@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub — Awards Addon
  * Description: Haunt Awards capture via Kadence (free bridge), Board Hub review, bulk certificates, and owner downloads/print.
- * Version: 6.10.0
+ * Version: 6.11.0
  * Author: OHA
  * Text Domain: oha-awards
  */

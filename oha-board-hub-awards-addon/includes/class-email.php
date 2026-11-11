@@ -88,7 +88,8 @@ class OHA_Awards_Email {
         $owner_email = $owner ? $owner->user_email : '';
         $haunt_title = $haunt_id ? get_the_title($haunt_id) : '';
         $admin_url     = admin_url('admin.php?page=oha-awards-submissions');
-        $dashboard_url = home_url('/');
+        $opts_dash     = get_option('oha_awards_settings', []);
+        $dashboard_url = !empty($opts_dash['dashboard_url']) ? esc_url($opts_dash['dashboard_url']) : home_url('/');
 
         // Campsite-specific fields
         $campground_name = get_post_meta($post_id, '_oha_campground_name', true);

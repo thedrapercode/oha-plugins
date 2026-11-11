@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-board-hub-awards-addon",
-    "version":  "6.10.0",
+    "version":  "6.11.0",
     "entries":  [
                     {
                         "date":  "2026-09-19",
@@ -204,6 +204,20 @@
                         "type":  "fix",
                         "summary":  "Added notice-error CSS rule; removed stray closing div after actor form; fixed campsite success redirect to use add_query_arg()",
                         "notes":  "notice-error was missing from oha-awards-form.css so error messages had no styling. Stray \u003c/div\u003e after \u003c/form\u003e was closing an ancestor div in the page layout."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "6.11.0",
+                        "type":  "feature",
+                        "summary":  "Add Awards Dashboard URL setting so {dashboard_url} in cert emails links to the [oha_my_award] page",
+                        "notes":  "New field in Awards Settings. Set this to the URL of the page containing [oha_my_award] shortcode so winners can log in and download their certificate."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "6.11.0",
+                        "type":  "fix",
+                        "summary":  "Fix {dashboard_url} in cert-ready emails resolving to homepage instead of the awards dashboard",
+                        "notes":  "build_replacements() in class-email.php was hardcoded to home_url(/). Now reads oha_awards_settings[dashboard_url] with home_url(/) as fallback."
                     }
                 ]
 }

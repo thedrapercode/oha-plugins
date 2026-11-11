@@ -122,6 +122,7 @@ class OHA_Awards_Settings {
                 $arr['actor_card_text']       = sanitize_text_field($arr['actor_card_text'] ?? '');
                 $arr['campsite_card_text']    = sanitize_text_field($arr['campsite_card_text'] ?? '');
                 $arr['login_shortcode']       = sanitize_text_field($arr['login_shortcode'] ?? '[uwp_login]');
+                $arr['dashboard_url']         = esc_url_raw($arr['dashboard_url'] ?? '');
                 return $arr;
             }
         ]);
@@ -136,6 +137,7 @@ class OHA_Awards_Settings {
         add_settings_field('notification_email','Notification Email',[__CLASS__,'field_email'],'oha_awards','oha_awards_main');
         add_settings_field('one_per_haunt','Enforce One Submission per Haunt',[__CLASS__,'field_one_per'],'oha_awards','oha_awards_main');
         add_settings_field('email_cert_ready','Certificate Ready Email',[__CLASS__,'field_cert_email'],'oha_awards','oha_awards_main');
+        add_settings_field('dashboard_url','Awards Dashboard URL',[__CLASS__,'field_dashboard_url'],'oha_awards','oha_awards_main');
         add_settings_field('login_shortcode','Login Form Shortcode',[__CLASS__,'field_login_shortcode'],'oha_awards','oha_awards_main');
         add_settings_field('actor_card_text','Actor Award Card Description',[__CLASS__,'field_actor_card_text'],'oha_awards','oha_awards_main');
         add_settings_field('actor_landing_text','Actor Award Page Text',[__CLASS__,'field_actor_landing_text'],'oha_awards','oha_awards_main');
@@ -294,6 +296,13 @@ class OHA_Awards_Settings {
         echo '<p><strong>Placeholders:</strong> {entry_id}, {campground_name}, {contact_name}, {contact_email}, {location}, {dashboard_url}</p>';
         echo '<p>Subject<br/><input type="text" name="oha_awards_settings[email_campsite_cert_subject]" value="' . $subj . '" class="regular-text" style="width:500px" /></p>';
         echo '<p>Body<br/><textarea name="oha_awards_settings[email_campsite_cert_body]" rows="6" class="large-text" style="max-width:700px">' . $body . '</textarea></p>';
+    }
+
+    public static function field_dashboard_url() {
+        $opts = get_option('oha_awards_settings', []);
+        $val  = esc_attr($opts['dashboard_url'] ?? '');
+        echo '<input type="url" name="oha_awards_settings[dashboard_url]" value="' . $val . '" class="regular-text" placeholder="https://ohiohaunters.com/my-award/" />';
+        echo '<p class="description">URL of the page containing <code>[oha_my_award]</code>. Used as <code>{dashboard_url}</code> in certificate-ready emails. Winners are sent here to log in and download their certificate.</p>';
     }
 
     public static function field_login_shortcode() {
