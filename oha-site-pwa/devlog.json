@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.2.1",
+    "version":  "1.3.0",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -64,6 +64,13 @@
                         "type":  "fix",
                         "summary":  "Add autocomplete attributes to UWP login form via JS for browser credential save and biometric autofill",
                         "notes":  "UWP AUI input renderer does not emit autocomplete attributes. Without autocomplete=username and autocomplete=current-password, Chrome and Safari cannot offer to save credentials or trigger Face ID / Touch ID. Fix: fixLoginAutocomplete() runs at DOMContentLoaded and via MutationObserver so it covers both inline forms and the lazily-loaded lightbox modal."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Notification permission prompt: slide-up banner with 30s delay, first-visit skip, defer/dismiss via localStorage",
+                        "notes":  "oha-pwa-notify.js: sets window.ohaSpwaPushReady callback (called by oha-pwa-init.js after OneSignal init). Checks Notification.permission, ohaPushSubscribed state, and first-visit flag before showing. Not Now defers 7 days; second Not Now dismisses permanently. Accept calls OneSignal.User.PushSubscription.optIn(). Banner output via wp_footer in notify_banner_html(); JS only enqueued when push is configured (app ID + push_enabled both set)."
                     }
                 ]
 }

@@ -13,6 +13,7 @@ class OHA_Site_PWA_Service_Worker {
     public function init() {
         add_action( 'wp_enqueue_scripts',   array( $this, 'enqueue' ) );
         add_action( 'wp_head',              array( $this, 'head_tags' ), 1 );
+        add_action( 'wp_footer',            array( $this, 'notify_banner_html' ) );
         add_action( 'admin_post_oha_spwa_save_settings', array( $this, 'on_settings_saved' ) );
         add_filter( 'body_class',           array( $this, 'body_classes' ) );
     }
@@ -160,12 +161,43 @@ class OHA_Site_PWA_Service_Worker {
             true
         );
 
+        // Notification prompt JS — only when push is configured
+        $push_app_id = get_option( 'oha_spwa_onesignal_app_id', '' );
+        if ( get_option( 'oha_spwa_push_enabled', '1' ) === '1' && $push_app_id ) {
+            wp_enqueue_script(
+                'oha-site-pwa-notify',
+                OHA_SITE_PWA_URL . 'assets/js/oha-pwa-notify.js',
+                array( 'oha-site-pwa-init' ),
+                OHA_SITE_PWA_VERSION,
+                true
+            );
+        }
+
         wp_enqueue_style(
             'oha-site-pwa',
             OHA_SITE_PWA_URL . 'assets/css/oha-pwa.css',
             array(),
             OHA_SITE_PWA_VERSION
         );
+    }
+
+    public function notify_banner_html() {
+        if ( is_admin() ) return;
+        if ( get_option( 'oha_spwa_push_enabled', '1' ) !== '1' ) return;
+        if ( ! get_option( 'oha_spwa_onesignal_app_id', '' ) ) return;
+        ?>
+        <div id="oha-notify-banner" aria-hidden="true">
+            <div id="oha-notify-header">
+                <strong>Stay informed</strong>
+                <button id="oha-notify-close" aria-label="Dismiss">&#x2715;</button>
+            </div>
+            <p id="oha-notify-body">Get alerts for haunt updates and OHA announcements.</p>
+            <div id="oha-notify-actions">
+                <button id="oha-notify-accept">Enable Notifications</button>
+                <button id="oha-notify-defer">Not Now</button>
+            </div>
+        </div>
+        <?php
     }
 
     public function head_tags() {

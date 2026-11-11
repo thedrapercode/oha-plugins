@@ -213,3 +213,92 @@ body.is-board .board-hide       { display: none !important; }
     padding: .25rem;
     flex-shrink: 0;
 }
+
+
+/* --- Notification Permission Banner --- */
+#oha-notify-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: var(--global-palette9, #000);
+    border-top: 2px solid var(--global-palette1, #ad3119);
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem 1.25rem 2rem;
+    color: var(--global-palette4, #f7fafc);
+    transform: translateY(100%);
+    transition: transform .25s ease-out;
+}
+
+#oha-notify-banner.oha-notify-visible {
+    transform: translateY(0);
+}
+
+#oha-notify-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .5rem;
+}
+
+#oha-notify-header strong {
+    font-size: 1.1rem;
+    color: var(--global-palette3, #fff);
+}
+
+#oha-notify-close {
+    background: transparent;
+    border: none;
+    color: var(--global-palette6, #cbd2d9);
+    cursor: pointer;
+    padding: .25rem;
+    line-height: 1;
+    font-size: 1rem;
+}
+
+#oha-notify-body {
+    font-size: .9rem;
+    color: var(--global-palette6, #cbd2d9);
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+}
+
+#oha-notify-actions {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+#oha-notify-accept {
+    flex: 1;
+    background: var(--global-palette1, #ad3119);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .75rem 1.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 160px;
+}
+
+#oha-notify-accept:hover {
+    background: var(--global-palette2, #ff0000);
+}
+
+#oha-notify-defer {
+    background: transparent;
+    border: 1px solid rgba(173, 49, 25, .45);
+    color: var(--global-palette6, #cbd2d9);
+    border-radius: 8px;
+    padding: .75rem 1.25rem;
+    font-size: .9rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#oha-notify-defer:hover {
+    border-color: var(--global-palette1, #ad3119);
+    color: var(--global-palette4, #f7fafc);
+}
