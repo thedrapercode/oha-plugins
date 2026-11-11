@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.4.0",
+    "version":  "1.5.0",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -85,6 +85,27 @@
                         "type":  "feature",
                         "summary":  "Floating pill bottom nav bar: Haunts, Events, Home (center elevated), Map, My OHA",
                         "notes":  "5-tab floating pill nav (position:fixed, border-radius:28px, overflow:visible for center pop-up). Center Home button elevated 14px with red rounded-square badge. Only visible in html.pwa-mode (standalone). Active tab highlighted in palette1 red via oha-pwa-nav.js path matching. Nav HTML output via nav_html() hooked to wp_footer with inline SVG icons. Added oha_spwa_nav_map_url WP option; settings Navigation Tabs section updated to match tab order. Body padding-bottom set for content clearance including safe-area-inset-bottom."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "PWA app header bar: hides Kadence header in standalone mode, shows site logo + hamburger",
+                        "notes":  "html.pwa-mode class toggled in head; body padding-top offset includes safe-area-inset-top"
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Slide-out navigation drawer tied to Appearances \u003e Menus PWA Navigation location",
+                        "notes":  "register_nav_menus adds pwa_navigation location; wp_nav_menu outputs it in drawer panel; drawer open/close via oha-pwa-nav.js"
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.5.0",
+                        "type":  "feature",
+                        "summary":  "Micro-interaction animations: icon pop on tab tap, drawer slide with cubic-bezier, center button press state",
+                        "notes":  "oha-icon-pop keyframe; oha-nav-tapped class added/removed on click via JS; center badge scale(0.92) on :active"
                     }
                 ]
 }

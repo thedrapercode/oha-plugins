@@ -13,10 +13,18 @@ class OHA_Site_PWA_Service_Worker {
     public function init() {
         add_action( 'wp_enqueue_scripts',   array( $this, 'enqueue' ) );
         add_action( 'wp_head',              array( $this, 'head_tags' ), 1 );
+        add_action( 'wp_footer',            array( $this, 'pwa_header_html' ) );
         add_action( 'wp_footer',            array( $this, 'notify_banner_html' ) );
         add_action( 'wp_footer',            array( $this, 'nav_html' ) );
+        add_action( 'after_setup_theme',    array( $this, 'register_menus' ) );
         add_action( 'admin_post_oha_spwa_save_settings', array( $this, 'on_settings_saved' ) );
         add_filter( 'body_class',           array( $this, 'body_classes' ) );
+    }
+
+    public function register_menus() {
+        register_nav_menus( array(
+            'pwa_navigation' => 'PWA Navigation',
+        ) );
     }
 
     // ------------------------------------------------------------------
@@ -188,6 +196,50 @@ class OHA_Site_PWA_Service_Worker {
             array(),
             OHA_SITE_PWA_VERSION
         );
+    }
+
+    public function pwa_header_html() {
+        if ( is_admin() ) return;
+
+        // Logo: use the site's custom logo if set, otherwise the app name from settings
+        if ( function_exists( 'has_custom_logo' ) && has_custom_logo() ) {
+            $logo = get_custom_logo();
+        } else {
+            $app_name = esc_html( get_option( 'oha_spwa_app_name', get_bloginfo( 'name' ) ) );
+            $logo = '<a href="' . esc_url( home_url( '/' ) ) . '" aria-label="' . $app_name . '">' . $app_name . '</a>';
+        }
+
+        $has_menu = has_nav_menu( 'pwa_navigation' );
+        ?>
+        <header id="oha-pwa-header">
+            <div id="oha-pwa-logo"><?php echo $logo; ?></div>
+            <?php if ( $has_menu ) : ?>
+            <button id="oha-pwa-menu-btn" aria-label="Open navigation menu" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <?php endif; ?>
+        </header>
+
+        <?php if ( $has_menu ) : ?>
+        <div id="oha-pwa-drawer-overlay" aria-hidden="true"></div>
+        <nav id="oha-pwa-drawer" aria-hidden="true" aria-label="Site navigation">
+            <div id="oha-pwa-drawer-head">
+                <button id="oha-pwa-drawer-close" aria-label="Close navigation">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <?php wp_nav_menu( array(
+                'theme_location' => 'pwa_navigation',
+                'menu_class'     => 'oha-pwa-drawer-menu',
+                'container'      => false,
+                'fallback_cb'    => false,
+            ) ); ?>
+        </nav>
+        <?php endif;
     }
 
     public function notify_banner_html() {
