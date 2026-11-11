@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.2.0",
+    "version":  "1.2.1",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -57,6 +57,13 @@
                         "type":  "feature",
                         "summary":  "Added Login section to admin settings: member redirect URL, owner redirect URL, session length",
                         "notes":  "Options: oha_spwa_member_redirect, oha_spwa_owner_redirect, oha_spwa_session_days. Used by role_redirect() in login class to decide where non-admin users land after login."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.2.1",
+                        "type":  "fix",
+                        "summary":  "Add autocomplete attributes to UWP login form via JS for browser credential save and biometric autofill",
+                        "notes":  "UWP AUI input renderer does not emit autocomplete attributes. Without autocomplete=username and autocomplete=current-password, Chrome and Safari cannot offer to save credentials or trigger Face ID / Touch ID. Fix: fixLoginAutocomplete() runs at DOMContentLoaded and via MutationObserver so it covers both inline forms and the lazily-loaded lightbox modal."
                     }
                 ]
 }

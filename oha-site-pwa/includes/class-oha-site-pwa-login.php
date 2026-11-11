@@ -166,6 +166,56 @@ class OHA_Site_PWA_Login {
         form.appendChild(inp);
     }, true); // capture phase: fires before jQuery submit handler
 
+    // --- Add autocomplete attributes for browser credential save + biometric autofill ---
+    // UWP's AUI input renderer does not add autocomplete attributes.
+    // Without them, browsers (Chrome, Safari) will not offer to save credentials
+    // or trigger Face ID / Touch ID autofill on subsequent visits.
+    function fixLoginAutocomplete(root) {
+        var forms = root.querySelectorAll ? root.querySelectorAll('form.uwp-login-form') : [];
+        // root itself may be the form (e.g. when MutationObserver sees it added)
+        if (!forms.length && root.classList && root.classList.contains('uwp-login-form')) {
+            forms = [root];
+        }
+        for (var i = 0; i < forms.length; i++) {
+            var form = forms[i];
+            var userInp = form.querySelector('input[name="user_login"]');
+            var passInp = form.querySelector('input[type="password"]');
+            if (userInp && !userInp.getAttribute('autocomplete')) {
+                userInp.setAttribute('autocomplete', 'username');
+            }
+            if (passInp && !passInp.getAttribute('autocomplete')) {
+                passInp.setAttribute('autocomplete', 'current-password');
+            }
+        }
+    }
+
+    // Apply to forms already in the DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() { fixLoginAutocomplete(document); });
+    } else {
+        fixLoginAutocomplete(document);
+    }
+
+    // Watch for the UWP lightbox being injected lazily
+    if (typeof MutationObserver !== 'undefined') {
+        var obs = new MutationObserver(function(mutations) {
+            for (var m = 0; m < mutations.length; m++) {
+                for (var n = 0; n < mutations[m].addedNodes.length; n++) {
+                    var node = mutations[m].addedNodes[n];
+                    if (node.nodeType !== 1) continue;
+                    fixLoginAutocomplete(node);
+                }
+            }
+        });
+        if (document.body) {
+            obs.observe(document.body, { childList: true, subtree: true });
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                obs.observe(document.body, { childList: true, subtree: true });
+            });
+        }
+    }
+
     // --- Clear SW page cache when user has just logged in ---
     // We write a session cookie (oha_pwa_s) server-side when logged-in.
     // On the client side we store the last-known user ID in sessionStorage.
