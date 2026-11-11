@@ -34,7 +34,7 @@ class OHA_Site_PWA_Settings {
             'oha_spwa_theme_color', 'oha_spwa_bg_color', 'oha_spwa_offline_url',
             'oha_spwa_onesignal_app_id',
             'oha_spwa_nav_home_url', 'oha_spwa_nav_listings_url',
-            'oha_spwa_nav_myoha_url', 'oha_spwa_nav_events_url', 'oha_spwa_nav_resources_url',
+            'oha_spwa_nav_myoha_url', 'oha_spwa_nav_events_url', 'oha_spwa_nav_map_url',
             'oha_spwa_member_redirect', 'oha_spwa_owner_redirect', 'oha_spwa_session_days',
         );
 
@@ -88,7 +88,7 @@ class OHA_Site_PWA_Settings {
         $nav_listings  = get_option( 'oha_spwa_nav_listings_url', '' );
         $nav_myoha     = get_option( 'oha_spwa_nav_myoha_url', '' );
         $nav_events    = get_option( 'oha_spwa_nav_events_url', '' );
-        $nav_resources = get_option( 'oha_spwa_nav_resources_url', '' );
+        $nav_map       = get_option( 'oha_spwa_nav_map_url', '' );
 
         $member_redirect  = get_option( 'oha_spwa_member_redirect', '' );
         $owner_redirect   = get_option( 'oha_spwa_owner_redirect', '' );
@@ -205,27 +205,28 @@ class OHA_Site_PWA_Settings {
                 </table>
 
                 <h2>Navigation Tabs</h2>
-                <p class="description" style="margin-bottom:.75rem;">URLs for the five-tab mobile nav (bottom bar shown when app is installed). Leave blank to hide a tab.</p>
+                <p class="description" style="margin-bottom:.75rem;">Tab order: Haunts | Events | Home (center, always shown) | Map | My OHA. Leave a URL blank to hide that tab.</p>
                 <table class="form-table" role="presentation">
                     <tr>
-                        <th><label for="oha_spwa_nav_home_url">Home</label></th>
-                        <td><input type="text" id="oha_spwa_nav_home_url" name="oha_spwa_nav_home_url" value="<?php echo esc_attr( $nav_home ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th><label for="oha_spwa_nav_listings_url">Haunt Listings</label></th>
-                        <td><input type="text" id="oha_spwa_nav_listings_url" name="oha_spwa_nav_listings_url" value="<?php echo esc_attr( $nav_listings ); ?>" class="regular-text"></td>
-                    </tr>
-                    <tr>
-                        <th><label for="oha_spwa_nav_myoha_url">My OHA</label></th>
-                        <td><input type="text" id="oha_spwa_nav_myoha_url" name="oha_spwa_nav_myoha_url" value="<?php echo esc_attr( $nav_myoha ); ?>" class="regular-text"></td>
+                        <th><label for="oha_spwa_nav_listings_url">Haunts</label></th>
+                        <td><input type="text" id="oha_spwa_nav_listings_url" name="oha_spwa_nav_listings_url" value="<?php echo esc_attr( $nav_listings ); ?>" class="regular-text" placeholder="/places/"></td>
                     </tr>
                     <tr>
                         <th><label for="oha_spwa_nav_events_url">Events</label></th>
-                        <td><input type="text" id="oha_spwa_nav_events_url" name="oha_spwa_nav_events_url" value="<?php echo esc_attr( $nav_events ); ?>" class="regular-text"></td>
+                        <td><input type="text" id="oha_spwa_nav_events_url" name="oha_spwa_nav_events_url" value="<?php echo esc_attr( $nav_events ); ?>" class="regular-text" placeholder="/events/"></td>
                     </tr>
                     <tr>
-                        <th><label for="oha_spwa_nav_resources_url">Resources</label></th>
-                        <td><input type="text" id="oha_spwa_nav_resources_url" name="oha_spwa_nav_resources_url" value="<?php echo esc_attr( $nav_resources ); ?>" class="regular-text"></td>
+                        <th><label for="oha_spwa_nav_home_url">Home (center, elevated)</label></th>
+                        <td><input type="text" id="oha_spwa_nav_home_url" name="oha_spwa_nav_home_url" value="<?php echo esc_attr( $nav_home ); ?>" class="regular-text">
+                        <p class="description">Defaults to site home if blank.</p></td>
+                    </tr>
+                    <tr>
+                        <th><label for="oha_spwa_nav_map_url">Map</label></th>
+                        <td><input type="text" id="oha_spwa_nav_map_url" name="oha_spwa_nav_map_url" value="<?php echo esc_attr( $nav_map ); ?>" class="regular-text" placeholder="/haunt-map/"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="oha_spwa_nav_myoha_url">My OHA</label></th>
+                        <td><input type="text" id="oha_spwa_nav_myoha_url" name="oha_spwa_nav_myoha_url" value="<?php echo esc_attr( $nav_myoha ); ?>" class="regular-text" placeholder="/my-oha/"></td>
                     </tr>
                 </table>
 

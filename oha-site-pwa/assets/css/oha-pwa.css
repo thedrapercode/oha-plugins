@@ -215,6 +215,85 @@ body.is-board .board-hide       { display: none !important; }
 }
 
 
+/* --- Bottom Navigation Bar --- */
+#oha-pwa-nav {
+    display: none;
+    position: fixed;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+    left: 1.25rem;
+    right: 1.25rem;
+    z-index: 9000;
+    height: 60px;
+    background: var(--global-palette9, #000);
+    border-radius: 28px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6), 0 1px 6px rgba(0, 0, 0, 0.3);
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 0.25rem;
+    overflow: visible;
+}
+
+html.pwa-mode #oha-pwa-nav {
+    display: flex;
+}
+
+html.pwa-mode body {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+}
+
+.oha-nav-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: var(--global-palette6, #cbd2d9);
+    text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .15s;
+}
+
+.oha-nav-tab svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+    pointer-events: none;
+}
+
+.oha-nav-tab.oha-nav-active {
+    color: var(--global-palette1, #ad3119);
+}
+
+/* Center elevated home button */
+.oha-nav-center {
+    position: relative;
+    bottom: 14px;
+    color: #fff !important;
+}
+
+.oha-nav-center-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background: var(--global-palette1, #ad3119);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(173, 49, 25, 0.5);
+    transition: background .15s, box-shadow .15s;
+}
+
+.oha-nav-center:hover .oha-nav-center-badge,
+.oha-nav-center:focus .oha-nav-center-badge {
+    background: var(--global-palette2, #ff0000);
+    box-shadow: 0 4px 16px rgba(255, 0, 0, 0.5);
+}
+
+.oha-nav-center.oha-nav-active .oha-nav-center-badge {
+    background: var(--global-palette2, #ff0000);
+}
+
+
 /* --- Notification Permission Banner --- */
 #oha-notify-banner {
     position: fixed;

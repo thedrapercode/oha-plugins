@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.3.1",
+    "version":  "1.4.0",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -78,6 +78,13 @@
                         "type":  "fix",
                         "summary":  "Skip notification prompt on iOS Safari browser — web push requires standalone mode on iOS",
                         "notes":  "Added iOS browser guard to canShow() in oha-pwa-notify.js. Without this, the banner appeared on iOS Safari browser and tapping Enable did nothing (iOS only supports web push for installed standalone PWAs). Fix: check /iP(hone|ad|od)/ userAgent + display-mode:standalone; if iOS and not standalone, return false and never show the prompt."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Floating pill bottom nav bar: Haunts, Events, Home (center elevated), Map, My OHA",
+                        "notes":  "5-tab floating pill nav (position:fixed, border-radius:28px, overflow:visible for center pop-up). Center Home button elevated 14px with red rounded-square badge. Only visible in html.pwa-mode (standalone). Active tab highlighted in palette1 red via oha-pwa-nav.js path matching. Nav HTML output via nav_html() hooked to wp_footer with inline SVG icons. Added oha_spwa_nav_map_url WP option; settings Navigation Tabs section updated to match tab order. Body padding-bottom set for content clearance including safe-area-inset-bottom."
                     }
                 ]
 }
