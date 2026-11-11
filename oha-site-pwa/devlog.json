@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.3.0",
+    "version":  "1.3.1",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -71,6 +71,13 @@
                         "type":  "feature",
                         "summary":  "Notification permission prompt: slide-up banner with 30s delay, first-visit skip, defer/dismiss via localStorage",
                         "notes":  "oha-pwa-notify.js: sets window.ohaSpwaPushReady callback (called by oha-pwa-init.js after OneSignal init). Checks Notification.permission, ohaPushSubscribed state, and first-visit flag before showing. Not Now defers 7 days; second Not Now dismisses permanently. Accept calls OneSignal.User.PushSubscription.optIn(). Banner output via wp_footer in notify_banner_html(); JS only enqueued when push is configured (app ID + push_enabled both set)."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.3.1",
+                        "type":  "fix",
+                        "summary":  "Skip notification prompt on iOS Safari browser — web push requires standalone mode on iOS",
+                        "notes":  "Added iOS browser guard to canShow() in oha-pwa-notify.js. Without this, the banner appeared on iOS Safari browser and tapping Enable did nothing (iOS only supports web push for installed standalone PWAs). Fix: check /iP(hone|ad|od)/ userAgent + display-mode:standalone; if iOS and not standalone, return false and never show the prompt."
                     }
                 ]
 }

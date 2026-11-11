@@ -15,6 +15,12 @@
     function canShow() {
         if (typeof Notification === 'undefined') return false;
 
+        // iOS only supports web push for installed (standalone) PWAs.
+        // In Safari browser mode, tapping Enable would trigger nothing — skip the prompt.
+        var isIos = /iP(hone|ad|od)/.test(navigator.userAgent);
+        var isStandalone = window.matchMedia('(display-mode:standalone)').matches || window.navigator.standalone === true;
+        if (isIos && !isStandalone) return false;
+
         // User has blocked notifications at the browser level — nothing we can do
         if (Notification.permission === 'denied') return false;
 
