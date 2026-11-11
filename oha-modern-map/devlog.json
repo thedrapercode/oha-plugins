@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.20.0",
+    "version":  "2.21.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -1184,6 +1184,13 @@
                         "type":  "feature",
                         "summary":  "GeoDirectory claimed field exposed on map cards as Verified Listing badge",
                         "notes":  "claimed is a native GD column in SELECT pd.* - zero extra query cost."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "2.21.0",
+                        "type":  "feature",
+                        "summary":  "Added nonce-free REST endpoint GET /oha/v1/map/listings for service worker caching of haunt pin data",
+                        "notes":  "Endpoint at /wp-json/oha/v1/map/listings, registered via rest_api_init. Returns same payload as ajax_get_listings but requires no nonce, so the site PWA SW can cache it with stale-while-revalidate. All data is already public on the map page."
                     }
                 ]
 }

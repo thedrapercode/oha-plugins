@@ -22,6 +22,30 @@ class OHA_Map_Data {
         add_action('wp_ajax_oha_get_ohio_counties',        [__CLASS__, 'ajax_get_ohio_counties']);
         add_action('wp_ajax_nopriv_oha_get_ohio_counties', [__CLASS__, 'ajax_get_ohio_counties']);
         add_action('wp_ajax_oha_clear_county_cache',       [__CLASS__, 'ajax_clear_county_cache']);
+        add_action('rest_api_init',                        [__CLASS__, 'register_rest_routes']);
+    }
+
+    /** REST: GET /wp-json/oha/v1/map/listings — nonce-free, cacheable by service worker. */
+    public static function register_rest_routes() {
+        register_rest_route('oha/v1', '/map/listings', [
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => [__CLASS__, 'rest_get_listings'],
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'region' => ['sanitize_callback' => 'sanitize_text_field', 'default' => ''],
+                'type'   => ['sanitize_callback' => 'sanitize_text_field', 'default' => ''],
+            ],
+        ]);
+    }
+
+    public static function rest_get_listings(WP_REST_Request $request) {
+        return rest_ensure_response([
+            'success' => true,
+            'data'    => self::get_listings(
+                $request->get_param('region'),
+                $request->get_param('type')
+            ),
+        ]);
     }
 
     public static function ajax_get_listings() {
