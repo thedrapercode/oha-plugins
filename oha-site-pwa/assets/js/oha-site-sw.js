@@ -173,5 +173,13 @@ self.addEventListener('fetch', function(event) {
 });
 
 self.addEventListener('message', function(event) {
-    if (event.data && event.data.action === 'SKIP_WAITING') self.skipWaiting();
+    if (!event.data) return;
+    if (event.data.action === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    // Sent by oha-site-pwa-login.php JS after detecting a new login.
+    // Drops the page cache so the user immediately sees logged-in content.
+    if (event.data.action === 'CLEAR_PAGE_CACHE') {
+        caches.delete(OHA_CACHE);
+    }
 });

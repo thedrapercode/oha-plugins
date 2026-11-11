@@ -1,41 +1,62 @@
 {
-    "plugin": "oha-site-pwa",
-    "version": "1.1.0",
-    "entries": [
-        {
-            "date": "2026-11-10",
-            "version": "1.0.0",
-            "type": "feature",
-            "summary": "Initial build: SW, manifest, OneSignal v16, install prompts, nonce endpoint, admin settings",
-            "notes": "Plugin skeleton, SW written to ABSPATH, manifest to ABSPATH, OneSignal v16 merged SW, Android/iOS install sheets, nonce refresh endpoint at /oha/v1/nonce, admin settings page"
-        },
-        {
-            "date": "2026-11-11",
-            "version": "1.1.0",
-            "type": "feature",
-            "summary": "Offline map strategy: MapTiler tile caching, Ohio overview tile pre-cache, stale-while-revalidate for map data and listing pages",
-            "notes": "SW intercepts api.maptiler.com (cache-first), /oha/v1/map/ REST endpoint (stale-while-revalidate), /places/ + /events/ pages (stale-while-revalidate). Ohio tiles z6-8 pre-fetched at SW install via OHIO_TILES injected by write_sw() using the MapTiler key from oha_map_maptiler option. Persistent caches: oha-tiles-v1, oha-map-data-v1."
-        },
-        {
-            "date": "2026-11-11",
-            "version": "1.1.0",
-            "type": "change",
-            "summary": "write_sw() now injects OHIO_TILES_JSON placeholder; on_settings_saved() rebuilds SW as well as manifest",
-            "notes": "on_settings_saved() now calls write_sw() in addition to write_manifest() so offline URL and tile list stay current when admin settings change."
-        },
-        {
-            "date": "2026-11-11",
-            "version": "1.1.0",
-            "type": "feature",
-            "summary": "Added body classes is-oha-member and is-board, inline head pwa-mode detection, offline class toggling in JS",
-            "notes": "PHP body_class filter adds is-oha-member (oha_member_id meta) and is-board (manage_options or edit_posts). Inline wp_head script adds pwa-mode class before CSS paints. oha-pwa-init.js toggles pwa-offline on online/offline events."
-        },
-        {
-            "date": "2026-11-11",
-            "version": "1.1.0",
-            "type": "feature",
-            "summary": "Added CSS visibility utility classes: pwa-show/hide, member-show/hide, oha-member-show/hide, board-show/hide, offline-show/hide",
-            "notes": "Classes target html.pwa-mode, body.logged-in (WP native), body.is-oha-member, body.is-board. Use via Kadence/Gutenberg Additional CSS class(es) on any block."
-        }
-    ]
+    "plugin":  "oha-site-pwa",
+    "version":  "1.2.0",
+    "entries":  [
+                    {
+                        "date":  "2026-11-10",
+                        "version":  "1.0.0",
+                        "type":  "feature",
+                        "summary":  "Initial build: SW, manifest, OneSignal v16, install prompts, nonce endpoint, admin settings",
+                        "notes":  "Plugin skeleton, SW written to ABSPATH, manifest to ABSPATH, OneSignal v16 merged SW, Android/iOS install sheets, nonce refresh endpoint at /oha/v1/nonce, admin settings page"
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Offline map strategy: MapTiler tile caching, Ohio overview tile pre-cache, stale-while-revalidate for map data and listing pages",
+                        "notes":  "SW intercepts api.maptiler.com (cache-first), /oha/v1/map/ REST endpoint (stale-while-revalidate), /places/ + /events/ pages (stale-while-revalidate). Ohio tiles z6-8 pre-fetched at SW install via OHIO_TILES injected by write_sw() using the MapTiler key from oha_map_maptiler option. Persistent caches: oha-tiles-v1, oha-map-data-v1."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.1.0",
+                        "type":  "change",
+                        "summary":  "write_sw() now injects OHIO_TILES_JSON placeholder; on_settings_saved() rebuilds SW as well as manifest",
+                        "notes":  "on_settings_saved() now calls write_sw() in addition to write_manifest() so offline URL and tile list stay current when admin settings change."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added body classes is-oha-member and is-board, inline head pwa-mode detection, offline class toggling in JS",
+                        "notes":  "PHP body_class filter adds is-oha-member (oha_member_id meta) and is-board (manage_options or edit_posts). Inline wp_head script adds pwa-mode class before CSS paints. oha-pwa-init.js toggles pwa-offline on online/offline events."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "Added CSS visibility utility classes: pwa-show/hide, member-show/hide, oha-member-show/hide, board-show/hide, offline-show/hide",
+                        "notes":  "Classes target html.pwa-mode, body.logged-in (WP native), body.is-oha-member, body.is-board. Use via Kadence/Gutenberg Additional CSS class(es) on any block."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Login reliability layer: uwp_login_redirect + login_redirect filters, 30-day sessions, JS redirect_to injection",
+                        "notes":  "class-oha-site-pwa-login.php: uwp_login_redirect filter overrides bad redirects (wp-admin, login page itself); login_redirect backup for direct wp-login.php access; auth_cookie_expiration extends to oha_spwa_session_days (default 30 days); JS injects redirect_to=current-URL into UWP modal form submits at capture phase - fixes PWA standalone mode where HTTP_REFERER is not sent so wp_get_referer() returns empty; oha_pwa_s cookie + sessionStorage used to detect new login and send CLEAR_PAGE_CACHE to SW."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "SW handles CLEAR_PAGE_CACHE message to drop page cache when user logs in",
+                        "notes":  "Added CLEAR_PAGE_CACHE branch in SW message handler. Sent by login JS when oha_pwa_s cookie user ID differs from sessionStorage value - indicates a fresh login this session."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Added Login section to admin settings: member redirect URL, owner redirect URL, session length",
+                        "notes":  "Options: oha_spwa_member_redirect, oha_spwa_owner_redirect, oha_spwa_session_days. Used by role_redirect() in login class to decide where non-admin users land after login."
+                    }
+                ]
 }

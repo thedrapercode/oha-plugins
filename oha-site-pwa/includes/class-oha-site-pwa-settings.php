@@ -35,6 +35,7 @@ class OHA_Site_PWA_Settings {
             'oha_spwa_onesignal_app_id',
             'oha_spwa_nav_home_url', 'oha_spwa_nav_listings_url',
             'oha_spwa_nav_myoha_url', 'oha_spwa_nav_events_url', 'oha_spwa_nav_resources_url',
+            'oha_spwa_member_redirect', 'oha_spwa_owner_redirect', 'oha_spwa_session_days',
         );
 
         foreach ( $text_fields as $key ) {
@@ -88,6 +89,10 @@ class OHA_Site_PWA_Settings {
         $nav_myoha     = get_option( 'oha_spwa_nav_myoha_url', '' );
         $nav_events    = get_option( 'oha_spwa_nav_events_url', '' );
         $nav_resources = get_option( 'oha_spwa_nav_resources_url', '' );
+
+        $member_redirect  = get_option( 'oha_spwa_member_redirect', '' );
+        $owner_redirect   = get_option( 'oha_spwa_owner_redirect', '' );
+        $session_days     = get_option( 'oha_spwa_session_days', '30' );
 
         $sw_exists       = file_exists( ABSPATH . 'oha-site-sw.js' );
         $manifest_exists = file_exists( ABSPATH . 'oha-site-manifest.json' );
@@ -153,6 +158,26 @@ class OHA_Site_PWA_Settings {
                         <th><label for="oha_spwa_offline_url">Offline Page URL</label></th>
                         <td><input type="text" id="oha_spwa_offline_url" name="oha_spwa_offline_url" value="<?php echo esc_attr( $offline_url ); ?>" class="regular-text">
                         <p class="description">Create a WordPress page at this path for a branded offline experience.</p></td>
+                    </tr>
+                </table>
+
+                <h2>Login</h2>
+                <p class="description" style="margin-bottom:.75rem;">Where users land after logging in. Leave blank to fall back to the home page. The modal login that works in-app handles the redirect automatically.</p>
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th><label for="oha_spwa_member_redirect">OHA Member Redirect</label></th>
+                        <td><input type="text" id="oha_spwa_member_redirect" name="oha_spwa_member_redirect" value="<?php echo esc_attr( $member_redirect ); ?>" class="regular-text" placeholder="/members/">
+                        <p class="description">Users with an OHA membership (oha_member_id). Example: <code>/members/</code></p></td>
+                    </tr>
+                    <tr>
+                        <th><label for="oha_spwa_owner_redirect">Haunt Owner Redirect</label></th>
+                        <td><input type="text" id="oha_spwa_owner_redirect" name="oha_spwa_owner_redirect" value="<?php echo esc_attr( $owner_redirect ); ?>" class="regular-text" placeholder="/my-listing/">
+                        <p class="description">Users with at least one GeoDirectory listing. Example: <code>/my-listing/</code></p></td>
+                    </tr>
+                    <tr>
+                        <th><label for="oha_spwa_session_days">Session Length (days)</label></th>
+                        <td><input type="number" id="oha_spwa_session_days" name="oha_spwa_session_days" value="<?php echo esc_attr( $session_days ); ?>" class="small-text" min="1" max="365"> days
+                        <p class="description">How long users stay logged in. Default 30. WordPress default without "Remember me" is 2 days.</p></td>
                     </tr>
                 </table>
 
