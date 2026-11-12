@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Site PWA
  * Description: Site-wide Progressive Web App for Ohio Haunters Association — push notifications, offline support, and app install experience.
- * Version: 1.7.0
+ * Version: 1.7.1
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_SITE_PWA_VERSION', '1.7.0' );
+define( 'OHA_SITE_PWA_VERSION', '1.7.1' );
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_spwa_check_for_update' );

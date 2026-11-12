@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.7.0",
+    "version":  "1.7.1",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -176,6 +176,20 @@
                         "type":  "fix",
                         "summary":  "Fixed OneSignal serviceWorkerPath using relative path causing 0 subscriber registrations on all non-root pages",
                         "notes":  "Changed oha-site-sw.js to /oha-site-sw.js in oha-pwa-init.js; relative path resolved to wrong URL on pages below root"
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.1",
+                        "type":  "feature",
+                        "summary":  "Notification Debug section in [oha_spwa_settings] for admin/board: SDK loaded, OneSignal ready, error, subscribed status",
+                        "notes":  "Polls ohaSpwaDebug object for 10 seconds after load to catch async init; Subscribe Now button calls optIn() directly"
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.1",
+                        "type":  "fix",
+                        "summary":  "OneSignal init errors now logged to console instead of silently swallowed",
+                        "notes":  "ohaSpwaDebug object exposed on window with swRegistered, oneSignalReady, oneSignalError, subscribed fields"
                     }
                 ]
 }

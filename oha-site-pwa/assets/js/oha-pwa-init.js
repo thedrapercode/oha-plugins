@@ -9,6 +9,8 @@
     if (!('serviceWorker' in navigator)) return;
     if (typeof ohaSpwaConfig === 'undefined') return;
 
+    window.ohaSpwaDebug = { swRegistered: false, oneSignalReady: false, oneSignalError: null, subscribed: null };
+
     // --- Service Worker Registration ---
 
     var swRegistration = null;
@@ -17,6 +19,7 @@
     navigator.serviceWorker.register(ohaSpwaConfig.swPath, { scope: ohaSpwaConfig.swScope })
         .then(function(reg) {
             swRegistration = reg;
+            window.ohaSpwaDebug.swRegistered = true;
 
             reg.addEventListener('updatefound', function() {
                 var newWorker = reg.installing;
@@ -69,13 +72,20 @@
         }).then(function() {
             OneSignal.User.PushSubscription.addEventListener('change', function(event) {
                 window.ohaPushSubscribed = event.current.optedIn;
+                window.ohaSpwaDebug.subscribed = event.current.optedIn;
             });
             window.ohaPushSubscribed = OneSignal.User.PushSubscription.optedIn;
+            window.ohaSpwaDebug.oneSignalReady = true;
+            window.ohaSpwaDebug.subscribed = window.ohaPushSubscribed;
 
             if (typeof window.ohaSpwaPushReady === 'function') {
                 window.ohaSpwaPushReady(OneSignal);
             }
-        }).catch(function() {});
+        }).catch(function(err) {
+            var msg = err ? (err.message || String(err)) : 'unknown error';
+            console.error('[OHA PWA] OneSignal init failed:', msg);
+            window.ohaSpwaDebug.oneSignalError = msg;
+        });
     });
 
 })();

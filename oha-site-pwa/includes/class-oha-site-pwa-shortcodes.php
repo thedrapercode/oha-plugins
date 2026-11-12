@@ -116,6 +116,111 @@ class OHA_Site_PWA_Shortcodes {
             </div>
         </div>
 
+        <?php if ( current_user_can( 'edit_posts' ) ) : ?>
+        <div class="oha-spwa-settings-section">
+            <h3>Notification Debug</h3>
+            <p class="oha-spwa-desc">Status of the push notification SDK on this device.</p>
+            <div class="oha-spwa-info-row">
+                <span class="oha-spwa-info-key">SDK loaded</span>
+                <span class="oha-spwa-info-val" id="oha-dbg-sdk">Checking...</span>
+            </div>
+            <div class="oha-spwa-info-row">
+                <span class="oha-spwa-info-key">OneSignal ready</span>
+                <span class="oha-spwa-info-val" id="oha-dbg-os">Checking...</span>
+            </div>
+            <div class="oha-spwa-info-row">
+                <span class="oha-spwa-info-key">Init error</span>
+                <span class="oha-spwa-info-val" id="oha-dbg-err" style="color:#ff8a80;word-break:break-all">None</span>
+            </div>
+            <div class="oha-spwa-info-row">
+                <span class="oha-spwa-info-key">SW registered</span>
+                <span class="oha-spwa-info-val" id="oha-dbg-sw">Checking...</span>
+            </div>
+            <div class="oha-spwa-info-row">
+                <span class="oha-spwa-info-key">Opted in (OneSignal)</span>
+                <span class="oha-spwa-info-val" id="oha-dbg-sub">Checking...</span>
+            </div>
+            <div class="oha-spwa-info-row">
+                <span class="oha-spwa-info-key">Browser permission</span>
+                <span class="oha-spwa-info-val" id="oha-dbg-perm">Checking...</span>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="oha-spwa-btn" id="oha-dbg-subscribe" type="button">Subscribe Now</button>
+                <button class="oha-spwa-btn" id="oha-dbg-refresh" type="button">Refresh Status</button>
+            </div>
+            <div id="oha-dbg-result" style="margin-top:10px;padding:8px 12px;border-radius:8px;font-size:13px;display:none"></div>
+        </div>
+        <script>
+        (function(){
+            function yn(v) { return v === true ? '<span style="color:#81c784">Yes</span>' : v === false ? '<span style="color:#f44336">No</span>' : '<span style="color:#ffb74d">' + (v || 'Unknown') + '</span>'; }
+
+            function refreshStatus() {
+                var d = window.ohaSpwaDebug || {};
+                document.getElementById('oha-dbg-sdk').innerHTML  = yn(typeof window.OneSignal !== 'undefined' || typeof window.OneSignalDeferred !== 'undefined');
+                document.getElementById('oha-dbg-os').innerHTML   = yn(!!d.oneSignalReady);
+                document.getElementById('oha-dbg-sw').innerHTML   = yn(!!d.swRegistered);
+                document.getElementById('oha-dbg-sub').innerHTML  = yn(d.subscribed);
+                document.getElementById('oha-dbg-err').textContent = d.oneSignalError || 'None';
+
+                var perm = 'Notification' in window ? Notification.permission : 'not supported';
+                var permColor = perm === 'granted' ? '#81c784' : perm === 'denied' ? '#f44336' : '#ffb74d';
+                document.getElementById('oha-dbg-perm').innerHTML = '<span style="color:' + permColor + '">' + perm + '</span>';
+            }
+
+            // Poll briefly on load since OneSignal init is async
+            var pollCount = 0;
+            var poll = setInterval(function() {
+                refreshStatus();
+                pollCount++;
+                if (pollCount >= 10 || (window.ohaSpwaDebug && (window.ohaSpwaDebug.oneSignalReady || window.ohaSpwaDebug.oneSignalError))) {
+                    clearInterval(poll);
+                }
+            }, 1000);
+
+            document.getElementById('oha-dbg-refresh').addEventListener('click', refreshStatus);
+
+            var subBtn = document.getElementById('oha-dbg-subscribe');
+            var subRes = document.getElementById('oha-dbg-result');
+            subBtn.addEventListener('click', function() {
+                subRes.style.display = 'none';
+                if (typeof window.OneSignalDeferred === 'undefined') {
+                    subRes.style.display = 'block';
+                    subRes.style.background = 'rgba(244,67,54,.12)';
+                    subRes.style.border = '1px solid rgba(244,67,54,.35)';
+                    subRes.style.color = '#ff8a80';
+                    subRes.textContent = 'OneSignal SDK not loaded. Check that the App ID is set in Settings > OHA Site PWA and that push is enabled.';
+                    return;
+                }
+                subBtn.disabled = true;
+                subBtn.textContent = 'Subscribing...';
+                window.OneSignalDeferred = window.OneSignalDeferred || [];
+                OneSignalDeferred.push(function(os) {
+                    os.User.PushSubscription.optIn()
+                        .then(function() {
+                            subBtn.disabled = false;
+                            subBtn.textContent = 'Subscribe Now';
+                            subRes.style.display = 'block';
+                            subRes.style.background = 'rgba(76,175,80,.15)';
+                            subRes.style.border = '1px solid rgba(76,175,80,.4)';
+                            subRes.style.color = '#81c784';
+                            subRes.textContent = 'Subscribed! You should now appear in the subscriber list (may take up to 5 minutes to reflect).';
+                            refreshStatus();
+                        })
+                        .catch(function(err) {
+                            subBtn.disabled = false;
+                            subBtn.textContent = 'Subscribe Now';
+                            subRes.style.display = 'block';
+                            subRes.style.background = 'rgba(244,67,54,.12)';
+                            subRes.style.border = '1px solid rgba(244,67,54,.35)';
+                            subRes.style.color = '#ff8a80';
+                            subRes.textContent = 'Subscribe failed: ' + (err ? (err.message || String(err)) : 'unknown error');
+                        });
+                });
+            });
+        })();
+        </script>
+        <?php endif; ?>
+
         <?php if ( current_user_can( 'edit_posts' ) ) :
             $push_nonce = wp_create_nonce( 'wp_rest' );
             $rest_url   = esc_url( rest_url( 'oha/v1/push/send' ) );
