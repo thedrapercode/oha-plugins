@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-profile-hub",
-    "version":  "1.0.0",
+    "version":  "1.1.0",
     "entries":  [
                     {
                         "date":  "2026-11-11",
@@ -8,6 +8,13 @@
                         "type":  "feature",
                         "summary":  "Initial release: [oha_account_dashboard] shortcode replaces UWP iframe hack on /haunt-profile/ page",
                         "notes":  "Profile card with avatar, display name, username, member status badge. Account actions card: Edit Account, Change Password, Privacy Settings, Track Orders (conditional on WC orders). Membership card (shown only if oha_member_id exists): status, member since, renews/expired date, member ID. Three-context CSS: PWA mode (floating cards, 58px touch targets, sticky tab nav), mobile web (\u003c768px), desktop (\u003e=768px). UWP profile chrome overrides: dark tab bar, hide cog button, hide profile header in PWA mode."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.1.0",
+                        "type":  "feature",
+                        "summary":  "UWP account forms open in slide-in panel overlay (iframe) instead of navigating away",
+                        "notes":  "Clicking Edit Account/Change Password/Privacy now opens a fixed full-screen panel that slides in from the right. UWP form loads in an iframe with ?oha_panel=1 param. body.oha-panel-view body class strips Kadence header/footer/nav and UWP left tab sidebar from the loaded form page. OHA dark theme applied to form inputs in panel view. Back button slides panel away. profile-hub.js added for panel open/close logic."
                     }
                 ]
 }

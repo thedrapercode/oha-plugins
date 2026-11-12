@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Profile Hub
  * Description: Custom account dashboard for the OHA haunt-profile page. Replaces the UWP iframe with a clean, app-ready account management experience for PWA, mobile, and desktop.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_PROFILE_HUB_VERSION', '1.0.0' );
+define( 'OHA_PROFILE_HUB_VERSION', '1.1.0' );
 define( 'OHA_PROFILE_HUB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_PROFILE_HUB_URL', plugin_dir_url( __FILE__ ) );
 
@@ -24,6 +24,24 @@ class OHA_Profile_Hub {
 
     public function init() {
         add_shortcode( 'oha_account_dashboard', array( $this, 'render_dashboard' ) );
+        add_filter( 'body_class', array( $this, 'panel_body_class' ) );
+        add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_panel_assets' ) );
+    }
+
+    // Add body class when UWP account page is loaded inside an oha panel iframe
+    public function panel_body_class( $classes ) {
+        if ( ! empty( $_GET['oha_panel'] ) ) {
+            $classes[] = 'oha-panel-view';
+        }
+        return $classes;
+    }
+
+    // Enqueue CSS/JS on the UWP account page when loaded in panel mode so
+    // Kadence chrome and UWP tab sidebar are stripped via oha-panel-view rules
+    public function maybe_enqueue_panel_assets() {
+        if ( ! empty( $_GET['oha_panel'] ) ) {
+            $this->enqueue_assets();
+        }
     }
 
     private function enqueue_assets() {
@@ -34,6 +52,13 @@ class OHA_Profile_Hub {
             array(),
             OHA_PROFILE_HUB_VERSION
         );
+        wp_enqueue_script(
+            'oha-profile-hub',
+            OHA_PROFILE_HUB_URL . 'assets/js/profile-hub.js',
+            array(),
+            OHA_PROFILE_HUB_VERSION,
+            true
+        );
         self::$assets_done = true;
     }
 
@@ -42,6 +67,7 @@ class OHA_Profile_Hub {
     // Renders profile card + account action rows + membership status.
     // Replace [oha_uwp_account_inline] with this in UWP Form Builder
     // under Profile Tabs > My Account tab content.
+    // UWP account forms open in a slide-in panel (iframe) -- no page navigation.
     // ------------------------------------------------------------------
     public function render_dashboard( $atts ) {
         $this->enqueue_assets();
@@ -109,29 +135,35 @@ class OHA_Profile_Hub {
             <div class="oha-prohub-card oha-prohub-actions-card">
                 <div class="oha-prohub-card-label">Account</div>
 
-                <a href="<?php echo esc_url( $account_base . '?type=account' ); ?>" class="oha-prohub-action-row">
+                <button type="button" class="oha-prohub-action-row"
+                    data-panel-url="<?php echo esc_url( $account_base . '?type=account' ); ?>"
+                    data-panel-title="Edit Account">
                     <span class="oha-prohub-action-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </span>
                     <span class="oha-prohub-action-label">Edit Account</span>
                     <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                </a>
+                </button>
 
-                <a href="<?php echo esc_url( $account_base . '?type=change-password' ); ?>" class="oha-prohub-action-row">
+                <button type="button" class="oha-prohub-action-row"
+                    data-panel-url="<?php echo esc_url( $account_base . '?type=change-password' ); ?>"
+                    data-panel-title="Change Password">
                     <span class="oha-prohub-action-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     </span>
                     <span class="oha-prohub-action-label">Change Password</span>
                     <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                </a>
+                </button>
 
-                <a href="<?php echo esc_url( $account_base . '?type=privacy' ); ?>" class="oha-prohub-action-row">
+                <button type="button" class="oha-prohub-action-row"
+                    data-panel-url="<?php echo esc_url( $account_base . '?type=privacy' ); ?>"
+                    data-panel-title="Privacy Settings">
                     <span class="oha-prohub-action-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     </span>
                     <span class="oha-prohub-action-label">Privacy Settings</span>
                     <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                </a>
+                </button>
 
                 <?php if ( $has_orders && $orders_url ) : ?>
                 <a href="<?php echo esc_url( $orders_url ); ?>" class="oha-prohub-action-row">
@@ -173,6 +205,23 @@ class OHA_Profile_Hub {
             </div>
             <?php endif; ?>
 
+        </div>
+
+        <!-- Slide-in panel for UWP account forms (loads /myaccount/?type=X in iframe) -->
+        <div id="oha-prohub-panel" class="oha-prohub-panel" aria-hidden="true" role="dialog" aria-modal="true">
+            <div class="oha-prohub-panel-bar">
+                <button type="button" id="oha-prohub-panel-back" class="oha-prohub-panel-back" aria-label="Back">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    <span>Back</span>
+                </button>
+                <span id="oha-prohub-panel-title" class="oha-prohub-panel-title"></span>
+                <span class="oha-prohub-panel-bar-end"></span>
+            </div>
+            <iframe id="oha-prohub-panel-iframe"
+                    class="oha-prohub-panel-iframe"
+                    src=""
+                    title="Account settings"
+                    scrolling="yes"></iframe>
         </div>
         <?php
         return ob_get_clean();
