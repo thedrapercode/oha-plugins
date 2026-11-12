@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-profile-hub",
-    "version":  "1.3.1",
+    "version":  "1.3.2",
     "entries":  [
                     {
                         "date":  "2026-11-11",
@@ -43,6 +43,13 @@
                         "type":  "fix",
                         "summary":  "Built-in default shortcodes for Listings, Events, Favorites, Discounts tabs",
                         "notes":  "Listings: [gd_listings post_author=current_user post_type=gd_place]. Favorites: [gd_listings favorites_by_user=current_user post_type=gd_place]. Events: [oha_education_events] (only if shortcode exists). Discounts: [oha_discounts] (only if shortcode exists). Resources: placeholder (no deployed plugin). WP option oha_phub_tab_{slug}_sc still overrides the default for any tab."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.3.2",
+                        "type":  "fix",
+                        "summary":  "Exclusive Events tab default matches existing content: GD upcoming events + on-demand virtual events",
+                        "notes":  "Events default is now: [gd_listings post_type=gd_event event_type=upcoming posts_per_page=10 map=0 show_paging=1 layout=list] concatenated with [oha_education_ondemand] (only appended if oha_education_ondemand shortcode is registered). Matches what was previously in the UWP Exclusive Events tab."
                     }
                 ]
 }

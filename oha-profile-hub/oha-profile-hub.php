@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Profile Hub
  * Description: Full-page account dashboard for the OHA haunt-profile experience. Single-page design with in-page tabs, profile hero, account management panels, and membership status. Adapts to PWA, mobile, and desktop.
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_PROFILE_HUB_VERSION', '1.3.1' );
+define( 'OHA_PROFILE_HUB_VERSION', '1.3.2' );
 define( 'OHA_PROFILE_HUB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_PROFILE_HUB_URL', plugin_dir_url( __FILE__ ) );
 
@@ -133,7 +133,7 @@ class OHA_Profile_Hub {
         // Override any of these by setting oha_phub_tab_{slug}_sc in wp_options.
         $tab_defaults = array(
             'listings'  => '[gd_listings post_author="current_user" post_type="gd_place"]',
-            'events'    => shortcode_exists( 'oha_education_events' )   ? '[oha_education_events]'   : '',
+            'events'    => '[gd_listings post_type="gd_event" event_type="upcoming" posts_per_page="10" map="0" show_paging="1" layout="list"]' . ( shortcode_exists( 'oha_education_ondemand' ) ? '[oha_education_ondemand]' : '' ),
             'favorites' => '[gd_listings favorites_by_user="current_user" post_type="gd_place"]',
             'discounts' => shortcode_exists( 'oha_discounts' )          ? '[oha_discounts]'          : '',
             'resources' => '',
