@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Profile Hub
  * Description: Full-page account dashboard for the OHA haunt-profile experience. Single-page design with in-page tabs, profile hero, account management panels, and membership status. Adapts to PWA, mobile, and desktop.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_PROFILE_HUB_VERSION', '1.3.0' );
+define( 'OHA_PROFILE_HUB_VERSION', '1.3.1' );
 define( 'OHA_PROFILE_HUB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_PROFILE_HUB_URL', plugin_dir_url( __FILE__ ) );
 
@@ -118,14 +118,25 @@ class OHA_Profile_Hub {
 
         // ---- Extra tabs -- content via WP options (shortcodes) or action hooks ----
         // Set oha_phub_tab_{slug}_label to rename a tab.
-        // Set oha_phub_tab_{slug}_sc to a shortcode string to render that tab's content.
+        // Set oha_phub_tab_{slug}_sc to override the shortcode for that tab's content.
         // Hook oha_phub_tab_{slug}_content($user_id) to inject content from another plugin.
+        // Built-in defaults are used when no option or hook is configured.
         $extra_tabs = array(
             'listings'  => get_option( 'oha_phub_tab_listings_label',  'Listings' ),
             'events'    => get_option( 'oha_phub_tab_events_label',    'Exclusive Events' ),
             'favorites' => get_option( 'oha_phub_tab_favorites_label', 'Favorites' ),
             'discounts' => get_option( 'oha_phub_tab_discounts_label', 'Discounts' ),
             'resources' => get_option( 'oha_phub_tab_resources_label', 'Resources' ),
+        );
+
+        // Default shortcodes for known tabs -- used when no WP option override is set.
+        // Override any of these by setting oha_phub_tab_{slug}_sc in wp_options.
+        $tab_defaults = array(
+            'listings'  => '[gd_listings post_author="current_user" post_type="gd_place"]',
+            'events'    => shortcode_exists( 'oha_education_events' )   ? '[oha_education_events]'   : '',
+            'favorites' => '[gd_listings favorites_by_user="current_user" post_type="gd_place"]',
+            'discounts' => shortcode_exists( 'oha_discounts' )          ? '[oha_discounts]'          : '',
+            'resources' => '',
         );
 
         ob_start();
@@ -276,6 +287,9 @@ class OHA_Profile_Hub {
                 <div class="oha-phub-panel" data-panel="<?php echo esc_attr( $slug ); ?>" role="tabpanel">
                     <?php
                     $sc = get_option( 'oha_phub_tab_' . $slug . '_sc', '' );
+                    if ( ! $sc && ! empty( $tab_defaults[ $slug ] ) ) {
+                        $sc = $tab_defaults[ $slug ];
+                    }
                     if ( $sc ) {
                         echo do_shortcode( $sc );
                     } else {
