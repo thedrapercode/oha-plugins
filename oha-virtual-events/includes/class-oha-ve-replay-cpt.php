@@ -422,18 +422,19 @@ class OHA_VE_Replay_CPT {
             $out .= '<span class="oha-replay-card__duration">' . esc_html( $duration ) . '</span>';
         }
 
-        $out .= '</div>'; // .oha-replay-card__thumb
-
-        // ── Action buttons footer ──────────────────────────────
-        $out .= '<div class="oha-replay-card__actions">';
+        // ── Video overlay (Watch Now) -- covers thumbnail in-place ──
         if ( $yt_safe ) {
-            $out .= '<button type="button" class="oha-replay-watch-btn oha-replay-toggle"'
-                  . ' data-target="' . esc_attr( $embed_id ) . '">Watch Now</button>';
+            $out .= '<div class="oha-replay-embed" id="' . esc_attr( $embed_id ) . '" style="display:none;">';
+            $out .= '<div class="oha-replay-video-wrap">';
+            $out .= '<iframe'
+                  . ' src="https://www.youtube.com/embed/' . $yt_safe . '?rel=0"'
+                  . ' frameborder="0" allowfullscreen loading="lazy"'
+                  . ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
+                  . '></iframe>';
+            $out .= '</div></div>';
         }
-        $out .= '<button type="button" class="oha-replay-info-btn">More Info</button>';
-        $out .= '</div>'; // .oha-replay-card__actions
 
-        // ── Inline info panel (toggled by More Info button) ──────
+        // ── Info overlay (More Info) -- covers thumbnail in-place ──
         $info_meta_parts = array_filter( [
             $type_label   ? '<span class="oha-replay-card__info-type">'    . esc_html( $type_label )   . '</span>' : '',
             $duration     ? '<span class="oha-replay-card__info-duration">' . esc_html( $duration )    . '</span>' : '',
@@ -454,17 +455,16 @@ class OHA_VE_Replay_CPT {
         }
         $out .= '</div>'; // .oha-replay-card__info-panel
 
-        // ── Expandable YouTube embed (toggled by Watch Now) ───────
+        $out .= '</div>'; // .oha-replay-card__thumb
+
+        // ── Action buttons footer ──────────────────────────────
+        $out .= '<div class="oha-replay-card__actions">';
         if ( $yt_safe ) {
-            $out .= '<div class="oha-replay-embed" id="' . esc_attr( $embed_id ) . '" style="display:none;">';
-            $out .= '<div class="oha-replay-video-wrap">';
-            $out .= '<iframe'
-                  . ' src="https://www.youtube.com/embed/' . $yt_safe . '?rel=0"'
-                  . ' frameborder="0" allowfullscreen loading="lazy"'
-                  . ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"'
-                  . '></iframe>';
-            $out .= '</div></div>';
+            $out .= '<button type="button" class="oha-replay-watch-btn oha-replay-toggle"'
+                  . ' data-target="' . esc_attr( $embed_id ) . '">Watch Now</button>';
         }
+        $out .= '<button type="button" class="oha-replay-info-btn">More Info</button>';
+        $out .= '</div>'; // .oha-replay-card__actions
 
         $out .= '</div>'; // .oha-replay-card
 

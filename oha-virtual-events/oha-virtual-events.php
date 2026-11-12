@@ -8,7 +8,7 @@
  *              displays upcoming events on haunt venue listing pages (replaces
  *              the gd_show_events_on_place_page code snippet - remove that
  *              snippet after activating this plugin).
- * Version:     1.8.5
+ * Version:     1.8.6
  * Author:      OHA Development
  * License:     GPLv3
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -112,7 +112,36 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'OHA_VE_VERSION',    '1.8.5' );
+define( 'OHA_VE_VERSION',    '1.8.6' );
+
+// Auto-update check via GitHub releases
+add_filter( 'pre_set_site_transient_update_plugins', 'oha_ve_check_for_update' );
+function oha_ve_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) {
+        return $transient;
+    }
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/thedrapercode/oha-plugins/main/updates/virtual-events.json',
+        [ 'timeout' => 10, 'sslverify' => true ]
+    );
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $transient;
+    }
+    $data = json_decode( wp_remote_retrieve_body( $response ) );
+    if ( ! $data || empty( $data->version ) ) {
+        return $transient;
+    }
+    if ( version_compare( $data->version, OHA_VE_VERSION, '>' ) ) {
+        $transient->response[ plugin_basename( __FILE__ ) ] = (object) [
+            'slug'        => 'oha-virtual-events',
+            'plugin'      => plugin_basename( __FILE__ ),
+            'new_version' => $data->version,
+            'package'     => $data->download_url,
+            'url'         => '',
+        ];
+    }
+    return $transient;
+}
 define( 'OHA_VE_PLUGIN_FILE', __FILE__ );
 define( 'OHA_VE_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'OHA_VE_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );

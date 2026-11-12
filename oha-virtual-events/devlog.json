@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.8.5",
+    "version":  "1.8.6",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -644,6 +644,13 @@
                         "type":  "change",
                         "summary":  "Clicking the replay thumbnail now also triggers Watch Now toggle",
                         "notes":  "Added oha-replay-toggle class and data-target attr to .oha-replay-card__thumb div (only when yt_safe is set). Added cursor:pointer to thumbnail CSS."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.8.6",
+                        "type":  "change",
+                        "summary":  "Watch Now and More Info now overlay the thumbnail in-place instead of expanding below the card",
+                        "notes":  "Embed and info panel moved inside .oha-replay-card__thumb as position:absolute overlays (z-index 2 and 3). Prevents CSS grid row height distortion in 2-col layout that caused blank black box in adjacent card. JS updated to close one overlay when the other opens (mutual exclusion)."
                     }
                 ]
 }

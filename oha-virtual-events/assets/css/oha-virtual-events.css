@@ -852,15 +852,17 @@ button.oha-ve-btn:disabled {
     color: #fff !important;
 }
 
-/* ── Expandable embed (Watch Now toggle) ─────────────────── */
+/* ── Video overlay (Watch Now) -- absolute over thumbnail ─── */
 .oha-replay-embed {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
     background: #000;
 }
 .oha-replay-video-wrap {
     position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
+    width: 100%;
+    height: 100%;
 }
 .oha-replay-video-wrap iframe {
     position: absolute;
@@ -869,14 +871,13 @@ button.oha-ve-btn:disabled {
     border: none;
 }
 
-/* =============================================================
-   INLINE INFO PANEL (More Info expansion below card)
-   position:fixed is broken inside auto-height iframes; this
-   panel expands in the normal document flow instead.
-   ============================================================= */
+/* ── Info overlay (More Info) -- absolute over thumbnail ──── */
 .oha-replay-card__info-panel {
-    background: rgba(0, 0, 0, 0.6);
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: rgba(0, 0, 0, 0.88);
+    overflow-y: auto;
     padding: 14px 16px;
 }
 .oha-replay-card__info-meta {
