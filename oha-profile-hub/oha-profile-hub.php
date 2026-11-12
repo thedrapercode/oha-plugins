@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: OHA Profile Hub
- * Description: Custom account dashboard for the OHA haunt-profile page. Replaces the UWP iframe with a clean, app-ready account management experience for PWA, mobile, and desktop.
- * Version: 1.2.0
+ * Description: Full-page account dashboard for the OHA haunt-profile experience. Single-page design with in-page tabs, profile hero, account management panels, and membership status. Adapts to PWA, mobile, and desktop.
+ * Version: 1.3.0
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_PROFILE_HUB_VERSION', '1.2.0' );
+define( 'OHA_PROFILE_HUB_VERSION', '1.3.0' );
 define( 'OHA_PROFILE_HUB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_PROFILE_HUB_URL', plugin_dir_url( __FILE__ ) );
 
@@ -23,21 +23,20 @@ class OHA_Profile_Hub {
     }
 
     public function init() {
-        add_shortcode( 'oha_account_dashboard', array( $this, 'render_dashboard' ) );
-        add_filter( 'body_class', array( $this, 'panel_body_class' ) );
+        add_shortcode( 'oha_profile_hub',      array( $this, 'render_hub' ) );
+        add_shortcode( 'oha_account_dashboard', array( $this, 'render_hub' ) ); // backward compat alias
+        add_filter( 'body_class', array( $this, 'body_classes' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_panel_assets' ) );
     }
 
-    // Add body class when UWP account page is loaded inside an oha panel iframe
-    public function panel_body_class( $classes ) {
+    public function body_classes( $classes ) {
         if ( ! empty( $_GET['oha_panel'] ) ) {
             $classes[] = 'oha-panel-view';
         }
         return $classes;
     }
 
-    // Enqueue CSS/JS on the UWP account page when loaded in panel mode so
-    // Kadence chrome and UWP tab sidebar are stripped via oha-panel-view rules
+    // Enqueue on the UWP account page when loaded in panel mode (?oha_panel=1)
     public function maybe_enqueue_panel_assets() {
         if ( ! empty( $_GET['oha_panel'] ) ) {
             $this->enqueue_assets();
@@ -62,38 +61,42 @@ class OHA_Profile_Hub {
         self::$assets_done = true;
     }
 
-    // ------------------------------------------------------------------
-    // [oha_account_dashboard]
-    // Renders profile card + account action rows + membership status.
-    // Replace [oha_uwp_account_inline] with this in UWP Form Builder
-    // under Profile Tabs > My Account tab content.
-    // UWP account forms open in a slide-in panel (iframe) -- no page navigation.
-    // ------------------------------------------------------------------
-    public function render_dashboard( $atts ) {
+    // -----------------------------------------------------------------------
+    // [oha_profile_hub]  (also registered as [oha_account_dashboard])
+    // Full-page profile hub: hero + in-page tabs + account management.
+    // Place on /haunt-profile/ or any My OHA page.
+    // -----------------------------------------------------------------------
+    public function render_hub( $atts ) {
         $this->enqueue_assets();
 
         if ( ! is_user_logged_in() ) {
-            return '<div class="oha-prohub-wrap"><p class="oha-prohub-login-notice">Please <a href="' . esc_url( wp_login_url( get_permalink() ) ) . '">log in</a> to manage your account.</p></div>';
+            ob_start();
+            ?>
+            <div class="oha-phub oha-phub-guest">
+                <div class="oha-phub-login-notice">
+                    <p>Please <a href="<?php echo esc_url( wp_login_url( get_permalink() ) ); ?>">log in</a> to manage your account.</p>
+                </div>
+            </div>
+            <?php
+            return ob_get_clean();
         }
 
         $user    = wp_get_current_user();
         $user_id = $user->ID;
 
-        // Avatar
-        $avatar = get_avatar( $user_id, 80, '', '', array( 'class' => 'oha-prohub-avatar-img' ) );
-
-        // Names
+        // ---- Profile data ----
         $display_name = $user->display_name ?: $user->user_login;
         $username     = $user->user_login;
+        $avatar       = get_avatar( $user_id, 96, '', '', array( 'class' => 'oha-phub-avatar-img' ) );
 
-        // Membership status
+        // ---- Membership ----
         $member_id    = get_user_meta( $user_id, 'oha_member_id', true );
         $trial_end    = get_user_meta( $user_id, 'membership_trial_end', true );
         $member_since = get_user_meta( $user_id, 'oha_paid_member_since', true );
         $is_active    = $member_id && $trial_end && strtotime( $trial_end ) > time();
         $is_expired   = $member_id && $trial_end && strtotime( $trial_end ) <= time();
 
-        // WooCommerce orders
+        // ---- WooCommerce orders ----
         $has_orders = false;
         $orders_url = '';
         if ( function_exists( 'wc_get_orders' ) && function_exists( 'wc_get_account_endpoint_url' ) ) {
@@ -104,7 +107,7 @@ class OHA_Profile_Hub {
             }
         }
 
-        // UWP account base URL
+        // ---- UWP account base URL ----
         $account_base = '/myaccount/';
         if ( function_exists( 'uwp_get_page_id' ) ) {
             $acct_id = uwp_get_page_id( 'account_page', false );
@@ -113,106 +116,197 @@ class OHA_Profile_Hub {
             }
         }
 
+        // ---- Extra tabs -- content via WP options (shortcodes) or action hooks ----
+        // Set oha_phub_tab_{slug}_label to rename a tab.
+        // Set oha_phub_tab_{slug}_sc to a shortcode string to render that tab's content.
+        // Hook oha_phub_tab_{slug}_content($user_id) to inject content from another plugin.
+        $extra_tabs = array(
+            'listings'  => get_option( 'oha_phub_tab_listings_label',  'Listings' ),
+            'events'    => get_option( 'oha_phub_tab_events_label',    'Exclusive Events' ),
+            'favorites' => get_option( 'oha_phub_tab_favorites_label', 'Favorites' ),
+            'discounts' => get_option( 'oha_phub_tab_discounts_label', 'Discounts' ),
+            'resources' => get_option( 'oha_phub_tab_resources_label', 'Resources' ),
+        );
+
         ob_start();
         ?>
-        <div class="oha-prohub-wrap">
+        <div class="oha-phub" id="oha-phub">
 
-            <div class="oha-prohub-card oha-prohub-profile-card">
-                <div class="oha-prohub-avatar-wrap"><?php echo $avatar; ?></div>
-                <div class="oha-prohub-identity">
-                    <div class="oha-prohub-display-name"><?php echo esc_html( $display_name ); ?></div>
-                    <div class="oha-prohub-username">@<?php echo esc_html( $username ); ?></div>
-                    <?php if ( $is_active ) : ?>
-                        <span class="oha-prohub-badge oha-prohub-badge-active">OHA Member</span>
-                    <?php elseif ( $is_expired ) : ?>
-                        <span class="oha-prohub-badge oha-prohub-badge-expired">Membership Expired</span>
-                    <?php else : ?>
-                        <span class="oha-prohub-badge oha-prohub-badge-guest">Registered User</span>
+            <!-- ===================== HERO ===================== -->
+            <div class="oha-phub-hero">
+                <div class="oha-phub-hero-top">
+                    <div class="oha-phub-avatar-ring"><?php echo $avatar; ?></div>
+                    <div class="oha-phub-hero-info">
+                        <div class="oha-phub-name"><?php echo esc_html( $display_name ); ?></div>
+                        <div class="oha-phub-username">@<?php echo esc_html( $username ); ?></div>
+                        <?php if ( $is_active ) : ?>
+                            <span class="oha-phub-badge oha-phub-badge-active">OHA Member</span>
+                        <?php elseif ( $is_expired ) : ?>
+                            <span class="oha-phub-badge oha-phub-badge-expired">Membership Expired</span>
+                        <?php else : ?>
+                            <span class="oha-phub-badge oha-phub-badge-guest">Registered User</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if ( $member_id ) : ?>
+                <div class="oha-phub-stats">
+                    <?php if ( $member_since ) : ?>
+                    <div class="oha-phub-stat">
+                        <span class="oha-phub-stat-label">Member Since</span>
+                        <strong class="oha-phub-stat-val"><?php echo esc_html( date( 'M Y', strtotime( $member_since ) ) ); ?></strong>
+                    </div>
+                    <span class="oha-phub-stat-sep"></span>
+                    <?php endif; ?>
+                    <div class="oha-phub-stat">
+                        <span class="oha-phub-stat-label">Member ID</span>
+                        <strong class="oha-phub-stat-val oha-phub-mono"><?php echo esc_html( $member_id ); ?></strong>
+                    </div>
+                    <?php if ( $trial_end ) : ?>
+                    <span class="oha-phub-stat-sep"></span>
+                    <div class="oha-phub-stat">
+                        <span class="oha-phub-stat-label"><?php echo $is_active ? 'Renews' : 'Expired'; ?></span>
+                        <strong class="oha-phub-stat-val <?php echo $is_active ? '' : 'oha-phub-expired-txt'; ?>"><?php echo esc_html( date( 'M j, Y', strtotime( $trial_end ) ) ); ?></strong>
+                    </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
             </div>
 
-            <div class="oha-prohub-card oha-prohub-actions-card">
-                <div class="oha-prohub-card-label">Account</div>
-
-                <button type="button" class="oha-prohub-action-row"
-                    data-panel-url="<?php echo esc_url( $account_base . '?type=account' ); ?>"
-                    data-panel-type="account"
-                    data-panel-title="Edit Account">
-                    <span class="oha-prohub-action-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </span>
-                    <span class="oha-prohub-action-label">Edit Account</span>
-                    <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
+            <!-- ===================== TAB BAR ===================== -->
+            <div class="oha-phub-tabbar" role="tablist" aria-label="Profile sections">
+                <button class="oha-phub-tab active" data-tab="account" role="tab" aria-selected="true">My Account</button>
+                <?php foreach ( $extra_tabs as $slug => $label ) : ?>
+                <button class="oha-phub-tab" data-tab="<?php echo esc_attr( $slug ); ?>" role="tab" aria-selected="false">
+                    <?php echo esc_html( $label ); ?>
                 </button>
-
-                <button type="button" class="oha-prohub-action-row"
-                    data-panel-url="<?php echo esc_url( $account_base . '?type=change-password' ); ?>"
-                    data-panel-type="change-password"
-                    data-panel-title="Change Password">
-                    <span class="oha-prohub-action-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </span>
-                    <span class="oha-prohub-action-label">Change Password</span>
-                    <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                </button>
-
-                <button type="button" class="oha-prohub-action-row"
-                    data-panel-url="<?php echo esc_url( $account_base . '?type=privacy' ); ?>"
-                    data-panel-type="privacy"
-                    data-panel-title="Privacy Settings">
-                    <span class="oha-prohub-action-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </span>
-                    <span class="oha-prohub-action-label">Privacy Settings</span>
-                    <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                </button>
-
-                <?php if ( $has_orders && $orders_url ) : ?>
-                <a href="<?php echo esc_url( $orders_url ); ?>" class="oha-prohub-action-row">
-                    <span class="oha-prohub-action-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                    </span>
-                    <span class="oha-prohub-action-label">Track Orders</span>
-                    <span class="oha-prohub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                </a>
-                <?php endif; ?>
-
+                <?php endforeach; ?>
             </div>
 
-            <?php if ( $member_id ) : ?>
-            <div class="oha-prohub-card oha-prohub-membership-card">
-                <div class="oha-prohub-card-label">Membership</div>
-                <div class="oha-prohub-mem-row">
-                    <span class="oha-prohub-mem-key">Status</span>
-                    <span class="oha-prohub-mem-val <?php echo $is_active ? 'oha-prohub-active' : 'oha-prohub-expired'; ?>">
-                        <?php echo $is_active ? 'Active' : 'Expired'; ?>
-                    </span>
-                </div>
-                <?php if ( $member_since ) : ?>
-                <div class="oha-prohub-mem-row">
-                    <span class="oha-prohub-mem-key">Member since</span>
-                    <span class="oha-prohub-mem-val"><?php echo esc_html( date( 'F j, Y', strtotime( $member_since ) ) ); ?></span>
-                </div>
-                <?php endif; ?>
-                <?php if ( $trial_end ) : ?>
-                <div class="oha-prohub-mem-row">
-                    <span class="oha-prohub-mem-key"><?php echo $is_active ? 'Renews' : 'Expired'; ?></span>
-                    <span class="oha-prohub-mem-val"><?php echo esc_html( date( 'F j, Y', strtotime( $trial_end ) ) ); ?></span>
-                </div>
-                <?php endif; ?>
-                <div class="oha-prohub-mem-row">
-                    <span class="oha-prohub-mem-key">Member ID</span>
-                    <span class="oha-prohub-mem-val oha-prohub-mem-id"><?php echo esc_html( $member_id ); ?></span>
-                </div>
-            </div>
-            <?php endif; ?>
+            <!-- ===================== TAB PANELS ===================== -->
+            <div class="oha-phub-panels">
 
-        </div>
+                <!-- MY ACCOUNT -->
+                <div class="oha-phub-panel active" data-panel="account" role="tabpanel">
+                    <div class="oha-phub-account-grid">
 
-        <!-- Slide-in panel for UWP account forms.
-             Desktop: right-side drawer (tabs remain visible).
-             Mobile/PWA: full-screen. -->
+                        <!-- Account Settings card -->
+                        <div class="oha-phub-card">
+                            <div class="oha-phub-card-head">Account Settings</div>
+
+                            <button type="button" class="oha-phub-action-row"
+                                data-panel-url="<?php echo esc_url( $account_base . '?type=account' ); ?>"
+                                data-panel-type="account">
+                                <span class="oha-phub-action-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                </span>
+                                <span class="oha-phub-action-label">Edit Account</span>
+                                <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
+                            </button>
+
+                            <button type="button" class="oha-phub-action-row"
+                                data-panel-url="<?php echo esc_url( $account_base . '?type=change-password' ); ?>"
+                                data-panel-type="change-password">
+                                <span class="oha-phub-action-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                </span>
+                                <span class="oha-phub-action-label">Change Password</span>
+                                <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
+                            </button>
+
+                            <button type="button" class="oha-phub-action-row"
+                                data-panel-url="<?php echo esc_url( $account_base . '?type=privacy' ); ?>"
+                                data-panel-type="privacy">
+                                <span class="oha-phub-action-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                </span>
+                                <span class="oha-phub-action-label">Privacy Settings</span>
+                                <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
+                            </button>
+
+                            <?php if ( $has_orders && $orders_url ) : ?>
+                            <a href="<?php echo esc_url( $orders_url ); ?>" class="oha-phub-action-row">
+                                <span class="oha-phub-action-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                                </span>
+                                <span class="oha-phub-action-label">Track Orders</span>
+                                <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Membership card -->
+                        <?php if ( $member_id ) : ?>
+                        <div class="oha-phub-card">
+                            <div class="oha-phub-card-head">Membership</div>
+                            <div class="oha-phub-info-row">
+                                <span class="oha-phub-info-key">Status</span>
+                                <span class="oha-phub-info-val <?php echo $is_active ? 'oha-phub-active-txt' : 'oha-phub-expired-txt'; ?>">
+                                    <?php echo $is_active ? 'Active' : 'Expired'; ?>
+                                </span>
+                            </div>
+                            <?php if ( $member_since ) : ?>
+                            <div class="oha-phub-info-row">
+                                <span class="oha-phub-info-key">Member Since</span>
+                                <span class="oha-phub-info-val"><?php echo esc_html( date( 'F j, Y', strtotime( $member_since ) ) ); ?></span>
+                            </div>
+                            <?php endif; ?>
+                            <?php if ( $trial_end ) : ?>
+                            <div class="oha-phub-info-row">
+                                <span class="oha-phub-info-key"><?php echo $is_active ? 'Renews' : 'Expired'; ?></span>
+                                <span class="oha-phub-info-val"><?php echo esc_html( date( 'F j, Y', strtotime( $trial_end ) ) ); ?></span>
+                            </div>
+                            <?php endif; ?>
+                            <div class="oha-phub-info-row">
+                                <span class="oha-phub-info-key">Member ID</span>
+                                <span class="oha-phub-info-val oha-phub-mono"><?php echo esc_html( $member_id ); ?></span>
+                            </div>
+                            <?php if ( $is_expired ) : ?>
+                            <div class="oha-phub-renew-cta">
+                                <a href="/membership/" class="oha-phub-renew-btn">Renew Membership</a>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
+                    </div><!-- .oha-phub-account-grid -->
+                </div><!-- [account panel] -->
+
+                <!-- EXTRA TABS: content via WP option shortcode or hook -->
+                <?php foreach ( $extra_tabs as $slug => $label ) : ?>
+                <div class="oha-phub-panel" data-panel="<?php echo esc_attr( $slug ); ?>" role="tabpanel">
+                    <?php
+                    $sc = get_option( 'oha_phub_tab_' . $slug . '_sc', '' );
+                    if ( $sc ) {
+                        echo do_shortcode( $sc );
+                    } else {
+                        ob_start();
+                        do_action( 'oha_phub_tab_' . $slug . '_content', $user_id );
+                        $hook_output = ob_get_clean();
+                        if ( $hook_output ) {
+                            echo $hook_output;
+                        } else {
+                            ?>
+                            <div class="oha-phub-tab-placeholder">
+                                <div class="oha-phub-placeholder-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                </div>
+                                <p class="oha-phub-placeholder-text"><?php echo esc_html( $label ); ?> content is configured separately.</p>
+                                <p class="oha-phub-placeholder-sub">Set the <code>oha_phub_tab_<?php echo esc_html( $slug ); ?>_sc</code> option or hook <code>oha_phub_tab_<?php echo esc_html( $slug ); ?>_content</code> to populate this tab.</p>
+                            </div>
+                            <?php
+                        }
+                    }
+                    ?>
+                </div>
+                <?php endforeach; ?>
+
+            </div><!-- .oha-phub-panels -->
+
+        </div><!-- .oha-phub -->
+
+        <!-- ===================== SLIDE-IN FORM PANEL ===================== -->
+        <!-- Right-side drawer on desktop, full-screen on mobile/PWA.         -->
+        <!-- Loads UWP account forms (/myaccount/?type=X) with stripped chrome. -->
         <div id="oha-prohub-panel" class="oha-prohub-panel" aria-hidden="true" role="dialog" aria-modal="true">
             <div class="oha-prohub-panel-bar">
                 <button type="button" id="oha-prohub-panel-back" class="oha-prohub-panel-back" aria-label="Back to My Account">

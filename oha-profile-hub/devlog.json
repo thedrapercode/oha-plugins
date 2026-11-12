@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-profile-hub",
-    "version":  "1.2.0",
+    "version":  "1.3.0",
     "entries":  [
                     {
                         "date":  "2026-11-11",
@@ -29,6 +29,13 @@
                         "type":  "feature",
                         "summary":  "Internal nav tabs in panel to switch between Edit Account, Password, Privacy without closing",
                         "notes":  "Panel now has a 3-tab nav bar (Edit Account, Password, Privacy). Active tab highlighted with red underline. Clicking a tab changes iframe src without closing the panel. dashboard action rows pass data-panel-type to pre-select the correct tab on open."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.3.0",
+                        "type":  "feature",
+                        "summary":  "Full profile hub redesign: hero + in-page tabs + 2-col desktop grid (HLD dark theme style)",
+                        "notes":  "New [oha_profile_hub] shortcode (backward-compat alias on [oha_account_dashboard]). Profile hero: Cinzel name, Rajdhani username, member badge, stats strip (since/ID/renews). In-page tabbar: Cinzel/Rajdhani font, red active underline, sessionStorage-persisted active tab. My Account panel: Account Settings card + Membership card in 2-col desktop grid. Extra tabs (Listings/Events/Favorites/Discounts/Resources) configurable via oha_phub_tab_{slug}_sc option or oha_phub_tab_{slug}_content action hook; show placeholder if not configured. Slide-in form panel kept: right-drawer desktop, full-screen mobile/PWA, 3-tab internal nav. PWA: sticky tabbar below app header, 58px touch targets, 110px bottom padding."
                     }
                 ]
 }
