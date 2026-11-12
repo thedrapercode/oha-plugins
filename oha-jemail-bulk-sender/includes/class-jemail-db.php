@@ -24,6 +24,7 @@ class JEmail_DB {
             target_vendor_statuses text,
             target_volunteer_statuses text,
             target_gd_listing varchar(20) NOT NULL DEFAULT '',
+            target_awards_year varchar(10) NOT NULL DEFAULT '',
             status varchar(20) NOT NULL DEFAULT 'draft',
             batch_size int(11) NOT NULL DEFAULT 50,
             sent_count int(11) NOT NULL DEFAULT 0,
@@ -686,11 +687,145 @@ class JEmail_DB {
         return $obj;
     }
 
-    public function count_recipients( $roles = array(), $swpm_levels = array(), $uwp_forms = array(), $vendor_statuses = array(), $volunteer_statuses = array(), $gd_listing = '' ) {
-        return count( $this->get_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing ) );
+    /* ═══ OHA: Awards Plugin ═══ */
+
+    /**
+     * Return distinct award years found in oha_award_entry posts, newest first.
+     */
+    public function get_awards_years() {
+        global $wpdb;
+        if ( ! post_type_exists( 'oha_award_entry' ) ) return array();
+        $years = $wpdb->get_col(
+            "SELECT DISTINCT pm.meta_value
+             FROM {$wpdb->postmeta} pm
+             INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+             WHERE p.post_type = 'oha_award_entry'
+               AND p.post_status != 'trash'
+               AND pm.meta_key = '_oha_award_year'
+               AND pm.meta_value != ''
+             ORDER BY pm.meta_value DESC"
+        );
+        return is_array( $years ) ? $years : array();
     }
 
-    public function get_recipients( $roles = array(), $swpm_levels = array(), $uwp_forms = array(), $vendor_statuses = array(), $volunteer_statuses = array(), $gd_listing = '' ) {
+    /**
+     * Get WP user IDs of everyone who submitted an award in the given year.
+     *
+     * Actor submissions link via _oha_owner_user_id (WP user ID).
+     * Campsite submissions link via _oha_contact_email matched to wp_users.
+     */
+    public function get_user_ids_by_awards_year( $year ) {
+        global $wpdb;
+        if ( ! post_type_exists( 'oha_award_entry' ) ) return array();
+        if ( empty( $year ) ) return array();
+
+        $entry_ids = $wpdb->get_col( $wpdb->prepare(
+            "SELECT p.ID
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} py ON p.ID = py.post_id AND py.meta_key = '_oha_award_year'
+             WHERE p.post_type = 'oha_award_entry'
+               AND p.post_status != 'trash'
+               AND py.meta_value = %s",
+            $year
+        ) );
+        if ( empty( $entry_ids ) ) return array();
+
+        $id_placeholders = implode( ',', array_fill( 0, count( $entry_ids ), '%d' ) );
+        $user_ids = array();
+
+        // Actor submissions: _oha_owner_user_id holds the WP user ID directly
+        $actor_ids = $wpdb->get_col( $wpdb->prepare(
+            "SELECT DISTINCT CAST(meta_value AS UNSIGNED)
+             FROM {$wpdb->postmeta}
+             WHERE meta_key = '_oha_owner_user_id'
+               AND CAST(meta_value AS UNSIGNED) > 0
+               AND post_id IN ({$id_placeholders})",
+            $entry_ids
+        ) );
+        if ( ! empty( $actor_ids ) ) {
+            $user_ids = array_merge( $user_ids, $actor_ids );
+        }
+
+        // Campsite submissions: match _oha_contact_email to wp_users.user_email
+        $contact_emails = $wpdb->get_col( $wpdb->prepare(
+            "SELECT DISTINCT meta_value
+             FROM {$wpdb->postmeta}
+             WHERE meta_key = '_oha_contact_email'
+               AND meta_value != ''
+               AND post_id IN ({$id_placeholders})",
+            $entry_ids
+        ) );
+        if ( ! empty( $contact_emails ) ) {
+            $ep = implode( ',', array_fill( 0, count( $contact_emails ), '%s' ) );
+            $matched = $wpdb->get_col( $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->users} WHERE LOWER(user_email) IN ({$ep})",
+                array_map( 'strtolower', $contact_emails )
+            ) );
+            if ( ! empty( $matched ) ) {
+                $user_ids = array_merge( $user_ids, $matched );
+            }
+        }
+
+        return array_map( 'intval', array_unique( $user_ids ) );
+    }
+
+    /**
+     * Get campsite award submitters who do NOT have a WP user account.
+     * Returns synthetic stdClass objects for compatibility with queue_recipients().
+     */
+    public function get_awards_only_recipients( $year ) {
+        global $wpdb;
+        if ( ! post_type_exists( 'oha_award_entry' ) ) return array();
+        if ( empty( $year ) ) return array();
+
+        $rows = $wpdb->get_results( $wpdb->prepare(
+            "SELECT p.ID, em.meta_value AS contact_email, cn.meta_value AS contact_name
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} py ON p.ID = py.post_id AND py.meta_key = '_oha_award_year' AND py.meta_value = %s
+             INNER JOIN {$wpdb->postmeta} em ON p.ID = em.post_id AND em.meta_key = '_oha_contact_email' AND em.meta_value != ''
+             LEFT  JOIN {$wpdb->postmeta} cn ON p.ID = cn.post_id AND cn.meta_key = '_oha_contact_name'
+             WHERE p.post_type = 'oha_award_entry'
+               AND p.post_status != 'trash'",
+            $year
+        ) );
+        if ( empty( $rows ) ) return array();
+
+        $all_emails = array_unique( array_filter( wp_list_pluck( $rows, 'contact_email' ) ) );
+        if ( empty( $all_emails ) ) return array();
+
+        $ep = implode( ',', array_fill( 0, count( $all_emails ), '%s' ) );
+        $wp_emails = $wpdb->get_col( $wpdb->prepare(
+            "SELECT LOWER(user_email) FROM {$wpdb->users} WHERE LOWER(user_email) IN ({$ep})",
+            array_map( 'strtolower', $all_emails )
+        ) );
+        $wp_emails = array_map( 'strtolower', $wp_emails );
+
+        $recipients  = array();
+        $seen_emails = array();
+        foreach ( $rows as $row ) {
+            $email_lower = strtolower( $row->contact_email );
+            if ( in_array( $email_lower, $wp_emails, true ) ) continue;
+            if ( isset( $seen_emails[ $email_lower ] ) ) continue;
+            $seen_emails[ $email_lower ] = true;
+
+            $obj               = new \stdClass();
+            $obj->ID           = 0;
+            $obj->user_email   = $row->contact_email;
+            $obj->user_login   = '';
+            $obj->display_name = $row->contact_name ?: $row->contact_email;
+            $name_parts        = explode( ' ', trim( $obj->display_name ), 2 );
+            $obj->first_name   = $name_parts[0] ?: '';
+            $obj->last_name    = isset( $name_parts[1] ) ? $name_parts[1] : '';
+            $recipients[]      = $obj;
+        }
+        return $recipients;
+    }
+
+    public function count_recipients( $roles = array(), $swpm_levels = array(), $uwp_forms = array(), $vendor_statuses = array(), $volunteer_statuses = array(), $gd_listing = '', $awards_year = '' ) {
+        return count( $this->get_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing, $awards_year ) );
+    }
+
+    public function get_recipients( $roles = array(), $swpm_levels = array(), $uwp_forms = array(), $vendor_statuses = array(), $volunteer_statuses = array(), $gd_listing = '', $awards_year = '' ) {
         // IMPORTANT: Do NOT use 'fields' => array(...) here. When fields is an array,
         // WordPress's WP_User_Query can silently drop the role-based meta JOIN, causing
         // role__in to be ignored and ALL users to be returned. Use 'all' for reliable filtering.
@@ -730,6 +865,12 @@ class JEmail_DB {
             } else {
                 $users = array_filter( $users, function( $u ) use ( $gd_ids ) { return ! in_array( (int) $u->ID, $gd_ids, true ); } );
             }
+        }
+
+        // Filter by Awards submission year (AND)
+        if ( ! empty( $awards_year ) ) {
+            $awards_ids = $this->get_user_ids_by_awards_year( $awards_year );
+            $users = array_filter( $users, function( $u ) use ( $awards_ids ) { return in_array( (int) $u->ID, $awards_ids, true ); } );
         }
 
         // Exclude unsubscribed
@@ -775,6 +916,25 @@ class JEmail_DB {
                     if ( isset( $seen_emails[ $email_lower ] ) ) continue; // already included
                     if ( ! $this->is_unsubscribed( $vo->user_email ) ) {
                         $recipients[] = $vo;
+                        $seen_emails[ $email_lower ] = true;
+                    }
+                }
+            }
+        }
+
+        // Include awards-only emails (campsite submitters without WP accounts).
+        // The campsite award form is public — submitters may not have a WP account.
+        // Only when awards year is the ONLY filter active.
+        if ( ! empty( $awards_year ) ) {
+            $has_wp_filters = ! empty( $roles ) || ! empty( $swpm_levels ) || ! empty( $uwp_forms )
+                              || ! empty( $vendor_statuses ) || ! empty( $volunteer_statuses ) || ! empty( $gd_listing );
+            if ( ! $has_wp_filters ) {
+                $awards_only = $this->get_awards_only_recipients( $awards_year );
+                foreach ( $awards_only as $ao ) {
+                    $email_lower = strtolower( $ao->user_email );
+                    if ( isset( $seen_emails[ $email_lower ] ) ) continue;
+                    if ( ! $this->is_unsubscribed( $ao->user_email ) ) {
+                        $recipients[] = $ao;
                         $seen_emails[ $email_lower ] = true;
                     }
                 }

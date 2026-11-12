@@ -3,7 +3,7 @@
  * Plugin Name: JEmail Bulk Sender
  * Plugin URI: https://ohaunters.com
  * Description: Bulk email campaigns for OHA. Send styled HTML or plain text emails to users by WP role, SWPM membership level, UsersWP user type, Vendor Hub status, Volunteer Hub status, or GeoDirectory listing ownership. Batch processing, link tracking, unsubscribe support, and campaign management. Works with FluentSMTP.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: Justin / OHA
  * License: GPL v2 or later
  * Text Domain: jemail-bulk-sender
@@ -13,14 +13,43 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'JEMAIL_VERSION', '1.5.0' );
+define( 'JEMAIL_VERSION', '1.6.0' );
+
+// Auto-update check via GitHub releases
+add_filter( 'pre_set_site_transient_update_plugins', 'oha_jemail_check_for_update' );
+function oha_jemail_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) {
+        return $transient;
+    }
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/thedrapercode/oha-plugins/main/updates/jemail-bulk-sender.json',
+        [ 'timeout' => 10, 'sslverify' => true ]
+    );
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $transient;
+    }
+    $data = json_decode( wp_remote_retrieve_body( $response ) );
+    if ( ! $data || empty( $data->version ) ) {
+        return $transient;
+    }
+    if ( version_compare( $data->version, JEMAIL_VERSION, '>' ) ) {
+        $transient->response[ plugin_basename( __FILE__ ) ] = (object) [
+            'slug'        => 'oha-jemail-bulk-sender',
+            'plugin'      => plugin_basename( __FILE__ ),
+            'new_version' => $data->version,
+            'package'     => $data->download_url,
+            'url'         => '',
+        ];
+    }
+    return $transient;
+}
 define( 'JEMAIL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'JEMAIL_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'JEMAIL_TABLE_CAMPAIGNS', 'jemail_campaigns' );
 define( 'JEMAIL_TABLE_LOGS', 'jemail_logs' );
 define( 'JEMAIL_TABLE_CLICKS', 'jemail_clicks' );
 define( 'JEMAIL_TABLE_UNSUBS', 'jemail_unsubscribes' );
-define( 'JEMAIL_DB_VERSION', '1.2.0' );
+define( 'JEMAIL_DB_VERSION', '1.3.0' );
 
 require_once JEMAIL_PLUGIN_DIR . 'includes/class-jemail-db.php';
 require_once JEMAIL_PLUGIN_DIR . 'includes/class-jemail-sender.php';

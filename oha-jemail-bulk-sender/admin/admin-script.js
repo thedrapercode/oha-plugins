@@ -46,13 +46,15 @@
                 volunteerStatuses.push($(this).val());
             });
             var gdListing = $('input[name="target_gd_listing"]:checked').val() || '';
+            var awardsYear = $('select[name="target_awards_year"]').val() || '';
             return {
                 roles: roles,
                 swpm_levels: swpmLevels,
                 uwp_forms: uwpForms,
                 vendor_statuses: vendorStatuses,
                 volunteer_statuses: volunteerStatuses,
-                gd_listing: gdListing
+                gd_listing: gdListing,
+                awards_year: awardsYear
             };
         }
 
@@ -71,7 +73,8 @@
                 uwp_forms: filters.uwp_forms,
                 vendor_statuses: filters.vendor_statuses,
                 volunteer_statuses: filters.volunteer_statuses,
-                gd_listing: filters.gd_listing
+                gd_listing: filters.gd_listing,
+                awards_year: filters.awards_year
             }, function(res) {
                 $btn.prop('disabled', false).text('Count Recipients');
                 if (res.success) {
@@ -85,9 +88,15 @@
             });
         });
 
-        // Auto-count on checkbox/radio change (debounced)
+        // Auto-count on checkbox/radio/select change (debounced)
         var countTimer;
         $('.jemail-checkbox-list input[type="checkbox"], .jemail-checkbox-list input[type="radio"]').on('change', function() {
+            clearTimeout(countTimer);
+            countTimer = setTimeout(function() {
+                $('#jemail-count-btn').trigger('click');
+            }, 500);
+        });
+        $('select[name="target_awards_year"]').on('change', function() {
             clearTimeout(countTimer);
             countTimer = setTimeout(function() {
                 $('#jemail-count-btn').trigger('click');
@@ -114,7 +123,8 @@
                 uwp_forms: filters.uwp_forms,
                 vendor_statuses: filters.vendor_statuses,
                 volunteer_statuses: filters.volunteer_statuses,
-                gd_listing: filters.gd_listing
+                gd_listing: filters.gd_listing,
+                awards_year: filters.awards_year
             }, function(res) {
                 $btn.prop('disabled', false).text('👁 Preview Who Gets This');
                 if (res.success && res.data) {

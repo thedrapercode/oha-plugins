@@ -22,6 +22,7 @@ class JEmail_Sender {
         $vendor_statuses    = maybe_unserialize( $campaign->target_vendor_statuses );
         $volunteer_statuses = maybe_unserialize( $campaign->target_volunteer_statuses );
         $gd_listing         = $campaign->target_gd_listing ?? '';
+        $awards_year        = $campaign->target_awards_year ?? '';
 
         if ( ! is_array( $roles ) )              $roles              = array();
         if ( ! is_array( $swpm_levels ) )        $swpm_levels        = array();
@@ -29,7 +30,7 @@ class JEmail_Sender {
         if ( ! is_array( $vendor_statuses ) )    $vendor_statuses    = array();
         if ( ! is_array( $volunteer_statuses ) ) $volunteer_statuses = array();
 
-        $recipients = $this->db->get_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing );
+        $recipients = $this->db->get_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing, $awards_year );
         if ( empty( $recipients ) ) return false;
 
         $this->db->queue_recipients( $campaign_id, $recipients );

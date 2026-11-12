@@ -130,7 +130,8 @@ class JEmail_Admin {
         $saved_uwp      = $campaign ? maybe_unserialize( $campaign->target_uwp_forms ) : array();
         $saved_vendor   = $campaign ? maybe_unserialize( $campaign->target_vendor_statuses ) : array();
         $saved_volunteer = $campaign ? maybe_unserialize( $campaign->target_volunteer_statuses ) : array();
-        $saved_gd       = $campaign ? $campaign->target_gd_listing : '';
+        $saved_gd        = $campaign ? $campaign->target_gd_listing : '';
+        $saved_awards_year = $campaign ? ( $campaign->target_awards_year ?? '' ) : '';
         if ( ! is_array( $saved_roles ) )     $saved_roles     = array();
         if ( ! is_array( $saved_swpm ) )      $saved_swpm      = array();
         if ( ! is_array( $saved_uwp ) )       $saved_uwp       = array();
@@ -147,6 +148,7 @@ class JEmail_Admin {
         $vendor_statuses    = $this->db->get_vendor_statuses();
         $volunteer_statuses = $this->db->get_volunteer_statuses();
         $has_geodirectory   = $this->db->has_geodirectory();
+        $awards_years       = $this->db->get_awards_years();
 
         $is_sent = in_array( $status, array( 'sending', 'sent' ), true );
         ?>
@@ -318,6 +320,20 @@ class JEmail_Admin {
                                 <label><input type="radio" name="target_gd_listing" value="has_listing" <?php checked( $saved_gd, 'has_listing' ); ?> /> Has created/claimed a listing</label>
                                 <label><input type="radio" name="target_gd_listing" value="no_listing" <?php checked( $saved_gd, 'no_listing' ); ?> /> Has NOT created any listing</label>
                             </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Awards Submissions -->
+                        <?php if ( ! empty( $awards_years ) ) : ?>
+                        <div class="jemail-sidebar-box">
+                            <h3>Awards Submissions</h3>
+                            <p class="description">Send to everyone who submitted an award nomination in a given year. Includes both actor and campsite submissions (even those without WP accounts).</p>
+                            <select name="target_awards_year" id="jemail-target-awards-year" class="widefat">
+                                <option value="">No filter (all users)</option>
+                                <?php foreach ( $awards_years as $ay ) : ?>
+                                    <option value="<?php echo esc_attr( $ay ); ?>" <?php selected( $saved_awards_year, $ay ); ?>><?php echo esc_html( $ay ); ?> award submissions</option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <?php endif; ?>
 
@@ -728,6 +744,14 @@ class JEmail_Admin {
                     ?></td>
                 </tr>
                 <tr>
+                    <th>Awards Hub</th>
+                    <td><?php
+                        $ay = $this->db->get_awards_years();
+                        if ( empty( $ay ) ) { echo '<em>Awards plugin not active or no submissions found</em>'; }
+                        else { echo 'Active - Submission years: ' . esc_html( implode( ', ', $ay ) ); }
+                    ?></td>
+                </tr>
+                <tr>
                     <th>FluentSMTP Active</th>
                     <td><?php echo is_plugin_active( 'fluent-smtp/fluent-smtp.php' ) ? '✅ Yes — emails will be routed through FluentSMTP' : '❌ No — using default wp_mail()'; ?></td>
                 </tr>
@@ -753,8 +777,9 @@ class JEmail_Admin {
         $vendor_statuses    = isset( $_POST['vendor_statuses'] ) ? array_map( 'sanitize_text_field', (array) $_POST['vendor_statuses'] ) : array();
         $volunteer_statuses = isset( $_POST['volunteer_statuses'] ) ? array_map( 'sanitize_text_field', (array) $_POST['volunteer_statuses'] ) : array();
         $gd_listing         = sanitize_text_field( $_POST['gd_listing'] ?? '' );
+        $awards_year        = sanitize_text_field( $_POST['awards_year'] ?? '' );
 
-        $count = $this->db->count_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing );
+        $count = $this->db->count_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing, $awards_year );
         wp_send_json_success( array( 'count' => $count ) );
     }
 
@@ -771,8 +796,9 @@ class JEmail_Admin {
         $vendor_statuses    = isset( $_POST['vendor_statuses'] ) ? array_map( 'sanitize_text_field', (array) $_POST['vendor_statuses'] ) : array();
         $volunteer_statuses = isset( $_POST['volunteer_statuses'] ) ? array_map( 'sanitize_text_field', (array) $_POST['volunteer_statuses'] ) : array();
         $gd_listing         = sanitize_text_field( $_POST['gd_listing'] ?? '' );
+        $awards_year        = sanitize_text_field( $_POST['awards_year'] ?? '' );
 
-        $all        = $this->db->get_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing );
+        $all        = $this->db->get_recipients( $roles, $swpm_levels, $uwp_forms, $vendor_statuses, $volunteer_statuses, $gd_listing, $awards_year );
         $total      = count( $all );
         $preview    = array_slice( $all, 0, 25 );
 
@@ -910,6 +936,7 @@ class JEmail_Admin {
             'target_vendor_statuses'   => maybe_serialize( isset( $_POST['target_vendor_statuses'] ) ? array_map( 'sanitize_text_field', (array) $_POST['target_vendor_statuses'] ) : array() ),
             'target_volunteer_statuses' => maybe_serialize( isset( $_POST['target_volunteer_statuses'] ) ? array_map( 'sanitize_text_field', (array) $_POST['target_volunteer_statuses'] ) : array() ),
             'target_gd_listing'        => sanitize_text_field( $_POST['target_gd_listing'] ?? '' ),
+            'target_awards_year'       => sanitize_text_field( $_POST['target_awards_year'] ?? '' ),
         );
 
         // When saving draft from a scheduled campaign, cancel the schedule
