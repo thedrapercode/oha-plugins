@@ -1,0 +1,221 @@
+{
+  "list": [
+    {
+      "name": "Rookie Clown",
+      "note": "Entry-level, voice-heavy presence.",
+      "answers": {
+        "archetype": "clown",
+        "primary_method": "comedy_horror",
+        "mobility": "hybrid",
+        "activity_level": "medium",
+        "costume_restriction": "moderate",
+        "scene_conditions": [
+          "open",
+          "loud"
+        ],
+        "prop_usage": "sound_device",
+        "vocal_type": "dialogue",
+        "vocal_care": [
+          "warmup_sometimes",
+          "hydration"
+        ],
+        "interaction": {
+          "style": "direct",
+          "proximity": "medium"
+        },
+        "experience": "1_2",
+        "training_recent": "yes",
+        "stamina_habits": [
+          "stretch"
+        ],
+        "unsafe_flags": []
+      }
+    },
+    {
+      "name": "Veteran Stalker",
+      "note": "Low light, patience, endurance-focused.",
+      "answers": {
+        "archetype": "stalker",
+        "primary_method": "psychological",
+        "mobility": "roaming",
+        "activity_level": "high",
+        "costume_restriction": "light",
+        "scene_conditions": [
+          "low_light",
+          "tight"
+        ],
+        "prop_usage": "none",
+        "vocal_type": "whisper",
+        "vocal_care": [
+          "warmup_always",
+          "hydration",
+          "cooldown"
+        ],
+        "interaction": {
+          "style": "improv_heavy",
+          "proximity": "high_no_touch"
+        },
+        "experience": "6_plus",
+        "training_recent": "yes",
+        "stamina_habits": [
+          "cardio",
+          "micro_breaks"
+        ],
+        "unsafe_flags": []
+      }
+    },
+    {
+      "name": "Heavy-Costume Brute",
+      "note": "Presence high; agility lowered.",
+      "answers": {
+        "archetype": "creature",
+        "primary_method": "startle_follow",
+        "mobility": "stationary",
+        "activity_level": "high",
+        "costume_restriction": "heavy",
+        "scene_conditions": [
+          "strobe_fx",
+          "low_light"
+        ],
+        "prop_usage": "handheld",
+        "vocal_type": "growl",
+        "vocal_care": [
+          "hydration"
+        ],
+        "interaction": {
+          "style": "indirect",
+          "proximity": "medium"
+        },
+        "experience": "3_5",
+        "training_recent": "no",
+        "stamina_habits": [
+          "heat_plan",
+          "micro_breaks"
+        ],
+        "unsafe_flags": []
+      }
+    },
+    {
+      "name": "Silent Loomer Ghost",
+      "note": "Voice minimal; presence maximal.",
+      "answers": {
+        "archetype": "ghost",
+        "primary_method": "silent_loomer",
+        "mobility": "roaming",
+        "activity_level": "medium",
+        "costume_restriction": "moderate",
+        "scene_conditions": [
+          "low_light",
+          "quiet"
+        ],
+        "prop_usage": "none",
+        "vocal_type": "non_vocal",
+        "vocal_care": [],
+        "interaction": {
+          "style": "indirect",
+          "proximity": "high_no_touch"
+        },
+        "experience": "3_5",
+        "training_recent": "yes",
+        "stamina_habits": [
+          "cardio"
+        ],
+        "unsafe_flags": []
+      }
+    },
+    {
+      "name": "Dialogue Trickster",
+      "note": "High presence, witty lines.",
+      "answers": {
+        "archetype": "trickster",
+        "primary_method": "comedy_horror",
+        "mobility": "hybrid",
+        "activity_level": "medium",
+        "costume_restriction": "light",
+        "scene_conditions": [
+          "open",
+          "quiet"
+        ],
+        "prop_usage": "sound_device",
+        "vocal_type": "dialogue",
+        "vocal_care": [
+          "warmup_always",
+          "hydration",
+          "cooldown"
+        ],
+        "interaction": {
+          "style": "direct",
+          "proximity": "medium"
+        },
+        "experience": "6_plus",
+        "training_recent": "yes",
+        "stamina_habits": [
+          "stretch",
+          "cardio"
+        ],
+        "unsafe_flags": []
+      }
+    },
+    {
+      "name": "Environmental Engineer",
+      "note": "Leans on props/timing.",
+      "answers": {
+        "archetype": "predator",
+        "primary_method": "environmental",
+        "mobility": "hybrid",
+        "activity_level": "medium",
+        "costume_restriction": "moderate",
+        "scene_conditions": [
+          "open",
+          "strobe_fx"
+        ],
+        "prop_usage": "mechanical",
+        "vocal_type": "growl",
+        "vocal_care": [
+          "warmup_sometimes"
+        ],
+        "interaction": {
+          "style": "scripted",
+          "proximity": "low"
+        },
+        "experience": "1_2",
+        "training_recent": "no",
+        "stamina_habits": [
+          "micro_breaks"
+        ],
+        "unsafe_flags": []
+      }
+    },
+    {
+      "name": "Roaming Predator",
+      "note": "Aggressive movement, big starts.",
+      "answers": {
+        "archetype": "predator",
+        "primary_method": "jump_startle",
+        "mobility": "roaming",
+        "activity_level": "high",
+        "costume_restriction": "light",
+        "scene_conditions": [
+          "low_light"
+        ],
+        "prop_usage": "handheld",
+        "vocal_type": "growl",
+        "vocal_care": [
+          "warmup_always",
+          "hydration"
+        ],
+        "interaction": {
+          "style": "direct",
+          "proximity": "high_no_touch"
+        },
+        "experience": "3_5",
+        "training_recent": "yes",
+        "stamina_habits": [
+          "cardio",
+          "stretch"
+        ],
+        "unsafe_flags": []
+      }
+    }
+  ]
+}

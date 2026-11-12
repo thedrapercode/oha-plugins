@@ -1,0 +1,485 @@
+{
+  "base": {
+    "fear": 5,
+    "agility": 5,
+    "endurance": 5,
+    "voice": 5,
+    "presence": 5
+  },
+  "ui": {
+    "archetype": {
+      "type": "single",
+      "label": "Archetype",
+      "options": {
+        "predator": "Predator",
+        "trickster": "Trickster",
+        "stalker": "Stalker",
+        "creature": "Creature",
+        "ghost": "Ghost",
+        "clown": "Clown",
+        "other": "Other"
+      }
+    },
+    "primary_method": {
+      "type": "single",
+      "label": "Primary Scare Method",
+      "options": {
+        "jump_startle": "Jump Startle",
+        "psychological": "Psychological / Slow Burn",
+        "environmental": "Environmental (sound/props/space)",
+        "startle_follow": "Startle + Follow Through",
+        "comedy_horror": "Comedy-Horror",
+        "silent_loomer": "Silent Loomer"
+      }
+    },
+    "mobility": {
+      "type": "single",
+      "label": "Mobility",
+      "options": {
+        "stationary": "Stationary",
+        "roaming": "Roaming",
+        "hybrid": "Both / Hybrid"
+      }
+    },
+    "activity_level": {
+      "type": "single",
+      "label": "Physical Activity Level",
+      "options": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
+    },
+    "costume_restriction": {
+      "type": "single",
+      "label": "Costume Restriction",
+      "options": {
+        "light": "Light/Flexible",
+        "moderate": "Moderate",
+        "heavy": "Heavy",
+        "extreme": "Extreme"
+      }
+    },
+    "scene_conditions": {
+      "type": "multi",
+      "label": "Scene Conditions (pick up to 2)",
+      "options": {
+        "tight": "Tight / Confined",
+        "open": "Open / Long Sightlines",
+        "low_light": "Low Light",
+        "strobe_fx": "Strobe/FX Heavy",
+        "loud": "Loud Environment",
+        "quiet": "Quiet / Whisper-friendly"
+      }
+    },
+    "prop_usage": {
+      "type": "single",
+      "label": "Prop Usage",
+      "options": {
+        "none": "None",
+        "handheld": "Handheld",
+        "mechanical": "Mechanical/Set-triggered",
+        "sound_device": "Sound Device"
+      }
+    },
+    "vocal_type": {
+      "type": "single",
+      "label": "Vocal Type",
+      "options": {
+        "growl": "Growl/Gravel",
+        "whisper": "Whisper/Breath",
+        "scream": "Scream/Distorted",
+        "dialogue": "Dialogue/Lines",
+        "non_vocal": "Non-vocal (Mime/Loom)"
+      }
+    },
+    "vocal_care": {
+      "type": "multi",
+      "label": "Vocal Care Habits",
+      "options": {
+        "warmup_always": "Always warm-up",
+        "warmup_sometimes": "Sometimes warm-up",
+        "hydration": "Hydration during shift",
+        "cooldown": "Post-show cooldown"
+      }
+    },
+    "interaction": {
+      "type": "composite",
+      "label": "Interaction Style",
+      "parts": {
+        "style": {
+          "type": "single",
+          "label": "Style",
+          "options": {
+            "direct": "Direct Engagement",
+            "indirect": "Indirect / Ambience",
+            "scripted": "Scripted",
+            "improv_heavy": "Improv-heavy"
+          }
+        },
+        "proximity": {
+          "type": "single",
+          "label": "Proximity Comfort",
+          "options": {
+            "low": "Low",
+            "medium": "Medium",
+            "high_no_touch": "High (no touch)"
+          }
+        }
+      }
+    },
+    "experience": {
+      "type": "single",
+      "label": "Seasons of Acting",
+      "options": {
+        "0": "0",
+        "1_2": "1\u20132",
+        "3_5": "3\u20135",
+        "6_plus": "6+"
+      }
+    },
+    "training_recent": {
+      "type": "single",
+      "label": "Formal Training in last 2 years?",
+      "options": {
+        "no": "No",
+        "yes": "Yes"
+      }
+    },
+    "stamina_habits": {
+      "type": "multi",
+      "label": "Stamina Habits",
+      "options": {
+        "stretch": "Pre-show stretch/mobility",
+        "micro_breaks": "Scheduled micro-breaks",
+        "cardio": "Off-season cardio",
+        "heat_plan": "Heat management plan"
+      }
+    },
+    "unsafe_flags": {
+      "type": "multi",
+      "label": "(For education) Unsafe behavior (don\u2019t do these)",
+      "options": {
+        "touch_guests": "Touch guests",
+        "block_exits": "Block exits",
+        "chase_outside_zone": "Chase outside zone"
+      }
+    }
+  },
+  "questions": {
+    "archetype": {
+      "type": "single",
+      "weights": {
+        "predator": {
+          "fear": 1,
+          "agility": 0.5,
+          "presence": 0.5
+        },
+        "trickster": {
+          "presence": 1,
+          "voice": 0.5
+        },
+        "stalker": {
+          "fear": 0.5,
+          "endurance": 0.5,
+          "presence": 0.5
+        },
+        "creature": {
+          "fear": 0.5,
+          "voice": -0.5,
+          "agility": 0.5
+        },
+        "ghost": {
+          "presence": 1,
+          "voice": -0.5
+        },
+        "clown": {
+          "presence": 0.5,
+          "voice": 0.5
+        },
+        "other": {}
+      }
+    },
+    "primary_method": {
+      "type": "single",
+      "weights": {
+        "jump_startle": {
+          "fear": 1.5,
+          "agility": 0.5
+        },
+        "psychological": {
+          "presence": 1.5,
+          "fear": 0.5
+        },
+        "environmental": {
+          "presence": 1,
+          "endurance": 0.5
+        },
+        "startle_follow": {
+          "fear": 1,
+          "presence": 0.5,
+          "endurance": 0.5
+        },
+        "comedy_horror": {
+          "presence": 1,
+          "voice": 0.5
+        },
+        "silent_loomer": {
+          "presence": 1,
+          "voice": -0.5,
+          "fear": 0.5
+        }
+      }
+    },
+    "mobility": {
+      "type": "single",
+      "weights": {
+        "stationary": {
+          "endurance": 0.5,
+          "agility": -1
+        },
+        "roaming": {
+          "agility": 1.5,
+          "endurance": 0.5
+        },
+        "hybrid": {
+          "agility": 1,
+          "endurance": 0.5
+        }
+      }
+    },
+    "activity_level": {
+      "type": "single",
+      "weights": {
+        "low": {
+          "endurance": -0.5,
+          "agility": -0.5
+        },
+        "medium": {},
+        "high": {
+          "agility": 1.5,
+          "endurance": 1
+        }
+      }
+    },
+    "costume_restriction": {
+      "type": "single",
+      "weights": {
+        "light": {
+          "agility": 1
+        },
+        "moderate": {},
+        "heavy": {
+          "agility": -1.5,
+          "endurance": -0.5,
+          "presence": 0.5
+        },
+        "extreme": {
+          "agility": -2,
+          "endurance": -1,
+          "presence": 1
+        }
+      }
+    },
+    "scene_conditions": {
+      "type": "multi",
+      "weights": {
+        "tight": {
+          "agility": -0.5,
+          "presence": 0.5
+        },
+        "open": {
+          "agility": 0.5,
+          "presence": -0.5
+        },
+        "low_light": {
+          "fear": 0.5,
+          "presence": 0.5
+        },
+        "strobe_fx": {
+          "endurance": -0.5,
+          "presence": 0.5
+        },
+        "loud": {
+          "voice": -0.5,
+          "presence": 0.5
+        },
+        "quiet": {
+          "voice": 1,
+          "fear": 0.5
+        }
+      }
+    },
+    "prop_usage": {
+      "type": "single",
+      "weights": {
+        "none": {
+          "presence": 0.5
+        },
+        "handheld": {
+          "presence": 0.5,
+          "agility": -0.25
+        },
+        "mechanical": {
+          "presence": 0.5,
+          "endurance": -0.25
+        },
+        "sound_device": {
+          "voice": 0.5,
+          "presence": 0.25
+        }
+      }
+    },
+    "vocal_type": {
+      "type": "single",
+      "weights": {
+        "growl": {
+          "fear": 1,
+          "voice": -0.5
+        },
+        "whisper": {
+          "presence": 0.5,
+          "voice": 0.5
+        },
+        "scream": {
+          "fear": 1,
+          "voice": -1
+        },
+        "dialogue": {
+          "voice": 1.5,
+          "presence": 0.5
+        },
+        "non_vocal": {
+          "presence": 0.5,
+          "voice": -1
+        }
+      }
+    },
+    "vocal_care": {
+      "type": "multi",
+      "weights": {
+        "warmup_always": {
+          "voice": 1.5,
+          "endurance": 0.5
+        },
+        "warmup_sometimes": {
+          "voice": 0.5
+        },
+        "hydration": {
+          "voice": 0.5,
+          "endurance": 0.5
+        },
+        "cooldown": {
+          "voice": 0.5
+        }
+      }
+    },
+    "interaction": {
+      "type": "composite",
+      "parts": {
+        "style": {
+          "type": "single",
+          "weights": {
+            "direct": {
+              "presence": 1,
+              "voice": 0.5
+            },
+            "indirect": {
+              "presence": 0.5
+            },
+            "scripted": {
+              "presence": -0.25,
+              "voice": 0.5
+            },
+            "improv_heavy": {
+              "presence": 1
+            }
+          }
+        },
+        "proximity": {
+          "type": "single",
+          "weights": {
+            "low": {},
+            "medium": {
+              "presence": 0.25
+            },
+            "high_no_touch": {
+              "presence": 0.5,
+              "fear": 0.5
+            }
+          }
+        }
+      }
+    },
+    "experience": {
+      "type": "single",
+      "weights": {
+        "0": {
+          "presence": -0.5
+        },
+        "1_2": {},
+        "3_5": {
+          "presence": 0.5,
+          "endurance": 0.25
+        },
+        "6_plus": {
+          "presence": 1,
+          "endurance": 0.5
+        }
+      }
+    },
+    "training_recent": {
+      "type": "bool",
+      "weights_true": {
+        "presence": 0.5,
+        "voice": 0.25,
+        "endurance": 0.25
+      }
+    },
+    "stamina_habits": {
+      "type": "multi",
+      "weights": {
+        "stretch": {
+          "agility": 0.5,
+          "endurance": 0.25
+        },
+        "micro_breaks": {
+          "endurance": 1
+        },
+        "cardio": {
+          "endurance": 1,
+          "agility": 0.25
+        },
+        "heat_plan": {
+          "endurance": 0.5
+        }
+      }
+    }
+  },
+  "guardrails": {
+    "unsafe_flags": {
+      "touch_guests": {
+        "fear": -2,
+        "presence": -2
+      },
+      "block_exits": {
+        "fear": -1.5,
+        "presence": -2
+      },
+      "chase_outside_zone": {
+        "fear": -1,
+        "presence": -1.5
+      }
+    },
+    "voice_strain": {
+      "penalty": {
+        "voice": -1
+      }
+    },
+    "over_restriction": {
+      "penalty": {
+        "endurance": -0.5
+      }
+    }
+  }
+}

@@ -10,6 +10,35 @@ Requires Plugins: geodirectory
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'OJB_VERSION', '0.6.0' );
+
+// Auto-update check via GitHub releases
+add_filter( 'pre_set_site_transient_update_plugins', 'ojb_check_for_update' );
+function ojb_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) {
+        return $transient;
+    }
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/thedrapercode/oha-plugins/main/updates/job-board-lite.json',
+        [ 'timeout' => 10, 'sslverify' => true ]
+    );
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $transient;
+    }
+    $data = json_decode( wp_remote_retrieve_body( $response ) );
+    if ( ! $data || empty( $data->version ) ) {
+        return $transient;
+    }
+    if ( version_compare( $data->version, OJB_VERSION, '>' ) ) {
+        $transient->response[ plugin_basename( __FILE__ ) ] = (object) [
+            'slug'        => 'oha-job-board-lite',
+            'plugin'      => plugin_basename( __FILE__ ),
+            'new_version' => $data->version,
+            'package'     => $data->download_url,
+            'url'         => '',
+        ];
+    }
+    return $transient;
+}
 define( 'OJB_URL',     plugin_dir_url( __FILE__ ) );
 define( 'OJB_PATH',    plugin_dir_path( __FILE__ ) );
 

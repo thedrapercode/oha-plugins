@@ -17,6 +17,35 @@ if (!defined('ABSPATH')) {
 
 // Define plugin constants
 define('OHA_SCHEDULE_VERSION', '1.6.1');
+
+// Auto-update check via GitHub releases
+add_filter( 'pre_set_site_transient_update_plugins', 'oha_schedule_check_for_update' );
+function oha_schedule_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) {
+        return $transient;
+    }
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/thedrapercode/oha-plugins/main/updates/schedule-hub.json',
+        [ 'timeout' => 10, 'sslverify' => true ]
+    );
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $transient;
+    }
+    $data = json_decode( wp_remote_retrieve_body( $response ) );
+    if ( ! $data || empty( $data->version ) ) {
+        return $transient;
+    }
+    if ( version_compare( $data->version, OHA_SCHEDULE_VERSION, '>' ) ) {
+        $transient->response[ plugin_basename( __FILE__ ) ] = (object) [
+            'slug'        => 'oha-schedule-hub',
+            'plugin'      => plugin_basename( __FILE__ ),
+            'new_version' => $data->version,
+            'package'     => $data->download_url,
+            'url'         => '',
+        ];
+    }
+    return $transient;
+}
 define('OHA_SCHEDULE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_SCHEDULE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
