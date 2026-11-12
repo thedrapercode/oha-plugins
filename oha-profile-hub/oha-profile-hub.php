@@ -2,15 +2,17 @@
 /**
  * Plugin Name: OHA Profile Hub
  * Description: Full-page account dashboard for the OHA haunt-profile experience. Single-page design with in-page tabs, profile hero, account management panels, and membership status. Adapts to PWA, mobile, and desktop.
- * Version: 1.3.3
+ * Version: 1.4.1
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_PROFILE_HUB_VERSION', '1.3.3' );
+define( 'OHA_PROFILE_HUB_VERSION', '1.4.1' );
 define( 'OHA_PROFILE_HUB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'OHA_PROFILE_HUB_URL', plugin_dir_url( __FILE__ ) );
+
+require_once OHA_PROFILE_HUB_PATH . 'includes/class-oha-profile-hub-settings.php';
 
 class OHA_Profile_Hub {
 
@@ -25,22 +27,6 @@ class OHA_Profile_Hub {
     public function init() {
         add_shortcode( 'oha_profile_hub',      array( $this, 'render_hub' ) );
         add_shortcode( 'oha_account_dashboard', array( $this, 'render_hub' ) ); // backward compat alias
-        add_filter( 'body_class', array( $this, 'body_classes' ) );
-        add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_panel_assets' ) );
-    }
-
-    public function body_classes( $classes ) {
-        if ( ! empty( $_GET['oha_panel'] ) ) {
-            $classes[] = 'oha-panel-view';
-        }
-        return $classes;
-    }
-
-    // Enqueue on the UWP account page when loaded in panel mode (?oha_panel=1)
-    public function maybe_enqueue_panel_assets() {
-        if ( ! empty( $_GET['oha_panel'] ) ) {
-            $this->enqueue_assets();
-        }
     }
 
     private function enqueue_assets() {
@@ -185,7 +171,7 @@ class OHA_Profile_Hub {
 
             <!-- ===================== TAB BAR ===================== -->
             <div class="oha-phub-tabbar" role="tablist" aria-label="Profile sections">
-                <button class="oha-phub-tab active" data-tab="account" role="tab" aria-selected="true">My Account</button>
+                <button class="oha-phub-tab active" data-tab="account" role="tab" aria-selected="true"><?php echo esc_html( get_option( 'oha_phub_account_tab_label', 'My Account' ) ); ?></button>
                 <?php foreach ( $extra_tabs as $slug => $label ) : ?>
                 <button class="oha-phub-tab" data-tab="<?php echo esc_attr( $slug ); ?>" role="tab" aria-selected="false">
                     <?php echo esc_html( $label ); ?>
@@ -204,35 +190,29 @@ class OHA_Profile_Hub {
                         <div class="oha-phub-card">
                             <div class="oha-phub-card-head">Account Settings</div>
 
-                            <button type="button" class="oha-phub-action-row"
-                                data-panel-url="<?php echo esc_url( $account_base . '?type=account' ); ?>"
-                                data-panel-type="account">
+                            <a href="<?php echo esc_url( $account_base . '?type=account' ); ?>" class="oha-phub-action-row">
                                 <span class="oha-phub-action-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                 </span>
                                 <span class="oha-phub-action-label">Edit Account</span>
                                 <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                            </button>
+                            </a>
 
-                            <button type="button" class="oha-phub-action-row"
-                                data-panel-url="<?php echo esc_url( $account_base . '?type=change-password' ); ?>"
-                                data-panel-type="change-password">
+                            <a href="<?php echo esc_url( $account_base . '?type=change-password' ); ?>" class="oha-phub-action-row">
                                 <span class="oha-phub-action-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                 </span>
                                 <span class="oha-phub-action-label">Change Password</span>
                                 <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                            </button>
+                            </a>
 
-                            <button type="button" class="oha-phub-action-row"
-                                data-panel-url="<?php echo esc_url( $account_base . '?type=privacy' ); ?>"
-                                data-panel-type="privacy">
+                            <a href="<?php echo esc_url( $account_base . '?type=privacy' ); ?>" class="oha-phub-action-row">
                                 <span class="oha-phub-action-icon">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                 </span>
                                 <span class="oha-phub-action-label">Privacy Settings</span>
                                 <span class="oha-phub-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></span>
-                            </button>
+                            </a>
 
                             <?php if ( $has_orders && $orders_url ) : ?>
                             <a href="<?php echo esc_url( $orders_url ); ?>" class="oha-phub-action-row">
@@ -273,7 +253,7 @@ class OHA_Profile_Hub {
                             </div>
                             <?php if ( $is_expired ) : ?>
                             <div class="oha-phub-renew-cta">
-                                <a href="/membership/" class="oha-phub-renew-btn">Renew Membership</a>
+                                <a href="<?php echo esc_url( get_option( 'oha_phub_renew_url', '/membership/' ) ); ?>" class="oha-phub-renew-btn">Renew Membership</a>
                             </div>
                             <?php endif; ?>
                         </div>
@@ -318,40 +298,6 @@ class OHA_Profile_Hub {
 
         </div><!-- .oha-phub -->
 
-        <!-- ===================== SLIDE-IN FORM PANEL ===================== -->
-        <!-- Right-side drawer on desktop, full-screen on mobile/PWA.         -->
-        <!-- Loads UWP account forms (/myaccount/?type=X) with stripped chrome. -->
-        <div id="oha-prohub-panel" class="oha-prohub-panel" aria-hidden="true" role="dialog" aria-modal="true">
-            <div class="oha-prohub-panel-bar">
-                <button type="button" id="oha-prohub-panel-back" class="oha-prohub-panel-back" aria-label="Back to My Account">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-                    <span>My Account</span>
-                </button>
-                <span class="oha-prohub-panel-bar-end"></span>
-            </div>
-            <nav class="oha-prohub-panel-nav" aria-label="Account sections">
-                <button type="button" class="oha-prohub-panel-nav-btn active"
-                        data-type="account"
-                        data-url="<?php echo esc_url( $account_base . '?type=account' ); ?>">
-                    Edit Account
-                </button>
-                <button type="button" class="oha-prohub-panel-nav-btn"
-                        data-type="change-password"
-                        data-url="<?php echo esc_url( $account_base . '?type=change-password' ); ?>">
-                    Password
-                </button>
-                <button type="button" class="oha-prohub-panel-nav-btn"
-                        data-type="privacy"
-                        data-url="<?php echo esc_url( $account_base . '?type=privacy' ); ?>">
-                    Privacy
-                </button>
-            </nav>
-            <iframe id="oha-prohub-panel-iframe"
-                    class="oha-prohub-panel-iframe"
-                    src=""
-                    title="Account settings"
-                    scrolling="yes"></iframe>
-        </div>
         <?php
         return ob_get_clean();
     }
@@ -359,4 +305,5 @@ class OHA_Profile_Hub {
 
 add_action( 'plugins_loaded', function() {
     OHA_Profile_Hub::instance()->init();
+    ( new OHA_Profile_Hub_Settings() )->init();
 } );

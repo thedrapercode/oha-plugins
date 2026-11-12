@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-profile-hub",
-    "version":  "1.3.3",
+    "version":  "1.4.1",
     "entries":  [
                     {
                         "date":  "2026-11-11",
@@ -57,6 +57,34 @@
                         "type":  "fix",
                         "summary":  "Resources tab default: qcopd-directory shortcode (Link Directory plugin)",
                         "notes":  "Resources default: [qcopd-directory mode=all column=2 style=style-1 orderby=date order=DESC per_page=2 enable_embedding=false]. Only rendered if qcopd-directory shortcode is registered (Link Directory - Simple Link Directory plugin must be active)."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Admin settings page added under Settings \u003e OHA Profile Hub for all configurable options",
+                        "notes":  "Covers: My Account tab label, Renew Membership URL, and per-tab label + shortcode for all 5 extra tabs. File: includes/class-oha-profile-hub-settings.php. Options: oha_phub_account_tab_label, oha_phub_renew_url, oha_phub_tab_{slug}_label, oha_phub_tab_{slug}_sc."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.4.0",
+                        "type":  "feature",
+                        "summary":  "Built-in default shortcodes added for all five extra tabs (Listings, Events, Favorites, Discounts, Resources)",
+                        "notes":  "Defaults used when no WP option override is set. Events default: gd_listings upcoming events + oha_education_ondemand. Resources default: qcopd-directory shortcode."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.4.0",
+                        "type":  "change",
+                        "summary":  "Renew Membership URL and My Account tab label now read from WP options with /membership/ and My Account as fallbacks",
+                        "notes":  "oha_phub_renew_url option controls Renew button href on expired membership card. oha_phub_account_tab_label controls first tab text."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.4.1",
+                        "type":  "change",
+                        "summary":  "Removed slide-in panel drawer; account form links now navigate directly to UWP account page",
+                        "notes":  "Panel had no visible close button and persisted across page navigation. Edit Account, Change Password, Privacy Settings converted from JS-triggered iframe panel to plain anchor links. body_classes() and maybe_enqueue_panel_assets() methods removed. Can revisit with modal approach later."
                     }
                 ]
 }
