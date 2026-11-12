@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.8.3",
+    "version":  "1.8.4",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -616,6 +616,20 @@
                         "type":  "fix",
                         "summary":  "Change HMAC token separator from pipe to dot to avoid esc_url percent-encoding edge cases",
                         "notes":  "add_query_arg encodes | as %7C. esc_url then decodes %7C back to | since pipe is in its allowed set. The literal | in the URL worked but was fragile. Changed make_zoom_token and verify_zoom_token to use dot as separator. Token format is now {expires}.{16-char-hex-sig}. Existing v1.8.2 tokens are invalidated but v1.8.2 was never uploaded to the live site."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.8.4",
+                        "type":  "fix",
+                        "summary":  "CSS not loading on UWP profile tab pages; has_shortcode check only inspects post_content",
+                        "notes":  "maybe_enqueue_styles() now loads CSS unconditionally on all frontend pages, same pattern as enqueue_replay_script(). The shortcode lives in UWP tab data, not post_content, so has_shortcode always returned false. Without CSS the replay embed had zero height so Watch Now appeared to do nothing."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.8.4",
+                        "type":  "change",
+                        "summary":  "Replay grid changed from 3-column to 2-column default; drops to 1-column below 576px",
+                        "notes":  "Removed the 900px 2-col breakpoint; 2-col is now the base. User requested smaller cards via 2-column layout."
                     }
                 ]
 }

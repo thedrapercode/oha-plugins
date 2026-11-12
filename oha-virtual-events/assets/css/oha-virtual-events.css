@@ -692,15 +692,12 @@ button.oha-ve-btn:disabled {
    play button on hover, Watch Now + More Info footer.
    ============================================================= */
 
-/* ── Grid: 3-col / 2-col / 1-col ─────────────────────────── */
+/* ── Grid: 2-col / 1-col ──────────────────────────────────── */
 .oha-replay-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     margin-top: 12px;
-}
-@media (max-width: 900px) {
-    .oha-replay-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 576px) {
     .oha-replay-grid { grid-template-columns: 1fr; }

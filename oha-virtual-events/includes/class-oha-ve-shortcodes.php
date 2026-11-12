@@ -753,31 +753,14 @@ class OHA_VE_Shortcodes {
     // =========================================================
 
     public function maybe_enqueue_styles() {
-        global $post;
-
-        if ( ! $post || ! is_a( $post, 'WP_Post' ) ) {
-            return;
-        }
-
-        $tags = [
-            'oha_education_events',
-            'oha_education_live',
-            'oha_education_upcoming',
-            'oha_education_teaching',
-            'oha_education_ondemand',
-            'oha_live_banner',
-        ];
-
-        foreach ( $tags as $tag ) {
-            if ( has_shortcode( $post->post_content, $tag ) ) {
-                wp_enqueue_style(
-                    'oha-virtual-events',
-                    OHA_VE_PLUGIN_URL . 'assets/css/oha-virtual-events.css',
-                    [],
-                    OHA_VE_VERSION
-                );
-                return;
-            }
-        }
+        // Load on every frontend page — shortcode may live inside a UWP profile
+        // tab whose content is not in $post->post_content, so has_shortcode() cannot
+        // detect it. The stylesheet is small; unconditional load is fine.
+        wp_enqueue_style(
+            'oha-virtual-events',
+            OHA_VE_PLUGIN_URL . 'assets/css/oha-virtual-events.css',
+            [],
+            OHA_VE_VERSION
+        );
     }
 }
