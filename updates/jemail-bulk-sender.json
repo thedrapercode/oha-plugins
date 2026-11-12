@@ -1,0 +1,9 @@
+{
+    "name":  "OHA Jemail Bulk Sender",
+    "slug":  "oha-jemail-bulk-sender",
+    "version":  "1.6.0",
+    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v1.6.0-jemail-bulk-sender/jemail-bulk-sender-oha-v1.6.0.zip",
+    "requires":  "5.8",
+    "tested":  "6.7",
+    "last_updated":  "2026-11-12"
+}

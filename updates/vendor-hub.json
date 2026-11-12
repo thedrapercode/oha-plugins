@@ -1,0 +1,9 @@
+{
+  "name": "OHA Vendor Hub",
+  "slug": "oha-vendor-hub",
+  "version": "3.16.2",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

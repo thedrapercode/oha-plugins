@@ -1,0 +1,9 @@
+{
+  "name": "OHA Volunteer Hub",
+  "slug": "oha-volunteer-hub",
+  "version": "4.15.1",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

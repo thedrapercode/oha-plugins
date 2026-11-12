@@ -1,0 +1,9 @@
+{
+    "name":  "OHA Virtual Events",
+    "slug":  "oha-virtual-events",
+    "version":  "1.8.6",
+    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v1.8.6-virtual-events/virtual-events-oha-v1.8.6.zip",
+    "requires":  "5.8",
+    "tested":  "6.7",
+    "last_updated":  "2026-11-12"
+}

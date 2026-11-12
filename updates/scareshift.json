@@ -1,0 +1,9 @@
+{
+  "name": "Scareshift",
+  "slug": "oha-scareshift",
+  "version": "1.4.3",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

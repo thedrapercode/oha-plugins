@@ -1,0 +1,9 @@
+{
+  "name": "OHA Board Hub Awards Addon",
+  "slug": "oha-board-hub-awards-addon",
+  "version": "6.10.0",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

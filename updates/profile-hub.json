@@ -1,0 +1,9 @@
+{
+  "name": "OHA Profile Hub",
+  "slug": "oha-profile-hub",
+  "version": "1.4.1",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "OHA Job Board Lite",
+  "slug": "oha-job-board-lite",
+  "version": "0.6.0",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

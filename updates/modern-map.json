@@ -1,0 +1,9 @@
+{
+  "name": "OHA Modern Map",
+  "slug": "oha-modern-map",
+  "version": "2.22.0",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}

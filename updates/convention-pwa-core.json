@@ -1,0 +1,9 @@
+{
+  "name": "OHA Convention PWA Core",
+  "slug": "oha-convention-pwa-core",
+  "version": "3.25.2",
+  "download_url": "",
+  "requires": "5.8",
+  "tested": "6.7",
+  "last_updated": "2026-11-12"
+}
