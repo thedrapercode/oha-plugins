@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.16.1",
+    "version":  "2.16.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -764,6 +764,13 @@
                         "type":  "change",
                         "summary":  "Renamed WooCommerce Orders stat card to Checkout Orders",
                         "notes":  "Removes vendor name from board hub display."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "2.16.2",
+                        "type":  "change",
+                        "summary":  "Add GitHub auto-update check; WordPress now shows update available when a new version is released",
+                        "notes":  ""
                     }
                 ]
 }

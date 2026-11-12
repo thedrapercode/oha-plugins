@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.16.1
+ * Version: 2.16.2
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,12 +219,41 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.16.1');
+define('OHA_BHS_VERSION', '2.16.2');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('OHA_BHS_OPT', 'oha_bh_suite_settings');
 define('OHA_BHS_MENU', 'oha-board-hub');
+
+// Auto-update check via GitHub releases
+add_filter( 'pre_set_site_transient_update_plugins', 'oha_bhs_check_for_update' );
+function oha_bhs_check_for_update( $transient ) {
+    if ( empty( $transient->checked ) ) {
+        return $transient;
+    }
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/thedrapercode/oha-plugins/main/updates/board-hub.json',
+        [ 'timeout' => 10, 'sslverify' => true ]
+    );
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $transient;
+    }
+    $data = json_decode( wp_remote_retrieve_body( $response ) );
+    if ( ! $data || empty( $data->version ) ) {
+        return $transient;
+    }
+    if ( version_compare( $data->version, OHA_BHS_VERSION, '>' ) ) {
+        $transient->response[ plugin_basename( __FILE__ ) ] = (object) [
+            'slug'        => 'oha-board-hub',
+            'plugin'      => plugin_basename( __FILE__ ),
+            'new_version' => $data->version,
+            'package'     => $data->download_url,
+            'url'         => '',
+        ];
+    }
+    return $transient;
+}
 
 // Autoloader for classes
 spl_autoload_register(function ($class) {
