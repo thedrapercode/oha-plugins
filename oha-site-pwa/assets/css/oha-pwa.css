@@ -223,6 +223,12 @@ html.pwa-mode .site-header {
     display: none !important;
 }
 
+/* Expose dimensions as CSS custom properties so other plugins (map, etc.) can inherit them */
+html.pwa-mode {
+    --oha-spwa-header-height: calc(54px + env(safe-area-inset-top, 0px));
+    --oha-spwa-nav-clearance: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
 /* Body padding: clear the fixed top bar and bottom nav */
 html.pwa-mode body {
     padding-top: calc(54px + env(safe-area-inset-top, 0));

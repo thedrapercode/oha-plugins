@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.6.0",
+    "version":  "1.6.1",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -127,6 +127,13 @@
                         "type":  "fix",
                         "summary":  "Fix Kadence site header not hiding in standalone PWA mode",
                         "notes":  "Added .site-header to the html.pwa-mode hide rule in oha-pwa.css alongside #masthead. Kadence outputs both the ID and class; the ID alone was not matching on this installation."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.6.1",
+                        "type":  "change",
+                        "summary":  "Added CSS custom properties --oha-spwa-header-height and --oha-spwa-nav-clearance on html.pwa-mode",
+                        "notes":  "Exposes header and nav clearance heights as CSS vars so other plugins (e.g. oha-modern-map) can read live values without hardcoded magic numbers. Values include safe-area insets."
                     }
                 ]
 }
