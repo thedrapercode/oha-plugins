@@ -60,7 +60,7 @@
     OneSignalDeferred.push(function(OneSignal) {
         OneSignal.init({
             appId: ohaSpwaConfig.appId,
-            serviceWorkerPath: 'oha-site-sw.js',
+            serviceWorkerPath: '/oha-site-sw.js',
             serviceWorkerParam: { scope: '/' },
             notifyButton: { enable: false },
             promptOptions: {

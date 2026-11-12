@@ -2,13 +2,13 @@
 /**
  * Plugin Name: OHA Site PWA
  * Description: Site-wide Progressive Web App for Ohio Haunters Association — push notifications, offline support, and app install experience.
- * Version: 1.6.1
+ * Version: 1.7.0
  * Author: OHA Dev
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_SITE_PWA_VERSION', '1.6.1' );
+define( 'OHA_SITE_PWA_VERSION', '1.7.0' );
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_spwa_check_for_update' );
@@ -48,6 +48,7 @@ require_once OHA_SITE_PWA_PATH . 'includes/class-oha-site-pwa-onesignal.php';
 require_once OHA_SITE_PWA_PATH . 'includes/class-oha-site-pwa-rest.php';
 require_once OHA_SITE_PWA_PATH . 'includes/class-oha-site-pwa-login.php';
 require_once OHA_SITE_PWA_PATH . 'includes/class-oha-site-pwa-shortcodes.php';
+require_once OHA_SITE_PWA_PATH . 'includes/class-oha-site-pwa-metabox.php';
 
 register_activation_hook( __FILE__, 'oha_site_pwa_activate' );
 function oha_site_pwa_activate() {
@@ -66,4 +67,5 @@ function oha_site_pwa_boot() {
     OHA_Site_PWA_REST::instance()->init();
     OHA_Site_PWA_Login::init();
     OHA_Site_PWA_Shortcodes::instance()->init();
+    OHA_Site_PWA_Metabox::instance()->init();
 }

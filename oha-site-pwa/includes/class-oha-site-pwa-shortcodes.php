@@ -116,6 +116,92 @@ class OHA_Site_PWA_Shortcodes {
             </div>
         </div>
 
+        <?php if ( current_user_can( 'edit_posts' ) ) :
+            $push_nonce = wp_create_nonce( 'wp_rest' );
+            $rest_url   = esc_url( rest_url( 'oha/v1/push/send' ) );
+        ?>
+        <div class="oha-spwa-settings-section">
+            <h3>Send Push Notification</h3>
+            <p class="oha-spwa-desc">Send a notification to all app subscribers.</p>
+            <style>
+            .oha-spwa-push-field{margin-bottom:12px}
+            .oha-spwa-push-field label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,.65);margin-bottom:4px}
+            .oha-spwa-push-field input,
+            .oha-spwa-push-field textarea{width:100%;box-sizing:border-box;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:8px 10px;color:#eee;font-size:13px;font-family:inherit}
+            .oha-spwa-push-field textarea{resize:vertical;min-height:60px}
+            .oha-spwa-push-field input::placeholder,
+            .oha-spwa-push-field textarea::placeholder{color:rgba(255,255,255,.3)}
+            #oha-spwa-push-result{margin-top:10px;padding:8px 12px;border-radius:8px;font-size:13px;display:none}
+            #oha-spwa-push-result.success{background:rgba(76,175,80,.15);border:1px solid rgba(76,175,80,.4);color:#81c784;display:block}
+            #oha-spwa-push-result.error{background:rgba(244,67,54,.12);border:1px solid rgba(244,67,54,.35);color:#ff8a80;display:block}
+            </style>
+            <div class="oha-spwa-push-field">
+                <label for="oha-spwa-push-title">Title</label>
+                <input type="text" id="oha-spwa-push-title" maxlength="100" placeholder="e.g. Convention schedule is live">
+            </div>
+            <div class="oha-spwa-push-field">
+                <label for="oha-spwa-push-message">Message</label>
+                <textarea id="oha-spwa-push-message" maxlength="200" placeholder="Short message shown in the notification..."></textarea>
+            </div>
+            <div class="oha-spwa-push-field">
+                <label for="oha-spwa-push-url">Link URL (optional)</label>
+                <input type="url" id="oha-spwa-push-url" placeholder="<?php echo esc_attr( home_url( '/' ) ); ?>">
+            </div>
+            <button class="oha-spwa-btn" id="oha-spwa-push-send" type="button">Send Notification</button>
+            <div id="oha-spwa-push-result"></div>
+        </div>
+        <script>
+        (function(){
+            var sendBtn = document.getElementById('oha-spwa-push-send');
+            var result  = document.getElementById('oha-spwa-push-result');
+            if (!sendBtn) return;
+            sendBtn.addEventListener('click', function() {
+                var title   = (document.getElementById('oha-spwa-push-title').value   || '').trim();
+                var message = (document.getElementById('oha-spwa-push-message').value || '').trim();
+                var url     = (document.getElementById('oha-spwa-push-url').value     || '').trim();
+                result.className = '';
+                result.style.display = 'none';
+                if (!title || !message) {
+                    result.className = 'error';
+                    result.textContent = 'Title and message are required.';
+                    return;
+                }
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending...';
+                fetch('<?php echo $rest_url; ?>', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': '<?php echo esc_js( $push_nonce ); ?>'
+                    },
+                    body: JSON.stringify({ title: title, message: message, url: url })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send Notification';
+                    if (data.success) {
+                        result.className = 'success';
+                        result.textContent = 'Sent to ' + (data.recipients || 0) + ' subscriber' + (data.recipients === 1 ? '' : 's') + '.';
+                        document.getElementById('oha-spwa-push-title').value   = '';
+                        document.getElementById('oha-spwa-push-message').value = '';
+                        document.getElementById('oha-spwa-push-url').value     = '';
+                    } else {
+                        result.className = 'error';
+                        result.textContent = (data.error || data.message || 'Send failed.');
+                    }
+                })
+                .catch(function() {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send Notification';
+                    result.className = 'error';
+                    result.textContent = 'Network error. Please try again.';
+                });
+            });
+        })();
+        </script>
+        <?php endif; ?>
+
         </div><!-- .oha-spwa-settings-wrap -->
 
         <script>

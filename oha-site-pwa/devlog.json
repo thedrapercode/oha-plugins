@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.6.1",
+    "version":  "1.7.0",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -134,6 +134,48 @@
                         "type":  "change",
                         "summary":  "Added CSS custom properties --oha-spwa-header-height and --oha-spwa-nav-clearance on html.pwa-mode",
                         "notes":  "Exposes header and nav clearance heights as CSS vars so other plugins (e.g. oha-modern-map) can read live values without hardcoded magic numbers. Values include safe-area insets."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Admin backend send form in Settings \u003e OHA Site PWA for sending push notifications",
+                        "notes":  "Separate form below settings with title/message/URL fields; shows recipient count on success; manage_options only"
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "REST endpoint POST /oha/v1/push/send for board member push sends from PWA frontend",
+                        "notes":  "edit_posts capability check; used by PWA send form via X-WP-Nonce header; params sanitized via register_rest_route args"
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Board-gated send notification form added to [oha_spwa_settings] shortcode output",
+                        "notes":  "Only rendered if current_user_can edit_posts; uses REST endpoint with wp_rest nonce inlined by PHP; clears fields on success"
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Publish meta box on posts and pages for send-on-publish or send-now notifications",
+                        "notes":  "Draft: checkbox fires on publish via save_post, records _oha_spwa_push_sent. Published: Send Now AJAX button. Works with classic and block editors."
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Subscriber count display in push settings section pulled from OneSignal app API",
+                        "notes":  "5-minute transient cache; shows messageable_players (opted-in) and total players; red error if API call fails"
+                    },
+                    {
+                        "date":  "2026-11-12",
+                        "version":  "1.7.0",
+                        "type":  "fix",
+                        "summary":  "Fixed OneSignal serviceWorkerPath using relative path causing 0 subscriber registrations on all non-root pages",
+                        "notes":  "Changed oha-site-sw.js to /oha-site-sw.js in oha-pwa-init.js; relative path resolved to wrong URL on pages below root"
                     }
                 ]
 }

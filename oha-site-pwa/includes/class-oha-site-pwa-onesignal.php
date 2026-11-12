@@ -21,6 +21,47 @@ class OHA_Site_PWA_OneSignal {
     }
 
     /**
+     * Fetch app info from OneSignal (players, messageable_players).
+     * Result is cached in a 5-minute transient to avoid hitting the API on every admin page load.
+     *
+     * @return array|null Associative array with 'players' and 'messageable_players', or null on failure.
+     */
+    public function get_app_info() {
+        $cached = get_transient( 'oha_spwa_onesignal_app_info' );
+        if ( $cached !== false ) return $cached;
+
+        $api_key = $this->get_api_key();
+        $app_id  = $this->get_app_id();
+        if ( ! $api_key || ! $app_id ) return null;
+
+        $response = wp_remote_get(
+            'https://onesignal.com/api/v1/apps/' . rawurlencode( $app_id ),
+            array(
+                'timeout' => 8,
+                'headers' => array(
+                    'Authorization' => 'Basic ' . $api_key,
+                    'Accept'        => 'application/json',
+                ),
+            )
+        );
+
+        if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+            return null;
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( ! $body ) return null;
+
+        $info = array(
+            'players'             => isset( $body['players'] )             ? (int) $body['players']             : 0,
+            'messageable_players' => isset( $body['messageable_players'] ) ? (int) $body['messageable_players'] : 0,
+        );
+
+        set_transient( 'oha_spwa_onesignal_app_info', $info, 5 * MINUTE_IN_SECONDS );
+        return $info;
+    }
+
+    /**
      * Send a push notification to all subscribers or a filtered segment.
      *
      * @param string $title   Notification title.

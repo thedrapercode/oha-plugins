@@ -13,6 +13,7 @@ class OHA_Site_PWA_Settings {
     public function init() {
         add_action( 'admin_menu',  array( $this, 'register_menu' ) );
         add_action( 'admin_post_oha_spwa_save_settings', array( $this, 'handle_save' ) );
+        add_action( 'admin_post_oha_spwa_send_push',     array( $this, 'handle_send_push' ) );
     }
 
     public function register_menu() {
@@ -67,10 +68,36 @@ class OHA_Site_PWA_Settings {
         exit;
     }
 
+    public function handle_send_push() {
+        if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Access denied.' );
+        check_admin_referer( 'oha_spwa_send_push' );
+
+        $title   = sanitize_text_field( wp_unslash( $_POST['oha_push_title']   ?? '' ) );
+        $message = sanitize_text_field( wp_unslash( $_POST['oha_push_message'] ?? '' ) );
+        $url     = esc_url_raw( wp_unslash( $_POST['oha_push_url'] ?? '' ) );
+
+        if ( ! $title || ! $message ) {
+            wp_safe_redirect( admin_url( 'options-general.php?page=oha-site-pwa&push_sent=Missing+title+or+message' ) );
+            exit;
+        }
+
+        $result = OHA_Site_PWA_OneSignal::instance()->send( $title, $message, $url );
+
+        if ( is_wp_error( $result ) ) {
+            wp_safe_redirect( admin_url( 'options-general.php?page=oha-site-pwa&push_sent=' . urlencode( $result->get_error_message() ) ) );
+        } else {
+            $recipients = isset( $result['recipients'] ) ? (int) $result['recipients'] : 0;
+            wp_safe_redirect( admin_url( 'options-general.php?page=oha-site-pwa&push_sent=1&push_recipients=' . $recipients ) );
+        }
+        exit;
+    }
+
     public function render_page() {
         if ( ! current_user_can( 'manage_options' ) ) return;
 
         $saved         = isset( $_GET['saved'] );
+        $push_sent     = isset( $_GET['push_sent'] ) ? sanitize_text_field( wp_unslash( $_GET['push_sent'] ) ) : '';
+        $push_recip    = isset( $_GET['push_recipients'] ) ? (int) $_GET['push_recipients'] : 0;
         $has_api_key   = (bool) get_option( 'oha_spwa_onesignal_api_key', '' );
 
         $app_name      = get_option( 'oha_spwa_app_name', 'Ohio Haunters Association' );
@@ -102,6 +129,12 @@ class OHA_Site_PWA_Settings {
 
             <?php if ( $saved ) : ?>
             <div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>
+            <?php endif; ?>
+
+            <?php if ( $push_sent === '1' ) : ?>
+            <div class="notice notice-success is-dismissible"><p>Push notification sent to <?php echo esc_html( $push_recip ); ?> subscriber<?php echo $push_recip === 1 ? '' : 's'; ?>.</p></div>
+            <?php elseif ( $push_sent ) : ?>
+            <div class="notice notice-error is-dismissible"><p>Send failed: <?php echo esc_html( urldecode( $push_sent ) ); ?></p></div>
             <?php endif; ?>
 
             <table class="widefat" style="max-width:600px;margin-bottom:1rem;">
@@ -182,6 +215,25 @@ class OHA_Site_PWA_Settings {
                 </table>
 
                 <h2>Push Notifications (OneSignal)</h2>
+                <?php
+                $app_info = OHA_Site_PWA_OneSignal::instance()->get_app_info();
+                if ( $app_info ) : ?>
+                <table class="widefat" style="max-width:400px;margin-bottom:1rem;">
+                    <tbody>
+                        <tr>
+                            <td><strong>Subscribed (can receive)</strong></td>
+                            <td><?php echo esc_html( number_format( $app_info['messageable_players'] ) ); ?></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total registered devices</strong></td>
+                            <td><?php echo esc_html( number_format( $app_info['players'] ) ); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="description" style="margin-bottom:1rem;">Counts refresh every 5 minutes. "Subscribed" = opted in and will receive notifications. "Registered" includes all devices that loaded the SDK, even those that declined.</p>
+                <?php elseif ( $has_api_key && get_option( 'oha_spwa_onesignal_app_id', '' ) ) : ?>
+                <p class="description" style="margin-bottom:1rem;color:#d63638;">Could not fetch subscriber count from OneSignal. Verify the App ID and Legacy API Key are correct.</p>
+                <?php endif; ?>
                 <table class="form-table" role="presentation">
                     <tr>
                         <th><label for="oha_spwa_push_enabled">Enable Push</label></th>
@@ -231,6 +283,32 @@ class OHA_Site_PWA_Settings {
                 </table>
 
                 <?php submit_button( 'Save Settings' ); ?>
+            </form>
+
+            <hr style="margin:2rem 0 1.5rem">
+            <h2>Send Push Notification</h2>
+            <p class="description" style="margin-bottom:1rem;">Send a notification immediately to all subscribed users.</p>
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="max-width:600px">
+                <?php wp_nonce_field( 'oha_spwa_send_push' ); ?>
+                <input type="hidden" name="action" value="oha_spwa_send_push">
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th><label for="oha_push_title">Title</label></th>
+                        <td><input type="text" id="oha_push_title" name="oha_push_title" class="regular-text" required placeholder="e.g. Convention schedule is live"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="oha_push_message">Message</label></th>
+                        <td><textarea id="oha_push_message" name="oha_push_message" class="large-text" rows="3" required placeholder="Short message body shown in the notification..."></textarea></td>
+                    </tr>
+                    <tr>
+                        <th><label for="oha_push_url">Link URL</label></th>
+                        <td>
+                            <input type="url" id="oha_push_url" name="oha_push_url" class="regular-text" placeholder="<?php echo esc_attr( home_url( '/' ) ); ?>">
+                            <p class="description">Optional. Leave blank to link to the site home.</p>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button( 'Send Notification', 'primary', 'send_push_submit' ); ?>
             </form>
         </div>
         <?php

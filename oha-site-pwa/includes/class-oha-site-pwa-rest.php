@@ -20,6 +20,41 @@ class OHA_Site_PWA_REST {
             'callback'            => array( $this, 'get_nonce' ),
             'permission_callback' => '__return_true',
         ) );
+
+        register_rest_route( 'oha/v1', '/push/send', array(
+            'methods'             => 'POST',
+            'callback'            => array( $this, 'send_push' ),
+            'permission_callback' => array( $this, 'can_send_push' ),
+            'args'                => array(
+                'title'   => array( 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ),
+                'message' => array( 'required' => true,  'sanitize_callback' => 'sanitize_text_field' ),
+                'url'     => array( 'required' => false, 'sanitize_callback' => 'esc_url_raw' ),
+            ),
+        ) );
+    }
+
+    public function can_send_push() {
+        return current_user_can( 'edit_posts' );
+    }
+
+    public function send_push( WP_REST_Request $request ) {
+        $title   = $request->get_param( 'title' );
+        $message = $request->get_param( 'message' );
+        $url     = $request->get_param( 'url' ) ?: '';
+
+        $result = OHA_Site_PWA_OneSignal::instance()->send( $title, $message, $url );
+
+        if ( is_wp_error( $result ) ) {
+            return new WP_REST_Response(
+                array( 'success' => false, 'error' => $result->get_error_message() ),
+                400
+            );
+        }
+
+        return new WP_REST_Response( array(
+            'success'    => true,
+            'recipients' => isset( $result['recipients'] ) ? (int) $result['recipients'] : 0,
+        ), 200 );
     }
 
     public function get_nonce() {
