@@ -1,0 +1,427 @@
+/* OHA Profile Hub - profile-hub.css v1.0.0
+   Uses Kadence global palette variables.
+   Three contexts: PWA (html.pwa-mode), mobile web (<768px), desktop (>=768px)
+*/
+
+/* ==========================================================
+   LOCAL TOKEN MAP
+   ========================================================== */
+.oha-prohub-wrap {
+    --prohub-primary:      var(--global-palette1, #ad3119);
+    --prohub-accent:       var(--global-palette7, #e76653);
+    --prohub-text:         var(--global-palette4, #f7fafc);
+    --prohub-text-muted:   var(--global-palette6, #cbd2d9);
+    --prohub-card-bg:      var(--global-palette9, #000000);
+    --prohub-border:       rgba(173, 49, 25, 0.35);
+    --prohub-success-bg:   rgba(19, 97, 46, 0.2);
+    --prohub-success-text: #81c784;
+    --prohub-danger-bg:    rgba(173, 49, 25, 0.2);
+    --prohub-danger-text:  #f9a8a8;
+}
+
+/* ==========================================================
+   WRAPPER
+   ========================================================== */
+.oha-prohub-wrap {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 16px 16px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: inherit;
+    color: var(--prohub-text);
+    box-sizing: border-box;
+}
+
+/* ==========================================================
+   BASE CARD
+   ========================================================== */
+.oha-prohub-card {
+    background: var(--prohub-card-bg);
+    border: 1px solid var(--prohub-border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.oha-prohub-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--prohub-text-muted);
+    padding: 14px 16px 2px;
+}
+
+/* ==========================================================
+   PROFILE IDENTITY CARD
+   ========================================================== */
+.oha-prohub-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 16px;
+}
+
+.oha-prohub-avatar-wrap {
+    flex-shrink: 0;
+}
+
+.oha-prohub-avatar-img,
+.oha-prohub-avatar-wrap img {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--prohub-border);
+    display: block;
+}
+
+.oha-prohub-identity {
+    flex: 1;
+    min-width: 0;
+}
+
+.oha-prohub-display-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--prohub-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.oha-prohub-username {
+    font-size: 0.85rem;
+    color: var(--prohub-accent);
+    margin-top: 2px;
+}
+
+.oha-prohub-badge {
+    display: inline-block;
+    margin-top: 7px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.oha-prohub-badge-active {
+    background: var(--prohub-success-bg);
+    color: var(--prohub-success-text);
+    border: 1px solid rgba(19, 97, 46, 0.45);
+}
+
+.oha-prohub-badge-expired {
+    background: var(--prohub-danger-bg);
+    color: var(--prohub-danger-text);
+    border: 1px solid rgba(173, 49, 25, 0.45);
+}
+
+.oha-prohub-badge-guest {
+    background: rgba(203, 210, 217, 0.08);
+    color: var(--prohub-text-muted);
+    border: 1px solid rgba(203, 210, 217, 0.18);
+}
+
+/* ==========================================================
+   ACTION ROWS
+   ========================================================== */
+.oha-prohub-action-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    border-top: 1px solid var(--prohub-border);
+    text-decoration: none !important;
+    color: var(--prohub-text) !important;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.oha-prohub-action-row:hover {
+    background: rgba(173, 49, 25, 0.08);
+}
+
+.oha-prohub-action-row:active {
+    background: rgba(173, 49, 25, 0.16);
+}
+
+.oha-prohub-action-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: rgba(173, 49, 25, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--prohub-accent);
+}
+
+.oha-prohub-action-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.oha-prohub-action-label {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.oha-prohub-chevron {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    color: var(--prohub-text-muted);
+    opacity: 0.6;
+}
+
+.oha-prohub-chevron svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* ==========================================================
+   MEMBERSHIP CARD
+   ========================================================== */
+.oha-prohub-mem-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 16px;
+    border-top: 1px solid var(--prohub-border);
+    font-size: 0.9rem;
+    gap: 12px;
+}
+
+.oha-prohub-membership-card .oha-prohub-card-label + .oha-prohub-mem-row {
+    border-top: none;
+}
+
+.oha-prohub-mem-key {
+    color: var(--prohub-text-muted);
+    flex-shrink: 0;
+}
+
+.oha-prohub-mem-val {
+    font-weight: 600;
+    color: var(--prohub-text);
+    text-align: right;
+}
+
+.oha-prohub-active  { color: var(--prohub-success-text); }
+.oha-prohub-expired { color: var(--prohub-danger-text);  }
+
+.oha-prohub-mem-id {
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: var(--prohub-accent);
+    letter-spacing: 0.03em;
+}
+
+/* ==========================================================
+   LOGIN NOTICE
+   ========================================================== */
+.oha-prohub-login-notice {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--prohub-text-muted, #cbd2d9);
+    font-size: 0.95rem;
+}
+
+.oha-prohub-login-notice a {
+    color: var(--prohub-accent, #e76653);
+    text-decoration: underline;
+}
+
+/* ==========================================================
+   UWP PROFILE PAGE CHROME OVERRIDES
+   Applies on /haunt-profile/ to tidy up the tab bar and
+   remove redundant UWP account navigation icons.
+   ========================================================== */
+
+.uwp-profile-nav {
+    background: #000 !important;
+    border-bottom: 1px solid rgba(173, 49, 25, 0.35) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.uwp-profile-nav .item-list-tabs-ul {
+    display: flex !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    white-space: nowrap;
+}
+
+.uwp-profile-nav .item-list-tabs-ul::-webkit-scrollbar {
+    display: none;
+}
+
+.uwp-profile-nav .item-list-tabs-ul li {
+    flex-shrink: 0;
+}
+
+.uwp-profile-nav .item-list-tabs-ul li a {
+    display: block;
+    padding: 11px 15px;
+    color: rgba(247, 250, 252, 0.55) !important;
+    text-decoration: none !important;
+    font-size: 0.83rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.uwp-profile-nav .item-list-tabs-ul li.active a,
+.uwp-profile-nav .item-list-tabs-ul li a:hover {
+    color: #f7fafc !important;
+    border-bottom-color: #ad3119;
+}
+
+/* Hide the redundant cog/edit icon link */
+.uwp-profile-nav .uwp-edit-account {
+    display: none !important;
+}
+
+/* Tab content area */
+.uwp-profile-entries {
+    background: transparent !important;
+    padding: 4px 0 0 !important;
+}
+
+/* ==========================================================
+   MOBILE WEB  (< 768px, browser mode)
+   ========================================================== */
+@media (max-width: 767px) {
+    .oha-prohub-wrap {
+        padding: 12px 10px 28px;
+    }
+
+    .oha-prohub-action-row {
+        min-height: 52px;
+    }
+}
+
+/* ==========================================================
+   DESKTOP WEB  (>= 768px, browser mode)
+   ========================================================== */
+@media (min-width: 768px) {
+    .oha-prohub-wrap {
+        padding: 24px 0 40px;
+        gap: 14px;
+    }
+
+    .oha-prohub-card {
+        border-radius: 12px;
+    }
+
+    .oha-prohub-profile-card {
+        padding: 24px 20px;
+    }
+
+    .oha-prohub-avatar-img,
+    .oha-prohub-avatar-wrap img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .oha-prohub-action-row {
+        padding: 14px 20px;
+    }
+
+    .oha-prohub-action-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .oha-prohub-card-label {
+        padding: 16px 20px 2px;
+    }
+
+    .oha-prohub-mem-row {
+        padding: 12px 20px;
+    }
+}
+
+/* ==========================================================
+   PWA MODE  (html.pwa-mode - standalone installed app)
+   Full mobile app experience: larger touch targets, elevated
+   cards, bottom padding for the site PWA pill nav.
+   ========================================================== */
+html.pwa-mode .oha-prohub-wrap {
+    padding: 14px 12px 110px;
+    gap: 14px;
+}
+
+html.pwa-mode .oha-prohub-card {
+    border-radius: 18px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(173, 49, 25, 0.2) inset;
+}
+
+html.pwa-mode .oha-prohub-profile-card {
+    padding: 22px 18px;
+    gap: 18px;
+}
+
+html.pwa-mode .oha-prohub-avatar-img,
+html.pwa-mode .oha-prohub-avatar-wrap img {
+    width: 76px;
+    height: 76px;
+    border-width: 2px;
+}
+
+html.pwa-mode .oha-prohub-display-name {
+    font-size: 1.15rem;
+}
+
+html.pwa-mode .oha-prohub-action-row {
+    padding: 16px 18px;
+    min-height: 58px;
+    gap: 16px;
+}
+
+html.pwa-mode .oha-prohub-action-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+}
+
+html.pwa-mode .oha-prohub-action-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+html.pwa-mode .oha-prohub-action-label {
+    font-size: 1rem;
+}
+
+html.pwa-mode .oha-prohub-card-label {
+    padding: 16px 18px 2px;
+}
+
+html.pwa-mode .oha-prohub-mem-row {
+    padding: 13px 18px;
+    font-size: 0.95rem;
+}
+
+/* Suppress the UWP profile header (avatar banner etc.) in PWA --
+   the site PWA app header already shows the logo */
+html.pwa-mode .uwp-profile-header {
+    display: none !important;
+}
+
+html.pwa-mode .uwp-profile-nav {
+    position: sticky;
+    top: calc(54px + env(safe-area-inset-top, 0));
+    z-index: 100;
+}
