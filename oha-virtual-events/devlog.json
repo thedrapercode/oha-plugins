@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Virtual Events",
-    "version":  "1.8.4",
+    "version":  "1.8.5",
     "entries":  [
                     {
                         "version":  "1.6.0",
@@ -630,6 +630,20 @@
                         "type":  "change",
                         "summary":  "Replay grid changed from 3-column to 2-column default; drops to 1-column below 576px",
                         "notes":  "Removed the 900px 2-col breakpoint; 2-col is now the base. User requested smaller cards via 2-column layout."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.8.5",
+                        "type":  "fix",
+                        "summary":  "Watch Now toggle fails in UWP profile tab context; switched from getElementById to card-relative querySelector",
+                        "notes":  "document.getElementById cannot locate the embed div when the replay shortcode is rendered inside a UWP profile tab container. Changed Watch Now handler in oha-ve-replay.js to use tb.closest(.oha-replay-card) then card.querySelector(.oha-replay-embed) -- same pattern as the working More Info handler. Also updated document.querySelectorAll for watch button text to card.querySelectorAll."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.8.5",
+                        "type":  "change",
+                        "summary":  "Clicking the replay thumbnail now also triggers Watch Now toggle",
+                        "notes":  "Added oha-replay-toggle class and data-target attr to .oha-replay-card__thumb div (only when yt_safe is set). Added cursor:pointer to thumbnail CSS."
                     }
                 ]
 }

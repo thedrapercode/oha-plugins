@@ -394,7 +394,8 @@ class OHA_VE_Replay_CPT {
         $out = '<div class="oha-replay-card">';
 
         // ── Thumbnail (16:9 padding-bottom ratio) ──────────────
-        $out .= '<div class="oha-replay-card__thumb">';
+        $out .= '<div class="oha-replay-card__thumb' . ( $yt_safe ? ' oha-replay-toggle' : '' ) . '"'
+              . ( $yt_safe ? ' data-target="' . esc_attr( $embed_id ) . '"' : '' ) . '>';
 
         if ( $yt_safe ) {
             // Auto-pull YouTube thumbnail; no API key required.

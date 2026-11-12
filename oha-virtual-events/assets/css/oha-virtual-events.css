@@ -727,6 +727,7 @@ button.oha-ve-btn:disabled {
     background: #0d0d0d;
     overflow: hidden;
     flex-shrink: 0;
+    cursor: pointer;
 }
 .oha-replay-card__thumb img {
     position: absolute;

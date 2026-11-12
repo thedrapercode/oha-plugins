@@ -1,9 +1,13 @@
 /* OHA Virtual Events - Replay card interactions
  *
- * Loaded via wp_enqueue_script so it runs on the initial page load,
- * including when the My Account page is inside an iframe
- * ([oha_uwp_account_inline] shortcode). Event delegation on document
- * catches clicks on cards that UsersWP injects via AJAX tab switching.
+ * Loaded via wp_enqueue_script so it runs on the initial page load.
+ * Event delegation on document catches clicks regardless of how the
+ * tab content is inserted (direct render, AJAX, or UWP profile tabs).
+ *
+ * All DOM lookups are card-relative (closest + querySelector within the
+ * card) so they work in any page context, including UWP profile tabs
+ * where document.getElementById can fail to locate elements that are
+ * inside a tab content container.
  */
 (function () {
     'use strict';
@@ -16,18 +20,22 @@
             if (!e.target) { return; }
 
             /* --------------------------------------------------
-               Watch Now button (.oha-replay-toggle + data-target)
+               Watch Now / thumbnail toggle (.oha-replay-toggle)
+               Finds the embed and button(s) within the same card
+               rather than using document.getElementById, which can
+               fail inside UWP profile tab containers.
                -------------------------------------------------- */
             var tb = (typeof e.target.closest === 'function')
                 ? e.target.closest('.oha-replay-toggle')
                 : null;
             if (tb) {
-                var id = tb.getAttribute('data-target');
-                var em = document.getElementById(id);
+                var card = tb.closest('.oha-replay-card');
+                if (!card) { return; }
+                var em = card.querySelector('.oha-replay-embed');
                 if (!em) { return; }
                 var vis = (em.style.display !== 'none');
                 em.style.display = vis ? 'none' : 'block';
-                var wb = document.querySelectorAll('.oha-replay-watch-btn[data-target="' + id + '"]');
+                var wb = card.querySelectorAll('.oha-replay-watch-btn');
                 for (var i = 0; i < wb.length; i++) {
                     wb[i].textContent = vis ? 'Watch Now' : 'Close Video';
                 }
@@ -36,8 +44,6 @@
 
             /* --------------------------------------------------
                More Info / Less Info button (.oha-replay-info-btn)
-               Toggles an inline panel below the card -- avoids
-               position:fixed which breaks inside auto-height iframes.
                -------------------------------------------------- */
             var ib = (typeof e.target.closest === 'function')
                 ? e.target.closest('.oha-replay-info-btn')
