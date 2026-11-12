@@ -1,17 +1,26 @@
 (function () {
     'use strict';
 
-    var panel   = document.getElementById('oha-prohub-panel');
-    var iframe  = document.getElementById('oha-prohub-panel-iframe');
-    var backBtn = document.getElementById('oha-prohub-panel-back');
-    var titleEl = document.getElementById('oha-prohub-panel-title');
+    var panel      = document.getElementById('oha-prohub-panel');
+    var iframe     = document.getElementById('oha-prohub-panel-iframe');
+    var backBtn    = document.getElementById('oha-prohub-panel-back');
+    var navBtns    = document.querySelectorAll('.oha-prohub-panel-nav-btn');
 
     if (!panel || !iframe || !backBtn) return;
 
-    function openPanel(url, title) {
-        if (titleEl) titleEl.textContent = title || '';
-        // Append oha_panel=1 so the loaded page strips Kadence chrome
+    function setNavActive(type) {
+        navBtns.forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-type') === type);
+        });
+    }
+
+    function loadUrl(url) {
         iframe.src = url + (url.indexOf('?') !== -1 ? '&' : '?') + 'oha_panel=1';
+    }
+
+    function openPanel(url, type) {
+        loadUrl(url);
+        setNavActive(type || 'account');
         panel.classList.add('oha-panel-open');
         panel.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
@@ -21,26 +30,38 @@
         panel.classList.remove('oha-panel-open');
         panel.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
-        // Clear src after transition so the old page doesn't flash on re-open
         setTimeout(function () {
             if (!panel.classList.contains('oha-panel-open')) {
                 iframe.src = '';
-                if (titleEl) titleEl.textContent = '';
+                setNavActive('account');
             }
         }, 320);
     }
 
-    // Wire up action row buttons
-    var actionBtns = document.querySelectorAll('[data-panel-url]');
-    actionBtns.forEach(function (btn) {
+    // Dashboard action row buttons open the panel
+    document.querySelectorAll('[data-panel-url]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            openPanel(btn.getAttribute('data-panel-url'), btn.getAttribute('data-panel-title') || '');
+            openPanel(
+                btn.getAttribute('data-panel-url'),
+                btn.getAttribute('data-panel-type') || 'account'
+            );
+        });
+    });
+
+    // Panel nav tabs switch the loaded section
+    navBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var url  = btn.getAttribute('data-url');
+            var type = btn.getAttribute('data-type');
+            if (url) {
+                loadUrl(url);
+                setNavActive(type);
+            }
         });
     });
 
     backBtn.addEventListener('click', closePanel);
 
-    // ESC key closes
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && panel.classList.contains('oha-panel-open')) {
             closePanel();

@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-profile-hub",
-    "version":  "1.1.0",
+    "version":  "1.2.0",
     "entries":  [
                     {
                         "date":  "2026-11-11",
@@ -15,6 +15,20 @@
                         "type":  "feature",
                         "summary":  "UWP account forms open in slide-in panel overlay (iframe) instead of navigating away",
                         "notes":  "Clicking Edit Account/Change Password/Privacy now opens a fixed full-screen panel that slides in from the right. UWP form loads in an iframe with ?oha_panel=1 param. body.oha-panel-view body class strips Kadence header/footer/nav and UWP left tab sidebar from the loaded form page. OHA dark theme applied to form inputs in panel view. Back button slides panel away. profile-hub.js added for panel open/close logic."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.2.0",
+                        "type":  "fix",
+                        "summary":  "Panel is now a right-side drawer on desktop so UWP profile tabs stay visible",
+                        "notes":  "On \u003e= 768px non-PWA: panel is 460px right drawer with box-shadow. PWA mode overrides back to full-screen. Removed centered title from panel bar; back button now reads My Account for clarity."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.2.0",
+                        "type":  "feature",
+                        "summary":  "Internal nav tabs in panel to switch between Edit Account, Password, Privacy without closing",
+                        "notes":  "Panel now has a 3-tab nav bar (Edit Account, Password, Privacy). Active tab highlighted with red underline. Clicking a tab changes iframe src without closing the panel. dashboard action rows pass data-panel-type to pre-select the correct tab on open."
                     }
                 ]
 }
