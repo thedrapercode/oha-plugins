@@ -198,8 +198,21 @@ class OHA_Site_PWA_Service_Worker {
         );
     }
 
+    // Convention PWA pages run their own nav/header — suppress site PWA UI there.
+    private function is_convention_page() {
+        $base = get_option( 'oha_convention_base_url', '' );
+        if ( $base ) {
+            $path = wp_parse_url( $base, PHP_URL_PATH );
+        } else {
+            $path = '/convention/';
+        }
+        $request = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+        return $path && strpos( $request, rtrim( $path, '/' ) ) === 0;
+    }
+
     public function pwa_header_html() {
         if ( is_admin() ) return;
+        if ( $this->is_convention_page() ) return;
 
         // Logo: use the site's custom logo if set, otherwise the app name from settings
         if ( function_exists( 'has_custom_logo' ) && has_custom_logo() ) {
@@ -244,6 +257,7 @@ class OHA_Site_PWA_Service_Worker {
 
     public function notify_banner_html() {
         if ( is_admin() ) return;
+        if ( $this->is_convention_page() ) return;
         if ( get_option( 'oha_spwa_push_enabled', '1' ) !== '1' ) return;
         if ( ! get_option( 'oha_spwa_onesignal_app_id', '' ) ) return;
         ?>
@@ -263,6 +277,7 @@ class OHA_Site_PWA_Service_Worker {
 
     public function nav_html() {
         if ( is_admin() ) return;
+        if ( $this->is_convention_page() ) return;
 
         $home_url     = get_option( 'oha_spwa_nav_home_url', '' ) ?: home_url( '/' );
         $listings_url = get_option( 'oha_spwa_nav_listings_url', '' );

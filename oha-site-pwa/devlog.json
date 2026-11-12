@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-site-pwa",
-    "version":  "1.5.0",
+    "version":  "1.6.0",
     "entries":  [
                     {
                         "date":  "2026-11-10",
@@ -106,6 +106,27 @@
                         "type":  "feature",
                         "summary":  "Micro-interaction animations: icon pop on tab tap, drawer slide with cubic-bezier, center button press state",
                         "notes":  "oha-icon-pop keyframe; oha-nav-tapped class added/removed on click via JS; center badge scale(0.92) on :active"
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.6.0",
+                        "type":  "feature",
+                        "summary":  "Add [oha_spwa_settings] shortcode: app info, restore prompts, check for updates, reset data",
+                        "notes":  "New file: includes/class-oha-site-pwa-shortcodes.php. Registered in oha-site-pwa.php boot. Place shortcode on a WP page and link it from the PWA drawer nav. All actions are localStorage-only, no AJAX."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.6.0",
+                        "type":  "fix",
+                        "summary":  "Suppress site PWA header, pill nav, and notify banner on convention PWA pages",
+                        "notes":  "Added is_convention_page() helper to class-oha-site-pwa-service-worker.php. Reads oha_convention_base_url option, falls back to /convention/. All three wp_footer hooks return early when on convention pages."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "1.6.0",
+                        "type":  "fix",
+                        "summary":  "Fix Kadence site header not hiding in standalone PWA mode",
+                        "notes":  "Added .site-header to the html.pwa-mode hide rule in oha-pwa.css alongside #masthead. Kadence outputs both the ID and class; the ID alone was not matching on this installation."
                     }
                 ]
 }

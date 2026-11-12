@@ -218,7 +218,8 @@ body.is-board .board-hide       { display: none !important; }
 /* --- PWA App Header --- */
 
 /* Hide the Kadence site header in standalone PWA mode */
-html.pwa-mode #masthead {
+html.pwa-mode #masthead,
+html.pwa-mode .site-header {
     display: none !important;
 }
 
