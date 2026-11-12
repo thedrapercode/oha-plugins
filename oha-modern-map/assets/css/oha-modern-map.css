@@ -1940,22 +1940,80 @@ body.oha-sheet-open {
 }
 
 /* ==========================================================================
-   PWA STANDALONE MODE (oha-in-pwa class added by JS when display-mode: standalone)
-   Removes widget chrome so the map fills the app shell edge-to-edge.
-   Forward-compatible with the future combined OHA app shell.
+   PWA STANDALONE MODE (oha-in-pwa added by JS on display-mode:standalone)
+   Map fills the viewport behind the floating site-pwa nav bar.
+   Controls pill bar moves to the top; nav bar floats above the map canvas.
    ========================================================================== */
+
 .oha-map-wrapper.oha-in-pwa {
     border-radius: 0;
     box-shadow:    none;
 }
 
-/* In PWA, respect device safe areas (notch / home indicator) */
+/* Body scroll lock while haunt map is active in PWA mode */
+html.oha-haunt-map-active body {
+    overflow: hidden;
+}
+
 @media (max-width: 767px) {
-    .oha-map-wrapper.oha-in-pwa .oha-mob-map-pill-bar {
-        bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    /* Break out of theme container — fixed, full viewport width, from just below
+       the PWA app header down to the viewport bottom. The floating nav bar
+       (z-index 9000) renders on top of the map canvas. Falls back to 54px header
+       if oha-site-pwa is not active. */
+    .oha-map-wrapper.oha-in-pwa {
+        position:       fixed;
+        inset:          0;
+        top:            var(--oha-spwa-header-height, calc(54px + env(safe-area-inset-top, 0px)));
+        z-index:        50;
+        margin:         0;
+        display:        flex;
+        flex-direction: column;
     }
 
+    /* Map content fills the remaining fixed height */
+    .oha-map-wrapper.oha-in-pwa .oha-map-content {
+        flex:       1;
+        min-height: 0;
+    }
+
+    .oha-map-wrapper.oha-in-pwa .oha-map-view.active {
+        height: 100%;
+    }
+
+    /* Container fills the flex item — override any JS-set inline height */
+    .oha-map-wrapper.oha-in-pwa .oha-map-container {
+        height: 100% !important;
+    }
+
+    /* Pill bar: move to TOP of map, below wrapper edge.
+       Search / Near Me / Filters / Saved / Reset all accessible at the top. */
+    .oha-map-wrapper.oha-in-pwa .oha-mob-map-pill-bar {
+        bottom: auto;
+        top:    12px;
+    }
+
+    /* Overlay controls (zoom/reset) hidden in PWA — pinch-zoom + pill bar handles it */
+    .oha-map-wrapper.oha-in-pwa .oha-map-overlay-controls {
+        display: none;
+    }
+
+    /* Bottom sheet and region info sheet: pad content above the floating nav bar */
+    .oha-map-wrapper.oha-in-pwa .oha-bottom-sheet-panel,
+    .oha-map-wrapper.oha-in-pwa .oha-region-info-sheet .oha-bottom-sheet-panel {
+        padding-bottom: var(--oha-spwa-nav-clearance, calc(80px + env(safe-area-inset-bottom, 0px)));
+    }
+
+    /* Filter sheet: same bottom clearance */
     .oha-map-wrapper.oha-in-pwa .oha-mob-filter-sheet {
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-bottom: var(--oha-spwa-nav-clearance, calc(80px + env(safe-area-inset-bottom, 0px)));
+    }
+
+    /* Results counter: float above the floating nav bar */
+    .oha-map-wrapper.oha-in-pwa .oha-results-counter {
+        bottom: var(--oha-spwa-nav-clearance, calc(80px + env(safe-area-inset-bottom, 0px)));
+    }
+
+    .oha-map-wrapper.oha-in-pwa .oha-results-counter.has-results {
+        transform: translateX(-50%) translateY(0);
     }
 }

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Modern Map",
-    "version":  "2.21.0",
+    "version":  "2.22.0",
     "entries":  [
                     {
                         "date":  "2026-05-04",
@@ -1191,6 +1191,27 @@
                         "type":  "feature",
                         "summary":  "Added nonce-free REST endpoint GET /oha/v1/map/listings for service worker caching of haunt pin data",
                         "notes":  "Endpoint at /wp-json/oha/v1/map/listings, registered via rest_api_init. Returns same payload as ajax_get_listings but requires no nonce, so the site PWA SW can cache it with stale-while-revalidate. All data is already public on the map page."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "2.22.0",
+                        "type":  "feature",
+                        "summary":  "PWA full-page mode: map fills viewport behind floating site-pwa nav bar",
+                        "notes":  "Wrapper is position:fixed from below PWA header to viewport bottom (z-index 50). Nav bar at z-index 9000 floats on top. CSS reads --oha-spwa-header-height and --oha-spwa-nav-clearance from site-pwa plugin."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "2.22.0",
+                        "type":  "feature",
+                        "summary":  "Pill bar moves to top of map in PWA mode (search, near me, filters, saved, reset)",
+                        "notes":  "CSS sets bottom:auto; top:12px on .oha-mob-map-pill-bar when .oha-in-pwa is present. Overlay zoom controls hidden in PWA mode (pinch + pill handles zoom/reset)."
+                    },
+                    {
+                        "date":  "2026-11-11",
+                        "version":  "2.22.0",
+                        "type":  "feature",
+                        "summary":  "Scroll lock and bottom clearance for PWA full-page experience",
+                        "notes":  "detectContext() adds oha-haunt-map-active to html element to lock body scroll. Bottom sheet, filter sheet, results counter all clear the floating nav using --oha-spwa-nav-clearance CSS var (fallback 80px + safe-area-inset-bottom). setMobileHeight() skips height calc in PWA mode and just calls map.resize()."
                     }
                 ]
 }

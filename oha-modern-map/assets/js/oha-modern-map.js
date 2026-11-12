@@ -1517,22 +1517,29 @@
 
         /**
          * Detect PWA standalone mode and tag the wrapper.
-         * CSS uses .oha-in-pwa to remove widget chrome (border-radius, box-shadow)
-         * and apply safe-area insets. Forward-compatible with the combined OHA app shell.
+         * In PWA mode on mobile: adds .oha-in-pwa (triggers CSS fixed-layout) and
+         * locks body scroll so the map is the only scrollable surface.
          */
         detectContext($wrapper) {
             const isPwa = window.matchMedia('(display-mode: standalone)').matches ||
                           (typeof window.navigator.standalone === 'boolean' && window.navigator.standalone);
             if (isPwa) {
                 $wrapper.addClass('oha-in-pwa');
+                if (window.innerWidth <= 767) {
+                    document.documentElement.classList.add('oha-haunt-map-active');
+                    window.addEventListener('pagehide', function() {
+                        document.documentElement.classList.remove('oha-haunt-map-active');
+                    }, { once: true });
+                }
             }
         },
 
         /**
-         * Set the map container height to fill from the top of the wrapper to the
-         * bottom of the viewport. This works in any browser (accounts for URL bars,
-         * theme headers, admin bar, etc.) and in PWA standalone mode without magic numbers.
-         * Only applies on screens ≤767px; desktop uses the shortcode height attribute.
+         * Set map container height to fill from wrapper top to viewport bottom.
+         * In PWA mode the wrapper is position:fixed and sized by CSS flex — skip
+         * the height calculation and just trigger a MapLibre resize so it reads
+         * the CSS-computed dimensions.
+         * Only applies on screens ≤767px; desktop uses the shortcode height attr.
          */
         setMobileHeight($wrapper) {
             if (window.innerWidth > 767) return;
@@ -1540,12 +1547,20 @@
             const $container = $wrapper.find('.oha-map-container');
             if (!$container.length) return;
 
-            const rect    = $wrapper[0].getBoundingClientRect();
-            const height  = Math.max(Math.floor(window.innerHeight - rect.top), 320);
+            const mapId = $wrapper.attr('id');
+
+            if ($wrapper.hasClass('oha-in-pwa')) {
+                // CSS flex handles height in PWA mode; just notify MapLibre
+                if (mapId && this.maps[mapId]) {
+                    this.maps[mapId].resize();
+                }
+                return;
+            }
+
+            const rect   = $wrapper[0].getBoundingClientRect();
+            const height = Math.max(Math.floor(window.innerHeight - rect.top), 320);
             $container.css('height', height + 'px');
 
-            // Notify MapLibre of the size change if the map is already initialised
-            const mapId = $wrapper.attr('id');
             if (mapId && this.maps[mapId]) {
                 this.maps[mapId].resize();
             }
