@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.19.0",
+    "version":  "1.19.1",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -491,6 +491,13 @@
                         "type":  "feature",
                         "summary":  "Auto-link related listings: on save_post_gd_place for holiday listings, bidirectionally sets oha_related_listing_id if author has exactly one other published listing",
                         "notes":  "Skips if 0 or 2+ other listings; does not overwrite existing links; displayed on listing page as See our [title] button in gold; admin metabox shows/edits the linked ID"
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.19.1",
+                        "type":  "fix",
+                        "summary":  "Holiday Event Info section header now fully hidden until a holiday category is selected in the GD form",
+                        "notes":  "updateHolidayVisibility() now sets hfs.style.display on the fieldset element itself, not just the content wrap"
                     }
                 ],
     "admin_settings":  {

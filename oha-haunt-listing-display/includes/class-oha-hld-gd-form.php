@@ -1227,6 +1227,7 @@ form#geodir-add-listing .oha-holiday-notice strong {
       if (holidayNoticeEl) holidayNoticeEl.style.display = label ? "" : "none";
       var hfs = form.querySelector("fieldset[data-rule-key=\"oha_holiday_event_info\"]");
       if (hfs) {
+        hfs.style.display = label ? "" : "none";
         var wrapId = hfs.getAttribute("aria-controls");
         var hWrap = wrapId ? document.getElementById(wrapId) : null;
         if (hWrap) {
