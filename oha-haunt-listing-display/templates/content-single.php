@@ -305,6 +305,14 @@ $disc_join_url   = $viewer_is_basic
     : 'https://ohiohaunters.com/register/';
 $disc_join_label = $viewer_is_basic ? 'Upgrade Membership' : 'Register to Join OHA';
 
+// ── Holiday event fields ──────────────────────────────────────────────────────
+$holiday_dates         = get_post_meta( $listing_id, 'oha_holiday_dates', true );
+$related_listing_id    = (int) get_post_meta( $listing_id, 'oha_related_listing_id', true );
+$related_post          = $related_listing_id ? get_post( $related_listing_id ) : null;
+$related_listing_title = ( $related_post && $related_post->post_status === 'publish' )
+                         ? get_the_title( $related_listing_id ) : '';
+$related_listing_url   = $related_listing_title ? get_permalink( $related_listing_id ) : '';
+
 // ── Full address string ───────────────────────────────────────────────────────
 $address_parts = array_filter( [ $city, $state, $zip ] );
 $location_str  = implode( ', ', $address_parts );

@@ -2116,3 +2116,36 @@
         flex-shrink: 0;
     }
 }
+
+/* ── Related listing button ──────────────────────────────────────────────── */
+.oha-listing-wrap .oha-info-card__related-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 8px;
+    background: rgba(201, 168, 76, 0.1);
+    border: 1px solid rgba(201, 168, 76, 0.28);
+    border-radius: 10px;
+    color: var(--oha-gold);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.3;
+    word-break: break-word;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.oha-listing-wrap .oha-info-card__related-btn:hover {
+    background: rgba(201, 168, 76, 0.18);
+    border-color: rgba(201, 168, 76, 0.45);
+    color: var(--oha-gold2);
+    text-decoration: none;
+}
+
+.oha-listing-wrap .oha-info-card__related-btn svg {
+    fill: currentColor;
+    flex-shrink: 0;
+}

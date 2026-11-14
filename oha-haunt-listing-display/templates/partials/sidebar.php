@@ -42,6 +42,16 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         </div>
         <?php endif; ?>
 
+        <?php if ( ! empty( $holiday_dates ) ) : ?>
+        <div class="oha-info-card__row">
+            <span class="oha-info-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </span>
+            <span class="oha-info-card__label">Event Dates</span>
+            <span class="oha-info-card__value"><?php echo esc_html( $holiday_dates ); ?></span>
+        </div>
+        <?php endif; ?>
+
         <?php if ( $typical_hours ) : ?>
         <div class="oha-info-card__row">
             <span class="oha-info-card__icon" aria-hidden="true">
@@ -214,6 +224,14 @@ if ( ! defined( 'ABSPATH' ) ) exit;
            target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 11h-2.95a14.09 14.09 0 00-.38-2.75A5.95 5.95 0 0018.92 13zm-8.92 5.93A12.03 12.03 0 019.05 15h5.9a12.03 12.03 0 01-1.95 3.93A6.01 6.01 0 0110 18.93zm-3-3.93H4.08a5.95 5.95 0 003.33 2.25A14.09 14.09 0 017 15zm-2.92-2H7a14.09 14.09 0 00.38 2.75A5.95 5.95 0 015.08 13zM7 11H4.08a5.95 5.95 0 013.33-2.25A14.09 14.09 0 007 11zm1.05-4h.95a12.03 12.03 0 011.95-3.93A6.01 6.01 0 0110 3.07 12.03 12.03 0 018.05 7zM17 11h-2.95a14.09 14.09 0 00-.38-2.75A5.95 5.95 0 0117 11zm-4 2h-2v-2h2v2zm0-4h-2V7h2v2zm0-4h-2V3.07A6.01 6.01 0 0114.95 7H13zm0 14v-2h1.95A6.01 6.01 0 0113 20.93z"/></svg>
             Visit Website
+        </a>
+        <?php endif; ?>
+
+        <?php if ( ! empty( $related_listing_url ) ) : ?>
+        <a class="oha-info-card__related-btn"
+           href="<?php echo esc_url( $related_listing_url ); ?>">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            See our <?php echo esc_html( $related_listing_title ); ?>
         </a>
         <?php endif; ?>
 

@@ -18,7 +18,9 @@ class OHA_HLD_GD_Form {
 
     public static function init() {
         add_action( 'wp_enqueue_scripts', [ __CLASS__, 'enqueue' ], 99 );
+        add_action( 'wp_footer',          [ __CLASS__, 'output_holiday_template' ], 4 );
         add_action( 'wp_footer',          [ __CLASS__, 'output_discount_template' ], 5 );
+        add_action( 'save_post_gd_place', [ __CLASS__, 'save_holiday_fields' ], 25, 3 );
         add_action( 'save_post_gd_place', [ __CLASS__, 'save_discount' ], 20, 3 );
     }
 
@@ -49,6 +51,18 @@ class OHA_HLD_GD_Form {
         wp_register_script( 'oha-gd-single-form-ui', '', [], OHA_HLD_VERSION, true );
         wp_enqueue_script( 'oha-gd-single-form-ui' );
         wp_add_inline_script( 'oha-gd-single-form-ui', self::get_form_js() );
+
+        // Pass holiday category term IDs to JS so the category watcher can detect them
+        $season_windows = OHA_HLD_Admin::get( 'season_windows', [] );
+        $holiday_cats   = [];
+        foreach ( (array) $season_windows as $w ) {
+            if ( empty( $w['category_slug'] ) ) continue;
+            $term = get_term_by( 'slug', $w['category_slug'], 'gd_placecategory' );
+            if ( $term && ! is_wp_error( $term ) ) {
+                $holiday_cats[ (string) $term->term_id ] = ! empty( $w['label'] ) ? $w['label'] : $term->name;
+            }
+        }
+        wp_add_inline_script( 'oha-gd-single-form-ui', 'window.ohaHldHolidayCats=' . wp_json_encode( $holiday_cats ) . ';', 'before' );
     }
 
     // ── Discount template: output hidden div that JS moves into the form ──────
@@ -256,6 +270,64 @@ class OHA_HLD_GD_Form {
 
             self::notify_board( $post_id, $rate, $message, $active );
         }
+    }
+
+    // ── Holiday template: notice + operating dates field (fires on add AND edit) ─
+
+    public static function output_holiday_template() {
+        if ( ! self::is_gd_form_page() ) return;
+        if ( ! is_user_logged_in() ) return;
+
+        $post_id = self::get_editing_post_id();
+
+        if ( $post_id ) {
+            $author_id = (int) get_post_field( 'post_author', $post_id );
+            $is_owner  = get_current_user_id() === $author_id;
+            $is_admin  = current_user_can( 'manage_options' ) || current_user_can( 'manage_oha_members' );
+            if ( ! $is_owner && ! $is_admin ) return;
+        }
+
+        $holiday_dates = $post_id ? get_post_meta( $post_id, 'oha_holiday_dates', true ) : '';
+        $nonce         = wp_create_nonce( 'oha_holiday_frontend_save' );
+        ?>
+        <div id="oha-holiday-inject" style="display:none!important" aria-hidden="true">
+
+            <div id="oha-holiday-notice" class="oha-holiday-notice" style="display:none" role="note">
+                <strong>Holiday Event Listing</strong>
+                This is a separate listing for your holiday or seasonal event. It will be featured in the seasonal listings section during the active date window for this category. It will not replace or affect your main haunted attraction listing.
+            </div>
+
+            <fieldset data-rule-type="fieldset" data-rule-key="oha_holiday_event_info">
+                <h3>Holiday Event Info</h3>
+                <small>Details specific to this seasonal event listing. This section appears when a holiday category is selected.</small>
+            </fieldset>
+
+            <div class="mb-3 row oha-span-2">
+                <label for="oha_holiday_dates_f">Operating Dates</label>
+                <div class="col-sm-10">
+                    <input type="text" id="oha_holiday_dates_f" name="oha_holiday_dates" class="form-control"
+                           value="<?php echo esc_attr( $holiday_dates ); ?>"
+                           placeholder="e.g. Dec 1 - 23, Fri and Sat nights">
+                    <small class="form-text">Describe when this event runs in plain text. This is displayed on your listing so visitors know when to attend.</small>
+                </div>
+            </div>
+
+            <input type="hidden" name="oha_holiday_nonce" value="<?php echo esc_attr( $nonce ); ?>">
+
+        </div>
+        <?php
+    }
+
+    // ── Holiday field save ────────────────────────────────────────────────────
+
+    public static function save_holiday_fields( $post_id, $post, $update ) {
+        if ( ! isset( $_POST['oha_holiday_nonce'] ) ) return;
+        if ( ! wp_verify_nonce( $_POST['oha_holiday_nonce'], 'oha_holiday_frontend_save' ) ) return;
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+        if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+        $holiday_dates = sanitize_text_field( wp_unslash( $_POST['oha_holiday_dates'] ?? '' ) );
+        update_post_meta( $post_id, 'oha_holiday_dates', $holiday_dates );
     }
 
     // ── Board notification email ──────────────────────────────────────────────
@@ -813,6 +885,29 @@ form#geodir-add-listing #geodir_address_map_row .col-sm-2 {
   }
 }
 
+#geodirectory-add-post .oha-holiday-notice,
+form.geodir-add-listing-form .oha-holiday-notice,
+form#geodir-add-listing .oha-holiday-notice {
+  background: rgba(173,49,25,.13);
+  border: 1px solid rgba(173,49,25,.4);
+  border-left: 3px solid #ad3119;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  color: #f6e8e4;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#geodirectory-add-post .oha-holiday-notice strong,
+form.geodir-add-listing-form .oha-holiday-notice strong,
+form#geodir-add-listing .oha-holiday-notice strong {
+  display: block;
+  color: #fff;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
 @media (max-width: 899px) {
   #geodirectory-add-post,
   form.geodir-add-listing-form,
@@ -877,6 +972,17 @@ form#geodir-add-listing #geodir_address_map_row .col-sm-2 {
   ready(function () {
     var form = document.querySelector("#geodirectory-add-post, form.geodir-add-listing-form, form#geodir-add-listing");
     if (!form) return;
+
+    // ---- Inject holiday section (before fieldset processing, notice extracted separately) ----
+    var holidayInject = document.getElementById("oha-holiday-inject");
+    var holidayNoticeEl = null;
+    if (holidayInject) {
+      holidayNoticeEl = holidayInject.querySelector("#oha-holiday-notice");
+      if (holidayNoticeEl) holidayInject.removeChild(holidayNoticeEl);
+      var hNodes = Array.prototype.slice.call(holidayInject.childNodes);
+      hNodes.forEach(function (node) { form.appendChild(node); });
+      if (holidayInject.parentNode) holidayInject.parentNode.removeChild(holidayInject);
+    }
 
     // ---- Inject discount section (PHP-rendered, must run before fieldset processing) ----
     var discInject = document.getElementById("oha-disc-inject");
@@ -1083,6 +1189,66 @@ form#geodir-add-listing #geodir_address_map_row .col-sm-2 {
         submitButtons.forEach(function (btn) { submitWrap.appendChild(btn); });
       }
     }
+
+    // ---- Holiday notice positioning ----
+    if (holidayNoticeEl) {
+      var catRowRef = form.querySelector("#gd_placecategory_row");
+      if (catRowRef && catRowRef.parentNode) {
+        catRowRef.parentNode.insertBefore(holidayNoticeEl, catRowRef.nextSibling);
+      } else {
+        var introRef2 = form.querySelector(".oha-form-intro");
+        if (introRef2) { introRef2.insertAdjacentElement("afterend", holidayNoticeEl); } else { form.insertBefore(holidayNoticeEl, form.firstChild); }
+      }
+    }
+
+    // ---- Holiday category watching ----
+    function getSelectedCatIds() {
+      var ids = [];
+      form.querySelectorAll("input[type=\"checkbox\"][name=\"post_category[]\"], input[type=\"checkbox\"][name=\"post_category\"]").forEach(function(cb) {
+        if (cb.checked) ids.push(parseInt(cb.value, 10));
+      });
+      form.querySelectorAll("select[name=\"post_category[]\"] option, select[name=\"post_category\"] option").forEach(function(opt) {
+        if (opt.selected) ids.push(parseInt(opt.value, 10));
+      });
+      return ids;
+    }
+
+    function getActiveHolidayLabel() {
+      var cats = window.ohaHldHolidayCats || {};
+      var ids = getSelectedCatIds();
+      for (var i = 0; i < ids.length; i++) {
+        if (cats[ids[i]]) return cats[ids[i]];
+      }
+      return null;
+    }
+
+    function updateHolidayVisibility() {
+      var label = getActiveHolidayLabel();
+      if (holidayNoticeEl) holidayNoticeEl.style.display = label ? "" : "none";
+      var hfs = form.querySelector("fieldset[data-rule-key=\"oha_holiday_event_info\"]");
+      if (hfs) {
+        var wrapId = hfs.getAttribute("aria-controls");
+        var hWrap = wrapId ? document.getElementById(wrapId) : null;
+        if (hWrap) {
+          if (label) {
+            hWrap.hidden = false;
+            hfs.classList.add("oha-open");
+            hfs.setAttribute("aria-expanded", "true");
+          } else {
+            hWrap.hidden = true;
+            hfs.classList.remove("oha-open");
+            hfs.setAttribute("aria-expanded", "false");
+          }
+        }
+      }
+    }
+
+    form.addEventListener("change", function(e) {
+      var n = e.target.name;
+      if (n === "post_category[]" || n === "post_category") updateHolidayVisibility();
+    });
+
+    updateHolidayVisibility();
   });
 })();
 ';

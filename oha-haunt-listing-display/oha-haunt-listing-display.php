@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.18.0
+ * Version:     1.19.0
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.18.0' );
+define( 'OHA_HLD_VERSION', '1.19.0' );
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_hld_check_for_update' );

@@ -97,6 +97,7 @@ class OHA_HLD_Admin {
         add_action( 'admin_menu',              [ __CLASS__, 'add_menu' ],      25 );
         add_action( 'add_meta_boxes',          [ __CLASS__, 'register_meta_box' ] );
         add_action( 'save_post_gd_place',      [ __CLASS__, 'save_meta_box' ], 10, 2 );
+        add_action( 'save_post_gd_place',      [ __CLASS__, 'auto_link_related_listing' ], 30, 3 );
         register_activation_hook( OHA_HLD_PATH . 'oha-haunt-listing-display.php', [ __CLASS__, 'on_activate' ] );
 
         // ── Utilities ────────────────────────────────────────────────────
@@ -205,6 +206,26 @@ class OHA_HLD_Admin {
 
         echo '<label ' . $lbl . '>Private Link (members only)</label>';
         echo '<input type="url" name="oha_disc_private_link" value="' . esc_attr( $disc_private_link ) . '" placeholder="https://" ' . $iw . '>';
+
+        // ── Holiday event fields ──────────────────────────────────────────────
+        echo '<hr style="margin:12px 0;">';
+        echo '<p style="font-weight:600;margin:0 0 8px;">Holiday Event Fields</p>';
+
+        $holiday_dates      = get_post_meta( $post->ID, 'oha_holiday_dates',      true );
+        $related_listing_id = get_post_meta( $post->ID, 'oha_related_listing_id', true );
+
+        echo '<label ' . $lbl . '>Operating Dates</label>';
+        echo '<input type="text" name="oha_holiday_dates" value="' . esc_attr( $holiday_dates ) . '" placeholder="e.g. Dec 1-23, Fri and Sat nights" ' . $iw . '>';
+
+        echo '<label ' . $lbl . '>Related Listing ID</label>';
+        echo '<input type="number" name="oha_related_listing_id" value="' . esc_attr( $related_listing_id ) . '" placeholder="Post ID" ' . $iw . '>';
+        if ( $related_listing_id ) {
+            $rel_title = get_the_title( (int) $related_listing_id );
+            if ( $rel_title ) {
+                echo '<span style="font-size:11px;color:#666;">Linked to: ' . esc_html( $rel_title ) . '</span>';
+            }
+        }
+        echo '<p style="font-size:11px;color:#888;margin:4px 0 0;">Auto-set when a holiday listing is published and the author has exactly one other listing. Clear to remove the link.</p>';
     }
 
     public static function save_meta_box( $post_id, $post ) {
@@ -232,6 +253,15 @@ class OHA_HLD_Admin {
         ];
         foreach ( $disc_fields as $key => $val ) {
             update_post_meta( $post_id, $key, $val );
+        }
+
+        // Holiday event fields
+        update_post_meta( $post_id, 'oha_holiday_dates', sanitize_text_field( wp_unslash( $_POST['oha_holiday_dates'] ?? '' ) ) );
+        $rel_id = absint( $_POST['oha_related_listing_id'] ?? 0 );
+        if ( $rel_id ) {
+            update_post_meta( $post_id, 'oha_related_listing_id', $rel_id );
+        } else {
+            delete_post_meta( $post_id, 'oha_related_listing_id' );
         }
     }
 
@@ -935,6 +965,58 @@ class OHA_HLD_Admin {
         if ( $sort_by !== 'oha_disc_active' ) return $orderby;
         global $wpdb;
         return "COALESCE(oha_disc_pm.meta_value + 0, 0) {$order}, {$wpdb->posts}.post_title ASC";
+    }
+
+    // ── Auto-link related listings ────────────────────────────────────────────
+    // When a holiday listing is published and the author has exactly one other
+    // published gd_place, link both bidirectionally via oha_related_listing_id.
+    // Skips if 0 or 2+ other listings (ambiguous). Does not overwrite existing links.
+
+    public static function auto_link_related_listing( $post_id, $post, $update ) {
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
+        if ( $post->post_status !== 'publish' ) return;
+
+        // Only trigger when this listing is in a holiday category
+        $season_windows = self::get( 'season_windows', [] );
+        $holiday_slugs  = [];
+        foreach ( (array) $season_windows as $w ) {
+            if ( ! empty( $w['category_slug'] ) ) $holiday_slugs[] = $w['category_slug'];
+        }
+        if ( empty( $holiday_slugs ) ) return;
+
+        $post_cats = get_the_terms( $post_id, 'gd_placecategory' );
+        if ( empty( $post_cats ) || is_wp_error( $post_cats ) ) return;
+
+        $is_holiday = false;
+        foreach ( $post_cats as $cat ) {
+            if ( in_array( $cat->slug, $holiday_slugs, true ) ) { $is_holiday = true; break; }
+        }
+        if ( ! $is_holiday ) return;
+
+        // Skip if a link is already set on this post
+        if ( get_post_meta( $post_id, 'oha_related_listing_id', true ) ) return;
+
+        $author_id      = (int) $post->post_author;
+        $other_listings = get_posts( [
+            'post_type'           => 'gd_place',
+            'post_status'         => 'publish',
+            'author'              => $author_id,
+            'post__not_in'        => [ $post_id ],
+            'posts_per_page'      => 2,
+            'fields'              => 'ids',
+            'ignore_sticky_posts' => true,
+        ] );
+
+        if ( count( $other_listings ) !== 1 ) return; // Skip if 0 or 2+
+
+        $related_id = (int) $other_listings[0];
+
+        update_post_meta( $post_id, 'oha_related_listing_id', $related_id );
+
+        // Set reverse link only if not already set on the other listing
+        if ( ! get_post_meta( $related_id, 'oha_related_listing_id', true ) ) {
+            update_post_meta( $related_id, 'oha_related_listing_id', $post_id );
+        }
     }
 
 }

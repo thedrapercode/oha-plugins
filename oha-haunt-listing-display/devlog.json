@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.18.0",
+    "version":  "1.19.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -470,6 +470,27 @@
                         "type":  "feature",
                         "summary":  "Added Seasonal Defaults admin tab to configure holiday season windows and GD category slugs",
                         "notes":  "New seasons tab in HLD admin. Each row: label, GD category slug, start MM-DD, end MM-DD. Up to 6 rows. Rows with empty slug are ignored. season_windows stored in oha_hld_settings option."
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.19.0",
+                        "type":  "feature",
+                        "summary":  "Holiday category notice injected in GD form when haunt selects a holiday category explaining the separate listing model",
+                        "notes":  "Output by output_holiday_template() at wp_footer priority 4; fires on both add and edit pages; notice moved after #gd_placecategory_row by JS; shown/hidden by category change events"
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.19.0",
+                        "type":  "feature",
+                        "summary":  "Operating dates text field (oha_holiday_dates) in GD form for holiday listings, saved to postmeta, displayed on listing page sidebar",
+                        "notes":  "Plain text field with placeholder; JS shows/hides it via Holiday Event Info collapsible section when holiday category selected; displayed as Event Dates row in sidebar with star icon"
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.19.0",
+                        "type":  "feature",
+                        "summary":  "Auto-link related listings: on save_post_gd_place for holiday listings, bidirectionally sets oha_related_listing_id if author has exactly one other published listing",
+                        "notes":  "Skips if 0 or 2+ other listings; does not overwrite existing links; displayed on listing page as See our [title] button in gold; admin metabox shows/edits the linked ID"
                     }
                 ],
     "admin_settings":  {
