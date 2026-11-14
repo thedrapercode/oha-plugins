@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.19.1",
+    "version":  "1.20.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -498,6 +498,20 @@
                         "type":  "fix",
                         "summary":  "Holiday Event Info section header now fully hidden until a holiday category is selected in the GD form",
                         "notes":  "updateHolidayVisibility() now sets hfs.style.display on the fieldset element itself, not just the content wrap"
+                    },
+                    {
+                        "date":  "2026-11-14",
+                        "version":  "1.20.0",
+                        "type":  "feature",
+                        "summary":  "Add [oha_holiday_listing_form] shortcode for dedicated holiday listing pages",
+                        "notes":  "Accepts category and label attrs. Forces geodir_is_page(add) via wp hook + filter so GD loads form scripts. Holiday section always visible via window.ohaHldForceHolidayLabel. Category auto-selected via checkbox or Select2 retry loop."
+                    },
+                    {
+                        "date":  "2026-11-14",
+                        "version":  "1.20.0",
+                        "type":  "fix",
+                        "summary":  "Fix double JS execution and fallback output path on holiday shortcode pages",
+                        "notes":  "output_holiday_form_js and output_holiday_form_globals check wp_script_is registered before outputting inline tags, avoiding double execution when enqueue() ran."
                     }
                 ],
     "admin_settings":  {

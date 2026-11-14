@@ -16,12 +16,21 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class OHA_HLD_GD_Form {
 
+    // Set by shortcode_holiday_listing_form() so footer hooks know we're on a holiday add page
+    private static $is_holiday_shortcode_page = false;
+    private static $holiday_shortcode_term_id = 0;
+    private static $holiday_shortcode_label   = '';
+
     public static function init() {
         add_action( 'wp_enqueue_scripts', [ __CLASS__, 'enqueue' ], 99 );
         add_action( 'wp_footer',          [ __CLASS__, 'output_holiday_template' ], 4 );
         add_action( 'wp_footer',          [ __CLASS__, 'output_discount_template' ], 5 );
         add_action( 'save_post_gd_place', [ __CLASS__, 'save_holiday_fields' ], 25, 3 );
         add_action( 'save_post_gd_place', [ __CLASS__, 'save_discount' ], 20, 3 );
+        add_shortcode( 'oha_holiday_listing_form', [ __CLASS__, 'shortcode_holiday_listing_form' ] );
+        // Force geodir_is_page('add') = true on pages containing our holiday shortcode
+        // so GD enqueues its form scripts (Select2, map, validators) correctly.
+        add_action( 'wp', [ __CLASS__, 'maybe_force_gd_add_page' ] );
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -29,6 +38,16 @@ class OHA_HLD_GD_Form {
     private static function is_gd_form_page() {
         if ( is_admin() ) return false;
         return is_page( 991 ) || ( function_exists( 'geodir_is_page' ) && geodir_is_page( 'add' ) );
+    }
+
+    public static function maybe_force_gd_add_page() {
+        global $post;
+        if ( ! $post || ! has_shortcode( $post->post_content, 'oha_holiday_listing_form' ) ) return;
+        add_filter( 'geodir_is_page', [ __CLASS__, 'filter_gd_add_page_for_holiday' ], 10, 2 );
+    }
+
+    public static function filter_gd_add_page_for_holiday( $is_page, $page = '' ) {
+        return $page === 'add' ? true : $is_page;
     }
 
     private static function get_editing_post_id() {
@@ -272,10 +291,62 @@ class OHA_HLD_GD_Form {
         }
     }
 
+    // ── Holiday listing form shortcode ────────────────────────────────────────
+
+    public static function shortcode_holiday_listing_form( $atts ) {
+        $atts     = shortcode_atts( [ 'category' => '', 'label' => 'Holiday Event' ], $atts, 'oha_holiday_listing_form' );
+        $cat_slug = sanitize_text_field( $atts['category'] );
+        $label    = sanitize_text_field( $atts['label'] );
+        $term_id  = 0;
+        if ( $cat_slug ) {
+            $term = get_term_by( 'slug', $cat_slug, 'gd_placecategory' );
+            if ( $term && ! is_wp_error( $term ) ) {
+                $term_id = (int) $term->term_id;
+            }
+        }
+
+        self::$is_holiday_shortcode_page = true;
+        self::$holiday_shortcode_term_id = $term_id;
+        self::$holiday_shortcode_label   = $label;
+
+        // Priority 3: CSS + force-holiday globals (before holiday template at 4)
+        add_action( 'wp_footer', [ __CLASS__, 'output_holiday_form_globals' ], 3 );
+        // Priority 6: form JS (after holiday template outputs #oha-holiday-inject at 4)
+        add_action( 'wp_footer', [ __CLASS__, 'output_holiday_form_js' ], 6 );
+
+        return do_shortcode( '[gd_add_listing post_type="gd_place"]' );
+    }
+
+    public static function output_holiday_form_globals() {
+        $term_id = self::$holiday_shortcode_term_id;
+        $label   = self::$holiday_shortcode_label;
+        $cats_js = $term_id ? wp_json_encode( [ (string) $term_id => $label ] ) : '{}';
+        $globals = 'window.ohaHldHolidayCats=' . $cats_js . ';'
+                 . 'window.ohaHldForceHolidayLabel=' . wp_json_encode( $label ) . ';'
+                 . 'window.ohaHldForceCategoryId=' . (int) $term_id . ';'
+                 . 'window.ohaHldForceCategoryLabel=' . wp_json_encode( $label ) . ';';
+
+        if ( wp_script_is( 'oha-gd-single-form-ui', 'registered' ) ) {
+            // enqueue() ran (geodir_is_page filter worked) — inject globals before the
+            // existing registered script; CSS was already added via wp_add_inline_style.
+            wp_add_inline_script( 'oha-gd-single-form-ui', $globals, 'before' );
+        } else {
+            // Fallback: output directly into footer as inline tags.
+            echo '<style>' . self::get_form_css() . '</style>';
+            echo '<script>' . $globals . '</script>';
+        }
+    }
+
+    public static function output_holiday_form_js() {
+        // If enqueue() ran, wp_print_footer_scripts() handles output at priority 20 — skip.
+        if ( wp_script_is( 'oha-gd-single-form-ui', 'registered' ) ) return;
+        echo '<script>' . self::get_form_js() . '</script>';
+    }
+
     // ── Holiday template: notice + operating dates field (fires on add AND edit) ─
 
     public static function output_holiday_template() {
-        if ( ! self::is_gd_form_page() ) return;
+        if ( ! self::is_gd_form_page() && ! self::$is_holiday_shortcode_page ) return;
         if ( ! is_user_logged_in() ) return;
 
         $post_id = self::get_editing_post_id();
@@ -1214,6 +1285,8 @@ form#geodir-add-listing .oha-holiday-notice strong {
     }
 
     function getActiveHolidayLabel() {
+      // On dedicated holiday form pages, always show the holiday section
+      if (window.ohaHldForceHolidayLabel) return window.ohaHldForceHolidayLabel;
       var cats = window.ohaHldHolidayCats || {};
       var ids = getSelectedCatIds();
       for (var i = 0; i < ids.length; i++) {
@@ -1250,6 +1323,41 @@ form#geodir-add-listing .oha-holiday-notice strong {
     });
 
     updateHolidayVisibility();
+
+    // Auto-select holiday category on dedicated holiday form pages
+    if (window.ohaHldForceCategoryId) {
+      var forcedId    = window.ohaHldForceCategoryId;
+      var forcedLabel = window.ohaHldForceCategoryLabel || "";
+      function tryForceCategory() {
+        // Try checkbox input first
+        var cb = form.querySelector(
+          "input[type=\"checkbox\"][name=\"post_category[]\"][value=\"" + forcedId + "\"]," +
+          "input[type=\"checkbox\"][name=\"post_category\"][value=\"" + forcedId + "\"]"
+        );
+        if (cb) {
+          if (!cb.checked) {
+            cb.checked = true;
+            cb.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+          return;
+        }
+        // Try Select2 dropdown
+        if (typeof jQuery !== "undefined") {
+          var $sel = jQuery("select[name=\"post_category[]\"], select[name=\"post_category\"]").first();
+          if ($sel.length && typeof $sel.data === "function" && $sel.data("select2") !== undefined) {
+            if (!$sel.find("option[value=\"" + forcedId + "\"]").length) {
+              $sel.append(new Option(forcedLabel, forcedId, true, true));
+            } else {
+              $sel.val(forcedId);
+            }
+            $sel.trigger("change");
+            return;
+          }
+        }
+        setTimeout(tryForceCategory, 300);
+      }
+      setTimeout(tryForceCategory, 500);
+    }
   });
 })();
 ';
