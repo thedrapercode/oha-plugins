@@ -1,9 +1,9 @@
 {
-  "name": "OHA Haunt Listing Display",
-  "slug": "oha-haunt-listing-display",
-  "version": "1.17.0",
-  "download_url": "",
-  "requires": "5.8",
-  "tested": "6.7",
-  "last_updated": "2026-11-12"
+    "name":  "OHA Haunt Listing Display",
+    "slug":  "oha-haunt-listing-display",
+    "version":  "1.19.1",
+    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v1.19.1-haunt-listing-display/haunt-listing-display-oha-v1.19.1.zip",
+    "requires":  "5.8",
+    "tested":  "6.7",
+    "last_updated":  "2026-11-13"
 }

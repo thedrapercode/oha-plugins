@@ -1,9 +1,9 @@
 {
-  "name": "OHA Survey Hub",
-  "slug": "oha-survey-hub",
-  "version": "1.5.0",
-  "download_url": "",
-  "requires": "5.8",
-  "tested": "6.7",
-  "last_updated": "2026-11-12"
+    "name":  "OHA Survey Hub",
+    "slug":  "oha-survey-hub",
+    "version":  "1.6.0",
+    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v1.6.0-survey-hub/survey-hub-oha-v1.6.0.zip",
+    "requires":  "5.8",
+    "tested":  "6.7",
+    "last_updated":  "2026-11-13"
 }
