@@ -51,6 +51,15 @@ class OHA_HLD_Admin {
             'enable_place_count'   => 1,  // [gd_place_count] shortcode
             'enable_discount_sort' => 1,  // GD sort option: OHA Discount
 
+            // ── Seasonal defaults ─────────────────────────────────────────
+            // Each window: label, category_slug, start_md (MM-DD), end_md (MM-DD)
+            // When today falls in a window, /places/ redirects to that GD category archive.
+            // Leave category_slug blank to disable redirect for that window.
+            'season_windows' => [
+                [ 'label' => 'Christmas / Krampus', 'category_slug' => 'christmas-events',  'start_md' => '11-01', 'end_md' => '01-05' ],
+                [ 'label' => "Valentine's Day",      'category_slug' => 'valentines-events', 'start_md' => '02-01', 'end_md' => '02-20' ],
+            ],
+
             // ── Unclaimed listing placeholder ──────────────────────────────
             'enable_unclaimed_placeholders' => 1,
             'unclaimed_placeholders'        => implode( "\n", [
@@ -287,6 +296,25 @@ class OHA_HLD_Admin {
             $s['enable_discount_sort'] = isset( $_POST['enable_discount_sort'] ) ? 1 : 0;
         }
 
+        if ( $tab === 'seasons' ) {
+            $rows = [];
+            foreach ( (array) ( $_POST['season_rows'] ?? [] ) as $r ) {
+                $slug = sanitize_text_field( $r['category_slug'] ?? '' );
+                if ( empty( $slug ) ) continue;
+                $start = sanitize_text_field( $r['start_md'] ?? '' );
+                $end   = sanitize_text_field( $r['end_md']   ?? '' );
+                // Validate MM-DD format
+                if ( ! preg_match( '/^\d{2}-\d{2}$/', $start ) || ! preg_match( '/^\d{2}-\d{2}$/', $end ) ) continue;
+                $rows[] = [
+                    'label'         => sanitize_text_field( $r['label'] ?? '' ),
+                    'category_slug' => $slug,
+                    'start_md'      => $start,
+                    'end_md'        => $end,
+                ];
+            }
+            $s['season_windows'] = $rows;
+        }
+
         update_option( self::OPTION_KEY, $s );
         return true;
     }
@@ -296,11 +324,11 @@ class OHA_HLD_Admin {
         if ( ! current_user_can( self::CAP ) ) { wp_die( 'Not allowed.' ); }
 
         $tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'display';
-        $valid_tabs = [ 'display', 'claim', 'claims', 'fields', 'utilities' ];
+        $valid_tabs = [ 'display', 'claim', 'claims', 'fields', 'utilities', 'seasons' ];
         if ( ! in_array( $tab, $valid_tabs, true ) ) $tab = 'display';
 
         $saved = false;
-        if ( in_array( $tab, [ 'display', 'claim', 'utilities' ], true ) ) {
+        if ( in_array( $tab, [ 'display', 'claim', 'utilities', 'seasons' ], true ) ) {
             $saved = self::maybe_save( $tab );
         }
 
@@ -325,6 +353,7 @@ class OHA_HLD_Admin {
             'claims'    => 'Pending Claims',
             'fields'    => 'Field Reference',
             'utilities' => 'Utilities',
+            'seasons'   => 'Seasonal Defaults',
         ];
 
         echo '<div class="wrap">';
@@ -358,6 +387,7 @@ class OHA_HLD_Admin {
             case 'claims':    self::render_claims_tab();    break;
             case 'fields':    self::render_fields_tab();    break;
             case 'utilities': self::render_utilities_tab(); break;
+            case 'seasons':   self::render_seasons_tab();   break;
         }
 
         echo '</div>'; // .wrap
@@ -843,6 +873,61 @@ class OHA_HLD_Admin {
                . " ON ({$wpdb->posts}.ID = oha_disc_pm.post_id"
                . " AND oha_disc_pm.meta_key = '_oha_disc_active') ";
         return $join;
+    }
+
+    /** ── Seasonal Defaults tab ──────────────────────────────────────────────── */
+    private static function render_seasons_tab() {
+        $s    = self::get_all();
+        $rows = isset( $s['season_windows'] ) && is_array( $s['season_windows'] ) ? $s['season_windows'] : [];
+
+        // Pad to 6 editable rows
+        while ( count( $rows ) < 6 ) {
+            $rows[] = [ 'label' => '', 'category_slug' => '', 'start_md' => '', 'end_md' => '' ];
+        }
+        ?>
+        <form method="post">
+            <?php wp_nonce_field( 'oha_hld_nonce_seasons', 'oha_hld_nonce' ); ?>
+
+            <h2>Seasonal Archive Defaults</h2>
+            <p>
+                When a visitor lands on the main haunt list page during a holiday window, they are automatically redirected to that season's GeoDirectory category archive.<br>
+                Outside all configured windows, the main haunt list shows all haunts as normal.
+            </p>
+            <p>
+                <strong>Setup:</strong> Create a GeoDirectory category for each holiday (e.g. <code>christmas-events</code>) under GeoDirectory &rarr; Places &rarr; Categories.
+                Holiday haunts create a separate listing assigned to that category.
+                Enter the category slug here along with the active date window.
+            </p>
+            <p>
+                <strong>Date format:</strong> <code>MM-DD</code> (e.g. <code>11-01</code> for November 1).
+                Year-wrap ranges are supported — a window of <code>11-01</code> to <code>01-05</code> correctly spans the December/January boundary.
+            </p>
+
+            <table class="widefat" style="margin-top:16px;">
+                <thead>
+                    <tr>
+                        <th style="width:200px;">Label</th>
+                        <th style="width:200px;">GD Category Slug</th>
+                        <th style="width:100px;">Start (MM-DD)</th>
+                        <th style="width:100px;">End (MM-DD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ( $rows as $i => $row ) : ?>
+                    <tr>
+                        <td><input type="text" name="season_rows[<?php echo $i; ?>][label]" value="<?php echo esc_attr( $row['label'] ); ?>" placeholder="e.g. Christmas / Krampus" class="regular-text"></td>
+                        <td><input type="text" name="season_rows[<?php echo $i; ?>][category_slug]" value="<?php echo esc_attr( $row['category_slug'] ); ?>" placeholder="e.g. christmas-events" class="regular-text"></td>
+                        <td><input type="text" name="season_rows[<?php echo $i; ?>][start_md]" value="<?php echo esc_attr( $row['start_md'] ); ?>" placeholder="11-01" style="width:80px;"></td>
+                        <td><input type="text" name="season_rows[<?php echo $i; ?>][end_md]" value="<?php echo esc_attr( $row['end_md'] ); ?>" placeholder="01-05" style="width:80px;"></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <p class="description" style="margin-top:8px;">Rows with an empty Category Slug are ignored. To remove a season, clear its Category Slug and save.</p>
+
+            <p><button type="submit" name="oha_hld_save" class="button button-primary">Save Settings</button></p>
+        </form>
+        <?php
     }
 
     // $sort_by arrives already stripped of _asc/_desc suffix by GeoDirectory

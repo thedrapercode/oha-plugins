@@ -1,6 +1,6 @@
 {
     "plugin":  "oha-haunt-listing-display",
-    "version":  "1.17.0",
+    "version":  "1.18.0",
     "entries":  [
                     {
                         "date":  "2026-09-16",
@@ -449,6 +449,27 @@
                         "type":  "fix",
                         "summary":  "OHA dark theme now applies to /events/ page and any GD archive WordPress page",
                         "notes":  "geodir_is_page(archive) only fires on post_type_archive URLs and taxonomy pages -- it misses WordPress pages configured as GD archive pages (e.g. /events/). Added oha_hld_is_gd_listing_context() helper that also loops through geodir_get_posttypes() and checks geodir_archive_page_id() for each. All four hooks (enqueue, body_class, post_class, wp_footer) now use the helper. geodir_posts_per_page filter extended to also cover gd_event (12 per page)."
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.18.0",
+                        "type":  "feature",
+                        "summary":  "Nearby haunts section now filters by current listing category (Christmas haunt shows nearby Christmas haunts)",
+                        "notes":  "tax_query added to candidate_args in nearby.php using current listing gd_placecategory terms. Section heading is also dynamic: More {Category Name} Nearby."
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.18.0",
+                        "type":  "feature",
+                        "summary":  "Seasonal archive default: /places/ redirects to active holiday GD category archive based on date window",
+                        "notes":  "oha_hld_get_active_season() checks MM-DD windows from settings, handles year-wrap (e.g. 11-01 to 01-05). oha_hld_is_main_places_archive() scopes redirect to only the configured GD places archive WP page. 302 redirect to get_term_link() for the category."
+                    },
+                    {
+                        "date":  "2026-11-13",
+                        "version":  "1.18.0",
+                        "type":  "feature",
+                        "summary":  "Added Seasonal Defaults admin tab to configure holiday season windows and GD category slugs",
+                        "notes":  "New seasons tab in HLD admin. Each row: label, GD category slug, start MM-DD, end MM-DD. Up to 6 rows. Rows with empty slug are ignored. season_windows stored in oha_hld_settings option."
                     }
                 ],
     "admin_settings":  {

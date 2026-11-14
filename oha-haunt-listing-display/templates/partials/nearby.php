@@ -11,6 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 $nearby_count = max( 1, (int) $settings['nearby_count'] );
 
+// Match current listing's category so nearby haunts are contextually relevant
+// (Christmas listing shows nearby Christmas haunts; Halloween shows Halloween haunts)
+$current_cats = get_the_terms( $listing_id, 'gd_placecategory' );
+
 // Haversine distance in miles
 function oha_hld_haversine( $lat1, $lon1, $lat2, $lon2 ) {
     $R    = 3958.8; // Earth radius in miles
@@ -33,6 +37,15 @@ $candidate_args = [
     'ignore_sticky_posts' => true,
     'fields'              => 'ids',
 ];
+
+if ( ! empty( $current_cats ) && ! is_wp_error( $current_cats ) ) {
+    $candidate_args['tax_query'] = [[
+        'taxonomy' => 'gd_placecategory',
+        'field'    => 'term_id',
+        'terms'    => wp_list_pluck( $current_cats, 'term_id' ),
+        'operator' => 'IN',
+    ]];
+}
 
 $candidate_ids = get_posts( $candidate_args );
 
@@ -78,9 +91,13 @@ usort( $featured_haunts, function( $a, $b ) {
 
 // Take only the count we need
 $featured_haunts = array_slice( $featured_haunts, 0, $nearby_count );
+$nearby_title = 'Featured Haunts Nearby';
+if ( ! empty( $current_cats ) && ! is_wp_error( $current_cats ) ) {
+    $nearby_title = 'More ' . $current_cats[0]->name . ' Nearby';
+}
 ?>
 <section class="oha-nearby">
-    <h2 class="oha-section-title">Featured Haunts Nearby</h2>
+    <h2 class="oha-section-title"><?php echo esc_html( $nearby_title ); ?></h2>
     <div class="oha-nearby__grid">
         <?php foreach ( $featured_haunts as $item ) :
             $n_id    = $item['id'];

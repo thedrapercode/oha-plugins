@@ -2,14 +2,14 @@
 /**
  * Plugin Name: OHA Haunt Listing Display
  * Description: Custom single listing page template for GeoDirectory gd_place listings. OHA-branded layout with hero, info card, gallery, nearby haunts, integrated claim workflow, and report post. Configure via GeoDirectory > OHA Listing Display.
- * Version:     1.17.0
+ * Version:     1.18.0
  * Author:      OHA
  * Requires Plugins: geodirectory
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'OHA_HLD_VERSION', '1.17.0' );
+define( 'OHA_HLD_VERSION', '1.18.0' );
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_hld_check_for_update' );
@@ -104,6 +104,60 @@ function oha_hld_is_gd_listing_context() {
     }
     return false;
 }
+
+/**
+ * Returns true only when on the WordPress page configured as the gd_place
+ * archive in GeoDirectory settings (e.g. /places/). Used to scope the seasonal
+ * redirect so it doesn't fire on taxonomy archives or search results.
+ */
+function oha_hld_is_main_places_archive() {
+    if ( ! function_exists( 'geodir_archive_page_id' ) ) return false;
+    if ( ! is_page() ) return false;
+    return (int) get_the_ID() === (int) geodir_archive_page_id( 'gd_place' );
+}
+
+/**
+ * Returns the first season window whose MM-DD date range contains today,
+ * or null if today falls outside all configured windows.
+ * Handles year-wrap ranges (e.g. 11-01 to 01-05).
+ */
+function oha_hld_get_active_season() {
+    $windows = OHA_HLD_Admin::get( 'season_windows', [] );
+    if ( empty( $windows ) || ! is_array( $windows ) ) return null;
+    $today = date( 'md' ); // zero-padded MMDD, e.g. "1115"
+    foreach ( $windows as $w ) {
+        if ( empty( $w['category_slug'] ) || empty( $w['start_md'] ) || empty( $w['end_md'] ) ) continue;
+        $start = str_replace( '-', '', $w['start_md'] );
+        $end   = str_replace( '-', '', $w['end_md'] );
+        if ( $start > $end ) {
+            // Wraps year boundary (e.g. 1101 → 0105): in range if today >= start OR today <= end
+            if ( $today >= $start || $today <= $end ) return $w;
+        } else {
+            if ( $today >= $start && $today <= $end ) return $w;
+        }
+    }
+    return null;
+}
+
+/**
+ * When a holiday season is active and the visitor lands on the main haunt
+ * archive page with no active filter or search, redirect them to the GD
+ * category archive for that season so the right haunts show by default.
+ * Uses 302 (temporary) so search engines see the full list at the canonical URL.
+ */
+add_action( 'template_redirect', function() {
+    if ( ! oha_hld_is_main_places_archive() ) return;
+    if ( isset( $_GET['geodir_search'] ) || isset( $_GET['s'] ) ) return;
+    $season = oha_hld_get_active_season();
+    if ( ! $season || empty( $season['category_slug'] ) ) return;
+    $term = get_term_by( 'slug', $season['category_slug'], 'gd_placecategory' );
+    if ( ! $term || is_wp_error( $term ) ) return;
+    $url = get_term_link( $term, 'gd_placecategory' );
+    if ( ! is_wp_error( $url ) ) {
+        wp_redirect( $url, 302 );
+        exit;
+    }
+} );
 
 /**
  * Enqueue OHA dark-theme CSS on GeoDirectory archive and search pages.
