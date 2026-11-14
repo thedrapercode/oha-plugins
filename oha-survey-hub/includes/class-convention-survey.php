@@ -18,6 +18,30 @@ class OHA_Convention_Survey {
     // Kept for backward-compat with main plugin file references
     const SURVEY_TYPE = 'convention_2026';
 
+    // -------------------------------------------------------------------------
+    // Active year helpers — all convention logic derives from these
+    // -------------------------------------------------------------------------
+
+    public static function get_year() {
+        return (int) get_option('oha_convention_survey_year', 2027);
+    }
+
+    public static function active_type() {
+        return 'convention_' . self::get_year();
+    }
+
+    public static function active_type_vendor() {
+        return 'convention_' . self::get_year() . '_vendor';
+    }
+
+    public static function active_type_volunteer() {
+        return 'convention_' . self::get_year() . '_volunteer';
+    }
+
+    public static function get_title($survey_type) {
+        return self::survey_title($survey_type);
+    }
+
     private static $page_titles = [
         'attendee' => [
             1 => 'Ticketing and Pricing',
@@ -27,7 +51,8 @@ class OHA_Convention_Survey {
             5 => 'Education Sessions',
             6 => 'Costume Ball',
             7 => 'Blood Prison',
-            8 => '2027 Planning and Overall Feedback',
+            9 => 'Main Stage Events',
+            10 => 'Haunt Showcase Area',
         ],
         'vendor' => [
             1 => 'Setup and Operations',
@@ -35,12 +60,24 @@ class OHA_Convention_Survey {
             3 => 'Education Sessions',
             4 => 'Costume Ball',
             5 => 'Communication and Support',
-            6 => 'Looking Ahead to 2027',
         ],
-        'volunteer' => [],
+        'volunteer' => [
+            1 => 'Your Volunteer Role',
+            2 => 'Your Experience',
+            3 => 'Benefits and Motivation',
+        ],
     ];
 
     private static function get_page_title($pg, $context = 'attendee') {
+        $next_year = self::get_year() + 1;
+        // Last page titles reference next year dynamically
+        $dynamic = [
+            'attendee' => [8 => "{$next_year} Planning and Overall Feedback"],
+            'vendor'   => [6 => "Looking Ahead to {$next_year}"],
+        ];
+        if (isset($dynamic[$context][$pg])) {
+            return $dynamic[$context][$pg];
+        }
         $map = self::$page_titles[$context] ?? [];
         return $map[$pg] ?? 'Page ' . $pg;
     }
@@ -63,6 +100,7 @@ class OHA_Convention_Survey {
         $sql = "CREATE TABLE $table (
             id int(11) NOT NULL AUTO_INCREMENT,
             survey_context varchar(20) NOT NULL DEFAULT 'attendee',
+            convention_year int(11) NOT NULL DEFAULT 2026,
             sort_order int(11) DEFAULT 0,
             page_group int(11) DEFAULT 1,
             question_text text NOT NULL,
@@ -78,6 +116,7 @@ class OHA_Convention_Survey {
             gate_show_value varchar(100) DEFAULT '',
             PRIMARY KEY (id),
             KEY survey_context (survey_context),
+            KEY convention_year (convention_year),
             KEY sort_order (sort_order),
             KEY hidden (hidden)
         ) $charset_collate;";
@@ -87,9 +126,12 @@ class OHA_Convention_Survey {
     public static function seed_questions() {
         global $wpdb;
         $table = $wpdb->prefix . 'oha_survey_convention_questions';
-        if ((int) $wpdb->get_var("SELECT COUNT(*) FROM $table") > 0) {
-            return;
-        }
+        $year  = self::get_year();
+        $exists = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE survey_context = 'attendee' AND convention_year = %d",
+            $year
+        ));
+        if ($exists > 0) return;
         foreach (self::default_questions() as $q) {
             $wpdb->insert($table, $q);
         }
@@ -98,6 +140,7 @@ class OHA_Convention_Survey {
     private static function q($sort, $group, $text, $type, $opts, $required, $gate_for = 0, $gate_val = '', $smin = 1, $smax = 5, $slmin = '', $slmax = '') {
         return [
             'survey_context'  => 'attendee',
+            'convention_year' => self::get_year(),
             'sort_order'      => $sort,
             'page_group'      => $group,
             'question_text'   => $text,
@@ -115,9 +158,11 @@ class OHA_Convention_Survey {
     }
 
     private static function default_questions() {
+        $year      = self::get_year();
+        $next_year = $year + 1;
         return [
             // ---- Page 1: Ticketing and Pricing (everyone) ----
-            self::q(5, 1, 'Which day(s) did you attend OHA Convention 2026?',
+            self::q(5, 1, "Which day(s) did you attend OHA Convention {$year}?",
                 'radio', ['Saturday only (May 10)', 'Sunday only (May 11)', 'Both days'], true),
 
             self::q(10, 1, 'How did you purchase your convention tickets?',
@@ -136,6 +181,9 @@ class OHA_Convention_Survey {
                     'No - I added everything I needed during checkout',
                     'Not applicable - I did not want those events',
                 ], true),
+
+            self::q(45, 1, 'How far did you travel to attend OHA Convention?',
+                'radio', ['Under 1 hour', '1 to 2 hours', '2 to 3 hours', 'Over 3 hours', 'Out of state'], true),
 
             // ---- Page 2: Ticket Type and Venue (everyone) ----
             // Gate question: VIP ($80) gates page 3
@@ -199,12 +247,42 @@ class OHA_Convention_Survey {
             self::q(170, 4, 'Did you attend Blood Prison?',
                 'radio', ['Yes', 'No'], true, 7, 'Yes'),
 
+            self::q(173, 4, 'What types of vendors or exhibitors would you like to see more of at future conventions? (Select all that apply)',
+                'checkbox', [
+                    'Special effects makeup and prosthetics',
+                    'Costumes and wearable props',
+                    'Animatronics and mechanical props',
+                    'Atmospheric and lighting equipment',
+                    'Audio and sound effects equipment',
+                    'Haunt business services (insurance, marketing, ticketing)',
+                    'Photography and videography services',
+                    'Art, prints, and collectibles',
+                    'Food and beverages',
+                    'Other',
+                ], false),
+
+            // Gate: Main Stage events gates page 9
+            self::q(175, 4, 'Did you attend any of the Main Stage events, such as the Opening Ceremony, Closing Ceremony, or on-stage entertainment?',
+                'radio', ['Yes', 'No'], true, 9, 'Yes'),
+
+            // Gate: Haunt Showcase gates page 10
+            self::q(177, 4, 'Did you visit the Haunt Showcase area where Ohio haunts were promoting their attractions?',
+                'radio', ['Yes', 'No'], true, 10, 'Yes'),
+
             // ---- Page 5: Education Sessions (conditional) ----
             self::q(180, 5, 'How would you rate the Education sessions you attended overall?',
                 'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
 
             self::q(190, 5, 'How many Education sessions did you attend?',
                 'radio', ['1', '2', '3 or more'], true),
+
+            self::q(195, 5, 'With more session rooms available this year, were you able to attend all the Education sessions you wanted?',
+                'radio', [
+                    'Yes, I attended everything I wanted',
+                    'No, there were sessions I had to skip due to scheduling conflicts',
+                    'I was not aware that multiple sessions ran at the same time',
+                    'I only wanted to attend one session',
+                ], false),
 
             self::q(200, 5, 'How relevant were the session topics to your interests and needs?',
                 'scale', null, true, 0, '', 1, 5, 'Not relevant', 'Very relevant'),
@@ -233,46 +311,44 @@ class OHA_Convention_Survey {
                 'radio', ['Definitely yes', 'Yes', 'Neutral', 'No', 'Definitely not'], true),
 
             // ---- Page 8: 2027 Planning and Overall Feedback (everyone) ----
+            self::q(272, 8, 'Did you post about OHA Convention on social media during or after the event?',
+                'radio', ['Yes, multiple posts', 'Yes, one post or story', 'No, but I shared content others posted', 'No'], true),
+
+            self::q(273, 8, 'Did you make any valuable connections at the convention - with other haunters, vendors, or speakers?',
+                'radio', ['Yes, several valuable connections', 'Yes, one or two good connections', 'Not really', 'No'], true),
+
             self::q(275, 8, 'Did you use the OHA Convention mobile app during the event?',
                 'radio', ['Yes', 'No'], true),
 
             self::q(278, 8, 'If you used the mobile app, how would you rate your experience with it?',
                 'radio', ['Excellent', 'Good', 'Fair', 'Poor - it had issues', 'I did not use the mobile app'], false),
 
-            self::q(280, 8, "The convention was held on Mother's Day weekend (Sunday, May 11). Did this affect your attendance?",
-                'radio', [
-                    'No impact on my attendance',
-                    'I had to adjust my schedule to attend',
-                    'I could only attend one day because of it',
-                    'It made it difficult but I still came',
-                    'Not applicable',
-                ], true),
-
-            self::q(290, 8, 'OHA Convention 2027 is planned for May 22-23, 2027 at the same venue. Do you plan to attend?',
+            self::q(290, 8, "OHA Convention {$next_year} is planned for {$next_year} at the same venue. Do you plan to attend?",
                 'radio', ['Definitely yes', 'Probably yes', 'Unsure', 'Probably not', 'Definitely not'], true),
 
-            self::q(300, 8, 'What would most increase your likelihood of attending in 2027? (Select all that apply)',
+            self::q(300, 8, "What would most increase your likelihood of attending in {$next_year}? (Select all that apply)",
                 'checkbox', [
                     'More vendors',
                     'More Education session topics',
                     'Better food options',
                     'Changes to the Costume Ball',
-                    'Additional events or activities',
+                    'More Main Stage events or live performances',
+                    'More haunts in the Haunt Showcase',
                     'Lower ticket price',
                     'Nothing - I am already planning to attend',
                     'Other',
                 ], true),
 
-            self::q(310, 8, 'What from this year should we keep exactly the same for 2027?',
+            self::q(310, 8, "What from this year should we keep exactly the same for {$next_year}?",
                 'textarea', null, false),
 
-            self::q(320, 8, 'What should we change or add for 2027?',
+            self::q(320, 8, "What should we change or add for {$next_year}?",
                 'textarea', null, false),
 
-            self::q(335, 8, 'Overall, how would you rate OHA Convention 2026?',
+            self::q(335, 8, "Overall, how would you rate OHA Convention {$year}?",
                 'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
 
-            self::q(330, 8, 'How did you hear about OHA Convention 2026? (Select all that apply)',
+            self::q(330, 8, "How did you hear about OHA Convention {$year}? (Select all that apply)",
                 'checkbox', [
                     'OHA website',
                     'Facebook',
@@ -289,6 +365,29 @@ class OHA_Convention_Survey {
 
             self::q(350, 8, 'Any additional comments or feedback?',
                 'textarea', null, false),
+
+            // ---- Page 9: Main Stage Events (conditional) ----
+            self::q(400, 9, 'How would you rate the Opening Ceremony overall?',
+                'scale', null, false, 0, '', 1, 5, 'Disappointing', 'Excellent'),
+
+            self::q(410, 9, 'How would you rate the Closing Ceremony overall?',
+                'scale', null, false, 0, '', 1, 5, 'Disappointing', 'Excellent'),
+
+            self::q(420, 9, 'How would you rate the costume contest on the Main Stage?',
+                'radio', ['Excellent', 'Good', 'Fair', 'Poor', 'I did not watch the costume contest'], false),
+
+            self::q(430, 9, 'What would you like to see on the Main Stage at future OHA Conventions?',
+                'textarea', null, false),
+
+            // ---- Page 10: Haunt Showcase Area (conditional) ----
+            self::q(450, 10, 'How would you rate the Haunt Showcase area overall?',
+                'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
+
+            self::q(460, 10, 'Did you discover any haunts you plan to visit as a result of the Haunt Showcase?',
+                'radio', ['Yes, definitely', 'Maybe', 'No'], true),
+
+            self::q(470, 10, 'What would make the Haunt Showcase more valuable for attendees?',
+                'textarea', null, false),
         ];
     }
 
@@ -299,8 +398,10 @@ class OHA_Convention_Survey {
     public static function seed_vendor_questions() {
         global $wpdb;
         $table = $wpdb->prefix . 'oha_survey_convention_questions';
+        $year  = self::get_year();
         $exists = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM $table WHERE survey_context = %s", 'vendor'
+            "SELECT COUNT(*) FROM $table WHERE survey_context = 'vendor' AND convention_year = %d",
+            $year
         ));
         if ($exists > 0) return;
         foreach (self::default_vendor_questions() as $q) {
@@ -325,6 +426,7 @@ class OHA_Convention_Survey {
     private static function qv($sort, $group, $text, $type, $opts, $required, $gate_for = 0, $gate_val = '', $smin = 1, $smax = 5, $slmin = '', $slmax = '') {
         return [
             'survey_context'  => 'vendor',
+            'convention_year' => self::get_year(),
             'sort_order'      => $sort,
             'page_group'      => $group,
             'question_text'   => $text,
@@ -342,9 +444,14 @@ class OHA_Convention_Survey {
     }
 
     private static function default_vendor_questions() {
+        $year      = self::get_year();
+        $next_year = $year + 1;
         return [
 
             // ---- Page 1: Setup and Operations (everyone) ----
+            self::qv(5, 1, 'Was this your first year vending at OHA Convention?',
+                'radio', ['Yes, this was my first time', 'No, I have vended here before'], true),
+
             self::qv(10, 1, 'How would you rate the pre-event communication and setup instructions provided by OHA?',
                 'scale', null, true, 0, '', 1, 5, 'Very unclear', 'Very clear'),
 
@@ -378,8 +485,26 @@ class OHA_Convention_Survey {
                     'Significantly fell short of expectations',
                 ], true),
 
-            self::qv(80, 2, 'With 37 vendors on the floor this year, how would you rate the overall vendor mix and diversity?',
+            self::qv(75, 2, 'Approximately how much in total sales did you generate at this event?',
+                'radio', [
+                    'Under $500',
+                    '$500 to $1,500',
+                    '$1,500 to $3,000',
+                    '$3,000 to $6,000',
+                    'Over $6,000',
+                    'Prefer not to say',
+                ], false),
+
+            self::qv(80, 2, 'How would you rate the overall vendor mix and diversity on the vendor floor this year?',
                 'scale', null, true, 0, '', 1, 5, 'Too similar, needs more variety', 'Excellent variety'),
+
+            self::qv(85, 2, 'Did the timing of Main Stage events affect attendee foot traffic at your booth?',
+                'radio', [
+                    'Yes, it noticeably increased traffic around our booth',
+                    'Yes, it temporarily drew attendees away from the vendor floor',
+                    'No noticeable impact',
+                    'I was not aware of the stage event schedule',
+                ], false),
 
             self::qv(90, 2, 'How would you rate the overall professionalism and friendliness of the attendees you interacted with?',
                 'scale', null, true, 0, '', 1, 5, 'Poor', 'Excellent'),
@@ -434,13 +559,30 @@ class OHA_Convention_Survey {
                 'textarea', null, false),
 
             // ---- Page 6: Looking Ahead to 2027 (everyone) ----
-            self::qv(230, 6, 'Would you apply to be a vendor at OHA Convention 2027?',
+            self::qv(230, 6, "Would you apply to be a vendor at OHA Convention {$next_year}?",
                 'radio', ['Definitely yes', 'Probably yes', 'Unsure', 'Probably not', 'Definitely not'], true),
+
+            self::qv(235, 6, 'Would you support having a dedicated Haunt Showcase area where local haunts promote their attractions to convention attendees?',
+                'radio', [
+                    'Yes, I think it would bring more attendees overall',
+                    'Yes, as long as it does not reduce vendor floor space',
+                    'Neutral',
+                    'No, it would compete with vendor space or attendee attention',
+                ], false),
+
+            self::qv(237, 6, 'Were the vendor booth fees reasonable for the return you received?',
+                'radio', [
+                    'Yes, very reasonable',
+                    'Yes, about right',
+                    'Somewhat, but fees could be lower',
+                    'No, fees were too high for the return',
+                    'Unsure',
+                ], false),
 
             self::qv(240, 6, 'How likely are you to recommend vending at OHA Convention to other vendors or businesses?',
                 'scale', null, true, 0, '', 1, 5, 'Would not recommend', 'Would strongly recommend'),
 
-            self::qv(250, 6, 'What changes would most improve the vendor experience in 2027? (Select all that apply)',
+            self::qv(250, 6, "What changes would most improve the vendor experience in {$next_year}? (Select all that apply)",
                 'checkbox', [
                     'Better foot traffic or event layout',
                     'Clearer pre-event communication',
@@ -448,19 +590,152 @@ class OHA_Convention_Survey {
                     'Earlier setup access',
                     'Better signage directing attendees to the vendor floor',
                     'More marketing or promotion of the vendor floor',
+                    'Better coordination of Main Stage event timing with vendor floor hours',
+                    'A dedicated Haunt Showcase area integrated with the vendor floor',
                     'Lower vendor fees',
                     'More attendees overall',
                     'Nothing - keep it the same',
                     'Other',
                 ], true),
 
-            self::qv(260, 6, 'What from this year should we keep exactly the same for 2027?',
+            self::qv(260, 6, "What from this year should we keep exactly the same for {$next_year}?",
                 'textarea', null, false),
 
-            self::qv(270, 6, 'Overall, how would you rate your vendor experience at OHA Convention 2026?',
+            self::qv(270, 6, "Overall, how would you rate your vendor experience at OHA Convention {$year}?",
                 'scale', null, true, 0, '', 1, 5, 'Disappointing', 'Excellent'),
 
             self::qv(280, 6, 'Any additional comments or feedback for the OHA team?',
+                'textarea', null, false),
+        ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Volunteer question seed
+    // -------------------------------------------------------------------------
+
+    public static function seed_volunteer_questions() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'oha_survey_convention_questions';
+        $year  = self::get_year();
+        $exists = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE survey_context = 'volunteer' AND convention_year = %d",
+            $year
+        ));
+        if ($exists > 0) return;
+        foreach (self::default_volunteer_questions() as $q) {
+            $wpdb->insert($table, $q);
+        }
+    }
+
+    private static function qvol($sort, $group, $text, $type, $opts, $required, $gate_for = 0, $gate_val = '', $smin = 1, $smax = 5, $slmin = '', $slmax = '') {
+        return [
+            'survey_context'  => 'volunteer',
+            'convention_year' => self::get_year(),
+            'sort_order'      => $sort,
+            'page_group'      => $group,
+            'question_text'   => $text,
+            'question_type'   => $type,
+            'options'         => $opts ? json_encode($opts) : null,
+            'scale_min'       => $smin,
+            'scale_max'       => $smax,
+            'scale_label_min' => $slmin,
+            'scale_label_max' => $slmax,
+            'required'        => $required ? 1 : 0,
+            'hidden'          => 0,
+            'gate_for_group'  => $gate_for,
+            'gate_show_value' => $gate_val,
+        ];
+    }
+
+    private static function default_volunteer_questions() {
+        $year = self::get_year();
+        return [
+
+            // ---- Page 1: Your Volunteer Role ----
+            self::qvol(10, 1, "What was your volunteer role at OHA Convention {$year}? (Select all that apply)",
+                'checkbox', [
+                    'Ticket check-in',
+                    'Vendor floor help',
+                    'Event setup or teardown',
+                    'Education room assistant',
+                    'Costume Ball assistance',
+                    'Security or crowd management',
+                    'Blood Prison guide',
+                    'General support and runner',
+                    'Other',
+                ], true),
+
+            self::qvol(20, 1, 'How did you first hear about the volunteer opportunity at OHA Convention?',
+                'radio', [
+                    'OHA email or newsletter',
+                    'Facebook or social media post',
+                    'OHA website',
+                    'Another volunteer told me',
+                    'I asked OHA directly',
+                    'Board Hub or admin message',
+                    'Other',
+                ], true),
+
+            self::qvol(30, 1, 'How many hours did you volunteer during the convention?',
+                'radio', [
+                    'Under 2 hours',
+                    '2 to 4 hours',
+                    '4 to 6 hours',
+                    'More than 6 hours',
+                ], true),
+
+            // ---- Page 2: Your Experience ----
+            self::qvol(40, 2, 'Were you given clear instructions about your role before the event?',
+                'scale', null, true, 0, '', 1, 5, 'Very unclear', 'Very clear'),
+
+            self::qvol(50, 2, 'Did you feel there were enough volunteers to cover everything that needed to be done?',
+                'radio', [
+                    'Yes, staffing felt about right',
+                    'No, we were short in some areas',
+                    'No, we were significantly understaffed',
+                    'I am not sure',
+                ], true),
+
+            self::qvol(60, 2, 'How would you rate the coordination and communication from the OHA team during the event?',
+                'scale', null, true, 0, '', 1, 5, 'Poor', 'Excellent'),
+
+            self::qvol(70, 2, 'Did you feel your time as a volunteer was valued by the OHA team?',
+                'scale', null, true, 0, '', 1, 5, 'Not valued', 'Very valued'),
+
+            self::qvol(80, 2, 'What was the biggest challenge you faced as a volunteer?',
+                'textarea', null, false),
+
+            // ---- Page 3: Benefits and Motivation ----
+            self::qvol(90, 3, 'What benefits did you receive for volunteering (convention access, meals, etc.)? Describe what was provided.',
+                'textarea', null, false),
+
+            self::qvol(100, 3, 'What would most encourage you to volunteer again at future OHA Conventions? (Select all that apply)',
+                'checkbox', [
+                    'Clearer role descriptions before the event',
+                    'Better communication during the event',
+                    'More breaks or flexible shift options',
+                    'Meals or refreshments provided',
+                    'Free or discounted convention admission',
+                    'Recognition or appreciation at the event',
+                    'Knowing there would be enough volunteers to share the work',
+                    'Other',
+                ], true),
+
+            self::qvol(110, 3, 'How likely are you to volunteer at OHA Convention again?',
+                'scale', null, true, 0, '', 1, 5, 'Definitely not', 'Definitely yes'),
+
+            self::qvol(120, 3, 'What do you think is the main reason more OHA members do not volunteer at the convention?',
+                'textarea', null, false),
+
+            self::qvol(130, 3, 'Would you be willing to recruit a friend or fellow OHA member to volunteer alongside you?',
+                'radio', [
+                    'Yes, definitely',
+                    'Probably',
+                    'Maybe',
+                    'No',
+                ], true),
+
+            self::qvol(140, 3, 'Any other feedback or suggestions for improving the volunteer experience?',
                 'textarea', null, false),
         ];
     }
@@ -509,6 +784,14 @@ class OHA_Convention_Survey {
     }
 
     private static function type_to_context($survey_type) {
+        // Handles any year: convention_YYYY_vendor -> vendor, convention_YYYY -> attendee
+        if (preg_match('/^convention_\d{4}_(.+)$/', $survey_type, $m)) {
+            return $m[1];
+        }
+        if (preg_match('/^convention_\d{4}$/', $survey_type)) {
+            return 'attendee';
+        }
+        // Legacy fallback for old constants
         $map = [
             self::SURVEY_TYPE_ATTENDEE  => 'attendee',
             self::SURVEY_TYPE_VENDOR    => 'vendor',
@@ -518,12 +801,18 @@ class OHA_Convention_Survey {
     }
 
     private static function survey_title($survey_type) {
-        $map = [
-            self::SURVEY_TYPE_ATTENDEE  => 'OHA Convention 2026 - Attendee Feedback',
-            self::SURVEY_TYPE_VENDOR    => 'OHA Convention 2026 - Vendor Feedback',
-            self::SURVEY_TYPE_VOLUNTEER => 'OHA Convention 2026 - Volunteer Feedback',
+        // Extract the year directly from the survey type string so historical titles are always correct
+        $year = self::get_year();
+        if (preg_match('/^convention_(\d{4})/', $survey_type, $m)) {
+            $year = (int) $m[1];
+        }
+        $context = self::type_to_context($survey_type);
+        $labels  = [
+            'attendee'  => "OHA Convention {$year} - Attendee Feedback",
+            'vendor'    => "OHA Convention {$year} - Vendor Feedback",
+            'volunteer' => "OHA Convention {$year} - Volunteer Feedback",
         ];
-        return $map[$survey_type] ?? 'OHA Convention 2026 Feedback';
+        return $labels[$context] ?? "OHA Convention {$year} Feedback";
     }
 
     // -------------------------------------------------------------------------
@@ -564,8 +853,9 @@ class OHA_Convention_Survey {
         global $wpdb;
         $table     = $wpdb->prefix . 'oha_survey_convention_questions';
         $questions = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table WHERE survey_context = %s AND hidden = 0 ORDER BY sort_order ASC",
-            $context
+            "SELECT * FROM $table WHERE survey_context = %s AND convention_year = %d AND hidden = 0 ORDER BY sort_order ASC",
+            $context,
+            self::get_year()
         ));
 
         // Group by page_group; track gate config for JS
@@ -597,7 +887,7 @@ class OHA_Convention_Survey {
 
             <div class="oha-survey-header">
                 <h2 class="oha-survey-title"><?php echo esc_html($title); ?></h2>
-                <p class="oha-survey-description">Thank you for attending OHA Convention 2026 at the Ohio State Reformatory. Your feedback helps us improve the experience. This survey takes approximately 5 to 7 minutes to complete.</p>
+                <p class="oha-survey-description">Thank you for attending OHA Convention <?php echo esc_html(self::get_year()); ?> at the Ohio State Reformatory. Your feedback helps us improve the experience. This survey takes approximately 5 to 7 minutes to complete.</p>
                 <div class="oha-progress-container">
                     <div class="oha-progress-bar">
                         <div class="oha-conv-progress-fill" style="width: 0%;"></div>
@@ -686,12 +976,13 @@ class OHA_Convention_Survey {
     }
 
     private static function context_to_type($context) {
+        $year = self::get_year();
         $map = [
-            'attendee'  => self::SURVEY_TYPE_ATTENDEE,
-            'vendor'    => self::SURVEY_TYPE_VENDOR,
-            'volunteer' => self::SURVEY_TYPE_VOLUNTEER,
+            'attendee'  => 'convention_' . $year,
+            'vendor'    => 'convention_' . $year . '_vendor',
+            'volunteer' => 'convention_' . $year . '_volunteer',
         ];
-        return $map[$context] ?? self::SURVEY_TYPE_ATTENDEE;
+        return $map[$context] ?? 'convention_' . $year;
     }
 
     private function render_question($q, $gate_config) {
@@ -942,8 +1233,9 @@ class OHA_Convention_Survey {
         $table      = $wpdb->prefix . 'oha_survey_convention_questions';
         $resp_table = $wpdb->prefix . 'oha_survey_responses';
         $questions  = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table WHERE survey_context = %s ORDER BY sort_order ASC",
-            $active_context
+            "SELECT * FROM $table WHERE survey_context = %s AND convention_year = %d ORDER BY sort_order ASC",
+            $active_context,
+            self::get_year()
         ));
 
         $survey_type    = self::context_to_type($active_context);
@@ -963,7 +1255,7 @@ class OHA_Convention_Survey {
         $base_url = admin_url('admin.php?page=oha-convention-survey');
         ?>
         <div class="wrap oha-survey-admin">
-            <h1>Convention 2026 Survey Questions</h1>
+            <h1>Convention <?php echo esc_html(self::get_year()); ?> Survey Questions</h1>
 
             <?php /* Context tabs */ ?>
             <nav class="nav-tab-wrapper" style="margin-bottom:16px;">

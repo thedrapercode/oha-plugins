@@ -239,9 +239,14 @@ class OHA_Survey_Data {
             "SELECT COUNT(*) FROM {$this->responses_table} WHERE is_completed = 0"
         ));
         
-        // By survey type
-        $survey_types = array('member', 'haunt_owner', 'scare_actor', 'behind_scenes', 'home_haunt', 'industry_deep_dive',
-            'convention_2026', 'convention_2026_vendor', 'convention_2026_volunteer');
+        // By survey type — hardcoded non-convention types plus any convention_YYYY types found in DB
+        $convention_types_in_db = $wpdb->get_col(
+            "SELECT DISTINCT survey_type FROM {$this->responses_table} WHERE survey_type LIKE 'convention_%'"
+        );
+        $survey_types = array_merge(
+            array('member', 'haunt_owner', 'scare_actor', 'behind_scenes', 'home_haunt', 'industry_deep_dive'),
+            $convention_types_in_db
+        );
         $stats['by_type'] = array();
 
         foreach ($survey_types as $type) {
@@ -503,15 +508,177 @@ class OHA_Survey_Data {
      */
     public function cleanup_old_responses() {
         global $wpdb;
-        
+
         $days_to_keep = get_option('oha_survey_hub_max_save_days', 30);
-        
+
         $deleted = $wpdb->query($wpdb->prepare(
-            "DELETE FROM {$this->responses_table} 
+            "DELETE FROM {$this->responses_table}
              WHERE is_completed = 0 AND updated_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
             $days_to_keep
         ));
-        
+
         return $deleted;
+    }
+
+    // =========================================================================
+    // On-demand Analytics Rollup
+    // =========================================================================
+
+    /**
+     * Per-question answer frequency computed directly from raw response blobs.
+     * Values longer than 200 chars (open text) are skipped — use get_text_responses().
+     *
+     * @return array [ question_id => [ answer_value => int count ] ]
+     */
+    public function get_rollup( $survey_type, $year = null ) {
+        global $wpdb;
+        $rows = $year
+            ? $wpdb->get_results( $wpdb->prepare(
+                "SELECT response_data FROM {$this->responses_table}
+                 WHERE survey_type = %s AND is_completed = 1 AND YEAR(completed_at) = %d",
+                $survey_type, (int) $year
+            ) )
+            : $wpdb->get_results( $wpdb->prepare(
+                "SELECT response_data FROM {$this->responses_table}
+                 WHERE survey_type = %s AND is_completed = 1",
+                $survey_type
+            ) );
+
+        $rollup = [];
+        foreach ( $rows as $row ) {
+            $data = json_decode( $row->response_data, true );
+            if ( ! is_array( $data ) ) continue;
+            foreach ( $data as $qid => $val ) {
+                if ( $val === '' || $val === null || $val === [] ) continue;
+                if ( ! isset( $rollup[ $qid ] ) ) $rollup[ $qid ] = [];
+                if ( is_array( $val ) ) {
+                    foreach ( $val as $v ) {
+                        $v = (string) $v;
+                        if ( strlen( $v ) > 200 ) continue;
+                        $rollup[ $qid ][ $v ] = ( $rollup[ $qid ][ $v ] ?? 0 ) + 1;
+                    }
+                } elseif ( strlen( (string) $val ) <= 200 ) {
+                    $v = (string) $val;
+                    $rollup[ $qid ][ $v ] = ( $rollup[ $qid ][ $v ] ?? 0 ) + 1;
+                }
+            }
+        }
+        return $rollup;
+    }
+
+    /**
+     * Full open-text entries for one question. Returns newest-first array of
+     * [ 'text' => string, 'date' => 'Y-m-d H:i:s' ].
+     */
+    public function get_text_responses( $survey_type, $question_id, $year = null ) {
+        global $wpdb;
+        $rows = $year
+            ? $wpdb->get_results( $wpdb->prepare(
+                "SELECT response_data, completed_at FROM {$this->responses_table}
+                 WHERE survey_type = %s AND is_completed = 1 AND YEAR(completed_at) = %d
+                 ORDER BY completed_at DESC",
+                $survey_type, (int) $year
+            ) )
+            : $wpdb->get_results( $wpdb->prepare(
+                "SELECT response_data, completed_at FROM {$this->responses_table}
+                 WHERE survey_type = %s AND is_completed = 1
+                 ORDER BY completed_at DESC",
+                $survey_type
+            ) );
+
+        $texts = [];
+        foreach ( $rows as $row ) {
+            $data = json_decode( $row->response_data, true );
+            $val  = $data[ $question_id ] ?? '';
+            if ( is_string( $val ) && strlen( trim( $val ) ) > 0 ) {
+                $texts[] = [ 'text' => $val, 'date' => $row->completed_at ];
+            }
+        }
+        return $texts;
+    }
+
+    /**
+     * Distinct calendar years that have completed responses, newest first.
+     */
+    public function get_survey_years( $survey_type ) {
+        global $wpdb;
+        return array_map( 'intval', $wpdb->get_col( $wpdb->prepare(
+            "SELECT DISTINCT YEAR(completed_at)
+             FROM {$this->responses_table}
+             WHERE survey_type = %s AND is_completed = 1
+             ORDER BY 1 DESC",
+            $survey_type
+        ) ) );
+    }
+
+    /**
+     * Completed response count for a specific year.
+     */
+    public function get_count_for_year( $survey_type, $year ) {
+        global $wpdb;
+        return (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->responses_table}
+             WHERE survey_type = %s AND is_completed = 1 AND YEAR(completed_at) = %d",
+            $survey_type, (int) $year
+        ) );
+    }
+
+    /**
+     * Response count per day for one survey type over the last N days.
+     */
+    public function get_timeline( $survey_type, $days = 30 ) {
+        global $wpdb;
+        return $wpdb->get_results( $wpdb->prepare(
+            "SELECT DATE(completed_at) AS `date`, COUNT(*) AS count
+             FROM {$this->responses_table}
+             WHERE survey_type = %s AND is_completed = 1
+               AND completed_at >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
+             GROUP BY DATE(completed_at)
+             ORDER BY `date` ASC",
+            $survey_type, (int) $days
+        ) );
+    }
+
+    /**
+     * Response count per day across ALL survey types for the last N days.
+     */
+    public function get_all_timeline( $days = 30 ) {
+        global $wpdb;
+        return $wpdb->get_results( $wpdb->prepare(
+            "SELECT DATE(completed_at) AS `date`, COUNT(*) AS count
+             FROM {$this->responses_table}
+             WHERE is_completed = 1
+               AND completed_at >= DATE_SUB(CURDATE(), INTERVAL %d DAY)
+             GROUP BY DATE(completed_at)
+             ORDER BY `date` ASC",
+            (int) $days
+        ) );
+    }
+
+    /**
+     * Responses completed in the current calendar month.
+     */
+    public function get_this_month_count( $survey_type ) {
+        global $wpdb;
+        return (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->responses_table}
+             WHERE survey_type = %s AND is_completed = 1
+               AND YEAR(completed_at) = YEAR(CURDATE())
+               AND MONTH(completed_at) = MONTH(CURDATE())",
+            $survey_type
+        ) );
+    }
+
+    /**
+     * Completion rate = completed / total started, as integer percent.
+     */
+    public function get_completion_rate( $survey_type ) {
+        global $wpdb;
+        $total     = (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->responses_table} WHERE survey_type = %s",
+            $survey_type
+        ) );
+        $completed = $this->get_response_count( $survey_type );
+        return $total > 0 ? (int) round( $completed / $total * 100 ) : 0;
     }
 }

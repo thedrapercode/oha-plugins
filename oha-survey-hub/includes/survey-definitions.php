@@ -17,7 +17,8 @@ class OHA_Survey_Definitions {
             'scare_actor' => self::get_scare_actor_survey(),
             'behind_scenes' => self::get_behind_scenes_survey(),
             'home_haunt' => self::get_home_haunt_survey(),
-            'industry_deep_dive' => self::get_industry_deep_dive_survey()
+            'industry_deep_dive'   => self::get_industry_deep_dive_survey(),
+            'convention_planning'  => self::get_convention_planning_survey()
         );
     }
     
@@ -25,7 +26,18 @@ class OHA_Survey_Definitions {
         $surveys = self::get_all_surveys();
         return isset($surveys[$survey_type]) ? $surveys[$survey_type] : null;
     }
-    
+
+    // Returns the most recently completed haunt season year (past) and the upcoming one (next).
+    // Haunt season runs August through October. After October, that year's season is complete.
+    public static function haunt_season_years() {
+        $month = (int) date('n');
+        $year  = (int) date('Y');
+        if ($month >= 11) {
+            return array('past' => $year, 'next' => $year + 1);
+        }
+        return array('past' => $year - 1, 'next' => $year);
+    }
+
     private static function get_member_survey() {
         return array(
             'title' => __('OHA Member Survey', 'oha-survey-hub'),
@@ -82,6 +94,22 @@ class OHA_Survey_Definitions {
                             )
                         ),
                         array(
+                            'id' => 'how_found_oha',
+                            'question' => __('How did you first find out about OHA?', 'oha-survey-hub'),
+                            'type' => 'radio',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options' => array(
+                                'facebook_social' => __('Facebook or other social media', 'oha-survey-hub'),
+                                'word_of_mouth' => __('Word of mouth from another haunter', 'oha-survey-hub'),
+                                'web_search' => __('Found the OHA website through a search', 'oha-survey-hub'),
+                                'haunt_convention' => __('At a haunt convention or event', 'oha-survey-hub'),
+                                'owner_referral' => __('A haunt owner told me', 'oha-survey-hub'),
+                                'oha_convention' => __('Through the OHA Convention itself', 'oha-survey-hub'),
+                                'other' => __('Other', 'oha-survey-hub')
+                            )
+                        ),
+                        array(
                             'id' => 'knew_oha_scope',
                             'question' => __('Before today, did you know OHA is for more than just haunt owners?', 'oha-survey-hub'),
                             'type' => 'radio',
@@ -134,6 +162,22 @@ class OHA_Survey_Definitions {
                             'type' => 'textarea',
                             'required' => false,
                             'priority' => 'high'
+                        ),
+                        array(
+                            'id' => 'membership_fee_value',
+                            'question' => __('Does your annual OHA membership feel worth the cost?', 'oha-survey-hub'),
+                            'type' => 'radio',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options' => array(
+                                'definitely_yes' => __('Definitely yes', 'oha-survey-hub'),
+                                'yes' => __('Yes', 'oha-survey-hub'),
+                                'somewhat' => __('Somewhat', 'oha-survey-hub'),
+                                'not_sure' => __('Not sure yet', 'oha-survey-hub'),
+                                'not_really' => __('Not really', 'oha-survey-hub'),
+                                'no' => __('No', 'oha-survey-hub'),
+                                'not_a_member' => __('I am not a paying member', 'oha-survey-hub')
+                            )
                         )
                     )
                 ),
@@ -141,8 +185,8 @@ class OHA_Survey_Definitions {
                     'title' => __('Convention Experience', 'oha-survey-hub'),
                     'questions' => array(
                         array(
-                            'id' => 'attended_2019_convention',
-                            'question' => __('Did you attend the Ohio Haunters Convention in 2019?', 'oha-survey-hub'),
+                            'id' => 'attended_oha_convention',
+                            'question' => __('Have you attended any OHA Convention?', 'oha-survey-hub'),
                             'type' => 'radio',
                             'required' => true,
                             'priority' => 'high',
@@ -152,18 +196,18 @@ class OHA_Survey_Definitions {
                             )
                         ),
                         array(
-                            'id' => 'convention_experience_rating',
-                            'question' => __('If yes, how would you rate your overall experience?', 'oha-survey-hub'),
-                            'type' => 'scale',
+                            'id' => 'convention_most_recent',
+                            'question' => __('Which was the most recent OHA Convention you attended?', 'oha-survey-hub'),
+                            'type' => 'radio',
                             'required' => false,
-                            'scale_min' => 1,
-                            'scale_max' => 5,
-                            'scale_labels' => array(
-                                1 => __('Poor', 'oha-survey-hub'),
-                                5 => __('Excellent', 'oha-survey-hub')
+                            'options' => array(
+                                '2026' => __('2026', 'oha-survey-hub'),
+                                '2024_2025' => __('2024 or 2025', 'oha-survey-hub'),
+                                '2023_earlier' => __('2023 or earlier', 'oha-survey-hub'),
+                                'not_sure' => __('Not sure', 'oha-survey-hub')
                             ),
                             'depends_on' => array(
-                                'field' => 'attended_2019_convention',
+                                'field' => 'attended_oha_convention',
                                 'value' => 'yes'
                             )
                         ),
@@ -239,26 +283,25 @@ class OHA_Survey_Definitions {
                     'title' => __('Technology & Digital Engagement', 'oha-survey-hub'),
                     'questions' => array(
                         array(
-                            'id' => 'mobile_app_interest',
-                            'question' => __('Would you find a dedicated OHA mobile app useful?', 'oha-survey-hub'),
+                            'id' => 'convention_app_used',
+                            'question' => __('Have you used the OHA Convention App during the convention?', 'oha-survey-hub'),
                             'type' => 'radio',
-                            'required' => true,
+                            'required' => false,
                             'priority' => 'high',
                             'options' => array(
-                                'yes' => __('Yes', 'oha-survey-hub'),
-                                'no' => __('No', 'oha-survey-hub'),
-                                'maybe' => __('Maybe', 'oha-survey-hub')
+                                'yes_regularly' => __('Yes, used it regularly', 'oha-survey-hub'),
+                                'yes_briefly' => __('Yes, tried it briefly', 'oha-survey-hub'),
+                                'no_did_not_use' => __('No, did not use it', 'oha-survey-hub'),
+                                'not_aware' => __('Was not aware of it', 'oha-survey-hub'),
+                                'did_not_attend' => __('I did not attend the convention', 'oha-survey-hub')
                             )
                         ),
                         array(
-                            'id' => 'desired_app_features',
-                            'question' => __('If yes, what features would you most want in an OHA mobile app?', 'oha-survey-hub'),
+                            'id' => 'off_season_members_area',
+                            'question' => __('Outside of convention season, what would you want from an OHA members area or mobile app?', 'oha-survey-hub'),
                             'type' => 'textarea',
                             'required' => false,
-                            'depends_on' => array(
-                                'field' => 'mobile_app_interest',
-                                'value' => array('yes', 'maybe')
-                            )
+                            'priority' => 'high'
                         ),
                         array(
                             'id' => 'haunt_profile_layout',
@@ -299,7 +342,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'industry_outlook_2026',
-                            'question' => __('Looking ahead to 2026, are you personally cutting back, staying the same, or expanding your haunt/business involvement?', 'oha-survey-hub'),
+                            'question' => __('Looking ahead to the 2027 haunt season, are you personally cutting back, staying the same, or expanding your haunt/business involvement?', 'oha-survey-hub'),
                             'type' => 'radio',
                             'required' => false,
                             'priority' => 'high',
@@ -423,6 +466,21 @@ class OHA_Survey_Definitions {
                             )
                         ),
                         array(
+                            'id' => 'membership_renewal_intent',
+                            'question' => __('OHA memberships renew on January 1. Do you plan to renew your OHA membership?', 'oha-survey-hub'),
+                            'type' => 'radio',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options' => array(
+                                'definitely_yes' => __('Yes, definitely', 'oha-survey-hub'),
+                                'probably_yes' => __('Yes, probably', 'oha-survey-hub'),
+                                'unsure' => __('Unsure', 'oha-survey-hub'),
+                                'probably_not' => __('Probably not', 'oha-survey-hub'),
+                                'no' => __('No, I do not plan to renew', 'oha-survey-hub'),
+                                'not_a_member' => __('I am not currently a member', 'oha-survey-hub')
+                            )
+                        ),
+                        array(
                             'id' => 'additional_feedback',
                             'question' => __('Is there anything else you would like the OHA Board to know?', 'oha-survey-hub'),
                             'type' => 'textarea',
@@ -433,7 +491,7 @@ class OHA_Survey_Definitions {
             )
         );
     }
-    
+
     private static function get_haunt_owner_survey() {
         // This would be the industry deep dive survey focused on haunt owners
         return self::get_industry_deep_dive_survey();
@@ -865,7 +923,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'planning_new_tech',
-                            'question' => __('What new technology are you planning or hoping to introduce in 2026 or beyond?', 'oha-survey-hub'),
+                            'question' => __('What new technology are you planning or hoping to introduce in the 2027 haunt season or beyond?', 'oha-survey-hub'),
                             'type' => 'textarea',
                             'required' => false,
                             'priority' => 'high'
@@ -1358,8 +1416,12 @@ class OHA_Survey_Definitions {
     }
     
     private static function get_industry_deep_dive_survey() {
+        $hy   = self::haunt_season_years();
+        $past = $hy['past'];
+        $prev = $past - 1;
+        $next = $hy['next'];
         return array(
-            'title' => __('Haunt Owner Industry Deep-Dive Survey (2025 → 2026)', 'oha-survey-hub'),
+            'title' => sprintf( __('Haunt Owner Industry Deep-Dive Survey (%1$d to %2$d)', 'oha-survey-hub'), $past, $next ),
             'description' => __('Provide a serious, data-driven snapshot of the haunted attraction industry in Ohio.', 'oha-survey-hub'),
             'pages' => array(
                 array(
@@ -1383,7 +1445,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id' => 'attendance_vs_2024',
-                            'question' => __('Compared to 2024, your attendance was:', 'oha-survey-hub'),
+                            'question' => "Compared to {$prev}, your attendance was:",
                             'type' => 'radio',
                             'required' => true,
                             'priority' => 'high',
@@ -1398,7 +1460,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id' => 'estimated_attendance_2025',
-                            'question' => __('What was your total estimated attendance in 2025?', 'oha-survey-hub'),
+                            'question' => "What was your total estimated attendance in the {$past} season?",
                             'type' => 'select',
                             'required' => false,
                             'options' => array(
@@ -1419,7 +1481,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'financial_health_2025',
-                            'question' => __('How would you describe your haunt\'s overall financial health after the 2025 season?', 'oha-survey-hub'),
+                            'question' => "How would you describe your haunt's overall financial health after the {$past} season?",
                             'type' => 'radio',
                             'required' => true,
                             'priority' => 'high',
@@ -1434,7 +1496,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id' => 'top_expense_categories',
-                            'question' => __('What were your top three expense categories in 2025?', 'oha-survey-hub'),
+                            'question' => "What were your top three expense categories in {$past}?",
                             'type' => 'checkbox',
                             'required' => false,
                             'priority' => 'high',
@@ -1454,7 +1516,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id' => 'investment_2026',
-                            'question' => __('How much do you plan to invest in 2026?', 'oha-survey-hub'),
+                            'question' => "How much do you plan to invest for the {$next} haunt season?",
                             'type' => 'select',
                             'required' => false,
                             'priority' => 'high',
@@ -1468,6 +1530,26 @@ class OHA_Survey_Definitions {
                                 'uncertain' => __('Uncertain', 'oha-survey-hub'),
                                 'prefer_not_say' => __('Prefer not to say', 'oha-survey-hub')
                             )
+                        ),
+                        array(
+                            'id' => 'insurance_coverage',
+                            'question' => __('Do you currently carry haunted attraction-specific insurance?', 'oha-survey-hub'),
+                            'type' => 'radio',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options' => array(
+                                'yes_specific' => __('Yes, a haunt-specific policy', 'oha-survey-hub'),
+                                'yes_general' => __('Yes, covered under a general business policy', 'oha-survey-hub'),
+                                'no' => __('No, I do not carry insurance', 'oha-survey-hub'),
+                                'not_sure' => __('Not sure what type of coverage I have', 'oha-survey-hub')
+                            )
+                        ),
+                        array(
+                            'id' => 'insurance_challenges',
+                            'question' => __('What challenges have you faced with insurance for your haunt, if any?', 'oha-survey-hub'),
+                            'type' => 'textarea',
+                            'required' => false,
+                            'priority' => 'high'
                         )
                     )
                 ),
@@ -1476,7 +1558,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'average_ticket_price_2025',
-                            'question' => __('What was your average ticket price in 2025?', 'oha-survey-hub'),
+                            'question' => "What was your average ticket price in the {$past} season?",
                             'type' => 'select',
                             'required' => false,
                             'priority' => 'high',
@@ -1493,7 +1575,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id' => 'pricing_strategies_2025',
-                            'question' => __('What promotions or pricing strategies worked best in 2025?', 'oha-survey-hub'),
+                            'question' => "What promotions or pricing strategies worked best in {$past}?",
                             'type' => 'textarea',
                             'required' => false,
                             'priority' => 'high'
@@ -1505,7 +1587,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'staffing_difficulties',
-                            'question' => __('Did you have difficulty hiring or retaining staff and actors in 2025?', 'oha-survey-hub'),
+                            'question' => "Did you have difficulty hiring or retaining staff and actors in {$past}?",
                             'type' => 'radio',
                             'required' => true,
                             'priority' => 'high',
@@ -1530,6 +1612,24 @@ class OHA_Survey_Definitions {
                                 'frequently' => __('Frequently (6+ times)', 'oha-survey-hub'),
                                 'constantly' => __('Constantly throughout season', 'oha-survey-hub')
                             )
+                        ),
+                        array(
+                            'id' => 'actor_recruitment_sources',
+                            'question' => __('How do you primarily recruit actors and volunteers for your haunt? (Select all that apply)', 'oha-survey-hub'),
+                            'type' => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options' => array(
+                                'facebook_groups' => __('Facebook groups', 'oha-survey-hub'),
+                                'word_of_mouth' => __('Word of mouth', 'oha-survey-hub'),
+                                'returning_cast' => __('Returning cast from prior seasons', 'oha-survey-hub'),
+                                'craigslist' => __('Craigslist', 'oha-survey-hub'),
+                                'local_theater' => __('Local theater or performing arts groups', 'oha-survey-hub'),
+                                'tiktok_social' => __('TikTok or other social media', 'oha-survey-hub'),
+                                'posted_flyers' => __('Flyers or local postings', 'oha-survey-hub'),
+                                'oha' => __('Through OHA', 'oha-survey-hub'),
+                                'other' => __('Other', 'oha-survey-hub')
+                            )
                         )
                     )
                 ),
@@ -1538,7 +1638,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'security_incidents_2025',
-                            'question' => __('How many security incidents or troublemakers did you experience in 2025? (Approximate)', 'oha-survey-hub'),
+                            'question' => "How many security incidents or troublemakers did you experience in the {$past} season? (Approximate)",
                             'type' => 'select',
                             'required' => false,
                             'priority' => 'high',
@@ -1565,7 +1665,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'weather_impact',
-                            'question' => __('How significantly did weather impact your 2025 season?', 'oha-survey-hub'),
+                            'question' => "How significantly did weather impact your {$past} season?",
                             'type' => 'radio',
                             'required' => false,
                             'priority' => 'high',
@@ -1584,6 +1684,20 @@ class OHA_Survey_Definitions {
                             'type' => 'textarea',
                             'required' => false,
                             'priority' => 'high'
+                        ),
+                        array(
+                            'id' => 'competition_awareness',
+                            'question' => __('How has competition from other haunted attractions in your area changed over the past year?', 'oha-survey-hub'),
+                            'type' => 'radio',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options' => array(
+                                'increased_significantly' => __('Increased significantly, new competitors opened nearby', 'oha-survey-hub'),
+                                'increased_somewhat' => __('Increased somewhat', 'oha-survey-hub'),
+                                'stayed_same' => __('Stayed about the same', 'oha-survey-hub'),
+                                'decreased_closures' => __('Decreased, some nearby haunts closed or reduced operations', 'oha-survey-hub'),
+                                'not_aware' => __('Not aware of significant changes', 'oha-survey-hub')
+                            )
                         )
                     )
                 ),
@@ -1624,7 +1738,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'technologies_adopting_2026',
-                            'question' => __('What technologies are you planning to adopt in 2026?', 'oha-survey-hub'),
+                            'question' => __('What technologies are you planning to adopt for the 2027 haunt season?', 'oha-survey-hub'),
                             'type' => 'textarea',
                             'required' => false,
                             'priority' => 'high'
@@ -1689,7 +1803,7 @@ class OHA_Survey_Definitions {
                     'questions' => array(
                         array(
                             'id' => 'biggest_lesson_2025',
-                            'question' => __('What was the single biggest lesson you learned from the 2025 season?', 'oha-survey-hub'),
+                            'question' => "What was the single biggest lesson you learned from the {$past} season?",
                             'type' => 'textarea',
                             'required' => false,
                             'priority' => 'high'
@@ -1703,12 +1817,631 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id' => 'industry_preparation_2026',
-                            'question' => __('Is there anything else you believe the industry needs to confront or prepare for heading into 2026?', 'oha-survey-hub'),
+                            'question' => "Is there anything else you believe the industry needs to confront or prepare for heading into the {$next} haunt season?",
                             'type' => 'textarea',
                             'required' => false
                         )
                     )
                 )
+            )
+        );
+    }
+
+    private static function get_convention_planning_survey() {
+        $year = (int) get_option('oha_convention_survey_year', 2027);
+        $prev = $year - 1;
+
+        return array(
+            'title'       => sprintf( __('OHA Convention %d Planning Survey', 'oha-survey-hub'), $year ),
+            'description' => sprintf( __('Help us plan OHA Convention %d. Tell us what you want to see, what logistics matter to you, and how to make the event worth your time and money. This survey takes about 10 to 15 minutes.', 'oha-survey-hub'), $year ),
+            'pages' => array(
+
+                // Page 1: Attendance Intent
+                array(
+                    'title'       => __('Are You Coming?', 'oha-survey-hub'),
+                    'description' => sprintf( __('Tell us whether you plan to attend OHA Convention %d and what factors are shaping that decision.', 'oha-survey-hub'), $year ),
+                    'questions'   => array(
+                        array(
+                            'id'       => 'cp_attendance_intent',
+                            'question' => sprintf( __('Are you planning to attend OHA Convention %d?', 'oha-survey-hub'), $year ),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes'          => __('Yes, I am planning to attend', 'oha-survey-hub'),
+                                'likely'       => __('Likely yes, but not confirmed', 'oha-survey-hub'),
+                                'undecided'    => __('Undecided', 'oha-survey-hub'),
+                                'probably_not' => __('Probably not', 'oha-survey-hub'),
+                                'no'           => __('No', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_barrier_to_attending',
+                            'question' => __('If you are undecided or not planning to attend, what would most change that?', 'oha-survey-hub'),
+                            'type'     => 'textarea',
+                            'required' => false,
+                            'depends_on' => array(
+                                'field' => 'cp_attendance_intent',
+                                'value' => array('undecided', 'probably_not', 'no')
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_previous_attendance',
+                            'question' => __('Have you attended a previous OHA Convention?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes_recent' => sprintf( __('Yes, I attended in %d', 'oha-survey-hub'), $prev ),
+                                'yes_prior'  => sprintf( __('Yes, but not in %d', 'oha-survey-hub'), $prev ),
+                                'no_first'   => __('No, this would be my first convention', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_planning_lead_time',
+                            'question' => __('How far in advance do you typically finalize plans for an event like this?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'options'  => array(
+                                '6_months_plus'  => __('6 months or more', 'oha-survey-hub'),
+                                '3_to_6_months'  => __('3 to 6 months', 'oha-survey-hub'),
+                                '1_to_3_months'  => __('1 to 3 months', 'oha-survey-hub'),
+                                'under_1_month'  => __('Less than 1 month', 'oha-survey-hub'),
+                                'last_minute'    => __('I decide last minute', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 2: Tickets and Budget
+                array(
+                    'title'     => __('Tickets and Budget', 'oha-survey-hub'),
+                    'questions' => array(
+                        array(
+                            'id'       => 'cp_ticket_type_interest',
+                            'question' => __('Which ticket type are you considering?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'ga'             => __('General Admission', 'oha-survey-hub'),
+                                'vip'            => __('VIP (includes vendor floor, education, and costume ball)', 'oha-survey-hub'),
+                                'undecided'      => __('Have not decided yet', 'oha-survey-hub'),
+                                'depends_lineup' => __('I will decide based on the final event lineup', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_ticket_price_feel',
+                            'question' => sprintf( __('The %d convention offered General Admission at $30 and VIP at $80. How do those prices feel for %d?', 'oha-survey-hub'), $prev, $year ),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'very_reasonable' => __('Very reasonable, I would pay more', 'oha-survey-hub'),
+                                'fair'            => __('Fair, about right', 'oha-survey-hub'),
+                                'bit_high'        => __('A bit high but I would still attend', 'oha-survey-hub'),
+                                'ga_too_high'     => __('GA price is too high', 'oha-survey-hub'),
+                                'vip_too_high'    => __('VIP price is too high', 'oha-survey-hub'),
+                                'not_a_factor'    => __('Price is not a deciding factor for me', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_early_bird_interest',
+                            'question' => __('Would an early-bird discount for tickets purchased 3 or more months before the event make you more likely to buy earlier?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'options'  => array(
+                                'yes_definitely' => __('Yes, definitely', 'oha-survey-hub'),
+                                'yes_probably'   => __('Yes, probably', 'oha-survey-hub'),
+                                'no'             => __('No, I will buy when I am ready regardless', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_addon_awareness',
+                            'question' => __('Were you aware that Education sessions, the Costume Ball, and Blood Prison each require separate tickets during checkout?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'options'  => array(
+                                'yes_all'  => __('Yes, I knew all of them required separate tickets', 'oha-survey-hub'),
+                                'yes_some' => __('I knew some required it, but not all', 'oha-survey-hub'),
+                                'no'       => __('No, I did not know this', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 3: New Features
+                array(
+                    'title'       => sprintf( __('New Features at the %d Convention', 'oha-survey-hub'), $year ),
+                    'description' => __('We are adding several new features this year. Tell us how interested you are in each one.', 'oha-survey-hub'),
+                    'questions'   => array(
+                        array(
+                            'id'       => 'cp_main_stage_interest',
+                            'question' => sprintf( __('The %d convention is adding a Main Stage for the Opening Ceremony, Closing Ceremony, and on-stage entertainment. How interested are you?', 'oha-survey-hub'), $year ),
+                            'type'     => 'scale',
+                            'required' => true,
+                            'priority' => 'high',
+                            'scale_min' => 1,
+                            'scale_max' => 5,
+                            'scale_labels' => array(
+                                1 => __('Not interested', 'oha-survey-hub'),
+                                5 => __('Very interested', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_haunt_showcase_interest',
+                            'question' => sprintf( __('The %d convention is adding a Haunt Showcase area where Ohio haunts promote their attractions to attendees. How interested are you in visiting?', 'oha-survey-hub'), $year ),
+                            'type'     => 'scale',
+                            'required' => true,
+                            'priority' => 'high',
+                            'scale_min' => 1,
+                            'scale_max' => 5,
+                            'scale_labels' => array(
+                                1 => __('Not interested', 'oha-survey-hub'),
+                                5 => __('Very interested', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_more_edu_rooms',
+                            'question' => __('With more education rooms available, there will be more session options running at the same time. Would you attend more sessions if more options were available?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'options'  => array(
+                                'yes_more'       => __('Yes, more options would lead me to attend more sessions', 'oha-survey-hub'),
+                                'yes_conflicts'  => __('Yes, it would help me avoid scheduling conflicts', 'oha-survey-hub'),
+                                'probably'       => __('Probably, depending on the topics', 'oha-survey-hub'),
+                                'no_fine'        => __('No, the current amount is fine', 'oha-survey-hub'),
+                                'never_attend'   => __('I do not typically attend education sessions', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_new_features_excitement',
+                            'question' => sprintf( __('What aspect of the %d additions are you most excited about? (Select all that apply)', 'oha-survey-hub'), $year ),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'main_stage'     => __('Main Stage events', 'oha-survey-hub'),
+                                'haunt_showcase' => __('Haunt Showcase area', 'oha-survey-hub'),
+                                'more_edu_rooms' => __('More education room options', 'oha-survey-hub'),
+                                'more_vendors'   => __('More vendors on the vendor floor', 'oha-survey-hub'),
+                                'none'           => __('None of these, I come for the existing features', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 4: Education Sessions
+                array(
+                    'title'     => __('Education Sessions', 'oha-survey-hub'),
+                    'questions' => array(
+                        array(
+                            'id'       => 'cp_edu_intent',
+                            'question' => __('Do you plan to attend Education sessions at the convention?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes'   => __('Yes, definitely', 'oha-survey-hub'),
+                                'maybe' => __('Maybe, depending on the topics', 'oha-survey-hub'),
+                                'no'    => __('No, I do not typically attend sessions', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_edu_topics',
+                            'question' => __('What education topics would you attend a session on? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'makeup_sfx'      => __('Makeup and special effects', 'oha-survey-hub'),
+                                'building_props'  => __('Set building and prop construction', 'oha-survey-hub'),
+                                'lighting_audio'  => __('Lighting and audio design', 'oha-survey-hub'),
+                                'business_ops'    => __('Business and operations (permits, insurance, marketing)', 'oha-survey-hub'),
+                                'actor_training'  => __('Actor training and performance', 'oha-survey-hub'),
+                                'ticketing_cx'    => __('Ticketing and customer experience', 'oha-survey-hub'),
+                                'safety_security' => __('Safety and security', 'oha-survey-hub'),
+                                'technology'      => __('Technology and automation', 'oha-survey-hub'),
+                                'finances'        => __('Haunt business finances and revenue', 'oha-survey-hub'),
+                                'social_media'    => __('Social media and marketing', 'oha-survey-hub'),
+                                'other'           => __('Other', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_edu_session_length',
+                            'question' => __('How long do you prefer education sessions to be?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                '30_or_less' => __('30 minutes or less', 'oha-survey-hub'),
+                                '45_to_60'   => __('45 to 60 minutes', 'oha-survey-hub'),
+                                '90_min'     => __('90 minutes', 'oha-survey-hub'),
+                                'multi_hour' => __('Multiple hours or workshop format', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_presenter_interest',
+                            'question' => __('Would you be interested in presenting or teaching a session at the convention?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                'yes'   => __('Yes, I would be interested', 'oha-survey-hub'),
+                                'maybe' => __('Maybe, if the topic fit', 'oha-survey-hub'),
+                                'no'    => __('No', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 5: Entertainment and Events
+                array(
+                    'title'     => __('Entertainment and Events', 'oha-survey-hub'),
+                    'questions' => array(
+                        array(
+                            'id'       => 'cp_costume_ball_intent',
+                            'question' => __('Do you plan to attend the Costume Ball?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes'   => __('Yes, definitely', 'oha-survey-hub'),
+                                'maybe' => __('Maybe', 'oha-survey-hub'),
+                                'no'    => __('No', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_costume_contest_intent',
+                            'question' => __('Would you enter the Costume Ball costume contest?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                'yes'                => __('Yes', 'oha-survey-hub'),
+                                'watch_only'         => __('No, but I would attend and watch', 'oha-survey-hub'),
+                                'not_attending_ball' => __('I am not planning to attend the Costume Ball', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_blood_prison_intent',
+                            'question' => __('Do you plan to attend Blood Prison?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes'   => __('Yes, definitely', 'oha-survey-hub'),
+                                'maybe' => __('Maybe', 'oha-survey-hub'),
+                                'no'    => __('No', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_main_stage_content',
+                            'question' => __('What entertainment would you most want to see on the Main Stage? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'live_band_dj'      => __('Live band or DJ', 'oha-survey-hub'),
+                                'haunt_performance' => __('Haunt-themed performance or stage show', 'oha-survey-hub'),
+                                'ceremonies'        => __('Opening and closing ceremonies with awards', 'oha-survey-hub'),
+                                'fire_circus'       => __('Fire performance or circus acts', 'oha-survey-hub'),
+                                'comedy_improv'     => __('Comedy or improv show', 'oha-survey-hub'),
+                                'industry_speaker'  => __('Guest speaker from the haunt industry', 'oha-survey-hub'),
+                                'other'             => __('Other', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 6: Food and Dining
+                array(
+                    'title'       => __('Food and Dining', 'oha-survey-hub'),
+                    'description' => __('Help us plan the food and beverage offerings to match what attendees actually want.', 'oha-survey-hub'),
+                    'questions'   => array(
+                        array(
+                            'id'       => 'cp_food_importance',
+                            'question' => __('How important is food quality and variety to your convention experience?', 'oha-survey-hub'),
+                            'type'     => 'scale',
+                            'required' => true,
+                            'priority' => 'high',
+                            'scale_min' => 1,
+                            'scale_max' => 5,
+                            'scale_labels' => array(
+                                1 => __('Not important', 'oha-survey-hub'),
+                                5 => __('Very important', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_food_options_wanted',
+                            'question' => __('What type of food options would you most like to see at the convention? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'food_trucks'       => __('Food trucks with varied options', 'oha-survey-hub'),
+                                'sit_down'          => __('A sit-down meal option on-site', 'oha-survey-hub'),
+                                'grab_and_go'       => __('Grab-and-go snacks and drinks', 'oha-survey-hub'),
+                                'bar_service'       => __('Full bar or beer service', 'oha-survey-hub'),
+                                'vegetarian_vegan'  => __('Vegetarian or vegan options', 'oha-survey-hub'),
+                                'allergy_friendly'  => __('Allergy-friendly options', 'oha-survey-hub'),
+                                'local_vendors'     => __('Ohio-based or local food vendors', 'oha-survey-hub'),
+                                'coffee_hot_bev'    => __('Coffee and hot beverages', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_dietary_needs',
+                            'question' => __('Do you have any dietary restrictions OHA should plan for? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'options'  => array(
+                                'vegetarian'    => __('Vegetarian', 'oha-survey-hub'),
+                                'vegan'         => __('Vegan', 'oha-survey-hub'),
+                                'gluten_free'   => __('Gluten-free', 'oha-survey-hub'),
+                                'nut_allergy'   => __('Nut allergy', 'oha-survey-hub'),
+                                'other_allergy' => __('Other food allergy or restriction', 'oha-survey-hub'),
+                                'none'          => __('None', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_catered_dinner_interest',
+                            'question' => __('Would you be interested in a catered dinner or social event the evening of the convention?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes_paid'         => __('Yes, I would pay for a separate ticket to that', 'oha-survey-hub'),
+                                'yes_vip_included' => __('Yes, if it were included with VIP admission', 'oha-survey-hub'),
+                                'maybe'            => __('Maybe', 'oha-survey-hub'),
+                                'no'               => __('No, I would not attend something like that', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_food_spending',
+                            'question' => __('How much would you reasonably spend on food during a full convention day?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                'under_10' => __('Under $10', 'oha-survey-hub'),
+                                '10_to_20' => __('$10 to $20', 'oha-survey-hub'),
+                                '20_to_35' => __('$20 to $35', 'oha-survey-hub'),
+                                'over_35'  => __('Over $35', 'oha-survey-hub'),
+                                'bring_own' => __('I bring my own food', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 7: Travel and Hotel
+                array(
+                    'title'       => __('Travel and Hotel', 'oha-survey-hub'),
+                    'description' => __('This information helps us plan accommodations support and understand how far people are traveling.', 'oha-survey-hub'),
+                    'questions'   => array(
+                        array(
+                            'id'       => 'cp_travel_distance',
+                            'question' => __('How far would you be traveling to attend the convention?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'under_1hr'   => __('Under 1 hour', 'oha-survey-hub'),
+                                '1_to_2hr'    => __('1 to 2 hours', 'oha-survey-hub'),
+                                '2_to_3hr'    => __('2 to 3 hours', 'oha-survey-hub'),
+                                'over_3hr'    => __('Over 3 hours', 'oha-survey-hub'),
+                                'out_of_state' => __('Out of state', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_overnight_stay',
+                            'question' => __('Are you planning to stay overnight near the convention venue?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes'   => __('Yes, I plan to stay overnight', 'oha-survey-hub'),
+                                'maybe' => __('Maybe, depending on how the day goes', 'oha-survey-hub'),
+                                'no'    => __('No, I will drive home the same day', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_hotel_block_interest',
+                            'question' => __('If OHA negotiated a discounted hotel block rate near the Ohio Reformatory, would you use it?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes_definitely'  => __('Yes, definitely if the rate was competitive', 'oha-survey-hub'),
+                                'probably'        => __('Probably yes', 'oha-survey-hub'),
+                                'own_preference'  => __('No, I already have my own accommodations preference', 'oha-survey-hub'),
+                                'not_staying'     => __('No, I am not staying overnight', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_hotel_info_timing',
+                            'question' => __('How far in advance would you need hotel information to plan your trip?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                '6_plus_months'   => __('6 or more months before the event', 'oha-survey-hub'),
+                                '3_to_6_months'   => __('3 to 6 months before', 'oha-survey-hub'),
+                                '1_to_3_months'   => __('1 to 3 months before', 'oha-survey-hub'),
+                                '1_month_or_less' => __('1 month or less', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 8: Logistics and Accessibility
+                array(
+                    'title'     => __('Logistics and Accessibility', 'oha-survey-hub'),
+                    'questions' => array(
+                        array(
+                            'id'       => 'cp_days_attending',
+                            'question' => __('Which day or days are you most likely to attend?', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'saturday'  => __('Saturday', 'oha-survey-hub'),
+                                'sunday'    => __('Sunday', 'oha-survey-hub'),
+                                'both_days' => __('Both days', 'oha-survey-hub'),
+                                'not_sure'  => __('Not sure yet', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_arrival_time',
+                            'question' => __('What time would you typically plan to arrive on the day of the convention?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                'doors_open'  => __('Right when doors open, or earlier', 'oha-survey-hub'),
+                                'mid_morning' => __('Mid-morning', 'oha-survey-hub'),
+                                'midday'      => __('Around midday', 'oha-survey-hub'),
+                                'afternoon'   => __('Early afternoon', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_parking_concern',
+                            'question' => __('The Ohio Reformatory has limited parking. Is parking availability an important factor in your planning?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes_critical' => __('Yes, limited parking would significantly affect my decision to attend', 'oha-survey-hub'),
+                                'somewhat'     => __('Somewhat, but I would work around it', 'oha-survey-hub'),
+                                'no'           => __('No, it does not affect my plans', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_accessibility_needs',
+                            'question' => __('Does your group have any accessibility needs OHA should plan for? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'options'  => array(
+                                'wheelchair_mobility' => __('Wheelchair or mobility accessibility', 'oha-survey-hub'),
+                                'hearing'             => __('Hearing or communication accommodations', 'oha-survey-hub'),
+                                'other_accessibility' => __('Other accessibility need', 'oha-survey-hub'),
+                                'none'                => __('None', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_shuttle_interest',
+                            'question' => __('Would you be interested in a convention shuttle or ride-share coordination organized by OHA?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                'yes'   => __('Yes, I would use that', 'oha-survey-hub'),
+                                'maybe' => __('Maybe, depending on where it ran from', 'oha-survey-hub'),
+                                'no'    => __('No', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 9: Communication
+                array(
+                    'title'       => __('Communication and Planning', 'oha-survey-hub'),
+                    'description' => __('Help us know when and how to reach you with convention updates.', 'oha-survey-hub'),
+                    'questions'   => array(
+                        array(
+                            'id'       => 'cp_communication_preference',
+                            'question' => __('How do you prefer to receive updates and announcements about the convention? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'email'         => __('Email newsletter', 'oha-survey-hub'),
+                                'facebook'      => __('Facebook posts', 'oha-survey-hub'),
+                                'oha_website'   => __('OHA website', 'oha-survey-hub'),
+                                'convention_app' => __('The OHA Convention App', 'oha-survey-hub'),
+                                'instagram'     => __('Instagram', 'oha-survey-hub'),
+                                'text_sms'      => __('Text message or SMS', 'oha-survey-hub'),
+                                'other'         => __('Other', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_critical_info',
+                            'question' => __('What information is most critical for you to have before you commit to attending? (Select all that apply)', 'oha-survey-hub'),
+                            'type'     => 'checkbox',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'full_schedule'       => __('Full event lineup and schedule', 'oha-survey-hub'),
+                                'vendor_list'         => __('Full vendor list', 'oha-survey-hub'),
+                                'edu_topics'          => __('Education session topics', 'oha-survey-hub'),
+                                'hotel_options'       => __('Hotel and accommodation options', 'oha-survey-hub'),
+                                'parking_details'     => __('Parking details', 'oha-survey-hub'),
+                                'ticket_prices'       => __('Ticket prices confirmed', 'oha-survey-hub'),
+                                'blood_prison_details' => __('Blood Prison details', 'oha-survey-hub'),
+                                'costume_ball_details' => __('Costume Ball details', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_promo_timing',
+                            'question' => sprintf( __('When is the ideal time for OHA to start promoting the %d convention heavily?', 'oha-survey-hub'), $year ),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'options'  => array(
+                                'now_nov_jan'    => __('Right now (November through January)', 'oha-survey-hub'),
+                                'jan_to_mar'     => __('January through March', 'oha-survey-hub'),
+                                'mar_to_apr'     => __('March through April', 'oha-survey-hub'),
+                                'within_60_days' => __('Within 60 days of the event', 'oha-survey-hub'),
+                            )
+                        ),
+                    )
+                ),
+
+                // Page 10: Overall Feedback
+                array(
+                    'title'     => sprintf( __('Overall Feedback for %d', 'oha-survey-hub'), $year ),
+                    'questions' => array(
+                        array(
+                            'id'       => 'cp_biggest_concern',
+                            'question' => sprintf( __('What is your biggest concern or barrier to attending OHA Convention %d?', 'oha-survey-hub'), $year ),
+                            'type'     => 'textarea',
+                            'required' => false,
+                            'priority' => 'high',
+                        ),
+                        array(
+                            'id'       => 'cp_biggest_draw',
+                            'question' => sprintf( __('What one thing could OHA do to make Convention %d worth attending for you?', 'oha-survey-hub'), $year ),
+                            'type'     => 'textarea',
+                            'required' => false,
+                            'priority' => 'high',
+                        ),
+                        array(
+                            'id'       => 'cp_overall_excitement',
+                            'question' => sprintf( __('Overall, how excited are you about OHA Convention %d?', 'oha-survey-hub'), $year ),
+                            'type'     => 'scale',
+                            'required' => true,
+                            'priority' => 'high',
+                            'scale_min' => 1,
+                            'scale_max' => 10,
+                            'scale_labels' => array(
+                                1  => __('Not at all excited', 'oha-survey-hub'),
+                                10 => __('Extremely excited', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_recommend_attending',
+                            'question' => __('Would you recommend attending OHA Convention to others in the haunt community?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => true,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes_definitely' => __('Yes, definitely', 'oha-survey-hub'),
+                                'probably'       => __('Probably', 'oha-survey-hub'),
+                                'unsure'         => __('Unsure', 'oha-survey-hub'),
+                                'probably_not'   => __('Probably not', 'oha-survey-hub'),
+                                'no'             => __('No', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_other_suggestions',
+                            'question' => sprintf( __('Any other thoughts, suggestions, or ideas for OHA Convention %d?', 'oha-survey-hub'), $year ),
+                            'type'     => 'textarea',
+                            'required' => false,
+                        ),
+                    )
+                ),
+
             )
         );
     }

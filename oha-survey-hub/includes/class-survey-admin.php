@@ -48,14 +48,13 @@ class OHA_Survey_Admin {
                     <h2><?php _e('Survey Response Counts', 'oha-survey-hub'); ?></h2>
                     <div class="oha-survey-list">
                         <?php
-                        $convention_titles = [
-                            'convention_2026'           => 'Convention 2026 - Attendee',
-                            'convention_2026_vendor'    => 'Convention 2026 - Vendor',
-                            'convention_2026_volunteer' => 'Convention 2026 - Volunteer',
-                        ];
                         foreach ($stats['by_type'] as $type => $counts):
                             $survey = OHA_Survey_Definitions::get_survey($type);
-                            $title  = $survey ? $survey['title'] : ($convention_titles[$type] ?? ucfirst(str_replace('_', ' ', $type)));
+                            $title  = $survey ? $survey['title'] : (
+                                preg_match('/^convention_\d{4}/', $type)
+                                    ? OHA_Convention_Survey::get_title($type)
+                                    : ucfirst(str_replace('_', ' ', $type))
+                            );
                         ?>
                             <div class="oha-survey-item">
                                 <div class="oha-survey-name"><?php echo esc_html($title); ?></div>
@@ -224,12 +223,22 @@ class OHA_Survey_Admin {
                             $selected = $survey_type === $type ? 'selected' : '';
                             echo '<option value="' . esc_attr($type) . '" ' . $selected . '>' . esc_html($survey_data['title']) . '</option>';
                         }
-                        $convention_options = [
-                            OHA_Convention_Survey::SURVEY_TYPE_ATTENDEE  => 'OHA Convention 2026 - Attendee Feedback',
-                            OHA_Convention_Survey::SURVEY_TYPE_VENDOR    => 'OHA Convention 2026 - Vendor Feedback',
-                            OHA_Convention_Survey::SURVEY_TYPE_VOLUNTEER => 'OHA Convention 2026 - Volunteer Feedback',
+                        // Build convention options from all years that have responses in DB
+                        global $wpdb;
+                        $conv_types = $wpdb->get_col(
+                            "SELECT DISTINCT survey_type FROM {$wpdb->prefix}oha_survey_responses
+                             WHERE survey_type LIKE 'convention_%' ORDER BY survey_type ASC"
+                        );
+                        // Always include active year types even if no responses yet
+                        $active_types = [
+                            OHA_Convention_Survey::active_type(),
+                            OHA_Convention_Survey::active_type_vendor(),
+                            OHA_Convention_Survey::active_type_volunteer(),
                         ];
-                        foreach ($convention_options as $type => $title) {
+                        $conv_types = array_unique(array_merge($conv_types, $active_types));
+                        sort($conv_types);
+                        foreach ($conv_types as $type) {
+                            $title    = OHA_Convention_Survey::get_title($type);
                             $selected = $survey_type === $type ? 'selected' : '';
                             echo '<option value="' . esc_attr($type) . '" ' . $selected . '>' . esc_html($title) . '</option>';
                         }
@@ -398,11 +407,6 @@ class OHA_Survey_Admin {
      */
     private function render_all_surveys_summary() {
         $stats = $this->data_handler->get_survey_stats();
-        $convention_titles = [
-            'convention_2026'           => 'OHA Convention 2026 - Attendee Feedback',
-            'convention_2026_vendor'    => 'OHA Convention 2026 - Vendor Feedback',
-            'convention_2026_volunteer' => 'OHA Convention 2026 - Volunteer Feedback',
-        ];
         ?>
         <div class="oha-all-surveys-summary">
             <h2>All Survey Results</h2>
@@ -421,7 +425,11 @@ class OHA_Survey_Admin {
                 <tbody>
                 <?php foreach ($stats['by_type'] as $type => $counts):
                     $survey = OHA_Survey_Definitions::get_survey($type);
-                    $title  = $survey ? $survey['title'] : ($convention_titles[$type] ?? ucfirst(str_replace('_', ' ', $type)));
+                    $title  = $survey ? $survey['title'] : (
+                        preg_match('/^convention_\d{4}/', $type)
+                            ? OHA_Convention_Survey::get_title($type)
+                            : ucfirst(str_replace('_', ' ', $type))
+                    );
                 ?>
                     <tr>
                         <td><strong><?php echo esc_html($title); ?></strong></td>
@@ -439,129 +447,513 @@ class OHA_Survey_Admin {
         <?php
     }
     
-    /**
-     * Render analytics page
-     */
+    // =========================================================================
+    // Analytics page
+    // =========================================================================
+
     public function render_analytics() {
-        $survey_type = isset($_GET['survey_type']) ? sanitize_text_field($_GET['survey_type']) : '';
-        
+        $data        = $this->data_handler;
+        $stats       = $data->get_survey_stats();
+        $survey_type = sanitize_text_field( $_GET['survey_type'] ?? '' );
+        $year        = intval( $_GET['year'] ?? 0 );
+        $compare_yr  = intval( $_GET['compare_year'] ?? 0 );
+        $base_url    = admin_url( 'admin.php?page=oha-survey-analytics' );
+        $all_types   = $this->get_all_analytics_types( $stats );
         ?>
         <div class="wrap oha-survey-admin">
-            <h1><?php _e('Survey Analytics', 'oha-survey-hub'); ?></h1>
-            
-            <div class="oha-survey-filter">
-                <form method="get" action="">
-                    <input type="hidden" name="page" value="oha-survey-analytics">
-                    <select name="survey_type" onchange="this.form.submit()">
-                        <option value=""><?php _e('Select Survey Type', 'oha-survey-hub'); ?></option>
-                        <?php
-                        $surveys = OHA_Survey_Definitions::get_all_surveys();
-                        foreach ($surveys as $type => $survey_data) {
-                            $selected = $survey_type === $type ? 'selected' : '';
-                            echo '<option value="' . esc_attr($type) . '" ' . $selected . '>' . esc_html($survey_data['title']) . '</option>';
-                        }
-                        ?>
-                    </select>
-                </form>
-            </div>
-            
-            <?php if ($survey_type): ?>
-                <?php $this->render_survey_analytics($survey_type); ?>
+            <h1><?php _e( 'Survey Analytics', 'oha-survey-hub' ); ?></h1>
+
+            <nav class="oha-analytics-nav">
+                <a href="<?php echo esc_url( $base_url ); ?>"
+                   class="oha-anav-tab <?php echo $survey_type === '' ? 'is-active' : ''; ?>">
+                    All Surveys
+                    <span class="oha-tab-count"><?php echo number_format( $stats['total_responses'] ); ?></span>
+                </a>
+                <?php foreach ( $all_types as $type => $info ): ?>
+                <a href="<?php echo esc_url( add_query_arg( 'survey_type', $type, $base_url ) ); ?>"
+                   class="oha-anav-tab <?php echo $survey_type === $type ? 'is-active' : ''; ?>">
+                    <?php echo esc_html( $info['title'] ); ?>
+                    <?php if ( $info['count'] > 0 ): ?>
+                    <span class="oha-tab-count"><?php echo number_format( $info['count'] ); ?></span>
+                    <?php endif; ?>
+                </a>
+                <?php endforeach; ?>
+            </nav>
+
+            <?php if ( $survey_type ): ?>
+                <?php
+                $years      = $data->get_survey_years( $survey_type );
+                $survey_url = add_query_arg( 'survey_type', $survey_type, $base_url );
+                ?>
+                <div class="oha-analytics-toolbar">
+                    <form class="oha-toolbar-filters" method="get" action="">
+                        <input type="hidden" name="page" value="oha-survey-analytics">
+                        <input type="hidden" name="survey_type" value="<?php echo esc_attr( $survey_type ); ?>">
+                        <label class="oha-filter-label">Year:
+                            <select name="year" onchange="this.form.submit()">
+                                <option value="0" <?php selected( $year, 0 ); ?>>All years</option>
+                                <?php foreach ( $years as $y ): ?>
+                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $year, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </label>
+                        <?php if ( count( $years ) > 1 ): ?>
+                        <label class="oha-filter-label">Compare to:
+                            <select name="compare_year" onchange="this.form.submit()">
+                                <option value="0" <?php selected( $compare_yr, 0 ); ?>>Off</option>
+                                <?php foreach ( $years as $y ):
+                                    if ( $y === $year ) continue; ?>
+                                <option value="<?php echo esc_attr( $y ); ?>" <?php selected( $compare_yr, $y ); ?>><?php echo esc_html( $y ); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </label>
+                        <?php endif; ?>
+                    </form>
+                    <div class="oha-toolbar-actions">
+                        <?php $count = $year ? $data->get_count_for_year( $survey_type, $year ) : $data->get_response_count( $survey_type ); ?>
+                        <span class="oha-response-badge"><?php echo number_format( $count ); ?> responses</span>
+                        <button type="button" class="button" onclick="ohaExportSurveyData('<?php echo esc_js( $survey_type ); ?>','csv')">Export CSV</button>
+                        <button type="button" class="button" onclick="ohaExportSurveyData('<?php echo esc_js( $survey_type ); ?>','json')">Export JSON</button>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=oha-survey-results&survey_type=' . $survey_type ) ); ?>" class="button">Raw Responses</a>
+                    </div>
+                </div>
+                <?php $this->render_analytics_detail( $survey_type, $year ?: null, $compare_yr ?: null ); ?>
             <?php else: ?>
-                <p><?php _e('Please select a survey type to view analytics.', 'oha-survey-hub'); ?></p>
+                <?php $this->render_analytics_overview( $stats ); ?>
             <?php endif; ?>
         </div>
         <?php
     }
-    
-    /**
-     * Render analytics for specific survey
-     */
-    private function render_survey_analytics($survey_type) {
-        $analytics = $this->data_handler->get_analytics($survey_type);
-        $survey = OHA_Survey_Definitions::get_survey($survey_type);
-        
-        if (empty($analytics)) {
-            echo '<p>' . __('No analytics data available for this survey.', 'oha-survey-hub') . '</p>';
-            return;
+
+    private function render_analytics_overview( $stats ) {
+        $data     = $this->data_handler;
+        $raw      = $data->get_all_timeline( 30 );
+        $tmap     = [];
+        foreach ( $raw as $r ) $tmap[ $r->date ] = (int) $r->count;
+        $days = [];
+        for ( $i = 29; $i >= 0; $i-- ) {
+            $d      = date( 'Y-m-d', strtotime( "-{$i} days" ) );
+            $days[] = [ 'label' => date( 'm/d', strtotime( $d ) ), 'count' => $tmap[$d] ?? 0 ];
         }
-        
-        // Group analytics by question
-        $grouped_analytics = array();
-        foreach ($analytics as $item) {
-            $grouped_analytics[$item->question_id][] = $item;
-        }
-        
+        $last30 = array_sum( array_column( $days, 'count' ) );
         ?>
-        <div class="oha-analytics-content">
-            <h2><?php echo $survey ? esc_html($survey['title']) . ' ' : ''; ?><?php _e('Analytics', 'oha-survey-hub'); ?></h2>
-            
-            <?php foreach ($grouped_analytics as $question_id => $question_data): ?>
-                <?php $question = $this->find_question_in_survey($survey, $question_id); ?>
-                <div class="oha-analytics-question">
-                    <h3><?php echo $question ? esc_html($question['question']) : esc_html($question_id); ?></h3>
-                    
-                    <div class="oha-analytics-chart">
-                        <canvas id="chart-<?php echo esc_attr($question_id); ?>" width="400" height="200"></canvas>
-                    </div>
-                    
-                    <div class="oha-analytics-table">
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th><?php _e('Answer', 'oha-survey-hub'); ?></th>
-                                    <th><?php _e('Count', 'oha-survey-hub'); ?></th>
-                                    <th><?php _e('Percentage', 'oha-survey-hub'); ?></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php 
-                                $total_responses = array_sum(array_column($question_data, 'response_count'));
-                                foreach ($question_data as $data): 
-                                    $percentage = $total_responses > 0 ? round(($data->response_count / $total_responses) * 100, 1) : 0;
-                                ?>
-                                    <tr>
-                                        <td><?php echo esc_html($data->answer_value); ?></td>
-                                        <td><?php echo number_format($data->response_count); ?></td>
-                                        <td><?php echo $percentage; ?>%</td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const ctx = document.getElementById('chart-<?php echo esc_js($question_id); ?>').getContext('2d');
-                    const data = <?php echo wp_json_encode($question_data); ?>;
-                    
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: data.map(item => item.answer_value.length > 30 ? item.answer_value.substring(0, 30) + '...' : item.answer_value),
-                            datasets: [{
-                                data: data.map(item => item.response_count),
-                                backgroundColor: [
-                                    '#f39200', '#1e1e1e', '#666666', '#999999', '#cccccc', 
-                                    '#ff6b35', '#004e89', '#ffc857', '#8ac4d0', '#bc6c25'
-                                ]
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
-                                }
-                            }
-                        }
-                    });
-                });
-                </script>
-            <?php endforeach; ?>
+        <div class="oha-stat-cards">
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo number_format( $stats['total_responses'] ); ?></div>
+                <div class="oha-stat-lbl">Total Responses</div>
+            </div>
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo number_format( $stats['in_progress'] ); ?></div>
+                <div class="oha-stat-lbl">In Progress</div>
+            </div>
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo count( $stats['by_type'] ); ?></div>
+                <div class="oha-stat-lbl">Active Survey Types</div>
+            </div>
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo number_format( $last30 ); ?></div>
+                <div class="oha-stat-lbl">Last 30 Days</div>
+            </div>
+        </div>
+
+        <div class="oha-chart-card">
+            <div class="oha-chart-card-title">Response Activity — All Surveys, Last 30 Days</div>
+            <div class="oha-timeline-wrap">
+                <canvas id="oha-overview-timeline"></canvas>
+            </div>
+            <script>
+            (function(){
+                var el=document.getElementById('oha-overview-timeline');
+                if(!el||typeof Chart==='undefined') return;
+                var d=<?php echo wp_json_encode( $days ); ?>;
+                new Chart(el,{type:'bar',data:{labels:d.map(function(x){return x.label;}),datasets:[{label:'Responses',data:d.map(function(x){return x.count;}),backgroundColor:'rgba(173,49,25,0.75)',borderColor:'rgba(173,49,25,1)',borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,precision:0}},x:{grid:{display:false},ticks:{maxTicksLimit:15}}}}});
+            })();
+            </script>
+        </div>
+
+        <div class="oha-chart-card">
+            <div class="oha-chart-card-title">All Survey Responses</div>
+            <table class="wp-list-table widefat fixed striped">
+                <thead><tr>
+                    <th>Survey</th>
+                    <th style="width:120px;">Completed</th>
+                    <th style="width:120px;">In Progress</th>
+                    <th style="width:200px;">Actions</th>
+                </tr></thead>
+                <tbody>
+                <?php
+                $ab = admin_url( 'admin.php' );
+                foreach ( $stats['by_type'] as $type => $counts ):
+                    $title = $this->resolve_survey_title( $type );
+                ?>
+                <tr>
+                    <td><strong><?php echo esc_html( $title ); ?></strong></td>
+                    <td><?php echo number_format( $counts['completed'] ); ?></td>
+                    <td><?php echo number_format( $counts['in_progress'] ); ?></td>
+                    <td>
+                        <a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-survey-analytics', 'survey_type' => $type ], $ab ) ); ?>" class="button button-small">Analytics</a>
+                        <a href="<?php echo esc_url( add_query_arg( [ 'page' => 'oha-survey-results', 'survey_type' => $type ], $ab ) ); ?>" class="button button-small" style="margin-left:4px;">Raw Responses</a>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
         <?php
+    }
+
+    private function render_analytics_detail( $survey_type, $year, $compare_yr ) {
+        $data   = $this->data_handler;
+        $survey = $this->resolve_survey_definition( $survey_type );
+        if ( ! $survey ) {
+            echo '<div class="notice notice-warning inline"><p>No survey definition found for this type. Questions may not have been seeded yet.</p></div>';
+            return;
+        }
+
+        $rollup1 = $data->get_rollup( $survey_type, $year );
+        $rollup2 = $compare_yr ? $data->get_rollup( $survey_type, $compare_yr ) : null;
+        $total1  = $year ? $data->get_count_for_year( $survey_type, $year ) : $data->get_response_count( $survey_type );
+        $total2  = $compare_yr ? $data->get_count_for_year( $survey_type, $compare_yr ) : 0;
+        $label1  = $year ? (string) $year : 'All Time';
+        $label2  = $compare_yr ? (string) $compare_yr : '';
+
+        // Timeline (last 30 days)
+        $raw  = $data->get_timeline( $survey_type, 30 );
+        $tmap = [];
+        foreach ( $raw as $r ) $tmap[ $r->date ] = (int) $r->count;
+        $tdays = [];
+        for ( $i = 29; $i >= 0; $i-- ) {
+            $d      = date( 'Y-m-d', strtotime( "-{$i} days" ) );
+            $tdays[] = [ 'label' => date( 'm/d', strtotime( $d ) ), 'count' => $tmap[$d] ?? 0 ];
+        }
+
+        // Question coverage stat
+        $total_q = 0;
+        $q_with_data = 0;
+        foreach ( $survey['pages'] as $pg ) {
+            foreach ( ( $pg['questions'] ?? [] ) as $q ) {
+                $total_q++;
+                if ( ! empty( $rollup1[ $q['id'] ] ) ) $q_with_data++;
+            }
+        }
+        $q_coverage = $total_q > 0 ? round( $q_with_data / $total_q * 100 ) : 0;
+        ?>
+
+        <div class="oha-stat-cards">
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo number_format( $total1 ); ?></div>
+                <div class="oha-stat-lbl"><?php echo $year ? "Responses ({$year})" : 'Total Responses'; ?></div>
+            </div>
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo number_format( $data->get_this_month_count( $survey_type ) ); ?></div>
+                <div class="oha-stat-lbl">This Month</div>
+            </div>
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo $data->get_completion_rate( $survey_type ); ?>%</div>
+                <div class="oha-stat-lbl">Completion Rate</div>
+            </div>
+            <div class="oha-stat-card">
+                <div class="oha-stat-num"><?php echo $q_coverage; ?>%</div>
+                <div class="oha-stat-lbl">Question Coverage</div>
+            </div>
+        </div>
+
+        <?php if ( $compare_yr ): ?>
+        <div class="oha-compare-banner">
+            Comparing <strong><?php echo esc_html( $label1 ); ?></strong> (<?php echo number_format( $total1 ); ?> responses)
+            vs <strong><?php echo esc_html( $label2 ); ?></strong> (<?php echo number_format( $total2 ); ?> responses)
+        </div>
+        <?php endif; ?>
+
+        <div class="oha-chart-card">
+            <div class="oha-chart-card-title">Response Activity — Last 30 Days</div>
+            <div class="oha-timeline-wrap">
+                <canvas id="oha-survey-timeline"></canvas>
+            </div>
+            <script>
+            (function(){
+                var el=document.getElementById('oha-survey-timeline');
+                if(!el||typeof Chart==='undefined') return;
+                var d=<?php echo wp_json_encode( $tdays ); ?>;
+                new Chart(el,{type:'bar',data:{labels:d.map(function(x){return x.label;}),datasets:[{label:'Responses',data:d.map(function(x){return x.count;}),backgroundColor:'rgba(173,49,25,0.75)',borderColor:'rgba(173,49,25,1)',borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,precision:0}},x:{grid:{display:false},ticks:{maxTicksLimit:15}}}}});
+            })();
+            </script>
+        </div>
+
+        <div class="oha-questions-wrap">
+        <?php foreach ( $survey['pages'] as $pg_idx => $page ):
+            $page_has_data = false;
+            foreach ( ( $page['questions'] ?? [] ) as $q ) {
+                $qtype = $q['type'] ?? 'text';
+                if ( ! empty( $rollup1[ $q['id'] ] ) ) { $page_has_data = true; break; }
+                if ( ( $qtype === 'textarea' || $qtype === 'text' ) ) {
+                    $t = $data->get_text_responses( $survey_type, $q['id'], $year );
+                    if ( ! empty($t) ) { $page_has_data = true; break; }
+                }
+            }
+            if ( ! $page_has_data ) continue;
+        ?>
+        <div class="oha-page-section">
+            <div class="oha-page-section-title"><?php echo esc_html( $page['title'] ?? ( 'Page ' . ( $pg_idx + 1 ) ) ); ?></div>
+            <?php foreach ( ( $page['questions'] ?? [] ) as $q ):
+                $qtype = $q['type'] ?? 'text';
+                if ( $qtype === 'textarea' || $qtype === 'text' ) {
+                    $t1 = $data->get_text_responses( $survey_type, $q['id'], $year );
+                    $t2 = $compare_yr ? $data->get_text_responses( $survey_type, $q['id'], $compare_yr ) : [];
+                    if ( empty($t1) && empty($t2) ) continue;
+                    $this->render_text_question_block( $q, $t1, $t2, $label1, $label2 );
+                } else {
+                    $a1 = $rollup1[ $q['id'] ] ?? [];
+                    $a2 = $rollup2 ? ( $rollup2[ $q['id'] ] ?? [] ) : null;
+                    if ( empty($a1) && ( $a2 === null || empty($a2) ) ) continue;
+                    $this->render_choice_question_block( $q, $a1, $a2, $total1, $total2, $label1, $label2 );
+                }
+            endforeach; ?>
+        </div>
+        <?php endforeach; ?>
+        </div>
+        <?php
+    }
+
+    private function render_choice_question_block( $q, $answers1, $answers2, $total1, $total2, $label1, $label2 ) {
+        $q_id   = $q['id'];
+        $q_type = $q['type'] ?? 'radio';
+        $is_cmp = $answers2 !== null;
+        $opts   = $q['options'] ?? [];
+
+        // Build ordered label/key pairs
+        if ( ! empty( $opts ) ) {
+            $keys   = array_keys( (array) $opts );
+            $labels = array_values( (array) $opts );
+        } elseif ( $q_type === 'scale' ) {
+            $min  = $q['scale_min'] ?? 1;
+            $max  = $q['scale_max'] ?? 5;
+            $keys = $labels = range( $min, $max );
+        } else {
+            $all_keys = array_unique( array_merge( array_keys( $answers1 ), array_keys( $answers2 ?? [] ) ) );
+            arsort( $answers1 );
+            $keys = $labels = array_keys( $answers1 ) ?: $all_keys;
+        }
+
+        $data1 = [];
+        $data2 = [];
+        foreach ( $keys as $k ) {
+            $data1[] = (int) ( $answers1[ (string)$k ] ?? 0 );
+            if ( $is_cmp ) $data2[] = (int) ( ( $answers2 ?? [] )[ (string)$k ] ?? 0 );
+        }
+
+        $resp1 = array_sum( $data1 );
+        if ( $resp1 === 0 && ( ! $is_cmp || array_sum( $data2 ) === 0 ) ) return;
+
+        // For checkbox: each respondent can pick multiple, so total > respondent count.
+        // We show % of total picks, not % of respondents.
+        $pct_base = $resp1 > 0 ? $resp1 : 1;
+
+        $canvas_id = 'oha-qc-' . preg_replace( '/[^a-z0-9]/i', '_', $q_id );
+        $chart_h   = max( 90, count( $keys ) * 34 + 20 );
+
+        $scale_avg = null;
+        if ( $q_type === 'scale' && $resp1 > 0 ) {
+            $weighted = 0;
+            foreach ( $keys as $i => $k ) $weighted += (int)$k * $data1[$i];
+            $scale_avg = round( $weighted / $resp1, 1 );
+        }
+        ?>
+        <div class="oha-q-block" data-qtype="<?php echo esc_attr( $q_type ); ?>">
+            <div class="oha-q-header">
+                <div class="oha-q-title"><?php echo esc_html( $q['question'] ); ?></div>
+                <div class="oha-q-badges">
+                    <span class="oha-q-badge oha-badge-type"><?php echo esc_html( $q_type ); ?></span>
+                    <span class="oha-q-badge oha-badge-count"><?php echo number_format( $resp1 ); ?> responses</span>
+                    <?php if ( $is_cmp && array_sum($data2) > 0 ): ?>
+                    <span class="oha-q-badge oha-badge-compare"><?php echo number_format( array_sum($data2) ); ?> in <?php echo esc_html($label2); ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="oha-q-body">
+                <?php if ( $scale_avg !== null ): ?>
+                <div class="oha-scale-avg">
+                    <span class="oha-scale-avg-num"><?php echo $scale_avg; ?></span>
+                    <span class="oha-scale-avg-label">avg / <?php echo esc_html( $q['scale_max'] ?? 5 ); ?></span>
+                </div>
+                <?php endif; ?>
+                <div class="oha-q-chart-wrap" style="height:<?php echo $chart_h; ?>px;">
+                    <canvas id="<?php echo esc_attr( $canvas_id ); ?>"></canvas>
+                </div>
+                <div class="oha-q-table-wrap">
+                    <table class="oha-q-table">
+                        <?php if ( $is_cmp ): ?>
+                        <thead><tr>
+                            <th class="oha-q-label-col">Answer</th>
+                            <th class="oha-q-cnt-col"><?php echo esc_html( $label1 ); ?></th>
+                            <th class="oha-q-cnt-col"><?php echo esc_html( $label2 ); ?></th>
+                            <th class="oha-q-pct-col">%</th>
+                        </tr></thead>
+                        <?php endif; ?>
+                        <tbody>
+                        <?php foreach ( $keys as $i => $k ):
+                            $c1  = $data1[$i];
+                            $c2  = $is_cmp ? $data2[$i] : 0;
+                            $pct = round( $c1 / $pct_base * 100 );
+                            if ( $c1 === 0 && ( ! $is_cmp || $c2 === 0 ) ) continue;
+                        ?>
+                        <tr>
+                            <td class="oha-q-label"><?php echo esc_html( (string) $labels[$i] ); ?></td>
+                            <td class="oha-q-cnt"><?php echo number_format( $c1 ); ?></td>
+                            <?php if ( $is_cmp ): ?>
+                            <td class="oha-q-cnt oha-q-cnt-cmp"><?php echo number_format( $c2 ); ?></td>
+                            <?php endif; ?>
+                            <td class="oha-q-pct">
+                                <div class="oha-inline-bar-wrap">
+                                    <div class="oha-inline-bar" style="width:<?php echo $pct; ?>%"></div>
+                                    <span class="oha-pct-num"><?php echo $pct; ?>%</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <script>
+            (function(){
+                var el=document.getElementById('<?php echo esc_js($canvas_id); ?>');
+                if(!el||typeof Chart==='undefined') return;
+                var labels=<?php echo wp_json_encode( array_map('strval',$labels) ); ?>;
+                var d1=<?php echo wp_json_encode($data1); ?>;
+                var total=<?php echo $resp1 ?: 1; ?>;
+                <?php if ($is_cmp): ?>
+                var d2=<?php echo wp_json_encode($data2); ?>;
+                var datasets=[
+                    {label:<?php echo wp_json_encode($label1); ?>,data:d1,backgroundColor:'rgba(173,49,25,0.82)',borderColor:'rgba(173,49,25,1)',borderWidth:1,borderRadius:3},
+                    {label:<?php echo wp_json_encode($label2); ?>,data:d2,backgroundColor:'rgba(17,89,175,0.75)',borderColor:'rgba(17,89,175,1)',borderWidth:1,borderRadius:3}
+                ];
+                <?php else: ?>
+                var datasets=[{label:'Responses',data:d1,backgroundColor:'rgba(173,49,25,0.82)',borderColor:'rgba(173,49,25,1)',borderWidth:1,borderRadius:3}];
+                <?php endif; ?>
+                new Chart(el,{
+                    type:'bar',
+                    data:{labels:labels,datasets:datasets},
+                    options:{
+                        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+                        plugins:{
+                            legend:{display:<?php echo $is_cmp ? 'true' : 'false'; ?>},
+                            tooltip:{callbacks:{label:function(c){var p=Math.round(c.raw/total*100);return ' '+c.raw+' ('+p+'%)';}}}
+                        },
+                        scales:{
+                            x:{beginAtZero:true,ticks:{stepSize:1,precision:0},grid:{color:'rgba(0,0,0,0.06)'}},
+                            y:{grid:{display:false},ticks:{font:{size:12},autoSkip:false}}
+                        }
+                    }
+                });
+            })();
+            </script>
+        </div>
+        <?php
+    }
+
+    private function render_text_question_block( $q, $texts1, $texts2, $label1, $label2 ) {
+        if ( empty($texts1) && empty($texts2) ) return;
+        $preview  = 5;
+        $has_cmp  = ! empty($texts2);
+        $uid      = preg_replace( '/[^a-z0-9]/i', '_', $q['id'] );
+        ?>
+        <div class="oha-q-block oha-q-text-block" data-qtype="textarea">
+            <div class="oha-q-header">
+                <div class="oha-q-title"><?php echo esc_html( $q['question'] ); ?></div>
+                <div class="oha-q-badges">
+                    <span class="oha-q-badge oha-badge-type">open text</span>
+                    <span class="oha-q-badge oha-badge-count"><?php echo count($texts1); ?> responses</span>
+                </div>
+            </div>
+            <?php if ( ! empty($texts1) ): ?>
+            <?php if ( $has_cmp ): ?><div class="oha-text-section-label"><?php echo esc_html($label1); ?></div><?php endif; ?>
+            <div class="oha-text-responses">
+                <?php foreach ( $texts1 as $i => $entry ): ?>
+                <div class="oha-text-entry<?php echo $i >= $preview ? ' oha-text-hidden' : ''; ?>">
+                    <span class="oha-text-date"><?php echo esc_html( date('M j, Y', strtotime($entry['date'])) ); ?></span>
+                    <div class="oha-text-content"><?php echo esc_html( $entry['text'] ); ?></div>
+                </div>
+                <?php endforeach; ?>
+                <?php if ( count($texts1) > $preview ): ?>
+                <button type="button" class="oha-expand-btn button button-small" data-uid="<?php echo esc_attr($uid); ?>-a">
+                    Show all <?php echo count($texts1); ?> responses
+                </button>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+            <?php if ( $has_cmp ): ?>
+            <div class="oha-text-section-label"><?php echo esc_html($label2); ?></div>
+            <div class="oha-text-responses">
+                <?php foreach ( $texts2 as $i => $entry ): ?>
+                <div class="oha-text-entry<?php echo $i >= $preview ? ' oha-text-hidden' : ''; ?>">
+                    <span class="oha-text-date"><?php echo esc_html( date('M j, Y', strtotime($entry['date'])) ); ?></span>
+                    <div class="oha-text-content"><?php echo esc_html( $entry['text'] ); ?></div>
+                </div>
+                <?php endforeach; ?>
+                <?php if ( count($texts2) > $preview ): ?>
+                <button type="button" class="oha-expand-btn button button-small" data-uid="<?php echo esc_attr($uid); ?>-b">
+                    Show all <?php echo count($texts2); ?> responses
+                </button>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function get_all_analytics_types( $stats ) {
+        $types = [];
+
+        $ordered = [
+            'member'             => 'Member Survey',
+            'haunt_owner'        => 'Haunt Owner',
+            'industry_deep_dive' => 'Industry Deep-Dive',
+            'convention_planning'=> 'Convention Planning',
+            'scare_actor'        => 'Scare Actor',
+            'behind_scenes'      => 'Behind-the-Scenes',
+            'home_haunt'         => 'Home Haunt',
+        ];
+        foreach ( $ordered as $type => $fallback ) {
+            $survey = OHA_Survey_Definitions::get_survey($type);
+            $types[$type] = [
+                'title' => $survey ? $survey['title'] : $fallback,
+                'count' => $stats['by_type'][$type]['completed'] ?? 0,
+            ];
+        }
+
+        // Convention types from DB responses
+        foreach ( $stats['by_type'] as $type => $counts ) {
+            if ( strpos($type, 'convention_') === 0 && ! isset($types[$type]) ) {
+                $types[$type] = [
+                    'title' => OHA_Convention_Survey::get_title($type),
+                    'count' => $counts['completed'],
+                ];
+            }
+        }
+        // Always include active year types even with no responses yet
+        foreach ( [ OHA_Convention_Survey::active_type(), OHA_Convention_Survey::active_type_vendor(), OHA_Convention_Survey::active_type_volunteer() ] as $type ) {
+            if ( ! isset($types[$type]) ) {
+                $types[$type] = [ 'title' => OHA_Convention_Survey::get_title($type), 'count' => 0 ];
+            }
+        }
+
+        return $types;
+    }
+
+    private function resolve_survey_definition( $survey_type ) {
+        $survey = OHA_Survey_Definitions::get_survey($survey_type);
+        if ( ! $survey ) {
+            $survey = OHA_Convention_Survey::get_as_definition($survey_type);
+        }
+        return $survey;
+    }
+
+    private function resolve_survey_title( $type ) {
+        $survey = OHA_Survey_Definitions::get_survey($type);
+        if ( $survey ) return $survey['title'];
+        if ( preg_match('/^convention_\d{4}/', $type) ) return OHA_Convention_Survey::get_title($type);
+        return ucwords(str_replace('_', ' ', $type));
     }
     
     /**
@@ -576,15 +968,20 @@ class OHA_Survey_Admin {
             update_option('oha_survey_hub_require_email_confirmation', isset($_POST['require_email_confirmation']));
             update_option('oha_survey_hub_max_save_days', intval($_POST['max_save_days']));
             update_option('oha_convention_board_email', sanitize_email($_POST['convention_board_email']));
+            $new_year = (int) $_POST['convention_survey_year'];
+            if ($new_year >= 2024 && $new_year <= 2050) {
+                update_option('oha_convention_survey_year', $new_year);
+            }
             echo '<div class="notice notice-success"><p>' . __('Settings saved!', 'oha-survey-hub') . '</p></div>';
         }
 
-        $support_email        = get_option('oha_survey_hub_support_email', 'info@ohiohaunt.com');
-        $email_notifications  = get_option('oha_survey_hub_email_notifications', true);
-        $admin_notifications  = get_option('oha_survey_hub_admin_notifications', true);
-        $require_confirmation = get_option('oha_survey_hub_require_email_confirmation', false);
-        $max_save_days        = get_option('oha_survey_hub_max_save_days', 30);
+        $support_email          = get_option('oha_survey_hub_support_email', 'info@ohiohaunt.com');
+        $email_notifications    = get_option('oha_survey_hub_email_notifications', true);
+        $admin_notifications    = get_option('oha_survey_hub_admin_notifications', true);
+        $require_confirmation   = get_option('oha_survey_hub_require_email_confirmation', false);
+        $max_save_days          = get_option('oha_survey_hub_max_save_days', 30);
         $convention_board_email = get_option('oha_convention_board_email', '');
+        $convention_year        = OHA_Convention_Survey::get_year();
         
         ?>
         <div class="wrap oha-survey-admin">
@@ -635,6 +1032,14 @@ class OHA_Survey_Admin {
                         <td>
                             <input type="email" name="convention_board_email" value="<?php echo esc_attr($convention_board_email); ?>" class="regular-text" placeholder="board@ohiohaunt.com">
                             <p class="description"><?php _e('Email address that receives a notification each time a convention survey is submitted. Leave blank to use the WordPress admin email.', 'oha-survey-hub'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"><?php _e('Active Convention Year', 'oha-survey-hub'); ?></th>
+                        <td>
+                            <input type="number" name="convention_survey_year" value="<?php echo esc_attr($convention_year); ?>" min="2024" max="2050" class="small-text">
+                            <p class="description"><?php _e('The convention year shown on surveys, selector cards, and admin pages. Changing this year triggers a fresh question seed for that year. Prior years\' questions and responses are preserved.', 'oha-survey-hub'); ?></p>
                         </td>
                     </tr>
 

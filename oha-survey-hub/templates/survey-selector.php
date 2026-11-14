@@ -23,7 +23,12 @@ if ($retake_token) {
             ['email' => $retake_data['email'], 'survey_type' => $retake_data['survey_type']],
             ['%s', '%s']
         );
+        // Map any year's survey type back to URL param; legacy 2026 retake links remain valid
+        $conv_year = OHA_Convention_Survey::get_year();
         $type_to_param = [
+            'convention_' . $conv_year              => 'convention_attendee',
+            'convention_' . $conv_year . '_vendor'  => 'convention_vendor',
+            'convention_' . $conv_year . '_volunteer' => 'convention_volunteer',
             'convention_2026'           => 'convention_attendee',
             'convention_2026_vendor'    => 'convention_vendor',
             'convention_2026_volunteer' => 'convention_volunteer',
@@ -50,6 +55,7 @@ $survey_shortcodes = array(
     'behind_scenes'          => '[oha_survey_behind_scenes direct_link="true"]',
     'home_haunt'             => '[oha_survey_home_haunt direct_link="true"]',
     'industry_deep_dive'     => '[oha_survey_industry_deep_dive direct_link="true"]',
+    'convention_planning'    => '[oha_survey_convention_planning direct_link="true"]',
     'convention_attendee'    => '[oha_convention_survey context="attendee"]',
     'convention_vendor'      => '[oha_convention_survey context="vendor"]',
     'convention_volunteer'   => '[oha_convention_survey context="volunteer"]',
@@ -100,14 +106,42 @@ if (!function_exists('oha_survey_direct_link')) {
         </div>
     </div>
 
+    <?php $planning_year = (int) get_option('oha_convention_survey_year', 2027); ?>
     <div class="oha-survey-options oha-survey-options-convention">
-        <h3><?php _e('OHA Convention 2026 Feedback', 'oha-survey-hub'); ?></h3>
-        <p class="oha-convention-surveys-intro"><?php _e('Share your experience from OHA Convention 2026. Select the survey that matches your role at the event.', 'oha-survey-hub'); ?></p>
+        <h3><?php echo esc_html(sprintf(__('OHA Convention %d Planning', 'oha-survey-hub'), $planning_year)); ?></h3>
+        <p class="oha-convention-surveys-intro"><?php echo esc_html(sprintf(__('Help us plan OHA Convention %d. Tell us what you want to attend, what food and logistics options matter to you, and what would make it worth the trip.', 'oha-survey-hub'), $planning_year)); ?></p>
+        <div class="oha-survey-grid">
+
+            <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_planning">
+                <h4><?php echo esc_html(sprintf(__('Convention %d Planning Survey', 'oha-survey-hub'), $planning_year)); ?></h4>
+                <p><?php echo esc_html(sprintf(__('For anyone considering attending OHA Convention %d. Share your preferences so we can plan the best event possible.', 'oha-survey-hub'), $planning_year)); ?></p>
+                <div class="oha-survey-meta">
+                    <span class="oha-survey-time">10 to 15 minutes</span>
+                    <span class="oha-survey-pages">10 pages</span>
+                </div>
+                <a href="<?php echo oha_survey_direct_link($page_url, 'convention_planning'); ?>" class="oha-survey-btn">
+                    <?php _e('Start Survey', 'oha-survey-hub'); ?>
+                </a>
+                <div class="oha-card-direct-link">
+                    <span class="oha-direct-link-label">Direct link:</span>
+                    <button class="oha-copy-link-btn" data-url="<?php echo oha_survey_direct_link($page_url, 'convention_planning'); ?>">
+                        Copy Link
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="oha-survey-options oha-survey-options-convention">
+        <?php $conv_year = OHA_Convention_Survey::get_year(); ?>
+        <h3><?php echo esc_html(sprintf(__('OHA Convention %d Feedback', 'oha-survey-hub'), $conv_year)); ?></h3>
+        <p class="oha-convention-surveys-intro"><?php echo esc_html(sprintf(__('Share your experience from OHA Convention %d. Select the survey that matches your role at the event.', 'oha-survey-hub'), $conv_year)); ?></p>
         <div class="oha-survey-grid">
 
             <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_attendee">
                 <h4><?php _e('Attendee Feedback', 'oha-survey-hub'); ?></h4>
-                <p><?php _e('For general admission and VIP attendees of OHA Convention 2026.', 'oha-survey-hub'); ?></p>
+                <p><?php echo esc_html(sprintf(__('For general admission and VIP attendees of OHA Convention %d.', 'oha-survey-hub'), $conv_year)); ?></p>
                 <div class="oha-survey-meta">
                     <span class="oha-survey-time">5 to 10 minutes</span>
                     <span class="oha-survey-pages">Up to 8 pages</span>
@@ -125,7 +159,7 @@ if (!function_exists('oha_survey_direct_link')) {
 
             <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_vendor">
                 <h4><?php _e('Vendor Feedback', 'oha-survey-hub'); ?></h4>
-                <p><?php _e('For vendors and exhibitors who participated in the OHA Convention 2026 vendor floor.', 'oha-survey-hub'); ?></p>
+                <p><?php echo esc_html(sprintf(__('For vendors and exhibitors who participated in the OHA Convention %d vendor floor.', 'oha-survey-hub'), $conv_year)); ?></p>
                 <div class="oha-survey-meta">
                     <span class="oha-survey-time">5 to 10 minutes</span>
                     <span class="oha-survey-pages">Varies</span>
@@ -143,7 +177,7 @@ if (!function_exists('oha_survey_direct_link')) {
 
             <div class="oha-survey-card oha-survey-card-convention" data-survey-type="convention_volunteer">
                 <h4><?php _e('Volunteer Feedback', 'oha-survey-hub'); ?></h4>
-                <p><?php _e('For volunteers who helped run OHA Convention 2026.', 'oha-survey-hub'); ?></p>
+                <p><?php echo esc_html(sprintf(__('For volunteers who helped run OHA Convention %d.', 'oha-survey-hub'), $conv_year)); ?></p>
                 <div class="oha-survey-meta">
                     <span class="oha-survey-time">5 to 10 minutes</span>
                     <span class="oha-survey-pages">Varies</span>
@@ -238,12 +272,13 @@ if (!function_exists('oha_survey_direct_link')) {
                 </div>
             </div>
 
+            <?php $hy = OHA_Survey_Definitions::haunt_season_years(); ?>
             <div class="oha-survey-card" data-survey-type="industry_deep_dive">
-                <h4><?php _e('Industry Deep-Dive Survey (2025 to 2026)', 'oha-survey-hub'); ?></h4>
+                <h4><?php echo esc_html(sprintf(__('Industry Deep-Dive Survey (%1$d to %2$d)', 'oha-survey-hub'), $hy['past'], $hy['next'])); ?></h4>
                 <p><?php _e('For haunt owners and operators looking at industry trends, financial health, and future planning.', 'oha-survey-hub'); ?></p>
                 <div class="oha-survey-meta">
                     <span class="oha-survey-time">20 to 25 minutes</span>
-                    <span class="oha-survey-pages">11 pages</span>
+                    <span class="oha-survey-pages">10 pages</span>
                 </div>
                 <a href="<?php echo oha_survey_direct_link($page_url, 'industry_deep_dive'); ?>" class="oha-survey-btn">
                     <?php _e('Start Survey', 'oha-survey-hub'); ?>
@@ -275,14 +310,15 @@ if (!function_exists('oha_survey_direct_link')) {
             <h4><?php _e('Direct Links', 'oha-survey-hub'); ?></h4>
             <p><?php _e('Share these links to send someone directly to a specific survey:', 'oha-survey-hub'); ?></p>
             <ul class="oha-direct-links">
+                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_planning'); ?>"><?php echo esc_html(sprintf(__('Convention %d Planning Survey', 'oha-survey-hub'), $planning_year)); ?></a></li>
                 <li><a href="<?php echo oha_survey_direct_link($page_url, 'member'); ?>"><?php _e('Member Survey', 'oha-survey-hub'); ?></a></li>
                 <li><a href="<?php echo oha_survey_direct_link($page_url, 'scare_actor'); ?>"><?php _e('Scare Actor Survey', 'oha-survey-hub'); ?></a></li>
                 <li><a href="<?php echo oha_survey_direct_link($page_url, 'behind_scenes'); ?>"><?php _e('Behind-the-Scenes Survey', 'oha-survey-hub'); ?></a></li>
                 <li><a href="<?php echo oha_survey_direct_link($page_url, 'home_haunt'); ?>"><?php _e('Home Haunt Survey', 'oha-survey-hub'); ?></a></li>
                 <li><a href="<?php echo oha_survey_direct_link($page_url, 'industry_deep_dive'); ?>"><?php _e('Industry Deep-Dive Survey', 'oha-survey-hub'); ?></a></li>
-                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_attendee'); ?>"><?php _e('Convention 2026 - Attendee', 'oha-survey-hub'); ?></a></li>
-                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_vendor'); ?>"><?php _e('Convention 2026 - Vendor', 'oha-survey-hub'); ?></a></li>
-                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_volunteer'); ?>"><?php _e('Convention 2026 - Volunteer', 'oha-survey-hub'); ?></a></li>
+                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_attendee'); ?>"><?php echo esc_html(sprintf(__('Convention %d - Attendee', 'oha-survey-hub'), $conv_year)); ?></a></li>
+                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_vendor'); ?>"><?php echo esc_html(sprintf(__('Convention %d - Vendor', 'oha-survey-hub'), $conv_year)); ?></a></li>
+                <li><a href="<?php echo oha_survey_direct_link($page_url, 'convention_volunteer'); ?>"><?php echo esc_html(sprintf(__('Convention %d - Volunteer', 'oha-survey-hub'), $conv_year)); ?></a></li>
             </ul>
         </div>
     </div>

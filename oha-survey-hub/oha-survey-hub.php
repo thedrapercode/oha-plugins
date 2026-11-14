@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.5.0');
+define('OHA_SURVEY_HUB_VERSION', '1.6.0');
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_survey_check_for_update' );
@@ -117,20 +117,31 @@ class OHA_Survey_Hub {
         // Load text domain for translations
         load_plugin_textdomain('oha-survey-hub', false, dirname(plugin_basename(__FILE__)) . '/languages');
 
-        // Ensure convention questions table exists and is seeded.
-        // Runs whenever the stored schema version is behind the current one,
-        // which catches update-over-existing-plugin cases where activate() never fires.
-        if (get_option('oha_convention_schema_version', '0') !== '1.1.0') {
+        // Ensure convention questions table schema is current (adds convention_year column via dbDelta).
+        // Existing 2026 rows get DEFAULT 2026 automatically.
+        if (get_option('oha_convention_schema_version', '0') !== '1.2.0') {
             require_once ABSPATH . 'wp-admin/includes/upgrade.php';
             OHA_Convention_Survey::create_table();
-            OHA_Convention_Survey::seed_questions();
-            update_option('oha_convention_schema_version', '1.1.0');
+            update_option('oha_convention_schema_version', '1.2.0');
         }
 
-        // Seed vendor questions once (separate flag so it can be added later without re-running everything)
-        if (!get_option('oha_convention_vendor_questions_seeded')) {
+        // Seed attendee questions for the active year if not done yet
+        $active_year = OHA_Convention_Survey::get_year();
+        if (!get_option('oha_convention_attendee_seeded_' . $active_year)) {
+            OHA_Convention_Survey::seed_questions();
+            update_option('oha_convention_attendee_seeded_' . $active_year, '1');
+        }
+
+        // Seed vendor questions for the active year if not done yet
+        if (!get_option('oha_convention_vendor_seeded_' . $active_year)) {
             OHA_Convention_Survey::seed_vendor_questions();
-            update_option('oha_convention_vendor_questions_seeded', '1');
+            update_option('oha_convention_vendor_seeded_' . $active_year, '1');
+        }
+
+        // Seed volunteer questions for the active year if not done yet
+        if (!get_option('oha_convention_volunteer_seeded_' . $active_year)) {
+            OHA_Convention_Survey::seed_volunteer_questions();
+            update_option('oha_convention_volunteer_seeded_' . $active_year, '1');
         }
 
         // One-time dedup: concurrent requests during install can bypass the count guard and insert duplicates
@@ -153,7 +164,7 @@ class OHA_Survey_Hub {
         global $post;
         if (!is_a($post, 'WP_Post')) return;
         
-        $survey_shortcodes = ['oha_survey_selector', 'oha_survey_member', 'oha_survey_haunt_owner', 'oha_survey_scare_actor', 'oha_survey_behind_scenes', 'oha_survey_home_haunt', 'oha_survey_industry_deep_dive', 'oha_convention_survey', 'oha_survey_results'];
+        $survey_shortcodes = ['oha_survey_selector', 'oha_survey_member', 'oha_survey_haunt_owner', 'oha_survey_scare_actor', 'oha_survey_behind_scenes', 'oha_survey_home_haunt', 'oha_survey_industry_deep_dive', 'oha_convention_survey', 'oha_survey_convention_planning', 'oha_survey_results'];
         $has_survey_shortcode = false;
 
         foreach ($survey_shortcodes as $shortcode) {
@@ -258,6 +269,7 @@ class OHA_Survey_Hub {
         add_shortcode('oha_survey_behind_scenes', array($this, 'survey_behind_scenes_shortcode'));
         add_shortcode('oha_survey_home_haunt', array($this, 'survey_home_haunt_shortcode'));
         add_shortcode('oha_survey_industry_deep_dive', array($this, 'survey_industry_deep_dive_shortcode'));
+        add_shortcode('oha_survey_convention_planning', array($this, 'survey_convention_planning_shortcode'));
         $convention = new OHA_Convention_Survey();
         add_shortcode('oha_convention_survey', array($convention, 'shortcode'));
         add_shortcode('oha_survey_results', array('OHA_Convention_Survey', 'shortcode_survey_results'));
@@ -281,6 +293,15 @@ class OHA_Survey_Hub {
             'manage_options',
             'oha-survey-results',
             array($this, 'admin_results_page')
+        );
+
+        add_submenu_page(
+            'oha-survey-hub',
+            __('Analytics', 'oha-survey-hub'),
+            __('Analytics', 'oha-survey-hub'),
+            'manage_options',
+            'oha-survey-analytics',
+            array($this, 'admin_analytics_page')
         );
         
         add_submenu_page(
@@ -336,6 +357,10 @@ class OHA_Survey_Hub {
     
     public function survey_industry_deep_dive_shortcode($atts) {
         return $this->render_survey('industry_deep_dive', $atts);
+    }
+
+    public function survey_convention_planning_shortcode($atts) {
+        return $this->render_survey('convention_planning', $atts);
     }
     
     private function render_survey($survey_type, $atts) {

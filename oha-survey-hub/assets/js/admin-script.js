@@ -497,3 +497,18 @@
     window.OHAAdmin = OHAAdmin;
 
 })(jQuery);
+
+// Analytics: expand text response blocks
+(function () {
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('.oha-expand-btn');
+        if (!btn) return;
+        var uid    = btn.getAttribute('data-uid');
+        var wrap   = btn.closest('.oha-text-responses');
+        if (!wrap) return;
+        wrap.querySelectorAll('.oha-text-hidden').forEach(function (el) {
+            el.classList.remove('oha-text-hidden');
+        });
+        btn.remove();
+    });
+}());

@@ -724,6 +724,457 @@
     }
 }
 
+/* ============================================================================
+   Analytics Page
+   ============================================================================ */
+
+/* Tab nav */
+.oha-analytics-nav {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    padding: 8px 10px;
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.oha-anav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--oha-admin-text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+}
+
+.oha-anav-tab:hover {
+    background: #f1f1f1;
+    color: var(--oha-admin-text);
+    text-decoration: none;
+}
+
+.oha-anav-tab.is-active {
+    background: #ad3119;
+    color: #fff;
+}
+
+.oha-anav-tab.is-active:hover {
+    background: #8e2814;
+    color: #fff;
+}
+
+.oha-tab-count {
+    display: inline-block;
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+    min-width: 20px;
+    text-align: center;
+}
+
+.oha-anav-tab.is-active .oha-tab-count {
+    background: rgba(255,255,255,0.25);
+}
+
+/* Toolbar */
+.oha-analytics-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.oha-toolbar-filters {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.oha-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--oha-admin-text);
+}
+
+.oha-filter-label select {
+    font-size: 13px;
+    padding: 3px 6px;
+}
+
+.oha-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.oha-response-badge {
+    background: #ad3119;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+/* Compare banner */
+.oha-compare-banner {
+    background: #e8f0fb;
+    border-left: 4px solid #1159af;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    border-radius: 0 var(--oha-admin-radius) var(--oha-admin-radius) 0;
+    font-size: 13px;
+    color: #1a3a6b;
+}
+
+/* Stat cards row */
+.oha-stat-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.oha-stat-card {
+    background: #fff;
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    padding: 16px 18px;
+    text-align: center;
+    box-shadow: var(--oha-admin-shadow);
+}
+
+.oha-stat-num {
+    font-size: 2.4em;
+    font-weight: 700;
+    color: #ad3119;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.oha-stat-lbl {
+    font-size: 12px;
+    color: var(--oha-admin-text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+/* Chart cards */
+.oha-chart-card {
+    background: #fff;
+    border: 1px solid var(--oha-admin-border-light);
+    border-radius: var(--oha-admin-radius);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--oha-admin-shadow);
+}
+
+.oha-chart-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--oha-admin-text-secondary);
+    margin-bottom: 14px;
+}
+
+.oha-timeline-wrap {
+    height: 150px;
+    position: relative;
+}
+
+/* Page section header */
+.oha-questions-wrap {
+    margin-top: 4px;
+}
+
+.oha-page-section {
+    margin-bottom: 10px;
+}
+
+.oha-page-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #fff;
+    background: #ad3119;
+    padding: 5px 14px;
+    border-radius: var(--oha-admin-radius) var(--oha-admin-radius) 0 0;
+    margin-bottom: 0;
+}
+
+/* Question block */
+.oha-q-block {
+    background: #fff;
+    border: 1px solid var(--oha-admin-border-light);
+    border-top: none;
+    padding: 16px 18px;
+    margin-bottom: 2px;
+}
+
+.oha-q-block:last-child {
+    border-radius: 0 0 var(--oha-admin-radius) var(--oha-admin-radius);
+    margin-bottom: 10px;
+}
+
+.oha-q-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.oha-q-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--oha-admin-text);
+    flex: 1;
+    line-height: 1.45;
+}
+
+.oha-q-badges {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.oha-q-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.oha-badge-type {
+    background: #f0f0f0;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+
+.oha-badge-count {
+    background: rgba(173,49,25,0.1);
+    color: #ad3119;
+}
+
+.oha-badge-compare {
+    background: rgba(17,89,175,0.1);
+    color: #1159af;
+}
+
+/* Question body: chart + table side-by-side */
+.oha-q-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.oha-q-chart-wrap {
+    position: relative;
+    min-height: 90px;
+}
+
+/* Scale average display */
+.oha-scale-avg {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.oha-scale-avg-num {
+    font-size: 2.8em;
+    font-weight: 700;
+    color: #ad3119;
+    line-height: 1;
+}
+
+.oha-scale-avg-label {
+    font-size: 13px;
+    color: var(--oha-admin-text-secondary);
+    font-weight: 600;
+}
+
+/* Answer data table */
+.oha-q-table-wrap {
+    overflow-x: auto;
+}
+
+.oha-q-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.oha-q-table th {
+    text-align: left;
+    padding: 5px 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--oha-admin-text-secondary);
+    border-bottom: 2px solid var(--oha-admin-border-light);
+}
+
+.oha-q-table tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.oha-q-label {
+    padding: 6px 8px;
+    color: var(--oha-admin-text);
+    vertical-align: top;
+    max-width: 260px;
+}
+
+.oha-q-cnt {
+    padding: 6px 8px;
+    font-weight: 700;
+    color: var(--oha-admin-text);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.oha-q-cnt-cmp {
+    color: #1159af;
+}
+
+.oha-q-pct {
+    padding: 6px 8px;
+    white-space: nowrap;
+    min-width: 90px;
+}
+
+.oha-inline-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 18px;
+}
+
+.oha-inline-bar {
+    height: 10px;
+    background: rgba(173,49,25,0.65);
+    border-radius: 3px;
+    min-width: 2px;
+    flex-shrink: 0;
+}
+
+.oha-pct-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--oha-admin-text-secondary);
+    white-space: nowrap;
+}
+
+/* Text / textarea question blocks */
+.oha-q-text-block .oha-q-body {
+    display: block;
+}
+
+.oha-text-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #1159af;
+    margin: 10px 0 6px;
+}
+
+.oha-text-responses {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.oha-text-entry {
+    background: #f9f9f9;
+    border-left: 3px solid rgba(173,49,25,0.4);
+    padding: 8px 12px;
+    border-radius: 0 3px 3px 0;
+}
+
+.oha-text-hidden {
+    display: none;
+}
+
+.oha-text-date {
+    font-size: 11px;
+    color: var(--oha-admin-text-muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.oha-text-content {
+    font-size: 13px;
+    color: var(--oha-admin-text);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.oha-expand-btn {
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
+/* Analytics overview */
+.oha-analytics-overview .oha-chart-card table {
+    margin-top: 0;
+}
+
+/* Responsive */
+@media screen and (max-width: 1100px) {
+    .oha-stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .oha-q-body {
+        grid-template-columns: 1fr;
+    }
+    .oha-stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .oha-analytics-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
 @media screen and (max-width: 480px) {
     .oha-admin-card {
         padding: 15px;
