@@ -1,9 +1,9 @@
 {
-  "name": "OHA Vendor Hub",
-  "slug": "oha-vendor-hub",
-  "version": "3.16.2",
-  "download_url": "",
-  "requires": "5.8",
-  "tested": "6.7",
-  "last_updated": "2026-11-12"
+    "name":  "OHA Vendor Hub",
+    "slug":  "oha-vendor-hub",
+    "version":  "3.18.0",
+    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v3.18.0-vendor-hub/vendor-hub-oha-v3.18.0.zip",
+    "requires":  "5.8",
+    "tested":  "6.7",
+    "last_updated":  "2026-11-20"
 }

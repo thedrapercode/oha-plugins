@@ -2,7 +2,7 @@
 /*
 Plugin Name: OHA Vendor Hub
 Description: Complete vendor management system with applications, e-signatures, Stripe payments, Board Hub admin dashboard, and vendor status table for Ohio Haunters Convention.
-Version: 3.16.2
+Version: 3.18.0
 Author: OHA Dev Team
 Author URI: https://ohiohaunters.com
 Text Domain: oha-vendor-hub
@@ -82,7 +82,7 @@ add_action('template_redirect', function() {
 }, 1);
 
 // Plugin version and paths
-define('OHA_VHCPT_VER', '3.16.2');
+define('OHA_VHCPT_VER', '3.18.0');
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_vendor_check_for_update' );
@@ -203,6 +203,8 @@ require_once OHA_VHCPT_PATH . 'includes/admin/settings-page.php';
 require_once OHA_VHCPT_PATH . 'includes/admin/stripe-settings.php';
 require_once OHA_VHCPT_PATH . 'includes/admin/send-edit-links.php';
 require_once OHA_VHCPT_PATH . 'includes/admin/year-tools.php';
+require_once OHA_VHCPT_PATH . 'includes/class-vendor-api.php';
+OHA_Vendor_API::register();
 
 /**
  * WEBHOOK ARCHITECTURE NOTE:

@@ -84,7 +84,7 @@ function oha_vendor_cards_shortcode( $atts ) {
         background: #fff;
         color: #1a1a1a;
     }
-    .oha-vc-search:focus { border-color: #c0392b; }
+    .oha-vc-search:focus { border-color: var(--global-palette1, #ad3119); }
     .oha-vc-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -141,7 +141,7 @@ function oha_vendor_cards_shortcode( $atts ) {
         margin-top: auto;
         padding-top: 8px;
         font-size: 12px;
-        color: #c0392b;
+        color: var(--global-palette1, #ad3119);
         text-decoration: none;
         font-weight: 600;
         word-break: break-all;

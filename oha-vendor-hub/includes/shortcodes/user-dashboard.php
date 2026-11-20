@@ -21,10 +21,10 @@ add_shortcode('oha_vendor_dashboard', function(){
     $edit_page_url = $edit_page_id ? get_permalink($edit_page_id) : '';
 
     ob_start(); ?>
-    <div class="oha-vh-user-dash">
-        <h3>Your Vendor Submissions</h3>
+    <div class="oha-vh-wrap oha-vh-user-dash">
+        <h3 style="color:var(--oha-vh-heading,#fff);margin-top:0;">Your Vendor Submissions</h3>
         <?php if ($edit_page_url): ?>
-            <p style="margin-bottom:1em;"><a href="<?php echo esc_url($edit_page_url); ?>" class="oha-vh-btn" style="display:inline-block;">Update Your Vendor Info</a></p>
+            <p style="margin-bottom:1em;"><a href="<?php echo esc_url($edit_page_url); ?>" class="oha-vh-btn">Update Your Vendor Info</a></p>
         <?php endif; ?>
         <?php if (!$q->have_posts()): ?>
             <p>No submissions yet.</p>

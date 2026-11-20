@@ -48,7 +48,14 @@ add_shortcode('oha_vendor_final_form', function($atts){
     
     // Get application ID from URL or session
     $app_id = isset($_GET['app_id']) ? intval($_GET['app_id']) : 0;
-    
+    $active_year          = intval(get_option('oha_vhcpt_active_year', date('Y')));
+    $convention_name      = get_option('oha_vhcpt_convention_name', 'OHA Convention ' . date('Y'));
+    $convention_venue     = get_option('oha_vhcpt_convention_venue', '');
+    $convention_dates     = get_option('oha_vhcpt_convention_dates', '');
+    $convention_load_in   = get_option('oha_vhcpt_convention_load_in', '');
+    $convention_booth_price = get_option('oha_vhcpt_convention_booth_price', '$250.00 per booth space');
+    $convention_contact   = get_option('oha_vhcpt_convention_contact_email', '' . esc_html($convention_contact) . '');
+
     // DUPLICATE PREVENTION: Check if this email already has a paid application
     // Only check if NOT editing an existing application (app_id is 0)
     if (!$app_id) {
@@ -68,6 +75,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
                 'post_type' => 'vendor_application',
                 'post_status' => 'any',
                 'meta_query' => [
+                    'relation' => 'AND',
                     [
                         'key' => 'email',
                         'value' => $check_email,
@@ -77,7 +85,13 @@ add_shortcode('oha_vendor_final_form', function($atts){
                         'key' => '_oha_status',
                         'value' => 'Paid',
                         'compare' => '='
-                    ]
+                    ],
+                    [
+                        'key'     => '_convention_year',
+                        'value'   => $active_year,
+                        'compare' => '=',
+                        'type'    => 'NUMERIC',
+                    ],
                 ],
                 'posts_per_page' => 1
             ]);
@@ -104,7 +118,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
                 
                 $duplicate_msg .= '<hr style="margin:20px 0;border:none;border-top:1px solid #d97706;">
                     <p style="margin-bottom:0;font-size:14px;"><strong>Need to add more booths or make changes?</strong><br>
-                    Please contact us at <a href="mailto:webmaster@ohiohaunters.com" style="color:#92400e;font-weight:bold;">webmaster@ohiohaunters.com</a></p>
+                    Please contact us at <a href="mailto:' . esc_html($convention_contact) . '" style="color:#92400e;font-weight:bold;">' . esc_html($convention_contact) . '</a></p>
                 </div>';
                 
                 return $duplicate_msg;
@@ -166,12 +180,12 @@ add_shortcode('oha_vendor_final_form', function($atts){
         $success_msg = '<div style="background:#ecfdf5;border:2px solid #34d399;padding:20px;color:#065f46;border-radius:8px;margin:20px 0;max-width:600px;margin-left:auto;margin-right:auto;text-align:center;">
             <h2 style="margin-top:0;">✅ Payment Successful!</h2>
             <p style="font-size:18px;"><strong>Thank you for your payment!</strong></p>
-            <p style="font-size:16px;">Your vendor registration for OHA Convention 2026 is being processed.</p>
+            <p style="font-size:16px;">Your vendor registration for OHA Convention ' . $active_year . ' is being processed.</p>
             <div style="background:#fff;border:2px solid #22c55e;padding:20px;margin:20px 0;border-radius:8px;">
                 <p style="font-size:16px;margin:0;"><strong>📧 Check your email!</strong></p>
                 <p style="margin:10px 0 0 0;">You will receive your signed vendor agreement and confirmation within the next few minutes.</p>
             </div>
-            <p style="font-size:14px;color:#065f46;margin-top:20px;">If you don\'t receive the email within 10 minutes, please contact us at <a href="mailto:webmaster@ohiohaunters.com" style="color:#065f46;font-weight:bold;">webmaster@ohiohaunters.com</a></p>
+            <p style="font-size:14px;color:#065f46;margin-top:20px;">If you don\'t receive the email within 10 minutes, please contact us at <a href="mailto:' . esc_html($convention_contact) . '" style="color:#065f46;font-weight:bold;">' . esc_html($convention_contact) . '</a></p>
         </div>';
         
         return $success_msg;
@@ -190,6 +204,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
                 'post_type' => 'vendor_application',
                 'post_status' => 'any',
                 'meta_query' => [
+                    'relation' => 'AND',
                     [
                         'key' => 'email',
                         'value' => $submission_email,
@@ -199,13 +214,19 @@ add_shortcode('oha_vendor_final_form', function($atts){
                         'key' => '_oha_status',
                         'value' => 'Paid',
                         'compare' => '='
-                    ]
+                    ],
+                    [
+                        'key'     => '_convention_year',
+                        'value'   => $active_year,
+                        'compare' => '=',
+                        'type'    => 'NUMERIC',
+                    ],
                 ],
                 'posts_per_page' => 1
             ]);
             
             if (!empty($check_existing)) {
-                $errors[] = 'This email address already has a paid vendor application. If you need to make changes, please contact webmaster@ohiohaunters.com';
+                $errors[] = 'This email address already has a paid vendor application. If you need to make changes, please contact ' . esc_html($convention_contact) . '';
             }
         }
         
@@ -237,6 +258,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
         if (empty($submitted['primary_contact'])) $errors[] = 'Primary Contact Person is required';
         if (empty($submitted['product_type'])) $errors[] = 'Type of Product Sold is required';
         if ($submitted['booths'] < 1) $errors[] = 'You must request at least 1 booth';
+        if ($submitted['booths'] > 2) $errors[] = 'Online payment is available for 1 or 2 booths. For 3 or more booths, please contact us at ' . esc_html($convention_contact) . ' to arrange your registration.';
         
         // Validate signature
         if (empty($submitted['agree_terms'])) {
@@ -279,6 +301,11 @@ add_shortcode('oha_vendor_final_form', function($atts){
             }
 
             if (!is_wp_error($post_id) && $post_id) {
+                // Set convention year if not already on the post (new posts created via this form)
+                if (!get_post_meta($post_id, '_convention_year', true)) {
+                    update_post_meta($post_id, '_convention_year', $active_year);
+                }
+
                 // Update all meta fields
                 update_post_meta($post_id, 'company_name', $submitted['company_name']);
                 update_post_meta($post_id, 'phone', $submitted['company_phone']);
@@ -405,9 +432,9 @@ add_shortcode('oha_vendor_final_form', function($atts){
                     $success .= '<div style="background:#fff;padding:18px;border-radius:8px;margin:18px 0;text-align:left;">';
                     $success .= '<p style="margin:0 0 10px 0;"><strong>What happens next:</strong></p>';
                     $success .= '<ul style="margin:0;padding-left:18px;line-height:1.7;">';
-                    $success .= '<li>📧 Check your email for your signed agreement</li>';
-                    $success .= '<li>📅 Load-in: Friday, May 8, 2026 (4 PM – 9 PM)</li>';
-                    $success .= '<li>❓ Questions? Email <a href="mailto:webmaster@ohiohaunters.com">webmaster@ohiohaunters.com</a></li>';
+                    $success .= '<li>Check your email for your signed agreement</li>';
+                    if ($convention_load_in) $success .= '<li>Load-in: ' . esc_html($convention_load_in) . '</li>';
+                    $success .= '<li>Questions? Email <a href="mailto:' . esc_attr($convention_contact) . '">' . esc_html($convention_contact) . '</a></li>';
                     $success .= '</ul>';
                     $success .= '</div>';
                     $success .= '</div>';
@@ -530,13 +557,13 @@ add_shortcode('oha_vendor_final_form', function($atts){
         $msg .= '<div style="background:#fff;padding:20px;border-radius:6px;margin:20px 0;text-align:left;">';
         $msg .= '<p><strong>What happens next:</strong></p>';
         $msg .= '<ul style="line-height:1.8;">';
-        $msg .= '<li>📧 Check your email for your signed vendor agreement</li>';
-        $msg .= '<li>📄 Your agreement includes all event details</li>';
-        $msg .= '<li>💰 Payment: <strong>Already received</strong> - Thank you!</li>';
-        $msg .= '<li>📅 Load-in: Friday, May 8, 2026 (4 PM - 9 PM)</li>';
+        $msg .= '<li>Check your email for your signed vendor agreement</li>';
+        $msg .= '<li>Your agreement includes all event details</li>';
+        $msg .= '<li>Payment: <strong>Already received</strong> - Thank you!</li>';
+        if ($convention_load_in) $msg .= '<li>Load-in: ' . esc_html($convention_load_in) . '</li>';
         $msg .= '</ul>';
         $msg .= '</div>';
-        $msg .= '<p style="color:#065f46;font-size:14px;">If you don\'t receive the email within 10 minutes, please contact us at <a href="mailto:webmaster@ohiohaunters.com">webmaster@ohiohaunters.com</a></p>';
+        $msg .= '<p style="color:#065f46;font-size:14px;">If you don\'t receive the email within 10 minutes, please contact us at <a href="mailto:' . esc_html($convention_contact) . '">' . esc_html($convention_contact) . '</a></p>';
         $msg .= '</div>';
         return $msg;
     }
@@ -563,11 +590,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
     ?>
     
     <div class="oha-final-app-intro">
-        <h2>Ohio Haunters Convention 2026 - Final Vendor Application</h2>
-        <p><strong>Venue:</strong> Mansfield Reformatory, Mansfield Ohio<br>
-        <strong>Dates:</strong> May 9-10, 2026<br>
-        <strong>Load-in:</strong> Friday May 8th, 4pm-9pm<br>
-        <strong>Load-out:</strong> Sunday May 10th, after 3pm close (must complete by 6pm)</p>
+        <h2>Ohio Haunters Convention <?php echo $active_year; ?> - Final Vendor Application</h2>
     </div>
 
     <form class="oha-vh-form oha-final-form" method="post" id="oha-final-form" enctype="multipart/form-data">
@@ -658,7 +681,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
         <div class="oha-vh-row">
             <label for="booths">How Many Booths Do You Need? *</label>
             <input type="number" id="booths" name="booths" value="<?php echo intval($form_data['booths']); ?>" min="1" max="10" required>
-            <small>$250 per booth space</small>
+            <small><?php echo esc_html($convention_booth_price); ?>. Need 3 or more booths? Contact us directly.</small>
         </div>
 
         <div class="oha-vh-row">
@@ -696,15 +719,13 @@ add_shortcode('oha_vendor_final_form', function($atts){
         <div class="oha-terms-section">
             <h3>Venue Rules & Requirements</h3>
             <div class="oha-terms-content">
-                <h4>Important Venue Information - Mansfield Reformatory</h4>
-                
-                <h5>Load-in/Load-out Schedule:</h5>
+                <h4>Important Venue Information<?php if ($convention_venue): ?> - <?php echo esc_html($convention_venue); ?><?php endif; ?></h4>
+
+                <h5>Schedule:</h5>
                 <ul>
-                    <li><strong>Load-in:</strong> Friday, May 8th, 4:00 PM - 9:00 PM</li>
-                    <li><strong>Show Hours:</strong> Saturday May 9th and Sunday May 10th</li>
-                    <li><strong>Show Close:</strong> Sunday, May 10th at 3:00 PM</li>
-                    <li><strong>Load-out:</strong> Sunday, May 10th after 3:00 PM (must complete by 6:00 PM)</li>
-                    <li>Vendors are expected to stay until end of day Sunday</li>
+                    <?php if ($convention_dates): ?><li><strong>Event Dates:</strong> <?php echo esc_html($convention_dates); ?></li><?php endif; ?>
+                    <?php if ($convention_load_in): ?><li><strong>Load-in:</strong> <?php echo esc_html($convention_load_in); ?></li><?php endif; ?>
+                    <li>Vendors are expected to stay until end of day on the final event day</li>
                 </ul>
 
                 <h5>Venue Conditions:</h5>
@@ -741,7 +762,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
 
                 <h5>Pricing & Refund Policy:</h5>
                 <ul>
-                    <li><strong>$250.00 per booth space</strong></li>
+                    <li><strong><?php echo esc_html($convention_booth_price); ?></strong></li>
                     <li><strong class="oha-refund-warning">NO REFUNDS</strong> once payment is accepted, except in extenuating circumstances</li>
                     <li>Additional booths can be purchased at same rate</li>
                 </ul>
@@ -941,7 +962,7 @@ add_shortcode('oha_vendor_final_form', function($atts){
     if (empty(trim($output))) {
         $output = '<div style="background:#fff;padding:20px;color:#000;border:3px solid red;">
             <h2>OHA Vendor Application Form</h2>
-            <p><strong>ERROR:</strong> Form output was empty. Please contact webmaster@ohiohaunters.com</p>
+            <p><strong>ERROR:</strong> Form output was empty. Please contact ' . esc_html($convention_contact) . '</p>
             <p>Debug Info:</p>
             <ul>
                 <li>Shortcode: [oha_vendor_final_form]</li>
@@ -956,6 +977,23 @@ add_shortcode('oha_vendor_final_form', function($atts){
     return $output;
 });
 
+
+/**
+ * Return the correct Stripe Payment Link URL for the given booth count and mode.
+ * 1-booth → single-booth link. 2-booth → 2-booth link (falls back to 1-booth if not configured).
+ * 3+ booths are handled manually by the board and should be blocked before reaching this function.
+ */
+function oha_vh_get_stripe_payment_link($booth_count, $mode = 'test') {
+    if (intval($booth_count) === 2) {
+        $link = $mode === 'live'
+            ? get_option('oha_vhcpt_stripe_link_live_2booth', '')
+            : get_option('oha_vhcpt_stripe_link_test_2booth', '');
+        if (!empty($link)) return $link;
+    }
+    return $mode === 'live'
+        ? get_option('oha_vhcpt_stripe_link_live', '')
+        : get_option('oha_vhcpt_stripe_link_test', '');
+}
 
 /**
  * Build Stripe payment URL

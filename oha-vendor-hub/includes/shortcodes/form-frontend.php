@@ -42,7 +42,7 @@ add_shortcode('oha_vendor_form', function(){
     // Applications closed check.
     if (get_option('oha_vhcpt_apps_closed', 0)) {
         $closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Vendor applications are currently closed. Please check back soon.');
-        return '<div class="oha-vh-notice" style="padding:1.2em 1.5em;border-left:4px solid #b32020;background:#fff5f5;border-radius:0 4px 4px 0;margin:1em 0;">' . wp_kses_post($closed_msg) . '</div>';
+        return '<div class="oha-vh-wrap"><div class="oha-vh-notice">' . wp_kses_post($closed_msg) . '</div></div>';
     }
 
     $user   = wp_get_current_user();
@@ -57,7 +57,7 @@ add_shortcode('oha_vendor_form', function(){
 
     // Success message (shown after redirect or direct return).
     if (isset($_GET['vendor_submitted']) && $_GET['vendor_submitted'] === 'success') {
-        return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
+        return '<div class="oha-vh-wrap"><div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div></div>';
     }
 
     // Handle submission.
@@ -65,14 +65,14 @@ add_shortcode('oha_vendor_form', function(){
 
         // Honeypot check.
         if (!empty($_POST['vendor_website_url'])) {
-            return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
+            return '<div class="oha-vh-wrap"><div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div></div>';
         }
 
         // Timing token check — rejects instant-submit bots.
         $submitted_token = sanitize_key(wp_unslash($_POST['oha_form_token'] ?? ''));
         $token_time      = $submitted_token ? (int) get_transient('oha_vh_ft_' . $submitted_token) : 0;
         if (!$token_time || (time() - $token_time) < 3) {
-            return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
+            return '<div class="oha-vh-wrap"><div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div></div>';
         }
         delete_transient('oha_vh_ft_' . $submitted_token);
 
@@ -289,7 +289,7 @@ add_shortcode('oha_vendor_form', function(){
                     oha_vhcpt_maybe_send_status_email($post_id, 'Submitted');
                 }
 
-                return '<div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div>';
+                return '<div class="oha-vh-wrap"><div class="oha-vh-success">Your vendor application has been submitted successfully. We will review it and contact you soon at the email address you provided.</div></div>';
 
             } elseif (empty($msg) && is_wp_error($post_id)) {
                 $msg = '<div class="oha-vh-error">Error creating application: ' . esc_html($post_id->get_error_message()) . '</div>';
@@ -341,27 +341,32 @@ add_shortcode('oha_vendor_form', function(){
     $vendor_edit_url = get_permalink((int) get_option('oha_vhcpt_vendor_edit_page_id'));
 
     ob_start();
-    echo $msg;
     ?>
+    <div class="oha-vh-wrap">
+    <?php echo $msg; ?>
     <style>
     .oha-vh-section { margin-bottom: 2em; }
-    .oha-vh-section-head { margin-bottom: 1em; padding-bottom: 0.5em; border-bottom: 2px solid #e0e0e0; }
-    .oha-vh-section-title { font-size: 1.05em; font-weight: 700; margin: 0 0 0.25em; }
-    .oha-vh-section-desc { font-size: 0.875em; margin: 0; }
-    .oha-vh-badge-public { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #1a7a3a; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
-    .oha-vh-badge-private { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: #555; color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
-    .oha-vh-hint { display: block; font-size: 0.8em; color: #ffffff; margin-top: 4px; line-height: 1.4; }
+    .oha-vh-section-head { margin-bottom: 1em; padding-bottom: 0.5em; border-bottom: 2px solid var(--oha-vh-border, rgba(173,49,25,0.45)); }
+    .oha-vh-section-title { font-size: 1.05em; font-weight: 700; margin: 0 0 0.25em; color: var(--oha-vh-heading, #ffffff); }
+    .oha-vh-section-desc { font-size: 0.875em; margin: 0; color: var(--oha-vh-text-muted, #cbd2d9); }
+    .oha-vh-badge-public { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: var(--global-palette11,#13612e); color: #fff; padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+    .oha-vh-badge-private { display: inline-block; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(255,255,255,0.15); color: var(--oha-vh-text, #f7fafc); padding: 2px 7px; border-radius: 3px; vertical-align: middle; margin-left: 6px; }
+    .oha-vh-hint { display: block; font-size: 0.8em; color: var(--oha-vh-text-muted, #cbd2d9); margin-top: 4px; line-height: 1.4; }
     .oha-vh-req { color: #ffd700; }
-    .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; }
-    .oha-vh-type-toggle { margin-bottom: 2em; padding: 1.75em 1.5em; background: rgba(173,49,25,0.08); border: 1px solid rgba(173,49,25,0.30); border-radius: 6px; text-align: center; }
-    .oha-vh-toggle-label { font-size: 1.15em; font-weight: 700; margin: 0 0 1.1em; }
+    .oha-vh-checkbox-label { display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer; color: var(--oha-vh-text, #f7fafc); }
+    .oha-vh-type-toggle { margin-bottom: 2em; padding: 1.75em 1.5em; background: rgba(173,49,25,0.08); border: 1px solid var(--oha-vh-border, rgba(173,49,25,0.30)); border-radius: 6px; text-align: center; }
+    .oha-vh-toggle-label { font-size: 1.15em; font-weight: 700; margin: 0 0 1.1em; color: var(--oha-vh-heading, #ffffff); }
     .oha-vh-toggle-btns { display: flex; gap: 1em; flex-wrap: wrap; justify-content: center; }
-    .oha-vh-toggle-btn { padding: .9em 2.75em; border: 2px solid rgba(173,49,25,0.5); border-radius: 6px; background: transparent; color: var(--global-palette4,#f7fafc); font-size: 1.1em; font-weight: 600; cursor: pointer; min-width: 190px; letter-spacing: 0.01em; }
-    .oha-vh-toggle-btn.oha-active { background: var(--global-palette1,#ad3119); border-color: var(--global-palette1,#ad3119); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(173,49,25,0.45); }
-    .oha-vh-returning-panel { margin-bottom: 2em; padding: 1.25em 1.5em; background: rgba(0,0,0,0.25); border: 1px solid rgba(173,49,25,0.30); border-radius: 4px; }
-    .oha-vh-prefill-success { background: rgba(19,97,46,0.15); border: 1px solid rgba(19,97,46,0.45); border-left: 4px solid var(--global-palette11,#13612e); border-radius: 4px; padding: .75em 1em; margin: .75em 0; font-size: .9em; }
-    .oha-vh-btn-secondary { display: inline-block; padding: .6em 1.4em; background: transparent; border: 2px solid var(--global-palette1,#ad3119); color: var(--global-palette1,#ad3119); border-radius: 4px; font-size: .95em; cursor: pointer; margin-top: .75em; }
-    .oha-vh-forgot-vid { font-size: .85em; color: var(--global-palette7,#e76653); cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
+    .oha-vh-toggle-btn { padding: .9em 2.75em; border: 2px solid rgba(173,49,25,0.5); border-radius: 6px; background: transparent; color: var(--oha-vh-text, #f7fafc); font-size: 1.1em; font-weight: 600; cursor: pointer; min-width: 190px; min-height: 44px; letter-spacing: 0.01em; }
+    .oha-vh-toggle-btn.oha-active { background: var(--oha-vh-primary,#ad3119); border-color: var(--oha-vh-primary,#ad3119); color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(173,49,25,0.45); }
+    .oha-vh-returning-panel { margin-bottom: 2em; padding: 1.25em 1.5em; background: rgba(0,0,0,0.25); border: 1px solid var(--oha-vh-border, rgba(173,49,25,0.30)); border-radius: 4px; }
+    .oha-vh-prefill-success { background: rgba(19,97,46,0.15); border: 1px solid rgba(19,97,46,0.45); border-left: 4px solid var(--global-palette11,#13612e); border-radius: 4px; padding: .75em 1em; margin: .75em 0; font-size: .9em; color: var(--oha-vh-text, #f7fafc); }
+    .oha-vh-btn-secondary { display: inline-block; padding: .6em 1.4em; min-height: 44px; background: transparent; border: 2px solid var(--oha-vh-primary,#ad3119); color: var(--oha-vh-primary,#ad3119); border-radius: 4px; font-size: .95em; cursor: pointer; margin-top: .75em; }
+    .oha-vh-forgot-vid { font-size: .85em; color: var(--oha-vh-accent,#e76653); cursor: pointer; background: none; border: none; padding: 0; text-decoration: underline; }
+    @media (max-width: 640px) {
+      .oha-vh-toggle-btns { flex-direction: column; align-items: stretch; }
+      .oha-vh-toggle-btn  { min-width: unset; width: 100%; }
+    }
     </style>
 
     <!-- New / Returning toggle (outside the form) -->
@@ -696,6 +701,7 @@ add_shortcode('oha_vendor_form', function(){
         }
     })();
     </script>
+    </div><!-- .oha-vh-wrap -->
     <?php
     return ob_get_clean();
 });

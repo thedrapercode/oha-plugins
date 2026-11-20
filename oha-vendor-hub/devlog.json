@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.16.2",
+    "version":  "3.18.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -610,6 +610,48 @@
                         "type":  "fix",
                         "summary":  "Add server-side booth count cap of 4 on vendor application form",
                         "notes":  "Rejects booth values outside 1-4 with a visible error. Also sets HTML min/max via JS. Prevents bots from submitting applications requesting 1000s of booths."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.18.0",
+                        "type":  "feature",
+                        "summary":  "CSS dark theme overhaul with .oha-vh-wrap local token map and Kadence palette vars",
+                        "notes":  "All public shortcodes wrapped in .oha-vh-wrap. final-application.css intentionally unchanged (white contract form). Per-page color override via Kadence custom CSS on .oha-vh-wrap."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.18.0",
+                        "type":  "feature",
+                        "summary":  "REST API oha-vendor/v1 with 6 endpoints for mobile app use",
+                        "notes":  "Endpoints: open, info, apply, status, application GET/POST. Auth: email+VID pair. Rate limiting via DB transients per IP. CORS open - tighten to app domain once known. File: includes/class-vendor-api.php."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.18.0",
+                        "type":  "fix",
+                        "summary":  "Return vendor year-scoped duplicate check prevents 2026 paid vendors from being blocked in 2027",
+                        "notes":  "Both duplicate checks in final-application.php now filter by _convention_year = active_year. Set oha_vhcpt_active_year to 2027 before opening applications."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.18.0",
+                        "type":  "fix",
+                        "summary":  "oha_vh_get_stripe_payment_link() now defined: 1-booth routes to 1-booth link, 2-booth routes to 2-booth link",
+                        "notes":  "Function was called but never existed, silently sending all vendors to 1-booth link. 2-booth falls back to 1-booth if not configured. 3+ booths blocked with contact-us message."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.18.0",
+                        "type":  "feature",
+                        "summary":  "Admin-configurable convention settings in final form (venue, dates, load-in, booth price, contact email)",
+                        "notes":  "New WP option oha_vhcpt_convention_contact_email added. All hardcoded 2026 dates and webmaster email replaced with WP options pulled from Convention Details settings."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.18.0",
+                        "type":  "change",
+                        "summary":  "Stripe setup instructions updated to remove hardcoded 2026 year and price references",
+                        "notes":  "Booth price display now from oha_vhcpt_convention_booth_price option. Actual Stripe price still controlled by payment link in Stripe Dashboard."
                     }
                 ]
 }

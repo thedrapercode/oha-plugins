@@ -179,6 +179,8 @@ function oha_vhcpt_settings_page(){
         update_option( 'oha_vhcpt_convention_load_in',    sanitize_text_field( wp_unslash( $_POST['convention_load_in']    ?? '' ) ) );
         update_option( 'oha_vhcpt_convention_booth_price',sanitize_text_field( wp_unslash( $_POST['convention_booth_price'] ?? '' ) ) );
 
+        update_option( 'oha_vhcpt_convention_contact_email', sanitize_email( wp_unslash( $_POST['convention_contact_email'] ?? '' ) ) );
+
         // Active convention year — stamped on all new applications.
         $active_year = intval( $_POST['active_year'] ?? date('Y') );
         if ( $active_year < 2020 || $active_year > 2100 ) $active_year = intval( date('Y') );
@@ -313,6 +315,14 @@ function oha_vhcpt_settings_page(){
                         <input type="text" id="convention_booth_price" name="convention_booth_price" class="regular-text"
                             value="<?php echo esc_attr( get_option('oha_vhcpt_convention_booth_price', '') ); ?>">
                         <p class="description">Example: $250.00 per space</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="convention_contact_email">Vendor Contact Email</label></th>
+                    <td>
+                        <input type="email" id="convention_contact_email" name="convention_contact_email" class="regular-text"
+                            value="<?php echo esc_attr( get_option('oha_vhcpt_convention_contact_email', 'webmaster@ohiohaunters.com') ); ?>">
+                        <p class="description">Email shown to vendors for questions and 3+ booth requests. Defaults to webmaster@ohiohaunters.com.</p>
                     </td>
                 </tr>
                 <tr>

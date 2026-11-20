@@ -115,9 +115,9 @@ function oha_vhcpt_render_stripe_settings() {
             <li>Click <strong>+ New</strong> to create a payment link</li>
             <li>Set up your product:
                 <ul>
-                    <li><strong>Name:</strong> OHA Convention 2026 Vendor Booth</li>
-                    <li><strong>Price:</strong> $250.00 USD</li>
-                    <li><strong>Adjustable quantity:</strong> Enable this! (Vendors can adjust 1-10 booths)</li>
+                    <li><strong>Name:</strong> OHA Convention [Year] Vendor Booth (e.g. "OHA Convention 2027 Vendor Booth")</li>
+                    <li><strong>Price:</strong> Current booth price per space (set in Convention Details above)</li>
+                    <li><strong>Adjustable quantity:</strong> Not required - the plugin routes 1-booth and 2-booth vendors to separate links automatically</li>
                 </ul>
             </li>
             <li>In <strong>Payment options</strong>, enable "Collect customer email"</li>

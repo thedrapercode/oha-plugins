@@ -122,9 +122,10 @@ function oha_vh_send_edit_link($email, $token, $edit_page_url, $first_name = '')
 function oha_vh_render_lookup_form($page_url, $email_val = '', $vid_val = '') {
     echo oha_vh_sandbox_banner();
     ?>
+    <div class="oha-vh-wrap">
     <div class="oha-vh-edit-email-wrap">
-        <h3>Update Your Vendor Information</h3>
-        <p>Enter the email address and Vendor ID number from your invitation email to access your application.</p>
+        <h3 style="color:var(--oha-vh-heading,#fff);margin-top:0;">Update Your Vendor Information</h3>
+        <p style="color:var(--oha-vh-text,#f7fafc);">Enter the email address and Vendor ID number from your invitation email to access your application.</p>
         <form class="oha-vh-form" method="post" action="<?php echo esc_url($page_url); ?>">
             <?php wp_nonce_field('oha_vh_lookup', 'oha_vh_lookup_nonce'); ?>
             <div class="oha-vh-row">
@@ -138,13 +139,14 @@ function oha_vh_render_lookup_form($page_url, $email_val = '', $vid_val = '') {
                 <input type="text" id="lookup_vid" name="lookup_vid" required
                     placeholder="e.g. 123 or VID-123"
                     value="<?php echo esc_attr($vid_val); ?>">
-                <p style="margin:.25em 0 0;font-size:.85em;color:#bbb;">Your Vendor ID was included in your invitation email (e.g. "Your Vendor ID is: VID-123"). Enter just the number or the full VID-123.</p>
+                <span class="oha-vh-hint">Your Vendor ID was included in your invitation email (e.g. "Your Vendor ID is: VID-123"). Enter just the number or the full VID-123.</span>
             </div>
             <div style="margin-top:1em;">
                 <button type="submit" class="oha-vh-btn">Find My Application</button>
             </div>
         </form>
     </div>
+    </div><!-- .oha-vh-wrap -->
     <?php
 }
 
