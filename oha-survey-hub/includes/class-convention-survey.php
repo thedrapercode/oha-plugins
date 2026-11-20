@@ -1792,6 +1792,7 @@ class OHA_Convention_Survey {
         ?>
         <div class="oha-sr-wrap" id="oha-sr-wrap">
 
+            <div class="oha-sr-tabs-scroll">
             <div class="oha-sr-tabs" role="tablist">
                 <?php $first = true; foreach ($types as $type => $label): ?>
                     <?php $cnt = $all_data[$type]['count']; ?>
@@ -1814,6 +1815,7 @@ class OHA_Convention_Survey {
                         <span class="oha-sr-tab-count"><?php echo $cnt; ?></span>
                     </button>
                 <?php endforeach; ?>
+            </div>
             </div>
 
             <?php $first = true; foreach ($types as $type => $label): ?>
@@ -2065,7 +2067,7 @@ class OHA_Convention_Survey {
                             'plugins' => [
                                 'legend' => [
                                     'position' => 'right',
-                                    'labels'   => ['boxWidth' => 14, 'padding' => 14, 'font' => ['size' => 12]],
+                                    'labels'   => ['boxWidth' => 14, 'padding' => 14, 'font' => ['size' => 12], 'color' => '#ffffff'],
                                 ],
                                 'tooltip' => [
                                     'callbacks' => new \stdClass(),
@@ -2125,12 +2127,12 @@ class OHA_Convention_Survey {
                             'scales' => [
                                 'x' => [
                                     'max'   => 100,
-                                    'grid'  => ['color' => '#f0f0f0'],
-                                    'ticks' => ['color' => '#888', 'callback' => '__pct_callback__'],
+                                    'grid'  => ['color' => 'rgba(255,255,255,0.12)'],
+                                    'ticks' => ['color' => '#ffffff', 'callback' => '__pct_callback__'],
                                 ],
                                 'y' => [
                                     'grid'  => ['display' => false],
-                                    'ticks' => ['color' => '#333', 'font' => ['size' => 12]],
+                                    'ticks' => ['color' => '#ffffff', 'font' => ['size' => 12]],
                                 ],
                             ],
                         ],

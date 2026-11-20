@@ -24,7 +24,21 @@ class OHA_Survey_Definitions {
     
     public static function get_survey($survey_type) {
         $surveys = self::get_all_surveys();
-        return isset($surveys[$survey_type]) ? $surveys[$survey_type] : null;
+        if (!isset($surveys[$survey_type])) return null;
+
+        // Check for admin-saved override stored by OHA_Survey_Def_Editor
+        $override_json = get_option('oha_survey_def_override_' . $survey_type, '');
+        if ($override_json) {
+            $override_pages = json_decode($override_json, true);
+            if (is_array($override_pages)) {
+                $base                = $surveys[$survey_type];
+                $base['pages']       = $override_pages;
+                $base['overridden']  = true;
+                return $base;
+            }
+        }
+
+        return $surveys[$survey_type];
     }
 
     // Returns the most recently completed haunt season year (past) and the upcoming one (next).
@@ -1950,14 +1964,14 @@ class OHA_Survey_Definitions {
                     )
                 ),
 
-                // Page 3: New Features
+                // Page 3: Possible New Features
                 array(
-                    'title'       => sprintf( __('New Features at the %d Convention', 'oha-survey-hub'), $year ),
-                    'description' => __('We are adding several new features this year. Tell us how interested you are in each one.', 'oha-survey-hub'),
+                    'title'       => sprintf( __('Possible New Features for %d', 'oha-survey-hub'), $year ),
+                    'description' => sprintf( __('We are exploring a number of potential additions for OHA Convention %d. None of these are confirmed yet. Your feedback will help us decide what to pursue. Tell us what you would actually value.', 'oha-survey-hub'), $year ),
                     'questions'   => array(
                         array(
                             'id'       => 'cp_main_stage_interest',
-                            'question' => sprintf( __('The %d convention is adding a Main Stage for the Opening Ceremony, Closing Ceremony, and on-stage entertainment. How interested are you?', 'oha-survey-hub'), $year ),
+                            'question' => sprintf( __('If a Main Stage were added for Opening and Closing Ceremonies and on-stage entertainment, how interested would you be?', 'oha-survey-hub'), $year ),
                             'type'     => 'scale',
                             'required' => true,
                             'priority' => 'high',
@@ -1970,7 +1984,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id'       => 'cp_haunt_showcase_interest',
-                            'question' => sprintf( __('The %d convention is adding a Haunt Showcase area where Ohio haunts promote their attractions to attendees. How interested are you in visiting?', 'oha-survey-hub'), $year ),
+                            'question' => sprintf( __('If a Haunt Showcase area were included where Ohio haunts promote their attractions to attendees, how interested would you be in visiting?', 'oha-survey-hub'), $year ),
                             'type'     => 'scale',
                             'required' => true,
                             'priority' => 'high',
@@ -1983,29 +1997,37 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id'       => 'cp_more_edu_rooms',
-                            'question' => __('With more education rooms available, there will be more session options running at the same time. Would you attend more sessions if more options were available?', 'oha-survey-hub'),
+                            'question' => __('If more education rooms were made available, allowing more sessions to run at the same time, would you attend more sessions?', 'oha-survey-hub'),
                             'type'     => 'radio',
                             'required' => true,
                             'options'  => array(
                                 'yes_more'       => __('Yes, more options would lead me to attend more sessions', 'oha-survey-hub'),
                                 'yes_conflicts'  => __('Yes, it would help me avoid scheduling conflicts', 'oha-survey-hub'),
                                 'probably'       => __('Probably, depending on the topics', 'oha-survey-hub'),
-                                'no_fine'        => __('No, the current amount is fine', 'oha-survey-hub'),
+                                'no_fine'        => __('No, the current number of sessions is enough for me', 'oha-survey-hub'),
                                 'never_attend'   => __('I do not typically attend education sessions', 'oha-survey-hub'),
                             )
                         ),
                         array(
-                            'id'       => 'cp_new_features_excitement',
-                            'question' => sprintf( __('What aspect of the %d additions are you most excited about? (Select all that apply)', 'oha-survey-hub'), $year ),
+                            'id'       => 'cp_possible_activities_interest',
+                            'question' => sprintf( __('Which of the following possible activities would interest you if added to OHA Convention %d? (Select all that apply)', 'oha-survey-hub'), $year ),
                             'type'     => 'checkbox',
                             'required' => false,
                             'priority' => 'high',
                             'options'  => array(
-                                'main_stage'     => __('Main Stage events', 'oha-survey-hub'),
-                                'haunt_showcase' => __('Haunt Showcase area', 'oha-survey-hub'),
-                                'more_edu_rooms' => __('More education room options', 'oha-survey-hub'),
-                                'more_vendors'   => __('More vendors on the vendor floor', 'oha-survey-hub'),
-                                'none'           => __('None of these, I come for the existing features', 'oha-survey-hub'),
+                                'main_stage'      => __('Main Stage events (Opening Ceremony, closing, on-stage entertainment)', 'oha-survey-hub'),
+                                'haunt_showcase'  => __('Haunt Showcase area (Ohio haunts promoting their attractions)', 'oha-survey-hub'),
+                                'more_edu_rooms'  => __('More education session options running simultaneously', 'oha-survey-hub'),
+                                'diy_mask'        => __('DIY Mask Contest (create and compete with your own mask)', 'oha-survey-hub'),
+                                'scavenger_hunt'  => __('Scavenger Hunt across the convention grounds', 'oha-survey-hub'),
+                                'trivia_games'    => __('Games like Trivia, challenges, or interactive competitions', 'oha-survey-hub'),
+                                'vendor_panel'    => __('Vendor or Industry Panel (ask questions directly to industry leaders)', 'oha-survey-hub'),
+                                'scream_contest'  => __('Scream Contest (best scream wins)', 'oha-survey-hub'),
+                                'photo_ops'       => __('More dedicated photo opportunities and themed photo stations', 'oha-survey-hub'),
+                                'live_podcast'    => __('Live Podcast broadcast or recording featuring haunt industry guests', 'oha-survey-hub'),
+                                'banquet_meetup'  => __('Organized Friday evening or Sunday wrap-up banquet or social meetup', 'oha-survey-hub'),
+                                'more_vendors'    => __('More vendors on the vendor floor', 'oha-survey-hub'),
+                                'none'            => __('None of these, I come for the existing features', 'oha-survey-hub'),
                             )
                         ),
                     )
@@ -2114,7 +2136,7 @@ class OHA_Survey_Definitions {
                         ),
                         array(
                             'id'       => 'cp_main_stage_content',
-                            'question' => __('What entertainment would you most want to see on the Main Stage? (Select all that apply)', 'oha-survey-hub'),
+                            'question' => __('If a Main Stage were added, what entertainment would you most want to see on it? (Select all that apply)', 'oha-survey-hub'),
                             'type'     => 'checkbox',
                             'required' => false,
                             'priority' => 'high',
@@ -2125,7 +2147,23 @@ class OHA_Survey_Definitions {
                                 'fire_circus'       => __('Fire performance or circus acts', 'oha-survey-hub'),
                                 'comedy_improv'     => __('Comedy or improv show', 'oha-survey-hub'),
                                 'industry_speaker'  => __('Guest speaker from the haunt industry', 'oha-survey-hub'),
+                                'scream_contest'    => __('Scream Contest with audience participation', 'oha-survey-hub'),
+                                'live_podcast'      => __('Live podcast recording featuring industry guests', 'oha-survey-hub'),
                                 'other'             => __('Other', 'oha-survey-hub'),
+                            )
+                        ),
+                        array(
+                            'id'       => 'cp_social_event_interest',
+                            'question' => __('Would you be interested in an organized social gathering or meetup separate from the main convention day - for example a Friday evening kickoff or a Sunday wrap-up event?', 'oha-survey-hub'),
+                            'type'     => 'radio',
+                            'required' => false,
+                            'priority' => 'high',
+                            'options'  => array(
+                                'yes_friday'  => __('Yes, a Friday evening event before the convention', 'oha-survey-hub'),
+                                'yes_sunday'  => __('Yes, a Sunday wrap-up or banquet after the convention', 'oha-survey-hub'),
+                                'yes_either'  => __('Yes, either day would work for me', 'oha-survey-hub'),
+                                'maybe'       => __('Maybe, depending on format and cost', 'oha-survey-hub'),
+                                'no'          => __('No, I prefer to keep the convention to its main day', 'oha-survey-hub'),
                             )
                         ),
                     )
@@ -2298,15 +2336,17 @@ class OHA_Survey_Definitions {
                             )
                         ),
                         array(
-                            'id'       => 'cp_parking_concern',
-                            'question' => __('The Ohio Reformatory has limited parking. Is parking availability an important factor in your planning?', 'oha-survey-hub'),
+                            'id'       => 'cp_hotel_distance_impact',
+                            'question' => __('The Ohio Reformatory is located away from most nearby hotels. How does that distance factor into your decision to attend?', 'oha-survey-hub'),
                             'type'     => 'radio',
                             'required' => true,
                             'priority' => 'high',
                             'options'  => array(
-                                'yes_critical' => __('Yes, limited parking would significantly affect my decision to attend', 'oha-survey-hub'),
-                                'somewhat'     => __('Somewhat, but I would work around it', 'oha-survey-hub'),
-                                'no'           => __('No, it does not affect my plans', 'oha-survey-hub'),
+                                'less_likely'    => __('It makes me less likely to attend', 'oha-survey-hub'),
+                                'concern_hotel'  => __('It concerns me but I would still attend if a hotel block were nearby', 'oha-survey-hub'),
+                                'neutral'        => __('It does not affect my decision either way', 'oha-survey-hub'),
+                                'more_appeal'    => __('The remote location is part of the appeal', 'oha-survey-hub'),
+                                'not_staying'    => __('I am not planning to stay overnight so it does not apply to me', 'oha-survey-hub'),
                             )
                         ),
                         array(

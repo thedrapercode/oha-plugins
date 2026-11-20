@@ -1084,17 +1084,8 @@ class OHA_Survey_Admin {
     }
     
     private function find_question_in_survey($survey, $question_id) {
-        if (!$survey || empty($survey['pages'])) return null;
-        
-        foreach ($survey['pages'] as $page) {
-            if (empty($page['questions'])) continue;
-            foreach ($page['questions'] as $question) {
-                if ($question['id'] === $question_id) {
-                    return $question;
-                }
-            }
-        }
-        
+        OHA_Survey_Debug::log_deprecated('find_question_in_survey');
+        // Dead code -- never called internally. Original logic archived in _dev/survey-hub-removed-code.txt
         return null;
     }
 }

@@ -1073,11 +1073,21 @@
 .oha-sr-hidden { display: none !important; }
 
 /* ---- Tabs ---- */
+.oha-sr-tabs-scroll {
+    overflow-x: auto;
+    margin-bottom: 28px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(173,49,25,0.5) transparent;
+}
+.oha-sr-tabs-scroll::-webkit-scrollbar { height: 4px; }
+.oha-sr-tabs-scroll::-webkit-scrollbar-thumb { background: rgba(173,49,25,0.5); border-radius: 2px; }
+
 .oha-sr-tabs {
     display: flex;
+    flex-wrap: nowrap;
     gap: 6px;
     border-bottom: 2px solid var(--oha-border);
-    margin-bottom: 28px;
+    min-width: max-content;
 }
 
 .oha-sr-tab {
@@ -1085,14 +1095,16 @@
     border: none;
     border-bottom: 3px solid transparent;
     margin-bottom: -2px;
-    padding: 10px 20px;
-    font-size: 15px;
+    padding: 10px 16px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--global-palette6, #cbd2d9);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    white-space: nowrap;
+    flex-shrink: 0;
     transition: color 0.15s, border-color 0.15s;
 }
 

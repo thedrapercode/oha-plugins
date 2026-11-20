@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.7.0",
+    "version":  "1.8.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -316,6 +316,83 @@
                         "type":  "feature",
                         "summary":  "Summary chips bar on each results tab showing total responses, first date, and latest date",
                         "notes":  "aggregate_responses() and aggregate_definition_responses() both now return first response date. Meta bar replaced with chip row. Gives board members immediate context on data freshness."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "fix",
+                        "summary":  "Fix heatmap chart text: set axis labels and legend to white for dark background",
+                        "notes":  "build_chart_configs(): x/y axis ticks changed from #888/#333 to #ffffff, grid from #f0f0f0 to rgba(255,255,255,0.12), doughnut legend labels color added."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "fix",
+                        "summary":  "Fix survey results tabs wrapping vertically when more than 6 tabs are shown",
+                        "notes":  "Added oha-sr-tabs-scroll wrapper div with overflow-x:auto. Inner oha-sr-tabs uses flex-wrap:nowrap + min-width:max-content. oha-sr-tab gets white-space:nowrap + flex-shrink:0. Thin red scrollbar styled via scrollbar-width/color."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Add REST API layer: 5 public endpoints under /wp-json/oha-survey/v1/",
+                        "notes":  "New file: includes/class-survey-api.php. Endpoints: GET /surveys, GET /definition/{type}, GET /progress, POST /progress, POST /submit. Survey type whitelist, session ID format validation, 64KB response cap, DB-based rate limit (10/IP/hour). CORS open to * until app domain is known. No credentials in code or responses."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Add debug logger writing to uploads/oha-debug/survey-hub.log with auto-rotation",
+                        "notes":  "New file: includes/class-survey-debug.php. Methods: log_deprecated(), log_api(), write(). Log dir blocked from HTTP via .htaccess. Rotates at 500KB. Sensitive keys (email, ip, password) auto-redacted. Also fires qm/warning action for Query Monitor."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Add admin editor for all 7 hardcoded definition surveys (Survey Hub \u003e Edit Questions)",
+                        "notes":  "New file: includes/class-survey-def-editor.php. New submenu: oha-survey-def-editor. Each survey type shows current questions as editable JSON (pages array). Saves to oha_survey_def_override_{type} WP option. get_survey() checks option first; delete option to restore PHP defaults. Green dot on tab indicates active override."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "change",
+                        "summary":  "Replace find_question_in_survey() dead code with deprecation logging stub",
+                        "notes":  "Original code archived in _dev/survey-hub-removed-code.txt (outside zip). Stub logs via OHA_Survey_Debug::log_deprecated() so any external caller is detected before removal."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "change",
+                        "summary":  "Convention planning survey Page 3 reworded: unconfirmed features now framed as possibilities",
+                        "notes":  "Main Stage, Haunt Showcase, and education room questions changed from \"is adding\" to \"if added / if available\". Page title/description updated to reflect nothing is confirmed yet."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Convention planning survey: 7 new possible activities added to Page 3 checkbox question",
+                        "notes":  "cp_possible_activities_interest replaces cp_new_features_excitement. New options: diy_mask, scavenger_hunt, trivia_games, vendor_panel, scream_contest, photo_ops, live_podcast, banquet_meetup. All existing options retained."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Convention planning survey: Scream Contest and Live Podcast added to main stage content question",
+                        "notes":  "cp_main_stage_content checkbox on Page 5 now includes scream_contest and live_podcast options. Question text updated to tentative framing."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "feature",
+                        "summary":  "Convention planning survey: add Friday/Sunday social event question (Page 5)",
+                        "notes":  "New question cp_social_event_interest: radio asking interest in a Friday evening kickoff or Sunday wrap-up banquet/meetup separate from main convention day."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.8.0",
+                        "type":  "change",
+                        "summary":  "Convention planning survey: replace parking concern question with hotel distance impact question",
+                        "notes":  "Removed cp_parking_concern (contained inaccurate claim about limited parking). Added cp_hotel_distance_impact asking how the Reformatory distance from hotels factors into attendance decision."
                     }
                 ]
 }

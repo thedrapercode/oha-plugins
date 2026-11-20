@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.7.0');
+define('OHA_SURVEY_HUB_VERSION', '1.8.0');
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_survey_check_for_update' );
@@ -111,6 +111,9 @@ class OHA_Survey_Hub {
         
         // Handle export requests
         add_action('init', array($this, 'handle_export_request'));
+
+        // REST API
+        OHA_Survey_API::register();
     }
     
     public function init() {
@@ -160,11 +163,14 @@ class OHA_Survey_Hub {
     }
     
     private function include_files() {
+        require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-survey-debug.php';
         require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-survey-data.php';
         require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-survey-processor.php';
         require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-survey-admin.php';
         require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/survey-definitions.php';
         require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-convention-survey.php';
+        require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-survey-def-editor.php';
+        require_once OHA_SURVEY_HUB_PLUGIN_DIR . 'includes/class-survey-api.php';
     }
     
     public function enqueue_scripts() {
@@ -241,7 +247,7 @@ class OHA_Survey_Hub {
     }
     
     public function admin_enqueue_scripts($hook) {
-        if (strpos($hook, 'oha-survey-hub') !== false) {
+        if (strpos($hook, 'oha-survey-hub') !== false || strpos($hook, 'oha-survey-def-editor') !== false || strpos($hook, 'oha-convention-survey') !== false) {
             // Chart.js must be enqueued/registered BEFORE any script that depends on it.
             wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), '4.4.0', true);
 
@@ -328,6 +334,15 @@ class OHA_Survey_Hub {
             'manage_options',
             'oha-convention-survey',
             array($this, 'admin_convention_page')
+        );
+
+        add_submenu_page(
+            'oha-survey-hub',
+            __('Edit Survey Questions', 'oha-survey-hub'),
+            __('Edit Questions', 'oha-survey-hub'),
+            'manage_options',
+            'oha-survey-def-editor',
+            ['OHA_Survey_Def_Editor', 'render_page']
         );
     }
     
