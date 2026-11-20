@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Survey Hub",
-    "version":  "1.6.0",
+    "version":  "1.7.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -267,6 +267,55 @@
                         "type":  "fix",
                         "summary":  "Analytics reads raw response blobs instead of pre-aggregated table, restoring full textarea text",
                         "notes":  "The wp_oha_survey_analytics table truncated answer values to 100 chars. New rollup queries wp_oha_survey_responses directly so no text is ever cut off."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "fix",
+                        "summary":  "Fix duplicate convention question seeding caused by activate() bypassing option flag gate",
+                        "notes":  "activate() now checks oha_convention_*_seeded_{year} options before seeding, same as init(). Prevents duplicates on each zip upload/activation."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "fix",
+                        "summary":  "Add dedup methods for attendee and volunteer questions; run once on next admin load",
+                        "notes":  "dedup_attendee_questions() and dedup_volunteer_questions() added. One-time dedup flags oha_attendee_q_dedup_done and oha_volunteer_q_dedup_done run from init(). Also fixed dedup_vendor_questions() to include convention_year in join to avoid cross-year deletions."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "[oha_survey_results] now shows all survey types: attendee, vendor, volunteer, plus all 7 hardcoded surveys",
+                        "notes":  "Added aggregate_definition_responses() and render_definition_panel() for hardcoded survey types (member, haunt_owner, scare_actor, behind_scenes, home_haunt, industry_deep_dive, convention_planning). All tabs appear in results shortcode."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Notable findings box auto-surfaces high-signal answers at top of each results tab",
+                        "notes":  "compute_notable_findings() flags: radio/checkbox options at \u003e=55%/50% threshold, scale averages \u003e=76% (positive) or \u003c=40% (negative). Max 8 findings. render_notable_box() renders a grid of finding cards with positive/negative/neutral styling."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Heatmap coloring on all bar charts: bar intensity scales with response percentage",
+                        "notes":  "Convention checkbox Chart.js bars: rgba(173,49,25,alpha) where alpha = 0.2 + pct/100*0.8. Definition survey HTML bars: same inline style. Top answer gets full opacity and bold label. Radio doughnut: segment opacity scales with count vs max count."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Response rate shown per optional question; text responses show first 3 inline with expand for rest",
+                        "notes":  "render_result_question() and render_definition_panel() both show n of total for optional questions. Textarea: first 3 responses always visible, Show N more button for overflow. Convention surveys had Show all hidden by default - now first 3 show immediately."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "1.7.0",
+                        "type":  "feature",
+                        "summary":  "Summary chips bar on each results tab showing total responses, first date, and latest date",
+                        "notes":  "aggregate_responses() and aggregate_definition_responses() both now return first response date. Meta bar replaced with chip row. Gives board members immediate context on data freshness."
                     }
                 ]
 }

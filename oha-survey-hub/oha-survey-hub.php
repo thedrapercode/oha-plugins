@@ -3,7 +3,7 @@
  * Plugin Name: OHA Survey Hub
  * Plugin URI: https://ohiohaunt.com
  * Description: Comprehensive anonymous survey system for the Ohio Haunters Association with multiple survey types, progress tracking, and data analytics.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Author: OHA
  * Author URI: https://ohiohaunt.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_SURVEY_HUB_VERSION', '1.6.0');
+define('OHA_SURVEY_HUB_VERSION', '1.7.0');
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_survey_check_for_update' );
@@ -148,6 +148,14 @@ class OHA_Survey_Hub {
         if (!get_option('oha_vendor_q_dedup_done')) {
             OHA_Convention_Survey::dedup_vendor_questions();
             update_option('oha_vendor_q_dedup_done', '1');
+        }
+        if (!get_option('oha_attendee_q_dedup_done')) {
+            OHA_Convention_Survey::dedup_attendee_questions();
+            update_option('oha_attendee_q_dedup_done', '1');
+        }
+        if (!get_option('oha_volunteer_q_dedup_done')) {
+            OHA_Convention_Survey::dedup_volunteer_questions();
+            update_option('oha_volunteer_q_dedup_done', '1');
         }
     }
     
@@ -471,7 +479,19 @@ class OHA_Survey_Hub {
     public function activate() {
         $this->create_tables();
         OHA_Convention_Survey::create_table();
-        OHA_Convention_Survey::seed_questions();
+        $active_year = OHA_Convention_Survey::get_year();
+        if (!get_option('oha_convention_attendee_seeded_' . $active_year)) {
+            OHA_Convention_Survey::seed_questions();
+            update_option('oha_convention_attendee_seeded_' . $active_year, '1');
+        }
+        if (!get_option('oha_convention_vendor_seeded_' . $active_year)) {
+            OHA_Convention_Survey::seed_vendor_questions();
+            update_option('oha_convention_vendor_seeded_' . $active_year, '1');
+        }
+        if (!get_option('oha_convention_volunteer_seeded_' . $active_year)) {
+            OHA_Convention_Survey::seed_volunteer_questions();
+            update_option('oha_convention_volunteer_seeded_' . $active_year, '1');
+        }
         $this->create_upload_dir();
         
         // Set default options

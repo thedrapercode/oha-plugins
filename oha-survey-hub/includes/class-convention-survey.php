@@ -412,14 +412,43 @@ class OHA_Convention_Survey {
     public static function dedup_vendor_questions() {
         global $wpdb;
         $table = $wpdb->prefix . 'oha_survey_convention_questions';
-        // Keep only the lowest id per (survey_context, sort_order) — removes duplicates from concurrent seeding
+        // Keep only the lowest id per (survey_context, convention_year, sort_order)
         $wpdb->query("
             DELETE q1 FROM {$table} q1
             INNER JOIN {$table} q2
                 ON q1.survey_context = q2.survey_context
+                AND q1.convention_year = q2.convention_year
                 AND q1.sort_order = q2.sort_order
                 AND q1.id > q2.id
             WHERE q1.survey_context = 'vendor'
+        ");
+    }
+
+    public static function dedup_attendee_questions() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'oha_survey_convention_questions';
+        $wpdb->query("
+            DELETE q1 FROM {$table} q1
+            INNER JOIN {$table} q2
+                ON q1.survey_context = q2.survey_context
+                AND q1.convention_year = q2.convention_year
+                AND q1.sort_order = q2.sort_order
+                AND q1.id > q2.id
+            WHERE q1.survey_context = 'attendee'
+        ");
+    }
+
+    public static function dedup_volunteer_questions() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'oha_survey_convention_questions';
+        $wpdb->query("
+            DELETE q1 FROM {$table} q1
+            INNER JOIN {$table} q2
+                ON q1.survey_context = q2.survey_context
+                AND q1.convention_year = q2.convention_year
+                AND q1.sort_order = q2.sort_order
+                AND q1.id > q2.id
+            WHERE q1.survey_context = 'volunteer'
         ");
     }
 
@@ -1745,6 +1774,20 @@ class OHA_Convention_Survey {
             $all_chart_cfgs[$type] = self::build_chart_configs($data['questions']);
         }
 
+        $def_surveys = [
+            'member'             => 'OHA Member',
+            'haunt_owner'        => 'Haunt Owner',
+            'scare_actor'        => 'Scare Actor',
+            'behind_scenes'      => 'Behind the Scenes',
+            'home_haunt'         => 'Home Haunt',
+            'industry_deep_dive' => 'Industry Deep-Dive',
+            'convention_planning' => sprintf('Planning %d', self::get_year()),
+        ];
+        $def_data = [];
+        foreach ($def_surveys as $slug => $label) {
+            $def_data[$slug] = self::aggregate_definition_responses($slug);
+        }
+
         ob_start();
         ?>
         <div class="oha-sr-wrap" id="oha-sr-wrap">
@@ -1760,6 +1803,16 @@ class OHA_Convention_Survey {
                         <span class="oha-sr-tab-count"><?php echo $cnt; ?></span>
                     </button>
                     <?php $first = false; ?>
+                <?php endforeach; ?>
+                <?php foreach ($def_surveys as $slug => $label): ?>
+                    <?php $cnt = $def_data[$slug]['count']; ?>
+                    <button class="oha-sr-tab<?php echo $cnt === 0 ? ' oha-sr-tab-empty' : ''; ?>"
+                            role="tab"
+                            data-type="<?php echo esc_attr($slug); ?>"
+                            data-target="oha-sr-panel-<?php echo esc_attr($slug); ?>">
+                        <?php echo esc_html($label); ?>
+                        <span class="oha-sr-tab-count"><?php echo $cnt; ?></span>
+                    </button>
                 <?php endforeach; ?>
             </div>
 
@@ -1779,6 +1832,22 @@ class OHA_Convention_Survey {
                     <?php endif; ?>
                 </div>
                 <?php $first = false; ?>
+            <?php endforeach; ?>
+
+            <?php foreach ($def_surveys as $slug => $label): ?>
+                <?php $data = $def_data[$slug]; ?>
+                <div class="oha-sr-panel oha-sr-hidden"
+                     id="oha-sr-panel-<?php echo esc_attr($slug); ?>"
+                     data-type="<?php echo esc_attr($slug); ?>"
+                     role="tabpanel">
+                    <?php if ($data['count'] === 0): ?>
+                        <div class="oha-sr-empty-panel">
+                            <p>No responses recorded for this survey yet.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php self::render_definition_panel($data); ?>
+                    <?php endif; ?>
+                </div>
             <?php endforeach; ?>
         </div>
 
@@ -1865,13 +1934,29 @@ class OHA_Convention_Survey {
         foreach ($sections as $pg => $qds) {
             $section_scores[$pg] = self::compute_section_score($qds);
         }
+        $notable_questions = [];
+        foreach ($data['questions'] as $qd) {
+            $notable_questions[] = [
+                'text'      => $qd['q']->question_text,
+                'type'      => $qd['q']->question_type,
+                'options'   => null,
+                'answers'   => $qd['answers'],
+                'n'         => $qd['n'],
+                'scale_max' => (int) $qd['q']->scale_max ?: 5,
+            ];
+        }
+        $notable = self::compute_notable_findings($notable_questions);
         ?>
         <div class="oha-sr-meta-bar">
-            <strong><?php echo $data['count']; ?></strong> response<?php echo $data['count'] !== 1 ? 's' : ''; ?>
-            <?php if ($data['latest']): ?>
-                &middot; most recent <?php echo esc_html(date('M j, Y', strtotime($data['latest']))); ?>
+            <span class="oha-sr-meta-chip"><strong><?php echo $data['count']; ?></strong> response<?php echo $data['count'] !== 1 ? 's' : ''; ?></span>
+            <?php if (!empty($data['first'])): ?>
+                <span class="oha-sr-meta-chip">First: <?php echo esc_html(date('M j, Y', strtotime($data['first']))); ?></span>
+            <?php endif; ?>
+            <?php if (!empty($data['latest'])): ?>
+                <span class="oha-sr-meta-chip">Latest: <?php echo esc_html(date('M j, Y', strtotime($data['latest']))); ?></span>
             <?php endif; ?>
         </div>
+        <?php self::render_notable_box($notable); ?>
 
         <div class="oha-sr-scorecards">
             <?php foreach ($sections as $pg => $qds): ?>
@@ -1916,7 +2001,7 @@ class OHA_Convention_Survey {
                 <div class="oha-sr-section-body" style="<?php echo $first ? '' : 'display:none;'; ?>">
                     <div class="oha-sr-question-grid">
                         <?php foreach ($qds as $qd): ?>
-                            <?php self::render_result_question($qd); ?>
+                            <?php self::render_result_question($qd, $data['count']); ?>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1950,11 +2035,15 @@ class OHA_Convention_Survey {
                     }
                     $ordered = array_filter($ordered, function($v) { return $v > 0; });
                     arsort($ordered);
-                    $labels = array_keys($ordered);
-                    $values = array_values($ordered);
-                    $colors = [];
-                    for ($i = 0; $i < count($labels); $i++) {
-                        $colors[] = $palette[$i % count($palette)];
+                    $labels   = array_keys($ordered);
+                    $values   = array_values($ordered);
+                    $max_val  = max($values) ?: 1;
+                    $colors   = [];
+                    $borders  = [];
+                    foreach ($values as $v) {
+                        $alpha    = round(0.25 + ($v / $max_val) * 0.75, 2);
+                        $colors[] = 'rgba(173,49,25,' . $alpha . ')';
+                        $borders[]= $v === $max_val ? 'rgba(173,49,25,1)' : 'transparent';
                     }
                     $configs[] = [
                         'id'        => 'oha-chart-' . $q->id,
@@ -1978,6 +2067,9 @@ class OHA_Convention_Survey {
                                     'position' => 'right',
                                     'labels'   => ['boxWidth' => 14, 'padding' => 14, 'font' => ['size' => 12]],
                                 ],
+                                'tooltip' => [
+                                    'callbacks' => new \stdClass(),
+                                ],
                             ],
                         ],
                     ];
@@ -1989,10 +2081,25 @@ class OHA_Convention_Survey {
                         if (is_array($a)) { foreach ($a as $v) $flat[] = $v; }
                         else { $flat[] = $a; }
                     }
-                    $counts = array_count_values($flat);
+                    $counts  = array_count_values($flat);
                     arsort($counts);
-                    $labels = array_keys($counts);
-                    $pcts   = array_map(function($c) use ($n) { return round(($c / $n) * 100); }, array_values($counts));
+                    $labels  = array_keys($counts);
+                    $pcts    = array_map(function($c) use ($n) { return round(($c / $n) * 100); }, array_values($counts));
+                    $max_pct = max($pcts) ?: 1;
+                    $colors  = [];
+                    $bcolors = [];
+                    $bwidths = [];
+                    foreach ($pcts as $pct) {
+                        $alpha    = round(0.2 + ($pct / 100) * 0.8, 2);
+                        $colors[] = 'rgba(173,49,25,' . $alpha . ')';
+                        if ($pct === $max_pct) {
+                            $bcolors[] = 'rgba(173,49,25,1)';
+                            $bwidths[] = 2;
+                        } else {
+                            $bcolors[] = 'transparent';
+                            $bwidths[] = 0;
+                        }
+                    }
                     $configs[] = [
                         'id'        => 'oha-chart-' . $q->id,
                         'chartType' => 'bar',
@@ -2001,8 +2108,10 @@ class OHA_Convention_Survey {
                             'datasets' => [[
                                 'label'           => '% of respondents',
                                 'data'            => $pcts,
-                                'backgroundColor' => '#f39200',
-                                'borderRadius'    => 5,
+                                'backgroundColor' => $colors,
+                                'borderColor'     => $bcolors,
+                                'borderWidth'     => $bwidths,
+                                'borderRadius'    => 4,
                                 'borderSkipped'   => false,
                             ]],
                         ],
@@ -2017,7 +2126,7 @@ class OHA_Convention_Survey {
                                 'x' => [
                                     'max'   => 100,
                                     'grid'  => ['color' => '#f0f0f0'],
-                                    'ticks' => ['color' => '#888'],
+                                    'ticks' => ['color' => '#888', 'callback' => '__pct_callback__'],
                                 ],
                                 'y' => [
                                     'grid'  => ['display' => false],
@@ -2073,14 +2182,16 @@ class OHA_Convention_Survey {
             ];
         }
 
+        $first = $count > 0 ? $raw[ count($raw) - 1 ]->completed_at : null;
         return [
             'count'     => $count,
             'latest'    => $latest,
+            'first'     => $first,
             'questions' => $result_questions,
         ];
     }
 
-    private static function render_result_question($qd) {
+    private static function render_result_question($qd, $total = 0) {
         $q       = $qd['q'];
         $answers = $qd['answers'];
         $n       = $qd['n'];
@@ -2088,6 +2199,9 @@ class OHA_Convention_Survey {
 
         echo '<div class="oha-sr-question' . ($is_wide ? ' oha-sr-question-wide' : '') . '">';
         echo '<div class="oha-sr-q-text">' . esc_html($q->question_text) . '</div>';
+        if ($total > 0 && $n < $total && !$q->required) {
+            echo '<div class="oha-sr-response-rate">' . $n . ' of ' . $total . ' responded</div>';
+        }
 
         if ($n === 0) {
             echo '<p class="oha-sr-no-answers">No answers recorded.</p>';
@@ -2155,16 +2269,22 @@ class OHA_Convention_Survey {
                 if ($cnt === 0) {
                     echo '<p class="oha-sr-no-answers">No answers recorded.</p>';
                 } else {
-                    $uid = 'oha-sr-ta-' . $q->id;
-                    echo '<div class="oha-sr-textarea-meta">';
-                    echo '<span>' . $cnt . ' response' . ($cnt !== 1 ? 's' : '') . '</span>';
-                    echo '<button type="button" class="oha-sr-expand-btn" data-target="' . esc_attr($uid) . '">Show responses</button>';
-                    echo '</div>';
-                    echo '<div class="oha-sr-textarea-list" id="' . esc_attr($uid) . '" style="display:none">';
-                    foreach ($non_empty as $a) {
+                    $uid      = 'oha-sr-ta-' . $q->id;
+                    $preview  = array_slice($non_empty, 0, 3);
+                    $overflow = array_slice($non_empty, 3);
+                    echo '<div class="oha-sr-textarea-preview">';
+                    foreach ($preview as $a) {
                         echo '<div class="oha-sr-textarea-item">' . esc_html($a) . '</div>';
                     }
                     echo '</div>';
+                    if (!empty($overflow)) {
+                        echo '<div class="oha-sr-textarea-list" id="' . esc_attr($uid) . '" style="display:none">';
+                        foreach ($overflow as $a) {
+                            echo '<div class="oha-sr-textarea-item">' . esc_html($a) . '</div>';
+                        }
+                        echo '</div>';
+                        echo '<button type="button" class="oha-sr-expand-btn" data-target="' . esc_attr($uid) . '">Show ' . count($overflow) . ' more responses</button>';
+                    }
                 }
                 break;
         }
@@ -2217,4 +2337,309 @@ class OHA_Convention_Survey {
         if (empty($scores)) return null;
         return array_sum($scores) / count($scores);
     }
+
+    // -------------------------------------------------------------------------
+    // Notable findings helpers
+    // -------------------------------------------------------------------------
+
+    private static function compute_notable_findings($questions) {
+        $findings = [];
+        foreach ($questions as $q) {
+            if ($q['n'] < 5) continue;
+            $type    = $q['type'];
+            $answers = $q['answers'];
+            $n       = $q['n'];
+
+            if ($type === 'scale') {
+                $max   = !empty($q['scale_max']) ? (int) $q['scale_max'] : 5;
+                $avg   = array_sum($answers) / $n;
+                $ratio = $max > 0 ? $avg / $max : 0;
+                if ($ratio >= 0.76) {
+                    $findings[] = ['q' => $q['text'], 'msg' => number_format($avg, 1) . '/' . $max . ' average rating', 'cls' => 'positive'];
+                } elseif ($ratio <= 0.4) {
+                    $findings[] = ['q' => $q['text'], 'msg' => number_format($avg, 1) . '/' . $max . ' average - needs attention', 'cls' => 'negative'];
+                }
+            } elseif (in_array($type, ['radio', 'checkbox'], true)) {
+                if ($type === 'checkbox') {
+                    $flat = [];
+                    foreach ($answers as $a) {
+                        if (is_array($a)) { foreach ($a as $v) $flat[] = $v; }
+                        else $flat[] = $a;
+                    }
+                    $counts = array_count_values($flat);
+                    $denom  = $n;
+                } else {
+                    $counts = array_count_values($answers);
+                    $denom  = $n;
+                }
+                if (empty($counts)) continue;
+                arsort($counts);
+                reset($counts);
+                $top_val = key($counts);
+                $top_cnt = current($counts);
+                $pct     = round($top_cnt / $denom * 100);
+                $thresh  = $type === 'checkbox' ? 50 : 55;
+                if ($pct >= $thresh) {
+                    $opts  = !empty($q['options']) ? $q['options'] : [];
+                    $label = isset($opts[$top_val]) ? $opts[$top_val] : $top_val;
+                    $findings[] = ['q' => $q['text'], 'msg' => $pct . '% said: ' . $label, 'cls' => 'neutral'];
+                }
+            }
+            if (count($findings) >= 8) break;
+        }
+        return $findings;
+    }
+
+    private static function render_notable_box($findings) {
+        if (empty($findings)) return;
+        echo '<div class="oha-sr-notable-box">';
+        echo '<div class="oha-sr-notable-title">Key Findings</div>';
+        echo '<div class="oha-sr-notable-grid">';
+        foreach ($findings as $f) {
+            echo '<div class="oha-sr-notable-item oha-sr-notable-' . esc_attr($f['cls']) . '">';
+            echo '<div class="oha-sr-notable-q">' . esc_html(wp_trim_words($f['q'], 10, '...')) . '</div>';
+            echo '<div class="oha-sr-notable-msg">' . esc_html($f['msg']) . '</div>';
+            echo '</div>';
+        }
+        echo '</div></div>';
+    }
+
+    // -------------------------------------------------------------------------
+    // Hardcoded-survey results (member, planning, scare_actor, etc.)
+    // -------------------------------------------------------------------------
+
+    private static function aggregate_definition_responses($survey_type) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'oha_survey_responses';
+
+        $definition = OHA_Survey_Definitions::get_survey($survey_type);
+        if (!$definition) return ['count' => 0, 'latest' => null, 'pages' => []];
+
+        $raw = $wpdb->get_results($wpdb->prepare(
+            "SELECT response_data, completed_at FROM $table WHERE survey_type = %s AND is_completed = 1 ORDER BY completed_at DESC",
+            $survey_type
+        ));
+
+        $count   = count($raw);
+        $latest  = $count > 0 ? $raw[0]->completed_at : null;
+        $decoded = [];
+        foreach ($raw as $r) {
+            $decoded[] = json_decode($r->response_data, true) ?: [];
+        }
+
+        $pages = [];
+        foreach ($definition['pages'] as $page) {
+            $questions = [];
+            foreach ($page['questions'] as $q) {
+                $id      = $q['id'];
+                $answers = [];
+                foreach ($decoded as $rd) {
+                    if (isset($rd[$id]) && $rd[$id] !== '' && $rd[$id] !== null) {
+                        $val = $rd[$id];
+                        if (is_array($val)) {
+                            foreach ($val as $v) {
+                                if ($v !== '') $answers[] = $v;
+                            }
+                        } else {
+                            $answers[] = $val;
+                        }
+                    }
+                }
+                $questions[] = [
+                    'id'      => $id,
+                    'text'    => $q['question'],
+                    'type'    => $q['type'],
+                    'options' => isset($q['options']) ? $q['options'] : null,
+                    'answers' => $answers,
+                    'n'       => count($answers),
+                ];
+            }
+            $pages[] = [
+                'title'     => isset($page['title']) ? $page['title'] : '',
+                'questions' => $questions,
+            ];
+        }
+
+        $first = $count > 0 ? $raw[ count($raw) - 1 ]->completed_at : null;
+        return [
+            'count'  => $count,
+            'latest' => $latest,
+            'first'  => $first,
+            'pages'  => $pages,
+        ];
+    }
+
+    private static function render_definition_panel($data) {
+        $total = $data['count'];
+
+        // Summary bar
+        echo '<div class="oha-sr-meta-bar">';
+        echo '<span class="oha-sr-meta-chip"><strong>' . $total . '</strong> response' . ($total !== 1 ? 's' : '') . '</span>';
+        if (!empty($data['first'])) echo '<span class="oha-sr-meta-chip">First: ' . esc_html(date('M j, Y', strtotime($data['first']))) . '</span>';
+        if (!empty($data['latest'])) echo '<span class="oha-sr-meta-chip">Latest: ' . esc_html(date('M j, Y', strtotime($data['latest']))) . '</span>';
+        echo '</div>';
+
+        // Notable findings
+        $flat_for_notable = [];
+        foreach ($data['pages'] as $page) {
+            foreach ($page['questions'] as $q) {
+                $flat_for_notable[] = [
+                    'text'      => $q['text'],
+                    'type'      => $q['type'],
+                    'options'   => $q['options'],
+                    'answers'   => $q['answers'],
+                    'n'         => $q['n'],
+                    'scale_max' => 10,
+                ];
+            }
+        }
+        self::render_notable_box(self::compute_notable_findings($flat_for_notable));
+
+        $first_section = true;
+        foreach ($data['pages'] as $page) {
+            $has_title = !empty($page['title']);
+            if ($has_title) {
+                echo '<div class="oha-sr-section' . ($first_section ? ' open' : '') . '">';
+                echo '<div class="oha-sr-section-header">';
+                echo '<div class="oha-sr-section-left"><span class="oha-sr-arrow">' . ($first_section ? '&#9660;' : '&#9654;') . '</span><span class="oha-sr-section-title">' . esc_html($page['title']) . '</span></div>';
+                echo '</div>';
+                echo '<div class="oha-sr-section-body" style="' . ($first_section ? '' : 'display:none;') . '">';
+                echo '<div class="oha-sr-question-grid">';
+            }
+
+            foreach ($page['questions'] as $q) {
+                $type    = $q['type'];
+                $answers = $q['answers'];
+                $n       = $q['n'];
+                $is_wide = in_array($type, ['radio', 'checkbox'], true);
+
+                echo '<div class="oha-sr-question' . ($is_wide ? ' oha-sr-question-wide' : '') . '">';
+                echo '<div class="oha-sr-q-text">' . esc_html($q['text']) . '</div>';
+                if ($total > 0 && $n < $total) {
+                    echo '<div class="oha-sr-response-rate">' . $n . ' of ' . $total . ' responded</div>';
+                }
+
+                if ($n === 0) {
+                    echo '<p class="oha-sr-no-answers">No answers recorded.</p>';
+                    echo '</div>';
+                    continue;
+                }
+
+                if ($type === 'textarea' || $type === 'text') {
+                    $uid      = 'defsr_' . esc_attr($q['id']);
+                    $preview  = array_slice($answers, 0, 3);
+                    $overflow = array_slice($answers, 3);
+                    echo '<div class="oha-sr-textarea-preview">';
+                    foreach ($preview as $ans) {
+                        echo '<div class="oha-sr-textarea-item">' . esc_html($ans) . '</div>';
+                    }
+                    echo '</div>';
+                    if (!empty($overflow)) {
+                        echo '<div class="oha-sr-textarea-list" id="' . $uid . '" style="display:none">';
+                        foreach ($overflow as $ans) {
+                            echo '<div class="oha-sr-textarea-item">' . esc_html($ans) . '</div>';
+                        }
+                        echo '</div>';
+                        echo '<button class="oha-sr-expand-btn" data-target="' . $uid . '">Show ' . count($overflow) . ' more responses</button>';
+                    }
+
+                } elseif ($type === 'scale') {
+                    $avg    = round(array_sum($answers) / $n, 1);
+                    $counts = array_count_values(array_map('strval', $answers));
+                    $max_c  = max($counts) ?: 1;
+                    echo '<div class="oha-sr-scale-layout">';
+                    echo self::render_scale_gauge($avg, 10, $n);
+                    echo '<div class="oha-sr-dist">';
+                    for ($v = 1; $v <= 10; $v++) {
+                        $c       = isset($counts[(string)$v]) ? $counts[(string)$v] : 0;
+                        $bar_pct = round(($c / $max_c) * 100);
+                        $pct     = $n > 0 ? round($c / $n * 100) : 0;
+                        $is_top  = ($c === $max_c && $c > 0);
+                        $alpha   = round(0.2 + ($c / $max_c) * 0.8, 2);
+                        echo '<div class="oha-sr-dist-row' . ($is_top ? ' oha-sr-bar-row--top' : '') . '">';
+                        echo '<span class="oha-sr-dist-label">' . $v . '</span>';
+                        echo '<div class="oha-sr-dist-track"><div class="oha-sr-dist-fill" style="width:' . $bar_pct . '%;background:rgba(173,49,25,' . $alpha . ')"></div></div>';
+                        echo '<span class="oha-sr-dist-cnt">' . $pct . '% (' . $c . ')</span>';
+                        echo '</div>';
+                    }
+                    echo '</div></div>';
+
+                } elseif (in_array($type, ['radio', 'checkbox'], true)) {
+                    if ($type === 'checkbox') {
+                        $flat = [];
+                        foreach ($answers as $a) {
+                            if (is_array($a)) { foreach ($a as $v) $flat[] = $v; }
+                            else $flat[] = $a;
+                        }
+                        $counts = array_count_values($flat);
+                        $denom  = $n;
+                        echo '<p class="oha-sr-checkbox-note">% of ' . $n . ' respondents (multiple selections allowed).</p>';
+                    } else {
+                        $counts = array_count_values($answers);
+                        $denom  = $n;
+                    }
+                    arsort($counts);
+                    $max_c    = max($counts) ?: 1;
+                    $opts     = $q['options'] ?: [];
+                    // Build ordered display: options in definition order first, then any unexpected values
+                    $display = [];
+                    if (!empty($opts)) {
+                        foreach ($opts as $key => $label) {
+                            $display[$key] = ['label' => $label, 'count' => isset($counts[$key]) ? $counts[$key] : 0];
+                        }
+                    }
+                    foreach ($counts as $key => $c) {
+                        if (!isset($display[$key])) $display[$key] = ['label' => $key, 'count' => $c];
+                    }
+                    $display = array_filter($display, function($d) { return $d['count'] > 0; });
+                    uasort($display, function($a, $b) { return $b['count'] - $a['count']; });
+
+                    echo '<div class="oha-sr-bars">';
+                    foreach ($display as $key => $d) {
+                        $c      = $d['count'];
+                        $pct    = round($c / $denom * 100);
+                        $alpha  = round(0.2 + ($c / $max_c) * 0.8, 2);
+                        $is_top = ($c === $max_c);
+                        echo '<div class="oha-sr-bar-row' . ($is_top ? ' oha-sr-bar-row--top' : '') . '">';
+                        echo '<span class="oha-sr-bar-label">' . esc_html($d['label']) . '</span>';
+                        echo '<div class="oha-sr-bar-track"><div class="oha-sr-bar-fill" style="width:' . $pct . '%;background:rgba(173,49,25,' . $alpha . ')"></div></div>';
+                        echo '<span class="oha-sr-bar-pct">' . $pct . '% <small>(' . $c . ')</small></span>';
+                        echo '</div>';
+                    }
+                    echo '</div>';
+
+                } else {
+                    $counts = array_count_values($answers);
+                    arsort($counts);
+                    echo '<div class="oha-sr-bars">';
+                    foreach ($counts as $val => $c) {
+                        $pct = round($c / $n * 100);
+                        echo '<div class="oha-sr-bar-row">';
+                        echo '<span class="oha-sr-bar-label">' . esc_html($val) . '</span>';
+                        echo '<div class="oha-sr-bar-track"><div class="oha-sr-bar-fill" style="width:' . $pct . '%"></div></div>';
+                        echo '<span class="oha-sr-bar-pct">' . $pct . '% <small>(' . $c . ')</small></span>';
+                        echo '</div>';
+                    }
+                    echo '</div>';
+                }
+
+                echo '</div>'; // .oha-sr-question
+            }
+
+            if ($has_title) {
+                echo '</div></div></div>'; // .oha-sr-question-grid, .oha-sr-section-body, .oha-sr-section
+            }
+            $first_section = false;
+        }
+    }
+
+    // Aliases kept so the planning tab calls above still work
+    private static function aggregate_planning_responses() {
+        return self::aggregate_definition_responses('convention_planning');
+    }
+
+    private static function render_planning_panel($data) {
+        self::render_definition_panel($data);
+    }
+
 }
