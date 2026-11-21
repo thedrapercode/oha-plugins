@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.16.2
+ * Version: 2.17.1
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.16.2');
+define('OHA_BHS_VERSION', '2.17.1');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -402,12 +402,16 @@ class OHA_Board_Hub_Suite {
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes'], 999);
 
-        
-// Membership upgrades/downgrades (UsersWP + SWPM alignment)
-add_action('oha_bhs_membership_set_paid', [$this, 'handle_membership_set_paid'], 10, 3);
-add_action('oha_bhs_membership_set_free', [$this, 'handle_membership_set_free'], 10, 3);
+        // Membership upgrades/downgrades (UsersWP + SWPM alignment)
+        add_action('oha_bhs_membership_set_paid', [$this, 'handle_membership_set_paid'], 10, 3);
+        add_action('oha_bhs_membership_set_free', [$this, 'handle_membership_set_free'], 10, 3);
 
-// Webhook cron
+        // Annual membership transition cron
+        add_action('oha_annual_membership_transition', [$this, 'handle_annual_transition_cron']);
+        add_action('init', [$this, 'maybe_schedule_annual_transition'], 20);
+        add_action('init', [$this, 'maybe_backfill_membership_year'], 25);
+
+        // Webhook cron
         add_action('oha_bhs_downgrade_event', [$this, 'handle_downgrade_event'], 10, 1);
 
         // Legacy settings sync (for backward compatibility)
@@ -734,6 +738,16 @@ private function is_plugin_file_active($plugin_file) {
             'callback'            => [$this, 'rest_sync_card_status'],
             'permission_callback' => function() { return current_user_can('manage_options'); },
         ]);
+        register_rest_route('oha/v1', '/membership/annual-transition-preview', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_annual_transition_preview'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
+        register_rest_route('oha/v1', '/membership/annual-transition-run', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'rest_annual_transition_run'],
+            'permission_callback' => function() { return current_user_can('manage_options'); },
+        ]);
     }
 
     /**
@@ -818,6 +832,239 @@ private function apply_userswp_free_from_sub_id($sub_id) {
     $this->userswp_set_free_member((int) $users[0]);
 }
 
+// =========================================================================
+// ANNUAL MEMBERSHIP TRANSITION
+// =========================================================================
+
+/**
+ * Schedule the annual membership transition cron if not already scheduled.
+ * Fires Jan 2 at 17:00 UTC (noon ET) each year.
+ */
+public function maybe_schedule_annual_transition() {
+    if (wp_next_scheduled('oha_annual_membership_transition')) {
+        return;
+    }
+    $year = (int) gmdate('Y');
+    $next = gmmktime(17, 0, 0, 1, 2, $year + 1);
+    wp_schedule_single_event($next, 'oha_annual_membership_transition');
+}
+
+/**
+ * One-time backfill: set oha_membership_active_year = 2026 for all current paid
+ * members who don't have it yet. Runs once after deploy; subsequent renewals will
+ * write the correct year automatically via userswp_set_paid_member().
+ */
+public function maybe_backfill_membership_year() {
+    if (get_option('oha_bhs_year_backfill_2026_done')) {
+        return;
+    }
+    $users = get_users([
+        'role'       => 'subscriber',
+        'meta_query' => [
+            ['key' => '_uwp_register_form_id', 'value' => '1'],
+            ['key' => 'oha_membership_active_year', 'compare' => 'NOT EXISTS'],
+        ],
+        'fields' => 'ID',
+        'number' => -1,
+    ]);
+    foreach ($users as $uid) {
+        update_user_meta((int) $uid, 'oha_membership_active_year', 2026);
+    }
+    update_option('oha_bhs_year_backfill_2026_done', true, false);
+}
+
+/**
+ * Cron callback: run the annual transition and email results to admin.
+ * Reschedules itself for next year after running.
+ */
+public function handle_annual_transition_cron() {
+    OHA_Logger::info('Annual membership transition cron starting');
+    $result = $this->run_annual_membership_transition(false);
+    $this->email_annual_transition_summary($result);
+    // Reschedule for next year
+    $next = gmmktime(17, 0, 0, 1, 2, (int) gmdate('Y') + 1);
+    wp_schedule_single_event($next, 'oha_annual_membership_transition');
+    OHA_Logger::info('Annual membership transition complete', [
+        'downgraded' => count($result['downgraded']),
+        'kept'       => count($result['kept']),
+    ]);
+}
+
+/**
+ * Core logic: find all paid members whose oha_membership_active_year < current year
+ * and downgrade them to listing_owner. Members with an active Stripe subscription
+ * are verified via API before downgrade to avoid false positives from delayed webhooks.
+ *
+ * @param bool $dry_run True = preview only, no writes.
+ * @return array {year, kept[], downgraded[], skipped[], dry_run}
+ */
+private function run_annual_membership_transition($dry_run = false) {
+    $current_year = (int) gmdate('Y');
+
+    $candidate_ids = get_users([
+        'role'       => 'subscriber',
+        'meta_query' => [
+            ['key' => '_uwp_register_form_id', 'value' => '1'],
+        ],
+        'fields' => 'ID',
+        'number' => -1,
+    ]);
+
+    $kept      = [];
+    $downgraded = [];
+    $skipped   = [];
+
+    foreach ($candidate_ids as $uid) {
+        $uid         = (int) $uid;
+        $active_year = (int) get_user_meta($uid, 'oha_membership_active_year', true);
+
+        // Already renewed for this year
+        if ($active_year >= $current_year) {
+            $kept[] = $uid;
+            continue;
+        }
+
+        // Has a Stripe subscription: call API to confirm it's not still active
+        // (guards against rare case where Jan 1 renewal webhook hasn't fired yet)
+        $sub_id = get_user_meta($uid, 'stripe_subscription_id', true);
+        if ($sub_id && function_exists('oha_sm_stripe_get')) {
+            $sub = oha_sm_stripe_get('/v1/subscriptions/' . urlencode($sub_id));
+            if (!empty($sub->error)) {
+                // Stripe API unavailable — skip to avoid false downgrade
+                $skipped[] = $uid;
+                OHA_Logger::warning('Annual transition: Stripe API unavailable for user, skipping', [
+                    'user_id' => $uid,
+                    'sub_id'  => $sub_id,
+                ]);
+                continue;
+            }
+            if (!empty($sub->status) && in_array($sub->status, ['active', 'trialing', 'past_due'], true)) {
+                // Keep: active/trialing are good; past_due means Stripe is still retrying — don't
+                // downgrade during the retry window; customer.subscription.deleted handles final downgrade
+                if (!$dry_run && $sub->status !== 'past_due') {
+                    update_user_meta($uid, 'oha_membership_active_year', $current_year);
+                }
+                $kept[] = $uid;
+                continue;
+            }
+        }
+
+        // Downgrade this member
+        if (!$dry_run) {
+            $this->userswp_set_free_member($uid);
+            update_user_meta($uid, 'oha_transition_downgraded_year', $current_year);
+        }
+        $downgraded[] = $uid;
+    }
+
+    return [
+        'year'       => $current_year,
+        'kept'       => $kept,
+        'downgraded' => $downgraded,
+        'skipped'    => $skipped,
+        'dry_run'    => $dry_run,
+    ];
+}
+
+/**
+ * Send the board admin a summary email after the annual transition runs.
+ */
+private function email_annual_transition_summary($result) {
+    $to      = get_option('admin_email');
+    $subject = sprintf('OHA Annual Membership Transition %d Complete', $result['year']);
+
+    $lines   = [];
+    $lines[] = sprintf('Annual membership transition completed for %d.', $result['year']);
+    $lines[] = '';
+    $lines[] = sprintf('Members retained:  %d', count($result['kept']));
+    $lines[] = sprintf('Members downgraded to Listing Owner: %d', count($result['downgraded']));
+    $lines[] = sprintf('Members skipped (Stripe API check failed): %d', count($result['skipped']));
+
+    if (!empty($result['downgraded'])) {
+        $lines[] = '';
+        $lines[] = 'Downgraded members:';
+        foreach ($result['downgraded'] as $uid) {
+            $u = get_userdata((int) $uid);
+            if ($u) {
+                $lines[] = sprintf('  - %s (%s)', $u->display_name, $u->user_email);
+            }
+        }
+    }
+
+    if (!empty($result['skipped'])) {
+        $lines[] = '';
+        $lines[] = 'Skipped (manual review recommended):';
+        foreach ($result['skipped'] as $uid) {
+            $u = get_userdata((int) $uid);
+            if ($u) {
+                $lines[] = sprintf('  - %s (%s)', $u->display_name, $u->user_email);
+            }
+        }
+    }
+
+    $lines[] = '';
+    $lines[] = 'Review the Board Hub membership tab to verify results.';
+
+    wp_mail($to, $subject, implode("\n", $lines));
+}
+
+/**
+ * REST: Preview the annual transition (dry run). Returns who would be affected.
+ */
+public function rest_annual_transition_preview(WP_REST_Request $request) {
+    $result = $this->run_annual_membership_transition(true);
+
+    $downgraded_detail = [];
+    foreach ($result['downgraded'] as $uid) {
+        $u = get_userdata((int) $uid);
+        if (!$u) {
+            continue;
+        }
+        $downgraded_detail[] = [
+            'id'                => $uid,
+            'name'              => $u->display_name,
+            'email'             => $u->user_email,
+            'active_year'       => get_user_meta($uid, 'oha_membership_active_year', true) ?: 'not set',
+            'has_subscription'  => !empty(get_user_meta($uid, 'stripe_subscription_id', true)),
+            'manually_verified' => !empty(get_user_meta($uid, 'oha_membership_verified', true)),
+        ];
+    }
+
+    $skipped_detail = [];
+    foreach ($result['skipped'] as $uid) {
+        $u = get_userdata((int) $uid);
+        if ($u) {
+            $skipped_detail[] = ['id' => $uid, 'name' => $u->display_name, 'email' => $u->user_email];
+        }
+    }
+
+    return new WP_REST_Response([
+        'year'            => $result['year'],
+        'kept_count'      => count($result['kept']),
+        'downgraded_count' => count($result['downgraded']),
+        'skipped_count'   => count($result['skipped']),
+        'downgraded'      => $downgraded_detail,
+        'skipped'         => $skipped_detail,
+    ], 200);
+}
+
+/**
+ * REST: Execute the annual transition. Requires {"confirm": true} in the body.
+ */
+public function rest_annual_transition_run(WP_REST_Request $request) {
+    $params = $request->get_json_params();
+    if (empty($params['confirm'])) {
+        return new WP_REST_Response(['error' => 'confirm_required'], 400);
+    }
+    $result = $this->run_annual_membership_transition(false);
+    return new WP_REST_Response([
+        'year'            => $result['year'],
+        'kept_count'      => count($result['kept']),
+        'downgraded_count' => count($result['downgraded']),
+        'skipped_count'   => count($result['skipped']),
+    ], 200);
+}
+
 /**
  * Webhook hook: set PAID state (UsersWP meta + role).
  */
@@ -855,6 +1102,9 @@ private function userswp_set_paid_member($user_id) {
         update_user_meta($user_id, 'oha_member_id', (string) $user_id);
     }
 
+    // Track which year this payment covers (updated on every renewal so the annual cron knows)
+    update_user_meta($user_id, 'oha_membership_active_year', (int) gmdate('Y'));
+
     // Role alignment
     $user = new WP_User($user_id);
     if ($user && $user->exists()) {
@@ -872,6 +1122,9 @@ private function userswp_set_free_member($user_id) {
     // UsersWP form field: form 4 = listing owner (non-paying registered user).
     // Clears paid member access — mirrors the set_paid_member write.
     update_user_meta($user_id, '_uwp_register_form_id', '4');
+
+    // Clear manual verification flag so the Membership Health panel reflects current state.
+    delete_user_meta($user_id, 'oha_membership_verified');
 
     // Role alignment: prefer listing_owner if it exists, otherwise subscriber
     $target_role = 'subscriber';
@@ -1555,6 +1808,11 @@ public function mu_membership_admin_footer_js() {
         }, 10, 1);
     }
 }
+
+// Clear the annual transition cron on plugin deactivation
+register_deactivation_hook(OHA_BHS_PLUGIN_FILE, function() {
+    wp_clear_scheduled_hook('oha_annual_membership_transition');
+});
 
 /**
  * Initialize the plugin

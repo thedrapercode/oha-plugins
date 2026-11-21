@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.16.2",
+    "version":  "2.17.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -771,6 +771,27 @@
                         "type":  "change",
                         "summary":  "Add GitHub auto-update check; WordPress now shows update available when a new version is released",
                         "notes":  ""
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.1",
+                        "type":  "fix",
+                        "summary":  "Blocked duplicate checkout: existing subscribers see portal link instead of new signup button",
+                        "notes":  "Guards added to [oha_membership_checkout] shortcode and wp_ajax_oha_create_checkout_session handler. Reactivation paths were already protected."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.1",
+                        "type":  "feature",
+                        "summary":  "Added Former Members watch list to Membership Health panel for manual downgrade verification",
+                        "notes":  "Shows listing_owner users with oha_paid_member_since set. Columns: last active year, Stripe sub status, downgraded-by-cron year, original join date. Loads with page, no AJAX."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.1",
+                        "type":  "change",
+                        "summary":  "Added late-year signup cutoff setting field to Stripe Settings admin (trial_end_late_cutoff)",
+                        "notes":  "Default 11-01 (Nov 1). Setting saves correctly but checkout handler does not yet act on it - trial_end is still static from trial_end_iso. Finish logic before Nov 1 of any active signup year."
                     }
                 ]
 }

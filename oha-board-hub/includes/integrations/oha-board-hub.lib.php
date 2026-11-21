@@ -709,6 +709,14 @@ private function render_overview_tab($range = '30d') {
             $active_year
         ));
 
+        $invited_vendors = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id AND m.meta_key = '_oha_status' AND m.meta_value = 'Invited'
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application' AND p.post_status <> 'trash'",
+            $active_year
+        ));
+
         $total_booths = $wpdb->get_var($wpdb->prepare(
             "SELECT SUM(CAST(m.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} m
              INNER JOIN {$wpdb->posts} p ON m.post_id = p.ID
@@ -863,10 +871,11 @@ private function render_overview_tab($range = '30d') {
                 // Get stat card link settings
                 $settings = get_option(self::OPT, []);
                 $stat_links = [
-                    'vendors'        => isset($settings['stat_vendors_link'])        ? $settings['stat_vendors_link']        : '?tab=con',
-                    'paid'           => isset($settings['stat_paid_vendors_link'])    ? $settings['stat_paid_vendors_link']    : '?tab=con',
-                    'pending'        => isset($settings['stat_pending_vendors_link']) ? $settings['stat_pending_vendors_link'] : '?tab=con',
-                    'booths'         => isset($settings['stat_booths_link'])          ? $settings['stat_booths_link']          : '?tab=con',
+                    'vendors'        => isset($settings['stat_vendors_link'])          ? $settings['stat_vendors_link']          : '?tab=con',
+                    'invited'        => isset($settings['stat_invited_vendors_link'])  ? $settings['stat_invited_vendors_link']  : '?tab=con',
+                    'paid'           => isset($settings['stat_paid_vendors_link'])     ? $settings['stat_paid_vendors_link']     : '?tab=con',
+                    'pending'        => isset($settings['stat_pending_vendors_link'])  ? $settings['stat_pending_vendors_link']  : '?tab=con',
+                    'booths'         => isset($settings['stat_booths_link'])           ? $settings['stat_booths_link']           : '?tab=con',
                     'volunteers'     => isset($settings['stat_volunteers_link'])      ? $settings['stat_volunteers_link']      : '',
                     'members'        => isset($settings['stat_members_link'])         ? $settings['stat_members_link']         : '?tab=members',
                     'haunts'         => isset($settings['stat_haunts_link'])          ? $settings['stat_haunts_link']          : '',
@@ -893,6 +902,15 @@ private function render_overview_tab($range = '30d') {
                 </div>
                 '); ?>
                 
+                <!-- Invited Vendors -->
+                <?php echo $wrap_card($stat_links['invited'], '
+                <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);cursor:'.(!empty($stat_links['invited']) ? 'pointer' : 'default').';">
+                    <div style="font-size:32px;font-weight:bold;color:#0891b2;margin:10px 0;">'.intval($invited_vendors).'</div>
+                    <div style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Invited</div>
+                    <div style="font-size:12px;color:#999;margin-top:5px;">Invite sent, not yet applied</div>
+                </div>
+                '); ?>
+
                 <!-- Paid Vendors -->
                 <?php echo $wrap_card($stat_links['paid'], '
                 <div class="oha-stat-card" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,0.05);cursor:'.(!empty($stat_links['paid']) ? 'pointer' : 'default').';">
@@ -1979,6 +1997,13 @@ private function render_sponsors_tab() {
             echo '<p class="description">Default: ?tab=con (Convention tab)</p>';
         }, self::OPT, 'stat_card_links');
         
+        add_settings_field('stat_invited_vendors_link', 'Invited Vendors Card Link', function(){
+            $opt = get_option(self::OPT, []);
+            $val = isset($opt['stat_invited_vendors_link']) ? esc_url($opt['stat_invited_vendors_link']) : '?tab=con';
+            echo '<input type="text" name="'.self::OPT.'[stat_invited_vendors_link]" value="'.$val.'" class="regular-text" placeholder="?tab=con">';
+            echo '<p class="description">Default: ?tab=con (Convention tab)</p>';
+        }, self::OPT, 'stat_card_links');
+
         add_settings_field('stat_paid_vendors_link', 'Paid Vendors Card Link', function(){
             $opt = get_option(self::OPT, []);
             $val = isset($opt['stat_paid_vendors_link']) ? esc_url($opt['stat_paid_vendors_link']) : '?tab=con';

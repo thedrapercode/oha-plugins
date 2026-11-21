@@ -67,11 +67,13 @@ function oha_sm_defaults() {
         'price_filter' => '',
         'log' => 1,
         // Checkout config
-        'price_signup_20'     => '',
-        'price_yearly_10'     => '',
-        'membership_level_id' => 0,
-        'trial_end_iso'       => '2027-01-01T00:00:00Z',
-        'membership_product_ids' => '',
+        'price_signup_20'          => '',
+        'price_yearly_10'          => '',
+        'price_reactivate_10'      => '',
+        'membership_level_id'      => 0,
+        'trial_end_iso'            => '2027-01-01T00:00:00Z',
+        'trial_end_late_cutoff'    => '11-01',
+        'membership_product_ids'   => '',
     );
 }
 
@@ -179,8 +181,10 @@ function oha_sm_settings_page(){
                 <tr><th colspan="2"><h2>Membership Checkout</h2></th></tr>
                 <tr><th>Membership Card Fee (One-Time $20)</th><td><input type="text" name="<?php echo esc_attr(OHA_SM_OPT); ?>[price_signup_20]" value="<?php echo esc_attr($s['price_signup_20']); ?>" class="regular-text"><p class="description">Stripe Price ID for $20 one-time fee (card creation & mailing). Example: price_xxxxxxxxxxxxx</p></td></tr>
                 <tr><th>Annual Membership Fee ($10/year)</th><td><input type="text" name="<?php echo esc_attr(OHA_SM_OPT); ?>[price_yearly_10]" value="<?php echo esc_attr($s['price_yearly_10']); ?>" class="regular-text"><p class="description">Stripe Price ID for $10/year recurring charge. Example: price_xxxxxxxxxxxxx</p></td></tr>
+                <tr><th>Reactivation Fee ($10 one-time)</th><td><input type="text" name="<?php echo esc_attr(OHA_SM_OPT); ?>[price_reactivate_10]" value="<?php echo esc_attr($s['price_reactivate_10'] ?? ''); ?>" class="regular-text"><p class="description">Stripe Price ID for $10 one-time fee for returning members reactivating lapsed membership (no card fee). Example: price_xxxxxxxxxxxxx</p></td></tr>
                 <tr><th>SWPM Membership Level ID</th><td><input type="number" name="<?php echo esc_attr(OHA_SM_OPT); ?>[membership_level_id]" value="<?php echo intval($s['membership_level_id']); ?>" class="small-text"></td></tr>
                 <tr><th>Annual Renewal Start Date</th><td><input type="text" name="<?php echo esc_attr(OHA_SM_OPT); ?>[trial_end_iso]" value="<?php echo esc_attr($s['trial_end_iso']); ?>" class="regular-text"><p class="description">When annual $10 charges begin (e.g. 2027-01-01T00:00:00Z for Jan 1, 2027). Members pay $20 immediately, then $10/year starting on this date.</p></td></tr>
+                <tr><th>Late-Year Signup Cutoff</th><td><input type="text" name="<?php echo esc_attr(OHA_SM_OPT); ?>[trial_end_late_cutoff]" value="<?php echo esc_attr($s['trial_end_late_cutoff'] ?? '11-01'); ?>" class="small-text"><p class="description">Month-day cutoff for late-year signups (MM-DD format, e.g. <code>11-01</code> for November 1). Members signing up on or after this date each year get their trial extended by one additional year — their $20 covers the current year and the following year. Leave blank to disable.</p></td></tr>
                 <tr><th>Membership Product IDs</th><td><input type="text" name="<?php echo esc_attr(OHA_SM_OPT); ?>[membership_product_ids]" value="<?php echo esc_attr($s['membership_product_ids'] ?? ''); ?>" class="regular-text"><p class="description">Comma-separated list of Stripe Product IDs that should trigger OHA membership activation when paid via invoice. Example: prod_xxxxx, prod_yyyyy</p></td></tr>
             </table>
             <?php submit_button(); ?>
@@ -394,17 +398,27 @@ add_shortcode('oha_stripe_address', function($atts){
 // Membership Checkout button
 add_shortcode('oha_membership_checkout', function($atts){
     if(!is_user_logged_in()) return '<p>Please log in.</p>';
+    $current_user = wp_get_current_user();
+    if (in_array('subscriber', $current_user->roles)) {
+        return '<p>You are already an active OHA member. <a href="' . esc_url(add_query_arg('oha_sm_portal', '1', home_url('/'))) . '">Manage your membership</a>.</p>';
+    }
+    $s = oha_sm_get();
     $nonce=wp_create_nonce('oha_create_session');
     $url=add_query_arg(array('action'=>'oha_create_checkout_session','_wpnonce'=>$nonce), admin_url('admin-ajax.php'));
-    
-    $output = '<div class="oha-membership-signup" style="background:#f5f5f5;padding:20px;border-radius:8px;margin:20px 0;">';
+
+    // Build dynamic date copy from trial_end_iso (e.g. "2028-01-01T00:00:00Z" -> "January 1, 2028")
+    $trial_ts   = strtotime($s['trial_end_iso']);
+    $join_year  = gmdate('Y'); // the year the member is joining
+    $renewal_label = $trial_ts ? gmdate('F j, Y', $trial_ts) : 'January 1, ' . ((int)gmdate('Y') + 1);
+
+    $output  = '<div class="oha-membership-signup" style="background:#f5f5f5;padding:20px;border-radius:8px;margin:20px 0;">';
     $output .= '<h3 style="margin-top:0;color:#a0232a;">OHA Membership</h3>';
-    $output .= '<p><strong>Due today:</strong> $20 (covers your 2026 membership and the one-time card creation and mailing fee)</p>';
-    $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning January 1, 2027</p>';
-    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on January 1, 2027 - not a free trial. You are paying $20 today for your 2026 membership.</p>';
+    $output .= '<p><strong>Due today:</strong> $20 (covers your ' . esc_html($join_year) . ' membership and the one-time card creation and mailing fee)</p>';
+    $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning ' . esc_html($renewal_label) . '</p>';
+    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on ' . esc_html($renewal_label) . ' - not a free trial. You are paying $20 today for your ' . esc_html($join_year) . ' membership.</p>';
     $output .= '<p><a class="button button-primary button-large" href="'.esc_url($url).'" target="_top">Join OHA Membership</a></p>';
     $output .= '</div>';
-    
+
     return $output;
 });
 
@@ -412,6 +426,10 @@ add_shortcode('oha_membership_checkout', function($atts){
 add_action('wp_ajax_oha_create_checkout_session', function(){
     if(!is_user_logged_in()) wp_die('Login required');
     check_admin_referer('oha_create_session');
+    $existing = wp_get_current_user();
+    if (in_array('subscriber', $existing->roles)) {
+        wp_die('You already have an active OHA membership. Use Manage Membership to update your billing or cancel.');
+    }
     $s=oha_sm_get();
     if(empty($s['secret_key'])||empty($s['price_signup_20'])||empty($s['price_yearly_10'])) wp_die('Stripe not configured (secret or price IDs missing)');
     $uid=get_current_user_id(); $user=get_userdata($uid);
@@ -722,6 +740,146 @@ function oha_sm_handle_sponsor_payment($invoice, $event) {
 }
 
 /** ==================
+ * MEMBERSHIP REACTIVATION
+ * For returning lapsed members: $10 one-time + $10/yr (no card fee)
+ * ================== */
+
+// Reactivation shortcode — only renders for listing_owner users who previously had membership
+add_shortcode('oha_membership_reactivation', function($atts) {
+    if (!is_user_logged_in()) {
+        return '<p>Please log in.</p>';
+    }
+
+    $user = wp_get_current_user();
+
+    if (in_array('subscriber', $user->roles)) {
+        return '<p>You are already an active OHA member. <a href="' . esc_url(add_query_arg('oha_sm_portal', '1', home_url('/'))) . '">Manage your membership</a>.</p>';
+    }
+
+    if (!in_array('listing_owner', $user->roles)) {
+        return '';
+    }
+
+    // Must have oha_paid_member_since set — proves they were a member before
+    if (!get_user_meta($user->ID, 'oha_paid_member_since', true)) {
+        return '';
+    }
+
+    $s = oha_sm_get();
+
+    if (empty($s['price_reactivate_10']) || empty($s['price_yearly_10'])) {
+        return '<p>Membership reactivation is not currently available online. Please contact the board.</p>';
+    }
+
+    $trial_ts = strtotime($s['trial_end_iso']);
+    if (!$trial_ts || $trial_ts <= time()) {
+        return '<p>Membership reactivation is temporarily unavailable. Please contact the board.</p>';
+    }
+
+    $renewal_label = gmdate('F j, Y', $trial_ts);
+    $renewal_year  = (int) gmdate('Y', $trial_ts);
+    $current_year  = (int) gmdate('Y');
+
+    $nonce = wp_create_nonce('oha_create_reactivation_session');
+    $url   = add_query_arg(
+        ['action' => 'oha_create_reactivation_session', '_wpnonce' => $nonce],
+        admin_url('admin-ajax.php')
+    );
+
+    $output  = '<div class="oha-membership-reactivate" style="background:#f5f5f5;padding:20px;border-radius:8px;margin:20px 0;">';
+    $output .= '<h3 style="margin-top:0;color:#a0232a;">Reactivate OHA Membership</h3>';
+    $output .= '<p>Welcome back. Reactivate your membership to restore member benefits.</p>';
+    $output .= '<p><strong>Due today:</strong> $10 (covers your ' . esc_html($current_year) . ' membership)</p>';
+    $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning ' . esc_html($renewal_label) . '</p>';
+    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your ' . esc_html($renewal_year) . ' renewal - not a free trial. You are paying $10 today for your ' . esc_html($current_year) . ' membership.</p>';
+    $output .= '<p><a class="button button-primary button-large" href="' . esc_url($url) . '" target="_top">Reactivate Membership</a></p>';
+    $output .= '</div>';
+
+    return $output;
+});
+
+// AJAX: create reactivation Checkout Session
+add_action('wp_ajax_oha_create_reactivation_session', function() {
+    if (!is_user_logged_in()) {
+        wp_die('Login required');
+    }
+    check_admin_referer('oha_create_reactivation_session');
+
+    $s = oha_sm_get();
+
+    if (empty($s['secret_key']) || empty($s['price_reactivate_10']) || empty($s['price_yearly_10'])) {
+        wp_die('Stripe not configured for reactivation (missing secret or price IDs).');
+    }
+
+    $uid      = get_current_user_id();
+    $user_obj = new WP_User($uid);
+
+    // Verify eligibility: must be listing_owner with a previous membership
+    if (!in_array('listing_owner', $user_obj->roles)) {
+        wp_die('Not eligible for reactivation.');
+    }
+    if (!get_user_meta($uid, 'oha_paid_member_since', true)) {
+        wp_die('Not eligible for reactivation.');
+    }
+
+    $trial_ts = strtotime($s['trial_end_iso']);
+    if (!$trial_ts || $trial_ts <= time()) {
+        wp_die('Reactivation checkout is not available (renewal date not configured or in the past).');
+    }
+
+    $user     = get_userdata($uid);
+    $customer = get_user_meta($uid, 'stripe_customer_id', true);
+
+    $body = [
+        'mode'                                   => 'subscription',
+        'success_url'                            => home_url('/membership/success?session_id={CHECKOUT_SESSION_ID}'),
+        'cancel_url'                             => home_url('/membership/cancelled'),
+        'client_reference_id'                    => (string) $uid,
+        'metadata[wp_user_id]'                   => (string) $uid,
+
+        // $10 one-time reactivation fee (access for the current year)
+        'line_items[0][price]'                   => $s['price_reactivate_10'],
+        'line_items[0][quantity]'                => 1,
+
+        // $10/yr subscription anchored to next Jan 1 via trial_end
+        'line_items[1][price]'                   => $s['price_yearly_10'],
+        'line_items[1][quantity]'                => 1,
+
+        'subscription_data[trial_end]'           => $trial_ts,
+        'subscription_data[metadata][wp_user_id]' => (string) $uid,
+
+        'billing_address_collection'             => 'required',
+        'shipping_address_collection[allowed_countries][0]' => 'US',
+    ];
+
+    if (!empty($customer)) {
+        $body['customer']                  = $customer;
+        $body['customer_update[address]']  = 'auto';
+        $body['customer_update[name]']     = 'auto';
+    } else {
+        $body['customer_email'] = $user->user_email;
+    }
+
+    $resp = oha_sm_stripe_post('/v1/checkout/sessions', $body);
+
+    if (!empty($resp->error)) {
+        $msg = 'Stripe error';
+        if (!empty($resp->error->message)) {
+            $msg .= ': ' . $resp->error->message;
+        }
+        oha_sm_log('Reactivation checkout error for user ' . $uid . ': ' . json_encode($resp));
+        wp_die(esc_html($msg));
+    }
+
+    if (!empty($resp->url)) {
+        wp_redirect($resp->url);
+        exit;
+    }
+
+    wp_die('Could not create reactivation checkout session (unexpected response).');
+});
+
+/** ==================
  * SMART MEMBERSHIP BUTTON
  * Auto-detects user role and shows appropriate button text
  * ================== */
@@ -747,29 +905,41 @@ add_shortcode('oha_smart_membership_button', function($atts) {
     $user = wp_get_current_user();
     $roles = $user->roles;
     
-    // Auto-detect appropriate button text based on user status
+    // Auto-detect appropriate button text and checkout URL based on user status
     $button_text = $atts['text'];
-    if (empty($button_text)) {
-        if (in_array('subscriber', $roles)) {
-            // Current OHA member - show renewal message
-            $button_text = 'Renew Membership';
-        } elseif (in_array('listing_owner', $roles)) {
-            // Free listing owner - show upgrade message
-            $button_text = 'Upgrade to OHA Member';
+    $is_lapsed   = false;
+
+    if (in_array('subscriber', $roles)) {
+        if (empty($button_text)) {
+            $button_text = 'Manage Membership';
+        }
+        // Active members go to the billing portal, not a new checkout — prevents duplicate subscriptions
+        $url = add_query_arg('oha_sm_portal', '1', home_url('/'));
+    } elseif (in_array('listing_owner', $roles)) {
+        // A listing_owner with oha_paid_member_since is a returning lapsed member
+        if (get_user_meta($user->ID, 'oha_paid_member_since', true)) {
+            $is_lapsed = true;
+            if (empty($button_text)) {
+                $button_text = 'Reactivate Membership';
+            }
+            $nonce = wp_create_nonce('oha_create_reactivation_session');
+            $url   = add_query_arg(['action' => 'oha_create_reactivation_session', '_wpnonce' => $nonce], admin_url('admin-ajax.php'));
         } else {
-            // New/other user - show join message
+            if (empty($button_text)) {
+                $button_text = 'Upgrade to OHA Member';
+            }
+            $nonce = wp_create_nonce('oha_create_session');
+            $url   = add_query_arg(['action' => 'oha_create_checkout_session', '_wpnonce' => $nonce], admin_url('admin-ajax.php'));
+        }
+    } else {
+        if (empty($button_text)) {
             $button_text = 'Join OHA';
         }
+        $nonce = wp_create_nonce('oha_create_session');
+        $url   = add_query_arg(['action' => 'oha_create_checkout_session', '_wpnonce' => $nonce], admin_url('admin-ajax.php'));
     }
-    
-    // Use existing checkout system (same as regular button)
-    $nonce = wp_create_nonce('oha_create_session');
-    $url = add_query_arg([
-        'action' => 'oha_create_checkout_session',
-        '_wpnonce' => $nonce
-    ], admin_url('admin-ajax.php'));
-    
+
     $style_attr = !empty($atts['style']) ? ' style="' . esc_attr($atts['style']) . '"' : '';
-    
+
     return '<a href="' . esc_url($url) . '" class="' . esc_attr($atts['class']) . '"' . $style_attr . ' target="_top">' . esc_html($button_text) . '</a>';
 });

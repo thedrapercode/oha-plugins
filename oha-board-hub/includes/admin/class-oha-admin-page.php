@@ -696,6 +696,173 @@ public function __construct() {
             </script>
 
         </div>
+
+        <!-- Annual Membership Transition -->
+        <?php
+        $next_cron = wp_next_scheduled('oha_annual_membership_transition');
+        $next_label = $next_cron
+            ? gmdate('Y-m-d H:i', $next_cron) . ' UTC'
+            : 'Not scheduled';
+        ?>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e0e0e0;">
+            <p style="margin:0 0 6px;font-weight:600;color:#444;">Annual Membership Transition</p>
+            <p style="margin:0 0 10px;color:#555;font-size:13px;">
+                Members whose <code>oha_membership_active_year</code> is less than the current year will be downgraded to Listing Owner.
+                Active Stripe subscribers are verified via API before downgrade. Run Preview first to review who would be affected.
+            </p>
+            <p style="margin:0 0 12px;color:#555;font-size:13px;">
+                <strong>Next scheduled run:</strong> <?php echo esc_html($next_label); ?>
+            </p>
+
+            <div id="oha-transition-preview-results" style="display:none;margin:12px 0;overflow-x:auto;"></div>
+            <p id="oha-transition-status" style="display:none;margin:8px 0;font-size:13px;"></p>
+
+            <button type="button" class="button" id="oha-transition-preview-btn">Preview Transition</button>
+            <button type="button" class="button button-primary" id="oha-transition-run-btn" style="display:none;margin-left:8px;">Run Transition Now</button>
+
+            <script>
+            (function() {
+                var nonce   = '<?php echo esc_js(wp_create_nonce('wp_rest')); ?>';
+                var apiBase = '<?php echo esc_js(rest_url('oha/v1/membership/')); ?>';
+                var previewData = null;
+
+                document.getElementById('oha-transition-preview-btn').addEventListener('click', function() {
+                    var btn = this;
+                    btn.disabled = true;
+                    document.getElementById('oha-transition-status').style.display = 'block';
+                    document.getElementById('oha-transition-status').textContent = 'Loading preview...';
+                    document.getElementById('oha-transition-run-btn').style.display = 'none';
+
+                    fetch(apiBase + 'annual-transition-preview', {
+                        method: 'POST',
+                        headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' },
+                        credentials: 'same-origin'
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        previewData = data;
+                        var html = '<table class="widefat" style="font-size:13px;"><thead><tr>'
+                            + '<th>ID</th><th>Name</th><th>Email</th><th>Active Year</th><th>Has Subscription</th><th>Manually Verified</th>'
+                            + '</tr></thead><tbody>';
+
+                        if (!data.downgraded || data.downgraded.length === 0) {
+                            html += '<tr><td colspan="6" style="color:green;">No members would be downgraded.</td></tr>';
+                        } else {
+                            data.downgraded.forEach(function(m) {
+                                html += '<tr><td>' + m.id + '</td><td>' + m.name + '</td><td>' + m.email
+                                    + '</td><td>' + m.active_year
+                                    + '</td><td>' + (m.has_subscription ? 'Yes' : 'No')
+                                    + '</td><td>' + (m.manually_verified ? 'Yes' : 'No') + '</td></tr>';
+                            });
+                        }
+                        html += '</tbody></table>';
+                        html += '<p style="margin:8px 0;"><strong>Kept:</strong> ' + data.kept_count
+                            + ' &nbsp; <strong>Would downgrade:</strong> ' + data.downgraded_count
+                            + ' &nbsp; <strong>Skipped (Stripe API check):</strong> ' + data.skipped_count + '</p>';
+
+                        document.getElementById('oha-transition-preview-results').innerHTML = html;
+                        document.getElementById('oha-transition-preview-results').style.display = 'block';
+                        document.getElementById('oha-transition-status').textContent = 'Preview complete.';
+
+                        if (data.downgraded_count > 0) {
+                            document.getElementById('oha-transition-run-btn').style.display = 'inline-block';
+                        }
+                        btn.disabled = false;
+                    })
+                    .catch(function(e) {
+                        document.getElementById('oha-transition-status').textContent = 'Preview request failed: ' + e;
+                        btn.disabled = false;
+                    });
+                });
+
+                document.getElementById('oha-transition-run-btn').addEventListener('click', function() {
+                    var count = previewData ? previewData.downgraded_count : '?';
+                    if (!confirm('This will downgrade ' + count + ' member(s) to Listing Owner. This action cannot be automatically undone. Proceed?')) {
+                        return;
+                    }
+                    var btn = this;
+                    btn.disabled = true;
+                    document.getElementById('oha-transition-status').textContent = 'Running transition...';
+
+                    fetch(apiBase + 'annual-transition-run', {
+                        method: 'POST',
+                        headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ confirm: true }),
+                        credentials: 'same-origin'
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        document.getElementById('oha-transition-status').textContent =
+                            'Transition complete. Downgraded: ' + data.downgraded_count
+                            + ', Kept: ' + data.kept_count
+                            + ', Skipped: ' + data.skipped_count + '.';
+                        document.getElementById('oha-transition-run-btn').style.display = 'none';
+                        document.getElementById('oha-transition-preview-results').style.display = 'none';
+                    })
+                    .catch(function(e) {
+                        document.getElementById('oha-transition-status').textContent = 'Transition request failed: ' + e;
+                        btn.disabled = false;
+                    });
+                });
+            })();
+            </script>
+        </div>
+
+        <!-- Former Members Watch List -->
+        <?php
+        $former_members = get_users([
+            'role'       => 'listing_owner',
+            'meta_query' => [['key' => 'oha_paid_member_since', 'compare' => 'EXISTS']],
+            'meta_key'   => 'oha_membership_active_year',
+            'orderby'    => 'meta_value',
+            'order'      => 'DESC',
+            'number'     => 200,
+        ]);
+        ?>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e0e0e0;">
+            <p style="margin:0 0 4px;font-weight:600;color:#444;">Former Members - Downgrade Watch List</p>
+            <p style="margin:0 0 12px;color:#555;font-size:13px;">
+                Listing Owner accounts that previously held OHA membership. Verify these were intentionally downgraded.
+                A blank Downgraded Year means the annual cron did not log this downgrade (manual cancellation, webhook, or pre-cron).
+            </p>
+            <?php if (empty($former_members)) : ?>
+                <p style="color:#555;font-size:13px;">No former members found.</p>
+            <?php else : ?>
+                <table class="widefat striped" style="font-size:13px;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Last Active Year</th>
+                            <th>Stripe Sub Status</th>
+                            <th>Downgraded by Cron</th>
+                            <th>Original Join</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($former_members as $fm) :
+                        $last_year  = get_user_meta($fm->ID, 'oha_membership_active_year', true);
+                        $sub_status = get_user_meta($fm->ID, 'stripe_subscription_status', true);
+                        $dgr_year   = get_user_meta($fm->ID, 'oha_transition_downgraded_year', true);
+                        $joined     = get_user_meta($fm->ID, 'oha_paid_member_since', true);
+                        $edit_url   = admin_url('user-edit.php?user_id=' . $fm->ID);
+                        $status_color = ($sub_status === 'cancelled' || $sub_status === 'canceled') ? '#a00' : '#555';
+                    ?>
+                        <tr>
+                            <td><a href="<?php echo esc_url($edit_url); ?>"><?php echo esc_html($fm->display_name); ?></a></td>
+                            <td><?php echo esc_html($fm->user_email); ?></td>
+                            <td><?php echo $last_year ? esc_html($last_year) : '<em style="color:#999;">unknown</em>'; ?></td>
+                            <td style="color:<?php echo esc_attr($status_color); ?>"><?php echo $sub_status ? esc_html($sub_status) : '<em style="color:#999;">none</em>'; ?></td>
+                            <td><?php echo $dgr_year ? esc_html($dgr_year) : '<em style="color:#999;">-</em>'; ?></td>
+                            <td><?php echo $joined ? esc_html(gmdate('Y-m-d', strtotime($joined))) : '<em style="color:#999;">-</em>'; ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <p style="margin:8px 0 0;color:#777;font-size:12px;">Showing up to 200 former members, sorted by most recent active year.</p>
+            <?php endif; ?>
+        </div>
+
         <?php
     }
 
@@ -1177,6 +1344,14 @@ public function __construct() {
             $active_year
         ));
 
+        $invited_vendors = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} m ON p.ID = m.post_id AND m.meta_key = '_oha_status' AND m.meta_value = 'Invited'
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             WHERE p.post_type = 'vendor_application'",
+            $active_year
+        ));
+
         $total_booths = $wpdb->get_var($wpdb->prepare(
             "SELECT SUM(CAST(m.meta_value AS UNSIGNED)) FROM {$wpdb->postmeta} m
              INNER JOIN {$wpdb->posts} p ON m.post_id = p.ID
@@ -1212,21 +1387,27 @@ public function __construct() {
                 <div class="oha-stat-label">Total Applications</div>
                 <div class="oha-stat-sublabel"><?php echo esc_html($recent_vendors); ?> new (30 days)</div>
             </div>
-            
+
+            <div class="oha-stat-card">
+                <div class="oha-stat-number" style="color:#0891b2;"><?php echo esc_html($invited_vendors ?: '0'); ?></div>
+                <div class="oha-stat-label">Invited</div>
+                <div class="oha-stat-sublabel">Invite sent, not yet applied</div>
+            </div>
+
             <div class="oha-stat-card">
                 <div class="oha-stat-icon">💰</div>
                 <div class="oha-stat-number"><?php echo esc_html($paid_vendors ?: '0'); ?></div>
                 <div class="oha-stat-label">Paid & Confirmed</div>
                 <div class="oha-stat-sublabel">Ready for event</div>
             </div>
-            
+
             <div class="oha-stat-card">
                 <div class="oha-stat-icon">⏳</div>
                 <div class="oha-stat-number"><?php echo esc_html($pending_vendors ?: '0'); ?></div>
                 <div class="oha-stat-label">Pending Payment</div>
                 <div class="oha-stat-sublabel">Awaiting completion</div>
             </div>
-            
+
             <div class="oha-stat-card">
                 <div class="oha-stat-icon">📦</div>
                 <div class="oha-stat-number"><?php echo esc_html($total_booths ?: '0'); ?></div>
@@ -1234,18 +1415,115 @@ public function __construct() {
                 <div class="oha-stat-sublabel">Reserved & paid</div>
             </div>
         </div>
-        
+
         <style>
             .oha-vendor-stats-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                 gap: 20px;
                 margin: 20px 0 30px 0;
             }
         </style>
         
         <?php
-        
+
+        // --- Duplicate vendor detection ---
+        $all_apps = $wpdb->get_results($wpdb->prepare(
+            "SELECT p.ID, p.post_date,
+                MAX(CASE WHEN pm.meta_key = 'company_name' THEN pm.meta_value END) AS company,
+                MAX(CASE WHEN pm.meta_key = 'email'        THEN pm.meta_value END) AS email,
+                MAX(CASE WHEN pm.meta_key = 'phone'        THEN pm.meta_value END) AS phone,
+                MAX(CASE WHEN pm.meta_key = '_oha_status'  THEN pm.meta_value END) AS status
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} y ON p.ID = y.post_id AND y.meta_key = '_convention_year' AND y.meta_value = %d
+             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key IN ('company_name','email','phone','_oha_status')
+             WHERE p.post_type = 'vendor_application' AND p.post_status <> 'trash'
+             GROUP BY p.ID, p.post_date
+             ORDER BY p.post_date DESC",
+            $active_year
+        ));
+
+        $by_company = [];
+        $by_email   = [];
+        $by_phone   = [];
+        foreach ($all_apps as $app) {
+            $norm_company = strtolower(trim($app->company ?? ''));
+            $norm_email   = strtolower(trim($app->email ?? ''));
+            $norm_phone   = preg_replace('/[^0-9]/', '', $app->phone ?? '');
+            if ($norm_company) $by_company[$norm_company][] = $app;
+            if ($norm_email)   $by_email[$norm_email][]     = $app;
+            if (strlen($norm_phone) >= 7) $by_phone[$norm_phone][] = $app;
+        }
+
+        // Collect unique duplicate groups: keyed by sorted post ID pair to avoid showing same pair twice
+        $dup_groups = [];
+        foreach (['company' => $by_company, 'email' => $by_email, 'phone' => $by_phone] as $field => $lookup) {
+            foreach ($lookup as $val => $group) {
+                if (count($group) < 2) continue;
+                usort($group, function($a, $b) { return $b->ID - $a->ID; });
+                $ids_key = implode(',', array_map(function($a){ return $a->ID; }, $group));
+                if (!isset($dup_groups[$ids_key])) {
+                    $dup_groups[$ids_key] = ['field' => $field, 'value' => $val, 'apps' => $group];
+                }
+            }
+        }
+
+        if (!empty($dup_groups)):
+        ?>
+        <div class="notice notice-warning inline" style="margin:0 0 20px;padding:12px 16px;">
+            <h3 style="margin:0 0 8px;">Potential Duplicate Vendor Applications (<?php echo count($dup_groups); ?>)</h3>
+            <p style="margin:0 0 12px;color:#555;">These applications share the same business name, email, or phone number. The most recent application (highest ID) is listed first. Review and remove the older duplicate.</p>
+            <table class="widefat striped" style="margin-top:8px;">
+                <thead>
+                    <tr>
+                        <th>Matched On</th>
+                        <th>Shared Value</th>
+                        <th>ID</th>
+                        <th>Company</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($dup_groups as $group):
+                    $field_label = ['company' => 'Business Name', 'email' => 'Email', 'phone' => 'Phone'][$group['field']];
+                    $first = true;
+                    foreach ($group['apps'] as $app):
+                        $edit_url = get_edit_post_link($app->ID);
+                ?>
+                    <tr style="<?php echo $first ? 'background:#f0fdf4;' : 'background:#fff7f7;'; ?>">
+                        <?php if ($first): ?>
+                        <td rowspan="<?php echo count($group['apps']); ?>" style="vertical-align:top;font-weight:bold;white-space:nowrap;"><?php echo esc_html($field_label); ?></td>
+                        <td rowspan="<?php echo count($group['apps']); ?>" style="vertical-align:top;word-break:break-all;max-width:160px;"><?php echo esc_html($group['value']); ?></td>
+                        <?php endif; ?>
+                        <td><?php echo intval($app->ID); ?></td>
+                        <td><?php echo esc_html($app->company ?: '(none)'); ?></td>
+                        <td><?php echo esc_html($app->email ?: '-'); ?></td>
+                        <td><?php echo esc_html($app->status ?: '-'); ?></td>
+                        <td><?php echo esc_html(date('M j, Y', strtotime($app->post_date))); ?></td>
+                        <td>
+                            <?php if ($first): ?>
+                            <span style="color:#059669;font-weight:bold;font-size:11px;">Most Recent</span><br>
+                            <?php else: ?>
+                            <span style="color:#dc2626;font-size:11px;">Older</span><br>
+                            <?php endif; ?>
+                            <a href="<?php echo esc_url($edit_url); ?>" target="_blank" style="font-size:12px;">Edit</a>
+                        </td>
+                    </tr>
+                <?php $first = false; endforeach; ?>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php else: ?>
+        <p style="color:#059669;margin-bottom:20px;">No duplicate vendor applications detected for <?php echo intval($active_year); ?>.</p>
+        <?php endif; ?>
+        <!-- end duplicate detection -->
+
+        <?php
+
         if (shortcode_exists('oha_vendor_board_hub')) {
             ?>
             <div class="card" style="padding:12px;margin-bottom:16px;">
