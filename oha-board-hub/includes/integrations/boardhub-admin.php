@@ -493,7 +493,7 @@ add_shortcode('oha_vendor_boardhub', function() {
         <!-- Enhanced Dashboard Statistics -->
         <div class="oha-boardhub-header">
             <div style="width:100%;">
-                <h1 class="oha-boardhub-title">🎃 OHA Vendor Board Hub</h1>
+                <h1 class="oha-boardhub-title">OHA Vendor Board Hub</h1>
                 
                 <!-- Quick Stats Grid -->
                 <div class="oha-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin:20px 0;">
@@ -504,12 +504,14 @@ add_shortcode('oha_vendor_boardhub', function() {
                     $total = count($vendors);
                     $paid = 0;
                     $pending = 0;
+                    $invited = 0;
                     $total_booths = 0;
-                    
+
                     foreach ($vendors as $v) {
                         $status = get_post_meta($v->ID, '_oha_status', true);
                         if ($status === 'Paid') $paid++;
                         if (in_array($status, ['Submitted', 'In Review', 'Approved', 'Pending', ''])) $pending++;
+                        if ($status === 'Invited') $invited++;
                         $booths = get_post_meta($v->ID, 'booths', true);
                         $total_booths += intval($booths ?: 1);
                     }
@@ -553,6 +555,13 @@ add_shortcode('oha_vendor_boardhub', function() {
                         <div style="font-size:11px;color:#999;margin-top:5px;"><?php echo $recent_vendors; ?> new (30 days)</div>
                     </div>
                     
+                    <div class="oha-stat-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px;text-align:center;">
+                        <div style="font-size:32px;margin-bottom:10px;visibility:hidden;">-</div>
+                        <div class="oha-stat-value" style="font-size:28px;font-weight:700;color:#0891b2;margin:5px 0;"><?php echo intval($invited); ?></div>
+                        <div class="oha-stat-label" style="font-size:12px;color:#64748b;text-transform:uppercase;">Invited</div>
+                        <div style="font-size:11px;color:#999;margin-top:5px;">Invite sent, not yet applied</div>
+                    </div>
+
                     <div class="oha-stat-card" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px;text-align:center;">
                         <div style="font-size:32px;margin-bottom:10px;">💰</div>
                         <div class="oha-stat-value" style="font-size:28px;font-weight:700;color:#059669;margin:5px 0;"><?php echo $paid; ?></div>

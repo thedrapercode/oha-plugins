@@ -1389,6 +1389,7 @@ public function __construct() {
             </div>
 
             <div class="oha-stat-card">
+                <div class="oha-stat-icon" style="font-size:32px;margin-bottom:10px;visibility:hidden;">-</div>
                 <div class="oha-stat-number" style="color:#0891b2;"><?php echo esc_html($invited_vendors ?: '0'); ?></div>
                 <div class="oha-stat-label">Invited</div>
                 <div class="oha-stat-sublabel">Invite sent, not yet applied</div>
@@ -1491,7 +1492,8 @@ public function __construct() {
                     $field_label = ['company' => 'Business Name', 'email' => 'Email', 'phone' => 'Phone'][$group['field']];
                     $first = true;
                     foreach ($group['apps'] as $app):
-                        $edit_url = get_edit_post_link($app->ID);
+                        $edit_url  = get_edit_post_link($app->ID);
+                        $trash_url = get_delete_post_link($app->ID, '', false);
                 ?>
                     <tr style="<?php echo $first ? 'background:#f0fdf4;' : 'background:#fff7f7;'; ?>">
                         <?php if ($first): ?>
@@ -1503,13 +1505,16 @@ public function __construct() {
                         <td><?php echo esc_html($app->email ?: '-'); ?></td>
                         <td><?php echo esc_html($app->status ?: '-'); ?></td>
                         <td><?php echo esc_html(date('M j, Y', strtotime($app->post_date))); ?></td>
-                        <td>
+                        <td style="white-space:nowrap;">
                             <?php if ($first): ?>
                             <span style="color:#059669;font-weight:bold;font-size:11px;">Most Recent</span><br>
                             <?php else: ?>
                             <span style="color:#dc2626;font-size:11px;">Older</span><br>
                             <?php endif; ?>
                             <a href="<?php echo esc_url($edit_url); ?>" target="_blank" style="font-size:12px;">Edit</a>
+                            &nbsp;|&nbsp;
+                            <a href="<?php echo esc_url($trash_url); ?>" style="font-size:12px;color:#dc2626;"
+                               onclick="return confirm('Move this application to Trash? No email will be sent to the vendor.');">Trash</a>
                         </td>
                     </tr>
                 <?php $first = false; endforeach; ?>
