@@ -43,8 +43,6 @@ public function __construct() {
             'webhooks' => __('Webhooks', 'oha-board-hub'),
             'notifications' => __('Board Notifications', 'oha-board-hub'),
             'shortcodes' => __('Shortcode Reference', 'oha-board-hub'),
-            'tools' => __('Tools', 'oha-board-hub'),
-            'debug' => __('Debug', 'oha-board-hub'),
             'discounts' => __('Haunt Discounts', 'oha-board-hub'),
         ];
 
@@ -139,12 +137,6 @@ public function __construct() {
                     break;
                 case 'shortcodes':
                     $this->render_shortcodes_tab();
-                    break;
-                case 'tools':
-                    $this->render_tools_tab();
-                    break;
-                case 'debug':
-                    $this->render_debug_tab();
                     break;
                 case 'discounts':
                     $this->render_discounts_tab();
@@ -1011,20 +1003,35 @@ public function __construct() {
      * Render Board Hub settings tab
      */
     private function render_boardhub_tab() {
+        // Handle Board Hub backfill action
+        if (isset($_POST['oha_sm_backfill_bh']) && check_admin_referer('oha_sm_backfill_bh')) {
+            if (function_exists('oha_sm_backfill_all_users_to_boardhub')) {
+                $n = oha_sm_backfill_all_users_to_boardhub();
+                echo '<div class="notice notice-success is-dismissible"><p>' . sprintf(esc_html__('Board Hub backfill complete. Users updated: %d', 'oha-board-hub'), intval($n)) . '</p></div>';
+            }
+        }
         ?>
         <h2><?php esc_html_e('Board Hub Settings', 'oha-board-hub'); ?></h2>
         <?php
-        
+
         if (class_exists('OHA_Board_Hub')) {
             $obj = new OHA_Board_Hub();
             if (method_exists($obj, 'settings_page')) {
                 $obj->settings_page();
-                return;
             }
+        } else {
+            ?>
+            <p><em><?php esc_html_e('Board Hub class not available.', 'oha-board-hub'); ?></em></p>
+            <?php
         }
-        
         ?>
-        <p><em><?php esc_html_e('Board Hub class not available.', 'oha-board-hub'); ?></em></p>
+        <hr>
+        <h3><?php esc_html_e('Maintenance', 'oha-board-hub'); ?></h3>
+        <p><?php esc_html_e('Backfill billing address fields from Stripe checkout data into Board Hub member fields for any members who completed checkout before the sync was added.', 'oha-board-hub'); ?></p>
+        <form method="post">
+            <?php wp_nonce_field('oha_sm_backfill_bh'); ?>
+            <button class="button" name="oha_sm_backfill_bh" value="1"><?php esc_html_e('Backfill Board Hub Fields', 'oha-board-hub'); ?></button>
+        </form>
         <?php
     }
     
@@ -1606,32 +1613,6 @@ public function __construct() {
         } else {
             ?>
             <p><?php esc_html_e('Board Notifications module not loaded.', 'oha-board-hub'); ?></p>
-            <?php
-        }
-    }
-    
-    /**
-     * Render Tools tab
-     */
-    private function render_tools_tab() {
-        if (function_exists('oha_sm_tools_page')) {
-            oha_sm_tools_page();
-        } else {
-            ?>
-            <p><?php esc_html_e('No tools available.', 'oha-board-hub'); ?></p>
-            <?php
-        }
-    }
-    
-    /**
-     * Render Debug tab
-     */
-    private function render_debug_tab() {
-        if (function_exists('oha_sm_debug_page')) {
-            oha_sm_debug_page();
-        } else {
-            ?>
-            <p><?php esc_html_e('No debug information available.', 'oha-board-hub'); ?></p>
             <?php
         }
     }

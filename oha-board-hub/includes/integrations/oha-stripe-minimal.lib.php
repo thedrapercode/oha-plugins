@@ -201,26 +201,7 @@ function oha_sm_settings_page(){
     <?php
 }
 
-/** Tools */
-function oha_sm_tools_page(){
-    if(!current_user_can('manage_options')) return;
-    if(isset($_POST['oha_sm_backfill_swpm']) && check_admin_referer('oha_sm_backfill_swpm')){ $n=oha_sm_backfill_all_users_to_swpm(); oha_sm_admin_note('SWPM Backfill complete. Updated rows: '.intval($n)); }
-    if(isset($_POST['oha_sm_backfill_bh']) && check_admin_referer('oha_sm_backfill_bh')){ $n=oha_sm_backfill_all_users_to_boardhub(); oha_sm_admin_note('Board Hub Backfill complete. Users updated: '.intval($n)); }
-    ?>
-    <div class="wrap"><h1>OHA Stripe Tools</h1>
-        <form method="post"><?php wp_nonce_field('oha_sm_backfill_swpm'); ?><p><button class="button button-primary" name="oha_sm_backfill_swpm" value="1">Backfill Addresses into SWPM</button></p></form>
-        <form method="post"><?php wp_nonce_field('oha_sm_backfill_bh'); ?><p><button class="button" name="oha_sm_backfill_bh" value="1">Backfill Board Hub Fields</button></p></form>
-    </div>
-    <?php
-}
-function oha_sm_backfill_all_users_to_swpm(){ $q=new WP_User_Query(array('meta_key'=>'billing_address_line1','meta_compare'=>'EXISTS','number'=>-1,'fields'=>'ID')); $ids=$q->get_results(); if(!$ids) return 0; $c=0; foreach($ids as $id){ if(oha_sm_sync_to_swpm($id)) $c++; } return $c; }
 function oha_sm_backfill_all_users_to_boardhub(){ $q=new WP_User_Query(array('meta_key'=>'billing_address_line1','meta_compare'=>'EXISTS','number'=>-1,'fields'=>'ID')); $ids=$q->get_results(); if(!$ids) return 0; $c=0; foreach($ids as $id){ oha_sm_push_to_board_hub_fields($id,'billing_'); $c++; } return $c; }
-
-/** Debug */
-function oha_sm_debug_page(){
-    if(!current_user_can('manage_options')) return; ?>
-    <div class="wrap"><h1>OHA Stripe Debug</h1><p>Use Tools to backfill. Errors surface as admin notices and in PHP error_log.</p></div>
-<?php }
 
 /** Logging */
 function oha_sm_log($m){ $s=oha_sm_get(); if(empty($s['log'])) return; if(!is_string($m)) $m=print_r($m,true); error_log('[OHA Stripe Minimal] '.$m); }

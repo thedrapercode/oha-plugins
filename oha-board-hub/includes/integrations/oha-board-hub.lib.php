@@ -307,10 +307,6 @@ const CAP = 'read_oha_board_hub';
             'members'  => ['title' => 'Members', 'order' => 20, 'enabled' => true],
             'con'      => ['title' => get_option('oha_vhcpt_convention_name', 'Convention ' . get_option('oha_vhcpt_active_year', date('Y'))), 'order' => 40, 'enabled' => true],
             'sponsors' => ['title' => 'Sponsors', 'order' => 45, 'enabled' => true],
-            'finance'  => ['title' => 'Finance', 'order' => 50, 'enabled' => true],
-            'activity' => ['title' => 'Site Activity', 'order' => 60, 'enabled' => true],
-            'help'     => ['title' => 'Training', 'order' => 70, 'enabled' => true],
-            'changes'  => ['title' => 'Change Log', 'order' => 80, 'enabled' => true],
             'discounts' => ['title' => 'Haunt Discounts', 'order' => 90, 'enabled' => true],
         ];
         
@@ -413,11 +409,6 @@ const CAP = 'read_oha_board_hub';
             'level_sponsors'        => '8',
             'level_convention2026'  => '6',
             'level_webmaster'       => '5',
-            'notify_email'          => get_option('admin_email'),
-            'videos_members'        => '',
-            'videos_listings'       => '',
-            'videos_convention'     => '',
-            'videos_events'         => '',
             'new_window_days'       => '30',
             'enable_convention_tools' => '0',
         ];
@@ -633,18 +624,6 @@ private function current_user_sm_level_equals($target_level) {
                     break;
                 case 'sponsors':
                     echo $this->render_sponsors_tab();
-                    break;
-                case 'finance':
-                    echo $this->render_finance_tab();
-                    break;
-                case 'activity':
-                    echo $this->render_activity_log_tab();
-                    break;
-                case 'help':
-                    echo $this->render_help_tab($s);
-                    break;
-                case 'changes':
-                    echo $this->render_changes_tab();
                     break;
                 case 'discounts':
                     echo do_shortcode('[oha_haunt_discounts_admin]');
@@ -1115,128 +1094,6 @@ private function render_overview_tab($range = '30d') {
         } catch (\Throwable $e) { return 0; }
     }
 
-    private function render_gd_tab() {
-        ob_start(); ?>
-        <div class="oha-grid">
-            <div class="oha-card">
-                <h3>Listings</h3>
-                <p>
-                    <a class="button" href="<?php echo admin_url('edit.php?post_type=gd_place'); ?>">Haunts (Admin)</a>
-                    <a class="button" href="<?php echo admin_url('edit.php?post_type=gd_place&post_status=pending'); ?>">Pending Places</a>
-                    <a class="button" href="<?php echo admin_url('admin.php?page=gd-claim-reports'); ?>">Claim Request</a>
-                </p>
-                <p><a class="button" href="<?php echo admin_url('edit.php?post_type=gd_place&orderby=date&order=desc'); ?>">Newest</a></p>
-            </div>
-            <div class="oha-card">
-                <h3>Events</h3>
-                <p>
-                    <a class="button" href="<?php echo admin_url('edit.php?post_type=gd_event'); ?>">Haunt Events (Admin)</a>
-                    <a class="button" href="<?php echo admin_url('post-new.php?post_type=gd_event'); ?>">Create Event</a>
-                </p>
-            </div>
-        </div>
-        <?php
-        return ob_get_clean();
-    }
-
-    /**
-     * Convention Financials Tab -- delegates to OHA_Financials class
-     */
-    private function render_finance_tab() {
-        if (class_exists('OHA_Financials')) {
-            return OHA_Financials::render_tab();
-        }
-        return '<p>Financials module not loaded.</p>';
-    }
-    
-    /**
-     * Phase 2B: Site Activity Tab - shows full development activity + system activity
-     */
-    private function render_activity_log_tab() {
-        ob_start(); ?>
-        <h2>Site Activity</h2>
-        
-        <?php
-        // Show full development activity (what was previously in Development Activity card)
-        if (class_exists('OHA_DevLog')) {
-            echo OHA_DevLog::render_overview_widget();
-        } else {
-            echo '<div class="oha-card"><p>Development activity tracking not available.</p></div>';
-        }
-        ?>
-        
-        <?php
-        return ob_get_clean();
-    }
-
-    private function video_urls($key) {
-        $raw = $this->get_setting($key, '');
-        $parts = preg_split('/[\r\n,]+/', (string)$raw);
-        $urls = [];
-        foreach ($parts as $p) {
-            $p = trim($p);
-            if (empty($p)) continue;
-            $urls[] = esc_url($p);
-        }
-        return $urls;
-    }
-
-    // NEW: Safe conversion of watch/share URLs to embed URLs for YouTube + basic Vimeo
-    private function oha_convert_video_url($url) {
-        $u = trim((string)$url);
-        if ($u === '') return $u;
-        // YouTube watch
-        if (preg_match('#https?://(?:www\.)?youtube\.com/watch\?([^ ]+)#i', $u)) {
-            parse_str(parse_url($u, PHP_URL_QUERY), $qs);
-            if (!empty($qs['v'])) {
-                return 'https://www.youtube.com/embed/' . preg_replace('/[^A-Za-z0-9_\-]/','',$qs['v']);
-            }
-        }
-        // YouTube short
-        if (preg_match('#https?://youtu\.be/([A-Za-z0-9_\-]+)#i', $u, $m)) {
-            return 'https://www.youtube.com/embed/' . $m[1];
-        }
-        // Already embed
-        if (preg_match('#https?://(?:www\.)?youtube\.com/embed/#i', $u)) {
-            return $u;
-        }
-        // Vimeo normal
-        if (preg_match('#https?://vimeo\.com/(\d+)#i', $u, $m)) {
-            return 'https://player.vimeo.com/video/' . $m[1];
-        }
-        // Vimeo embed
-        if (preg_match('#https?://player\.vimeo\.com/video/\d+#i', $u)) {
-            return $u;
-        }
-        return $u;
-    }
-
-    private function render_help_tab($s) {
-        $sections = [
-            'videos_members'    => 'Members (Simple Membership)',
-            'videos_listings'   => 'GeoDirectory (Listings & Events)',
-            'videos_convention' => 'Convention Tools',
-            'videos_events'     => 'Event Creation',
-        ];
-
-        ob_start(); ?>
-        <div class="oha-grid">
-            <?php foreach ($sections as $opt => $title): $urls = $this->video_urls($opt); ?>
-            <div class="oha-card">
-                <h3><?php echo esc_html($title); ?></h3>
-                <?php if (!empty($urls)): ?>
-                    <?php foreach ($urls as $u): $embed = $this->oha_convert_video_url($u); ?>
-                        <div class="oha-video-wrap"><iframe src="<?php echo esc_url($embed); ?>" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p>Add one or more training video URLs (comma or newline separated) in <em>Settings → OHA Board Hub</em>.</p>
-                <?php endif; ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php
-        return ob_get_clean();
-    }
 
     /* ================= Members: legacy-safe dataset + PHP filter ================= */
 
@@ -2382,33 +2239,20 @@ private function render_sponsors_tab() {
             </style>
             <?php
         });
-        add_settings_section('general', 'General Settings', function(){
-            echo '<p>Emails, training videos, and feature toggles. You can paste multiple video URLs for each section (comma or newline separated).</p>';
-        }, self::OPT);
+        add_settings_section('general', 'General Settings', '__return_false', self::OPT);
 
         $fields = [
-            'notify_email'    => 'Board Notification Email(s) (comma-separated)',
             'new_window_days' => 'Overview “New Members” Window (days)',
-            'videos_members'   => 'Members Training Video URL(s)',
-            'videos_listings'  => 'Listings/GeoDirectory Training Video URL(s)',
-            'videos_convention'=> 'Convention Tools Training Video URL(s)',
-            'videos_events'    => 'Event Creation Training Video URL(s)',
             'enable_convention_tools' => 'Enable Convention Tools (leave OFF for stability)',
         ];
         foreach($fields as $key=>$label){
             add_settings_field($key, $label, function() use ($key){
                 $opts = get_option(OHA_Board_Hub::OPT, []);
                 if ($key === 'new_window_days') {
-                    printf('<input type="number" class="small-text" name="%s[%s]" value="%s" />', esc_attr(OHA_Board_Hub::OPT), esc_attr($key), isset($opts[$key]) ? esc_attr($opts[$key]) : '');
+                    printf('<input type=”number” class=”small-text” name=”%s[%s]” value=”%s” />', esc_attr(OHA_Board_Hub::OPT), esc_attr($key), isset($opts[$key]) ? esc_attr($opts[$key]) : '');
                 } else if ($key === 'enable_convention_tools') {
                     $checked = isset($opts[$key]) && $opts[$key] === '1' ? 'checked' : '';
-                    printf('<label><input type="checkbox" name="%s[%s]" value="1" %s /> Enable</label><p class="description">Leave OFF if your host has strict PHP/MySQL settings or you saw errors previously. Turning it ON registers extra CPTs.</p>', esc_attr(OHA_Board_Hub::OPT), esc_attr($key), $checked);
-                } else if (strpos($key, 'videos_') === 0) {
-                    $val = isset($opts[$key]) ? $opts[$key] : '';
-                    printf('<textarea class="large-text" rows="3" name="%s[%s]">%s</textarea><p class="description">Paste multiple URLs separated by commas or new lines. Unlisted YouTube/Vimeo embed/share URLs recommended.</p>', esc_attr(OHA_Board_Hub::OPT), esc_attr($key), esc_textarea($val));
-                } else if ($key === 'notify_email') {
-                    $val = isset($opts[$key]) ? $opts[$key] : '';
-                    printf('<input type="text" class="regular-text" name="%s[%s]" value="%s" />', esc_attr(OHA_Board_Hub::OPT), esc_attr($key), esc_attr($val));
+                    printf('<label><input type=”checkbox” name=”%s[%s]” value=”1” %s /> Enable</label><p class=”description”>Leave OFF if your host has strict PHP/MySQL settings or you saw errors previously. Turning it ON registers extra CPTs.</p>', esc_attr(OHA_Board_Hub::OPT), esc_attr($key), $checked);
                 }
             }, self::OPT, 'general');
         }
@@ -2425,21 +2269,6 @@ private function render_sponsors_tab() {
         <?php
     }
 
-    private function render_changes_tab() {
-        ob_start(); ?>
-        <h2 class="oha-overview-title">Change Log</h2>
-        <div class="oha-card">
-            <?php
-            if ( function_exists('do_shortcode') ) {
-                echo do_shortcode('[oha_change_log]');
-            } else {
-                echo '<p>[oha_change_log] shortcode requires WordPress do_shortcode.</p>';
-            }
-            ?>
-        </div>
-        <?php
-        return ob_get_clean();
-    }
 }
 new OHA_Board_Hub();
 }

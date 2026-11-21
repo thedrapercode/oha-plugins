@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.17.3",
+    "version":  "2.18.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -848,6 +848,55 @@
                         "type":  "feature",
                         "summary":  "Admin notice warns when Annual Renewal Start Date is expired or within 45 days of expiring",
                         "notes":  "Shows error (red) when trial_end_iso is in the past - signups are blocked. Shows warning (yellow) when within 45 days. Both notices link directly to Board Hub Stripe Settings tab and show the exact value to enter. Visible to manage_options users on all admin pages."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "feature",
+                        "summary":  "Late-year signup cutoff advances trial_end by 1 year for signups on/after configurable date (default Nov 1)",
+                        "notes":  "Configured via trial_end_late_cutoff setting (MM-DD format). oha_sm_get_effective_trial() helper used in all 4 checkout paths."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "feature",
+                        "summary":  "Subscriber guard blocks active members from reaching checkout and paying a second time",
+                        "notes":  "Role check in both [oha_membership_checkout] shortcode and wp_ajax_oha_create_checkout_session. Returns friendly message with manage link."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "feature",
+                        "summary":  "Admin notice warns when trial_end_iso is expired or within 45 days, showing exact value to enter",
+                        "notes":  "Red notice after expiry, yellow within 45 days. Links directly to Stripe Settings tab. Must be updated each January."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "feature",
+                        "summary":  "Former Members Watch List panel in Membership Health tab for manual downgrade verification",
+                        "notes":  "Queries listing_owner users with oha_paid_member_since set. Shows last active year and Stripe sub status. Up to 200 rows."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "change",
+                        "summary":  "Removed Training, Finance, Site Activity, Change Log, and Listings/Events tabs from frontend board dashboard",
+                        "notes":  "render_help_tab, render_finance_tab, render_activity_log_tab, render_changes_tab, render_gd_tab all removed. oha-financials.lib.php no longer loaded. DevLog overview widget on Overview tab preserved."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "change",
+                        "summary":  "Consolidated notification emails - removed duplicate notify_email field and dead SWPM integration",
+                        "notes":  "notify_email removed from oha_board_hub_settings defaults and form. SWPM field, hooks, and swpm backfill removed from class-oha-board-notifications.php. oha_board_notifications[recipient_emails] is sole location."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.18.0",
+                        "type":  "change",
+                        "summary":  "Removed Tools and Debug admin tabs; Board Hub backfill button moved to Board Hub Settings tab",
+                        "notes":  "oha_sm_tools_page, oha_sm_debug_page, oha_sm_backfill_all_users_to_swpm removed. Backfill BH button now in render_boardhub_tab with nonce."
                     }
                 ]
 }

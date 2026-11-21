@@ -29,14 +29,8 @@ class OHA_Board_Notifications {
         // Add settings to main admin page
         add_action('admin_init', [__CLASS__, 'register_settings']);
         
-        // Hook into SWPM member creation
-        add_action('swpm_membership_changed', [__CLASS__, 'check_swpm_membership'], 10, 2);
-        
         // Hook into UsersWP form submission (if UsersWP is active)
         add_action('uwp_after_process_register', [__CLASS__, 'check_userswp_registration'], 10, 1);
-        
-        // Alternative SWPM hook for new members
-        add_action('swpm_front_end_registration_complete_user_data', [__CLASS__, 'check_swpm_registration'], 10, 2);
     }
     
     /**
@@ -57,7 +51,6 @@ class OHA_Board_Notifications {
         $sanitized['enabled'] = !empty($input['enabled']) ? 1 : 0;
         $sanitized['recipient_emails'] = sanitize_textarea_field($input['recipient_emails'] ?? '');
         $sanitized['subject'] = sanitize_text_field($input['subject'] ?? 'New OHA Member Signup');
-        $sanitized['notify_swpm_level'] = absint($input['notify_swpm_level'] ?? 10);
         $sanitized['notify_userswp_form'] = absint($input['notify_userswp_form'] ?? 1);
         
         return $sanitized;
@@ -71,7 +64,6 @@ class OHA_Board_Notifications {
             'enabled' => 1,
             'recipient_emails' => get_option('admin_email'),
             'subject' => 'New OHA Member Signup',
-            'notify_swpm_level' => 10,
             'notify_userswp_form' => 1,
         ];
         
@@ -321,25 +313,6 @@ class OHA_Board_Notifications {
                     
                     <tr>
                         <th scope="row">
-                            <label for="oha_notifications_swpm_level">
-                                <?php esc_html_e('SWPM Membership Level to Monitor', 'oha-board-hub'); ?>
-                            </label>
-                        </th>
-                        <td>
-                            <input type="number" 
-                                   name="<?php echo esc_attr(self::OPTION_NAME); ?>[notify_swpm_level]" 
-                                   id="oha_notifications_swpm_level"
-                                   value="<?php echo esc_attr($settings['notify_swpm_level']); ?>" 
-                                   class="small-text"
-                                   min="1">
-                            <p class="description">
-                                <?php esc_html_e('Send notification when a member signs up with this SWPM membership level (default: 10 for paid members).', 'oha-board-hub'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
                             <label for="oha_notifications_userswp_form">
                                 <?php esc_html_e('UsersWP Form ID to Monitor', 'oha-board-hub'); ?>
                             </label>
@@ -383,10 +356,10 @@ class OHA_Board_Notifications {
                     'email' => 'test@example.com',
                     'first_name' => 'Test',
                     'last_name' => 'Member',
-                    'membership_level' => $settings['notify_swpm_level']
+                    'membership_level' => 1,
                 ];
-                
-                self::send_notification($test_data, 'swpm');
+
+                self::send_notification($test_data, 'uwp');
                 
                 echo '<div class="notice notice-success"><p>' . 
                      esc_html__('Test notification sent! Check your inbox.', 'oha-board-hub') . 
