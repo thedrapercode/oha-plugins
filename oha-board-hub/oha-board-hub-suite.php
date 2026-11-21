@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.18.0
+ * Version: 2.18.1
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.18.0');
+define('OHA_BHS_VERSION', '2.18.1');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -253,6 +253,39 @@ function oha_bhs_check_for_update( $transient ) {
         ];
     }
     return $transient;
+}
+
+add_filter( 'plugins_api', 'oha_bhs_plugin_info', 20, 3 );
+function oha_bhs_plugin_info( $result, $action, $args ) {
+    if ( $action !== 'plugin_information' || empty( $args->slug ) || $args->slug !== 'oha-board-hub' ) {
+        return $result;
+    }
+    $response = wp_remote_get(
+        'https://raw.githubusercontent.com/thedrapercode/oha-plugins/main/updates/board-hub.json',
+        [ 'timeout' => 10, 'sslverify' => true ]
+    );
+    if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
+        return $result;
+    }
+    $data = json_decode( wp_remote_retrieve_body( $response ) );
+    if ( ! $data || empty( $data->version ) ) {
+        return $result;
+    }
+    return (object) [
+        'name'          => 'OHA Board Hub Suite',
+        'slug'          => 'oha-board-hub',
+        'version'       => $data->version,
+        'author'        => 'OHA',
+        'homepage'      => 'https://ohiohaunters.com',
+        'download_link' => $data->download_url,
+        'sections'      => [
+            'description' => 'Unified admin suite for Ohio Haunters Association.',
+            'changelog'   => isset( $data->changelog ) ? nl2br( esc_html( $data->changelog ) ) : 'See GitHub releases for changelog.',
+        ],
+        'requires'      => '5.8',
+        'tested'        => '6.7',
+        'last_updated'  => isset( $data->last_updated ) ? $data->last_updated : '',
+    ];
 }
 
 // Autoloader for classes

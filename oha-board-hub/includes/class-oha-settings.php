@@ -189,6 +189,10 @@ class OHA_Settings {
                 'free_level_id' => 2,
                 'paid_level_id' => 10,
             ],
+            'discord' => [
+                'announcement_webhook' => '',
+                'jobs_webhook'         => '',
+            ],
         ];
     }
     
