@@ -1921,15 +1921,11 @@ private function render_sponsors_tab() {
             
             // Define built-in tabs with default order
             $builtin_tabs = [
-                'overview' => ['title' => 'Overview', 'type' => 'builtin', 'order' => 10],
-                'members' => ['title' => 'Members', 'type' => 'builtin', 'order' => 20],
-                'gd' => ['title' => 'Listings & Events', 'type' => 'builtin', 'order' => 30],
-                'con' => ['title' => 'Convention 2026', 'type' => 'builtin', 'order' => 40],
-                'finance' => ['title' => 'Finance', 'type' => 'builtin', 'order' => 50],
-                'activity' => ['title' => 'Site Activity', 'type' => 'builtin', 'order' => 60],
-                'help' => ['title' => 'Training', 'type' => 'builtin', 'order' => 70],
-                'changes' => ['title' => 'Change Log', 'type' => 'builtin', 'order' => 80],
-                'discounts' => ['title' => 'Haunt Discounts', 'type' => 'builtin', 'order' => 90]
+                'overview'  => ['title' => 'Overview',        'type' => 'builtin', 'order' => 10],
+                'members'   => ['title' => 'Members',         'type' => 'builtin', 'order' => 20],
+                'con'       => ['title' => 'Convention 2026', 'type' => 'builtin', 'order' => 40],
+                'sponsors'  => ['title' => 'Sponsors',        'type' => 'builtin', 'order' => 45],
+                'discounts' => ['title' => 'Haunt Discounts', 'type' => 'builtin', 'order' => 90],
             ];
             
             // Get saved tab settings (includes custom tabs and tab overrides)
