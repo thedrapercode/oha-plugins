@@ -82,7 +82,7 @@ add_action('template_redirect', function() {
 }, 1);
 
 // Plugin version and paths
-define('OHA_VHCPT_VER', '3.18.0');
+define('OHA_VHCPT_VER', '3.19.0');
 
 // Auto-update check via GitHub releases
 add_filter( 'pre_set_site_transient_update_plugins', 'oha_vendor_check_for_update' );

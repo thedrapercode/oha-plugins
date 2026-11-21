@@ -687,6 +687,13 @@
                         "type":  "fix",
                         "summary":  "Removed duplicate partial Stripe save block from settings-page.php",
                         "notes":  "First copy was missing 2-booth links; second copy was complete. Kept only the complete version."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.19.0",
+                        "type":  "fix",
+                        "summary":  "OHA_VHCPT_VER constant corrected to 3.19.0 (was left at 3.18.0, causing WP update loop)",
+                        "notes":  "PHP header Version: was updated but the define() on line 85 was missed. Always update both."
                     }
                 ]
 }
