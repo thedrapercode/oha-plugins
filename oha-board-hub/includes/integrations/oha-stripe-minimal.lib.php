@@ -395,6 +395,40 @@ add_shortcode('oha_stripe_address', function($atts){
     if(empty($disp)) return '<p><em>No address on file yet.</em></p>'; return '<div class="oha-stripe-address"><code>'.esc_html($disp).'</code></div>';
 });
 
+// Admin notice: warn when trial_end_iso is expired (signups blocked) or expiring within 45 days.
+add_action('admin_notices', function() {
+    if (!current_user_can('manage_options')) return;
+    $s        = oha_sm_get();
+    $trial_ts = strtotime($s['trial_end_iso'] ?? '');
+    if (!$trial_ts) return;
+
+    $now      = time();
+    $days_out = (int) round(($trial_ts - $now) / DAY_IN_SECONDS);
+    $settings_url = admin_url('admin.php?page=oha-board-hub&tab=stripe');
+    $next_jan1    = gmdate('Y', strtotime('+1 year', $trial_ts)) . '-01-01T00:00:00Z';
+    $current_label = gmdate('F j, Y', $trial_ts);
+
+    if ($trial_ts <= $now) {
+        // Expired — signups are actively blocked right now
+        echo '<div class="notice notice-error"><p>';
+        echo '<strong>Board Hub - Action Required:</strong> ';
+        echo 'New member signups are <strong>currently blocked</strong>. The Annual Renewal Start Date ';
+        echo '(<code>' . esc_html($s['trial_end_iso']) . '</code>) has passed. ';
+        echo 'Go to <a href="' . esc_url($settings_url) . '"><strong>Board Hub &rsaquo; Stripe Settings</strong></a> ';
+        echo 'and update the Annual Renewal Start Date to <code>' . esc_html($next_jan1) . '</code>.';
+        echo '</p></div>';
+    } elseif ($days_out <= 45) {
+        // Expiring soon — give a heads-up
+        echo '<div class="notice notice-warning"><p>';
+        echo '<strong>Board Hub Reminder:</strong> ';
+        echo 'The Annual Renewal Start Date expires in <strong>' . esc_html($days_out) . ' days</strong> ';
+        echo '(' . esc_html($current_label) . '). After that date, new member signups will be blocked until it is updated. ';
+        echo 'Go to <a href="' . esc_url($settings_url) . '"><strong>Board Hub &rsaquo; Stripe Settings</strong></a> ';
+        echo 'and change it to <code>' . esc_html($next_jan1) . '</code> before ' . esc_html($current_label) . '.';
+        echo '</p></div>';
+    }
+});
+
 // Returns effective trial_end timestamp and whether this is a late-year signup.
 // If today is on or after the trial_end_late_cutoff (MM-DD) for the current year,
 // the trial_end is advanced by one year so the member's payment covers the current

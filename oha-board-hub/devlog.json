@@ -841,6 +841,13 @@
                         "type":  "change",
                         "summary":  "Remove pumpkin emoji from OHA Vendor Board Hub heading in boardhub-admin.php",
                         "notes":  "Heading changed from emoji + text to plain text only per CLAUDE.md no-emoji rule."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.3",
+                        "type":  "feature",
+                        "summary":  "Admin notice warns when Annual Renewal Start Date is expired or within 45 days of expiring",
+                        "notes":  "Shows error (red) when trial_end_iso is in the past - signups are blocked. Shows warning (yellow) when within 45 days. Both notices link directly to Board Hub Stripe Settings tab and show the exact value to enter. Visible to manage_options users on all admin pages."
                     }
                 ]
 }
