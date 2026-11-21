@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.17.1",
+    "version":  "2.17.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -792,6 +792,13 @@
                         "type":  "change",
                         "summary":  "Added late-year signup cutoff setting field to Stripe Settings admin (trial_end_late_cutoff)",
                         "notes":  "Default 11-01 (Nov 1). Setting saves correctly but checkout handler does not yet act on it - trial_end is still static from trial_end_iso. Finish logic before Nov 1 of any active signup year."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.2",
+                        "type":  "feature",
+                        "summary":  "Late-year signup cutoff now active: Nov 1+ signups get trial_end advanced one year automatically",
+                        "notes":  "Helper oha_sm_get_effective_trial() checks trial_end_late_cutoff (MM-DD) against current date. If on or after cutoff, trial_end is +1 year from trial_end_iso. Applied in both new-member and reactivation AJAX handlers and both shortcodes. Shortcode copy shows covered years (e.g. 2026 and 2027) when is_late=true."
                     }
                 ]
 }

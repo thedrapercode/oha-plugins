@@ -395,6 +395,26 @@ add_shortcode('oha_stripe_address', function($atts){
     if(empty($disp)) return '<p><em>No address on file yet.</em></p>'; return '<div class="oha-stripe-address"><code>'.esc_html($disp).'</code></div>';
 });
 
+// Returns effective trial_end timestamp and whether this is a late-year signup.
+// If today is on or after the trial_end_late_cutoff (MM-DD) for the current year,
+// the trial_end is advanced by one year so the member's payment covers the current
+// year AND the next year before their first $10 charge fires.
+function oha_sm_get_effective_trial($s) {
+    $trial_ts  = strtotime($s['trial_end_iso'] ?? '');
+    $cutoff_md = trim($s['trial_end_late_cutoff'] ?? '');
+    $is_late   = false;
+
+    if ($trial_ts && $cutoff_md) {
+        $cutoff_ts = strtotime(gmdate('Y') . '-' . $cutoff_md);
+        if ($cutoff_ts && time() >= $cutoff_ts) {
+            $trial_ts = strtotime('+1 year', $trial_ts);
+            $is_late  = true;
+        }
+    }
+
+    return ['trial_ts' => (int) $trial_ts, 'is_late' => $is_late];
+}
+
 // Membership Checkout button
 add_shortcode('oha_membership_checkout', function($atts){
     if(!is_user_logged_in()) return '<p>Please log in.</p>';
@@ -403,20 +423,24 @@ add_shortcode('oha_membership_checkout', function($atts){
         return '<p>You are already an active OHA member. <a href="' . esc_url(add_query_arg('oha_sm_portal', '1', home_url('/'))) . '">Manage your membership</a>.</p>';
     }
     $s = oha_sm_get();
-    $nonce=wp_create_nonce('oha_create_session');
-    $url=add_query_arg(array('action'=>'oha_create_checkout_session','_wpnonce'=>$nonce), admin_url('admin-ajax.php'));
+    $nonce = wp_create_nonce('oha_create_session');
+    $url   = add_query_arg(['action' => 'oha_create_checkout_session', '_wpnonce' => $nonce], admin_url('admin-ajax.php'));
 
-    // Build dynamic date copy from trial_end_iso (e.g. "2028-01-01T00:00:00Z" -> "January 1, 2028")
-    $trial_ts   = strtotime($s['trial_end_iso']);
-    $join_year  = gmdate('Y'); // the year the member is joining
-    $renewal_label = $trial_ts ? gmdate('F j, Y', $trial_ts) : 'January 1, ' . ((int)gmdate('Y') + 1);
+    $effective     = oha_sm_get_effective_trial($s);
+    $trial_ts      = $effective['trial_ts'];
+    $is_late       = $effective['is_late'];
+    $join_year     = (int) gmdate('Y');
+    $renewal_label = $trial_ts ? gmdate('F j, Y', $trial_ts) : 'January 1, ' . ($join_year + 1);
+    $covered       = $is_late
+        ? esc_html($join_year) . ' and ' . esc_html($join_year + 1)
+        : esc_html($join_year);
 
     $output  = '<div class="oha-membership-signup" style="background:#f5f5f5;padding:20px;border-radius:8px;margin:20px 0;">';
     $output .= '<h3 style="margin-top:0;color:#a0232a;">OHA Membership</h3>';
-    $output .= '<p><strong>Due today:</strong> $20 (covers your ' . esc_html($join_year) . ' membership and the one-time card creation and mailing fee)</p>';
+    $output .= '<p><strong>Due today:</strong> $20 (covers your ' . $covered . ' membership and the one-time card creation and mailing fee)</p>';
     $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning ' . esc_html($renewal_label) . '</p>';
-    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on ' . esc_html($renewal_label) . ' - not a free trial. You are paying $20 today for your ' . esc_html($join_year) . ' membership.</p>';
-    $output .= '<p><a class="button button-primary button-large" href="'.esc_url($url).'" target="_top">Join OHA Membership</a></p>';
+    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on ' . esc_html($renewal_label) . ' - not a free trial. You are paying $20 today for your ' . $covered . ' membership.</p>';
+    $output .= '<p><a class="button button-primary button-large" href="' . esc_url($url) . '" target="_top">Join OHA Membership</a></p>';
     $output .= '</div>';
 
     return $output;
@@ -433,7 +457,8 @@ add_action('wp_ajax_oha_create_checkout_session', function(){
     $s=oha_sm_get();
     if(empty($s['secret_key'])||empty($s['price_signup_20'])||empty($s['price_yearly_10'])) wp_die('Stripe not configured (secret or price IDs missing)');
     $uid=get_current_user_id(); $user=get_userdata($uid);
-    $trial_ts=strtotime($s['trial_end_iso']); if(!$trial_ts||$trial_ts<=time()) wp_die('First $10 Charge must be a future UTC timestamp (check Settings).');
+    $effective=oha_sm_get_effective_trial($s); $trial_ts=$effective['trial_ts'];
+    if(!$trial_ts||$trial_ts<=time()) wp_die('First $10 Charge must be a future UTC timestamp (check Settings).');
     $customer=get_user_meta($uid,'stripe_customer_id',true);
 
     $body=array(
@@ -771,14 +796,18 @@ add_shortcode('oha_membership_reactivation', function($atts) {
         return '<p>Membership reactivation is not currently available online. Please contact the board.</p>';
     }
 
-    $trial_ts = strtotime($s['trial_end_iso']);
+    $effective = oha_sm_get_effective_trial($s);
+    $trial_ts  = $effective['trial_ts'];
+    $is_late   = $effective['is_late'];
     if (!$trial_ts || $trial_ts <= time()) {
         return '<p>Membership reactivation is temporarily unavailable. Please contact the board.</p>';
     }
 
     $renewal_label = gmdate('F j, Y', $trial_ts);
-    $renewal_year  = (int) gmdate('Y', $trial_ts);
     $current_year  = (int) gmdate('Y');
+    $covered       = $is_late
+        ? esc_html($current_year) . ' and ' . esc_html($current_year + 1)
+        : esc_html($current_year);
 
     $nonce = wp_create_nonce('oha_create_reactivation_session');
     $url   = add_query_arg(
@@ -789,9 +818,9 @@ add_shortcode('oha_membership_reactivation', function($atts) {
     $output  = '<div class="oha-membership-reactivate" style="background:#f5f5f5;padding:20px;border-radius:8px;margin:20px 0;">';
     $output .= '<h3 style="margin-top:0;color:#a0232a;">Reactivate OHA Membership</h3>';
     $output .= '<p>Welcome back. Reactivate your membership to restore member benefits.</p>';
-    $output .= '<p><strong>Due today:</strong> $10 (covers your ' . esc_html($current_year) . ' membership)</p>';
+    $output .= '<p><strong>Due today:</strong> $10 (covers your ' . $covered . ' membership)</p>';
     $output .= '<p><strong>Annual renewal:</strong> $10/year, beginning ' . esc_html($renewal_label) . '</p>';
-    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your ' . esc_html($renewal_year) . ' renewal - not a free trial. You are paying $10 today for your ' . esc_html($current_year) . ' membership.</p>';
+    $output .= '<p style="font-size:14px;color:#555;">Note: The Stripe checkout page may show a "days free" period. This refers to the time between today and your first $10 renewal on ' . esc_html($renewal_label) . ' - not a free trial. You are paying $10 today for your ' . $covered . ' membership.</p>';
     $output .= '<p><a class="button button-primary button-large" href="' . esc_url($url) . '" target="_top">Reactivate Membership</a></p>';
     $output .= '</div>';
 
@@ -822,7 +851,8 @@ add_action('wp_ajax_oha_create_reactivation_session', function() {
         wp_die('Not eligible for reactivation.');
     }
 
-    $trial_ts = strtotime($s['trial_end_iso']);
+    $effective = oha_sm_get_effective_trial($s);
+    $trial_ts  = $effective['trial_ts'];
     if (!$trial_ts || $trial_ts <= time()) {
         wp_die('Reactivation checkout is not available (renewal date not configured or in the past).');
     }
