@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.18.1",
+    "version":  "2.18.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -904,6 +904,13 @@
                         "type":  "fix",
                         "summary":  "Add plugins_api filter so View details popup shows plugin info instead of plugin not found",
                         "notes":  "Intercepts plugins_api action for slug oha-board-hub, fetches version/download_url from board-hub.json on GitHub, returns plugin object. Without this WP falls through to wordpress.org and returns not found."
+                    },
+                    {
+                        "date":  "2026-11-21",
+                        "version":  "2.18.2",
+                        "type":  "fix",
+                        "summary":  "CRITICAL: restore oha-financials.lib.php require_once; OHA_Financials::CAP on admin menu caused fatal crash",
+                        "notes":  "Removing the require_once in v2.18.0 left OHA_Financials class references intact in suite.php (admin menu registration uses OHA_Financials::CAP constant). Fatal error fired on every admin page load. Finance tab is still removed from the frontend shortcode; the class just needs to be loaded."
                     }
                 ]
 }

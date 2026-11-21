@@ -2,7 +2,7 @@
 /**
  * Plugin Name: OHA Board Hub Suite
  * Description: Unified admin suite for Ohio Haunters Association with centralized Stripe webhook hub. Combines board member management, Stripe integrations, vendor management, and haunt features. All Stripe events (memberships, vendors, products, board payments) flow through a single webhook endpoint.
- * Version: 2.18.1
+ * Version: 2.18.2
  * Author: OHA
  * Text Domain: oha-board-hub
  * Domain Path: /languages
@@ -219,7 +219,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('OHA_BHS_VERSION', '2.18.1');
+define('OHA_BHS_VERSION', '2.18.2');
 define('OHA_BHS_PLUGIN_FILE', __FILE__);
 define('OHA_BHS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OHA_BHS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -332,6 +332,8 @@ require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-vendor-2026-simple.
 require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-board-hub.lib.php';
 require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-haunt-discounts.lib.php';
 require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-sponsor-hub.lib.php';
+require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-financials.lib.php';
+require_once OHA_BHS_PLUGIN_DIR . 'includes/integrations/oha-discord.lib.php';
 
 /**
  * Main plugin class
@@ -385,6 +387,9 @@ class OHA_Board_Hub_Suite {
         if (class_exists('OHA_Stripe_Webhook_Log')) {
             OHA_Stripe_Webhook_Log::init();
         }
+
+        // Discord notifications
+        OHA_Discord::init();
 
         // Initialize settings
         $this->settings = OHA_Settings::instance();

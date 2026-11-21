@@ -1561,10 +1561,16 @@ public function __construct() {
         $settings = OHA_Settings::instance();
         $path = trim($settings->get('stripe.endpoint_path', 'oha/v1/stripe-webhook'), '/');
         $webhook_url = home_url('/' . $path);
-        
+
+        $discord_saved = isset($_GET['discord']) && $_GET['discord'] === 'saved';
         ?>
+
+        <?php if ($discord_saved) : ?>
+            <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Discord settings saved.', 'oha-board-hub'); ?></p></div>
+        <?php endif; ?>
+
         <h2><?php esc_html_e('Webhook Endpoint', 'oha-board-hub'); ?></h2>
-        
+
         <table class="form-table">
             <tr>
                 <th><?php esc_html_e('Webhook URL', 'oha-board-hub'); ?></th>
@@ -1601,6 +1607,53 @@ public function __construct() {
                 </td>
             </tr>
         </table>
+
+        <hr/>
+
+        <h2><?php esc_html_e('Discord Integration', 'oha-board-hub'); ?></h2>
+        <p class="description" style="margin-bottom:1em;">
+            <?php esc_html_e('Paste Discord channel webhook URLs here. Leave blank to disable that channel. Webhooks are never output to the frontend.', 'oha-board-hub'); ?>
+        </p>
+
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <input type="hidden" name="action" value="oha_save_discord"/>
+            <?php wp_nonce_field('oha_discord_save', 'oha_discord_nonce'); ?>
+
+            <table class="form-table">
+                <tr>
+                    <th scope="row">
+                        <label for="discord_announcement_webhook"><?php esc_html_e('Announcement Webhook', 'oha-board-hub'); ?></label>
+                    </th>
+                    <td>
+                        <input type="password"
+                               id="discord_announcement_webhook"
+                               name="discord_announcement_webhook"
+                               value="<?php echo esc_attr($settings->get('discord.announcement_webhook', '')); ?>"
+                               class="regular-text"/>
+                        <p class="description">
+                            <?php esc_html_e('Posts published in the Announcements category are sent to this channel. Create the category slug "announcements" in WordPress if not done yet.', 'oha-board-hub'); ?>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="discord_jobs_webhook"><?php esc_html_e('Job Board Webhook', 'oha-board-hub'); ?></label>
+                    </th>
+                    <td>
+                        <input type="password"
+                               id="discord_jobs_webhook"
+                               name="discord_jobs_webhook"
+                               value="<?php echo esc_attr($settings->get('discord.jobs_webhook', '')); ?>"
+                               class="regular-text"/>
+                        <p class="description">
+                            <?php esc_html_e('New published jobs from Job Board Lite are sent to this channel. Create the #job-board channel on Discord first.', 'oha-board-hub'); ?>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php submit_button(__('Save Discord Settings', 'oha-board-hub')); ?>
+        </form>
         <?php
     }
     
