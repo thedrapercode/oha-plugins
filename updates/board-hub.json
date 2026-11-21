@@ -1,8 +1,8 @@
 {
     "name":  "OHA Board Hub",
     "slug":  "oha-board-hub",
-    "version":  "2.17.2",
-    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v2.17.2-board-hub/board-hub-oha-v2.17.2.zip",
+    "version":  "2.17.3",
+    "download_url":  "https://github.com/thedrapercode/oha-plugins/releases/download/v2.17.3-board-hub/board-hub-oha-v2.17.3.zip",
     "requires":  "5.8",
     "tested":  "6.7",
     "last_updated":  "2026-11-20"

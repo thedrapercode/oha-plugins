@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.17.2",
+    "version":  "2.17.3",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -817,6 +817,27 @@
                     {
                         "date":  "2026-11-20",
                         "version":  "2.17.2",
+                        "type":  "change",
+                        "summary":  "Remove pumpkin emoji from OHA Vendor Board Hub heading in boardhub-admin.php",
+                        "notes":  "Heading changed from emoji + text to plain text only per CLAUDE.md no-emoji rule."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.3",
+                        "type":  "feature",
+                        "summary":  "Add Invited vendor count card to overview stats, admin vendor tab, and boardhub-admin shortcode (year-scoped)",
+                        "notes":  "Queries _oha_status=Invited scoped to active convention year. Added to oha-board-hub.lib.php (frontend shortcode overview), class-oha-admin-page.php (admin vendor tab), and boardhub-admin.php (boardhub-admin shortcode). Invisible spacer div added for height parity with emoji-icon cards."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.3",
+                        "type":  "feature",
+                        "summary":  "Add duplicate vendor detection panel to admin vendor tab; flags applications sharing name, email, or phone",
+                        "notes":  "Runs on render_vendor_tab() in class-oha-admin-page.php. Loads all active-year vendor_application posts, groups by normalized company/email/phone, surfaces groups with 2+ matches. Most recent app (highest ID) shown first in green; older shown in red. Each row has Edit and Trash (get_delete_post_link false) links with confirm dialog. No email sent on trash."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "2.17.3",
                         "type":  "change",
                         "summary":  "Remove pumpkin emoji from OHA Vendor Board Hub heading in boardhub-admin.php",
                         "notes":  "Heading changed from emoji + text to plain text only per CLAUDE.md no-emoji rule."
