@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.18.3",
+    "version":  "2.19.0",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -918,6 +918,13 @@
                         "type":  "fix",
                         "summary":  "Remove deleted tabs from Tab Management settings form - second builtin_tabs array was not updated in v2.18.0",
                         "notes":  "The settings form renderer has its own builtin_tabs definition separate from get_all_tabs_ordered(). Both must match. Removed gd, finance, activity, help, changes from the form array. Added sponsors which was missing."
+                    },
+                    {
+                        "date":  "2026-11-21",
+                        "version":  "2.19.0",
+                        "type":  "feature",
+                        "summary":  "Discord integration: webhook notifications to #announcement on post publish and #job-board on new job publish",
+                        "notes":  "Settings stored in oha_bh_suite_settings discord.announcement_webhook and discord.jobs_webhook. Configured in Board Hub admin \u003e Webhooks tab. Post must be in Announcements category (slug: announcements) to trigger. oha_job posts trigger jobs webhook. Only fires on new publish, not edits."
                     }
                 ]
 }
