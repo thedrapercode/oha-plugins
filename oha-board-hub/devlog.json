@@ -932,6 +932,13 @@
                         "type":  "feature",
                         "summary":  "Add Reactivation Fee and Late-Year Signup Cutoff fields to Stripe Settings admin form",
                         "notes":  "price_reactivate_10 and trial_end_late_cutoff were already functional in code but had no admin form fields to enter their values. Fields added to Stripe Settings tab in class-oha-admin-page.php."
+                    },
+                    {
+                        "date":  "2026-11-21",
+                        "version":  "2.19.1",
+                        "type":  "fix",
+                        "summary":  "Added missing Reactivation Fee and Late-Year Signup Cutoff fields to Board Hub Stripe Settings tab",
+                        "notes":  "price_reactivate_10 and trial_end_late_cutoff were in oha-stripe-minimal.lib.php form but missing from class-oha-admin-page.php render_stripe_tab(). Added after price_yearly_10 row."
                     }
                 ]
 }
