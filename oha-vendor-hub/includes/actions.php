@@ -1178,31 +1178,30 @@ add_action('wp_ajax_oha_vh_fasttrack_invite', function() {
     $conv_dates   = get_option('oha_vhcpt_convention_dates',       '');
     $conv_load_in = get_option('oha_vhcpt_convention_load_in',     '');
 
+    $ft_subject_default = "You're Invited to Vend at {convention_name}";
+    $ft_body_default    = "Hello,\n\nWe are thrilled to invite you to join us as a vendor at {convention_name}!\n\nThis is a fantastic opportunity to showcase your products to hundreds of haunted attraction enthusiasts, professionals, and fans from across the region.\n\nEVENT DETAILS\nVenue:    {convention_venue}\nDates:    {convention_dates}\nLoad-In:  {convention_load_in}\n\nTo secure your booth, please complete your vendor application using the link below:\n\n{final_app_url}\n\nBooth spaces are limited and fill up quickly, so we encourage you to complete your application as soon as possible.\n\nIf you have any questions or need assistance, please don't hesitate to reply to this email. We look forward to having you with us this year!\n\nWarm regards,\nOhio Haunters Association\nhttps://ohiohaunters.com";
+
+    $subject_tpl = get_option('oha_vhcpt_fasttrack_subject', $ft_subject_default);
+    $body_tpl    = get_option('oha_vhcpt_fasttrack_body',    $ft_body_default);
+
     $greeting = $to_name ? 'Hi ' . $to_name . ',' : 'Hello,';
 
-    $subject  = "You're Invited to Vend at the " . $conv_name;
+    // Replace greeting placeholder if body starts with the default greeting marker
+    $body_tpl = preg_replace('/^Hello,/m', $greeting, $body_tpl, 1);
 
-    $body  = $greeting . "\n\n";
-    $body .= "We are thrilled to invite you to join us as a vendor at the " . $conv_name . "!\n\n";
-    $body .= "This is a fantastic opportunity to showcase your products to hundreds of haunted attraction enthusiasts, ";
-    $body .= "professionals, and fans from across the region.\n\n";
+    $replacements = [
+        '{convention_name}'  => $conv_name,
+        '{convention_venue}' => $conv_venue,
+        '{convention_dates}' => $conv_dates,
+        '{convention_load_in}' => $conv_load_in,
+        '{final_app_url}'    => $final_app_url,
+    ];
 
-    if ( $conv_venue || $conv_dates || $conv_load_in ) {
-        $body .= "EVENT DETAILS\n";
-        if ( $conv_venue   ) $body .= "Venue:    " . $conv_venue   . "\n";
-        if ( $conv_dates   ) $body .= "Dates:    " . $conv_dates   . "\n";
-        if ( $conv_load_in ) $body .= "Load-In:  " . $conv_load_in . "\n";
-        $body .= "\n";
-    }
+    $subject = strtr($subject_tpl, $replacements);
+    $body    = strtr($body_tpl,    $replacements);
 
-    $body .= "To secure your booth, please complete your vendor application using the link below:\n\n";
-    $body .= $final_app_url . "\n\n";
-    $body .= "Booth spaces are limited and fill up quickly, so we encourage you to complete your application as soon as possible.\n\n";
-    $body .= "If you have any questions or need assistance, please don't hesitate to reply to this email. ";
-    $body .= "We look forward to having you with us this year!\n\n";
-    $body .= "Warm regards,\n";
-    $body .= "Ohio Haunters Association\n";
-    $body .= "https://ohiohaunters.com";
+    // Remove lines that only contain a blank placeholder value (e.g. "Venue:    ")
+    $body = preg_replace('/^(Venue|Dates|Load-In):\s+\n/m', '', $body);
 
     $headers = [
         'Content-Type: text/plain; charset=UTF-8',

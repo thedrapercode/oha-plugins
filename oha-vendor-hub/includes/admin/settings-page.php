@@ -89,18 +89,7 @@ function oha_vhcpt_settings_page(){
 
         update_option('oha_vhcpt_email_steps', $clean_steps);
 
-        // Save Stripe settings (v1.6)
-        if (isset($_POST['stripe_link_test'])) {
-            update_option('oha_vhcpt_stripe_link_test', esc_url_raw($_POST['stripe_link_test']));
-        }
-        if (isset($_POST['stripe_link_live'])) {
-            update_option('oha_vhcpt_stripe_link_live', esc_url_raw($_POST['stripe_link_live']));
-        }
-        if (isset($_POST['stripe_mode'])) {
-            update_option('oha_vhcpt_stripe_mode', sanitize_text_field($_POST['stripe_mode']));
-        }
-        
-        // Save Stripe settings (Payment Links only)
+        // Save Stripe settings (Payment Links)
         if (isset($_POST['stripe_link_test'])) {
             update_option('oha_vhcpt_stripe_link_test', esc_url_raw($_POST['stripe_link_test']));
         }
@@ -118,22 +107,22 @@ function oha_vhcpt_settings_page(){
         }
         // Save vendor send options templates (v1.8)
         if (isset($_POST['vendor_send_with_payment_subject'])) {
-            update_option('oha_vhcpt_vendor_send_with_payment_subject', sanitize_text_field($_POST['vendor_send_with_payment_subject']));
+            update_option('oha_vhcpt_vendor_send_with_payment_subject', sanitize_text_field(wp_unslash($_POST['vendor_send_with_payment_subject'])));
         }
         if (isset($_POST['vendor_send_with_payment_body'])) {
-            update_option('oha_vhcpt_vendor_send_with_payment_body', wp_kses_post($_POST['vendor_send_with_payment_body']));
+            update_option('oha_vhcpt_vendor_send_with_payment_body', wp_kses_post(wp_unslash($_POST['vendor_send_with_payment_body'])));
         }
         if (isset($_POST['vendor_send_no_payment_subject'])) {
-            update_option('oha_vhcpt_vendor_send_no_payment_subject', sanitize_text_field($_POST['vendor_send_no_payment_subject']));
+            update_option('oha_vhcpt_vendor_send_no_payment_subject', sanitize_text_field(wp_unslash($_POST['vendor_send_no_payment_subject'])));
         }
         if (isset($_POST['vendor_send_no_payment_body'])) {
-            update_option('oha_vhcpt_vendor_send_no_payment_body', wp_kses_post($_POST['vendor_send_no_payment_body']));
+            update_option('oha_vhcpt_vendor_send_no_payment_body', wp_kses_post(wp_unslash($_POST['vendor_send_no_payment_body'])));
         }
         if (isset($_POST['vendor_send_payment_only_subject'])) {
-            update_option('oha_vhcpt_vendor_send_payment_only_subject', sanitize_text_field($_POST['vendor_send_payment_only_subject']));
+            update_option('oha_vhcpt_vendor_send_payment_only_subject', sanitize_text_field(wp_unslash($_POST['vendor_send_payment_only_subject'])));
         }
         if (isset($_POST['vendor_send_payment_only_body'])) {
-            update_option('oha_vhcpt_vendor_send_payment_only_body', wp_kses_post($_POST['vendor_send_payment_only_body']));
+            update_option('oha_vhcpt_vendor_send_payment_only_body', wp_kses_post(wp_unslash($_POST['vendor_send_payment_only_body'])));
         }
         
         // Save final app page ID
@@ -161,7 +150,7 @@ function oha_vhcpt_settings_page(){
             update_option('oha_vhcpt_edit_link_subject', sanitize_text_field(wp_unslash($_POST['edit_link_subject'])));
         }
         if (isset($_POST['edit_link_body'])) {
-            update_option('oha_vhcpt_edit_link_body', sanitize_textarea_field(wp_unslash($_POST['edit_link_body'])));
+            update_option('oha_vhcpt_edit_link_body', wp_kses_post(wp_unslash($_POST['edit_link_body'])));
         }
 
         // Vendor Card Grid settings
@@ -197,7 +186,15 @@ function oha_vhcpt_settings_page(){
             update_option('oha_vhcpt_return_confirm_subject', sanitize_text_field(wp_unslash($_POST['return_confirm_subject'])));
         }
         if (isset($_POST['return_confirm_body'])) {
-            update_option('oha_vhcpt_return_confirm_body', sanitize_textarea_field(wp_unslash($_POST['return_confirm_body'])));
+            update_option('oha_vhcpt_return_confirm_body', wp_kses_post(wp_unslash($_POST['return_confirm_body'])));
+        }
+
+        // Fast-Track Invite email template.
+        if (isset($_POST['fasttrack_subject'])) {
+            update_option('oha_vhcpt_fasttrack_subject', sanitize_text_field(wp_unslash($_POST['fasttrack_subject'])));
+        }
+        if (isset($_POST['fasttrack_body'])) {
+            update_option('oha_vhcpt_fasttrack_body', wp_kses_post(wp_unslash($_POST['fasttrack_body'])));
         }
 
         echo '<div class="updated"><p>Settings saved.</p></div>';
@@ -370,6 +367,8 @@ function oha_vhcpt_settings_page(){
             <?php
             $apps_closed     = get_option('oha_vhcpt_apps_closed', 0);
             $apps_closed_msg = get_option('oha_vhcpt_apps_closed_message', 'Vendor applications are currently closed. Please check back soon.');
+            $vendor_edit_page_id = (int) get_option('oha_vhcpt_vendor_edit_page_id', 0);
+            $all_pages = get_pages();
             ?>
             <table class="form-table">
                 <tr>
@@ -391,10 +390,6 @@ function oha_vhcpt_settings_page(){
                 <tr>
                     <th scope="row"><label for="vendor_edit_page_id">Vendor Edit Page</label></th>
                     <td>
-                        <?php
-                        $vendor_edit_page_id = (int) get_option('oha_vhcpt_vendor_edit_page_id', 0);
-                        $all_pages = get_pages();
-                        ?>
                         <select name="vendor_edit_page_id" id="vendor_edit_page_id" class="regular-text">
                             <option value="0">-- Select Page --</option>
                             <?php foreach ($all_pages as $page): ?>
@@ -403,45 +398,10 @@ function oha_vhcpt_settings_page(){
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="description">Select the page that contains the <code>[oha_vendor_edit]</code> shortcode. This URL is inserted into return invite emails as <code>{edit_page_url}</code> so vendors know where to go to update their application.</p>
+                        <p class="description">Page containing the <code>[oha_vendor_edit]</code> shortcode. Used by the Edit Link email and return invite emails.</p>
                         <?php if ($vendor_edit_page_id): ?>
                             <p class="description"><strong>Current page:</strong> <a href="<?php echo esc_url(get_permalink($vendor_edit_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($vendor_edit_page_id)); ?></a></p>
                         <?php endif; ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="edit_link_subject">Edit Link Email Subject</label></th>
-                    <td>
-                        <input type="text" id="edit_link_subject" name="edit_link_subject" class="large-text"
-                            value="<?php echo esc_attr(get_option('oha_vhcpt_edit_link_subject', 'Update Your Vendor Information - Ohio Haunters Convention')); ?>">
-                        <p class="description">Subject line sent when a vendor receives an edit link. Placeholder: <code>{first_name}</code></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="edit_link_body">Edit Link Email Body</label></th>
-                    <td>
-                        <?php
-                        $edit_link_body_default = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team";
-                        ?>
-                        <textarea id="edit_link_body" name="edit_link_body" rows="10" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_edit_link_body', $edit_link_body_default)); ?></textarea>
-                        <p class="description">Body of the vendor reminder email. Placeholders: <code>{first_name}</code> (vendor first name), <code>{link}</code> (the vendor edit page URL), <code>{vendor_id}</code> (the vendor's permanent ID number — vendors need this to log in to the edit form).</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="return_confirm_subject">Returning Vendor Confirmation Email Subject</label></th>
-                    <td>
-                        <?php $rc_subject_default = 'Your Vendor Information Has Been Updated - {convention_name}'; ?>
-                        <input type="text" id="return_confirm_subject" name="return_confirm_subject" class="large-text"
-                            value="<?php echo esc_attr(get_option('oha_vhcpt_return_confirm_subject', $rc_subject_default)); ?>">
-                        <p class="description">Sent to a returning vendor after they save the edit form. Placeholders: <code>{first_name}</code>, <code>{company_name}</code>, <code>{convention_name}</code></p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="return_confirm_body">Returning Vendor Confirmation Email Body</label></th>
-                    <td>
-                        <?php $rc_body_default = "Hello {first_name},\n\nThank you for updating your vendor information for {convention_name}. We have received your submission and will be in touch soon with next steps.\n\nIf you need to make any changes, you can return to the vendor update page at any time and log in with your email address and Vendor ID.\n\n-- The OHA Team"; ?>
-                        <textarea id="return_confirm_body" name="return_confirm_body" rows="8" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_return_confirm_body', $rc_body_default)); ?></textarea>
-                        <p class="description">Confirmation email body sent to returning vendors after they update their information. Placeholders: <code>{first_name}</code>, <code>{company_name}</code>, <code>{convention_name}</code></p>
                     </td>
                 </tr>
             </table>
@@ -461,16 +421,15 @@ function oha_vhcpt_settings_page(){
             <p>Edit the JSON to add/remove/reorder fields. (Keys become meta keys on the <code>vendor_application</code> post.)</p>
             <textarea name="fields_json" rows="14" style="width:100%;font-family:monospace;"><?php echo esc_textarea(wp_json_encode($fields, JSON_PRETTY_PRINT)); ?></textarea>
 
-            <h2 class="title">Legacy Manual Email Template</h2>
-            <p>This template is used only by the older “Send Email” action (if enabled elsewhere). Automated status emails use the Email Automations section below.</p>
-            <textarea name="email_tpl" rows="8" style="width:100%;"><?php echo esc_textarea($email_tpl); ?></textarea>
-            <p>Placeholders available here: {first_name}, {last_name}, {company_name}, {status}, {agreement_link}, {payment_link}</p>
+            <h2 class="title">Email Templates</h2>
+            <p style="color:#555;">All automated and manual emails sent by this plugin. Use Sandbox Mode (below) to redirect any of these to a test address before going live.</p>
 
-            <h2 class="title">Email Automations</h2>
-            <p>Configure automatic emails for each status step. These use the applicant&rsquo;s email address and the following smart tags:</p>
-            <p><code>{first_name}</code>, <code>{last_name}</code>, <code>{company_name}</code>, <code>{email}</code>, <code>{phone}</code>, <code>{address_street}</code>, <code>{address_city}</code>, <code>{address_state}</code>, <code>{address_zip}</code>, <code>{website}</code>, <code>{product_type}</code>, <code>{booths}</code>, <code>{sponsor}</code>, <code>{status}</code>, <code>{agreement_link}</code>, <code>{payment_link}</code>, <code>{application_id}</code></p>
+            <?php /* ── 1. Status-Change Automations ── */ ?>
+            <h3 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#3c434a;border-top:1px solid #c3c4c7;padding-top:20px;margin-top:4px;">Status-Change Automations</h3>
+            <p class="description" style="margin-bottom:8px;">Trigger: fires automatically when you change a vendor&rsquo;s status in the board hub. Each row can be enabled or disabled independently.</p>
+            <p class="description" style="margin-bottom:12px;">Placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{company_name}</code> <code>{email}</code> <code>{phone}</code> <code>{booths}</code> <code>{status}</code> <code>{agreement_link}</code> <code>{payment_link}</code> <code>{application_id}</code></p>
 
-            <table class="widefat striped">
+            <table class="widefat striped" style="margin-bottom:0;">
                 <thead>
                     <tr>
                         <th style="width:160px;">Status</th>
@@ -482,22 +441,22 @@ function oha_vhcpt_settings_page(){
                     $row = $email_steps[$key];
                     ?>
                     <tr>
-                        <td>
+                        <td style="vertical-align:top;padding-top:14px;">
                             <strong><?php echo esc_html($label); ?></strong><br>
-                            <label>
+                            <label style="font-weight:normal;">
                                 <input type="checkbox" name="email_steps[<?php echo esc_attr($key); ?>][enabled]" value="1" <?php checked($row['enabled'], 1); ?>>
                                 Enable
                             </label>
                         </td>
                         <td>
-                            <p>
+                            <p style="margin-bottom:6px;">
                                 <label>Subject<br>
-                                    <input type="text" name="email_steps[<?php echo esc_attr($key); ?>][subject]" class="regular-text" value="<?php echo esc_attr($row['subject']); ?>">
+                                    <input type="text" name="email_steps[<?php echo esc_attr($key); ?>][subject]" class="large-text" value="<?php echo esc_attr($row['subject']); ?>">
                                 </label>
                             </p>
-                            <p>
+                            <p style="margin-bottom:0;">
                                 <label>Body<br>
-                                    <textarea name="email_steps[<?php echo esc_attr($key); ?>][body]" rows="6" style="width:100%;"><?php echo esc_textarea($row['body']); ?></textarea>
+                                    <textarea name="email_steps[<?php echo esc_attr($key); ?>][body]" rows="5" class="large-text"><?php echo esc_textarea($row['body']); ?></textarea>
                                 </label>
                             </p>
                         </td>
@@ -506,18 +465,19 @@ function oha_vhcpt_settings_page(){
                 </tbody>
             </table>
 
-            <h2 class="title">Vendor Send Options - Configuration</h2>
-            
-            <table class="form-table">
+            <?php /* ── 2. Send Options ── */ ?>
+            <?php
+            $final_app_page_id            = (int) get_option('oha_vhcpt_final_app_page_id', 0);
+            $final_app_no_payment_page_id = (int) get_option('oha_vhcpt_final_app_no_payment_page_id', 0);
+            $pages = get_pages();
+            ?>
+            <h3 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#3c434a;border-top:1px solid #c3c4c7;padding-top:20px;margin-top:20px;">Send Options</h3>
+            <p class="description" style="margin-bottom:12px;">Trigger: fires when you click the &ldquo;Send&rdquo; dropdown on a vendor card in the board hub. Choose the right option per vendor.</p>
+
+            <table class="form-table" style="margin-top:0;">
                 <tr>
-                    <th scope="row">
-                        <label for="final_app_page_id">Final Application Page</label>
-                    </th>
+                    <th scope="row"><label for="final_app_page_id">Final Application Page</label></th>
                     <td>
-                        <?php
-                        $final_app_page_id = get_option('oha_vhcpt_final_app_page_id', 0);
-                        $pages = get_pages();
-                        ?>
                         <select name="final_app_page_id" id="final_app_page_id" class="regular-text">
                             <option value="0">-- Select Page --</option>
                             <?php foreach ($pages as $page): ?>
@@ -526,120 +486,135 @@ function oha_vhcpt_settings_page(){
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="description">
-                            Select the page that has the <code>[oha_vendor_final_form]</code> shortcode.<br>
-                            This is used for "Send → With Payment" option.
-                        </p>
-                        <?php if ($final_app_page_id): ?>
-                            <p class="description">
-                                <strong>Current page:</strong> <a href="<?php echo esc_url(get_permalink($final_app_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($final_app_page_id)); ?></a>
-                            </p>
-                        <?php endif; ?>
+                        <p class="description">Page containing <code>[oha_vendor_final_form]</code>. Used for the &ldquo;With Payment&rdquo; and &ldquo;Payment Only&rdquo; send options.<?php if ($final_app_page_id): ?> <strong>Current:</strong> <a href="<?php echo esc_url(get_permalink($final_app_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($final_app_page_id)); ?></a><?php endif; ?></p>
                     </td>
                 </tr>
-                
                 <tr>
-                    <th scope="row">
-                        <label for="final_app_no_payment_page_id">No-Payment Application Page</label>
-                    </th>
+                    <th scope="row"><label for="final_app_no_payment_page_id">No-Payment Page</label></th>
                     <td>
-                        <?php
-                        $final_app_no_payment_page_id = get_option('oha_vhcpt_final_app_no_payment_page_id', 0);
-                        ?>
                         <select name="final_app_no_payment_page_id" id="final_app_no_payment_page_id" class="regular-text">
-                            <option value="0">-- Same as above (adds ?no_payment_mode=1) --</option>
+                            <option value="0">-- Same as Final Application Page (recommended) --</option>
                             <?php foreach ($pages as $page): ?>
                                 <option value="<?php echo intval($page->ID); ?>" <?php selected($final_app_no_payment_page_id, $page->ID); ?>>
                                     <?php echo esc_html($page->post_title); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="description">
-                            Select the page that has the <code>[oha_vendor_final_form_no_payment]</code> shortcode.<br>
-                            This is used for "Send → Without Payment" option.<br>
-                            <strong>Leave as "Same as above"</strong> to use the same page (recommended - simpler!)<br>
-                            <strong>Or select different page</strong> if you created a separate no-payment page.
-                        </p>
-                        <?php if ($final_app_no_payment_page_id): ?>
-                            <p class="description">
-                                <strong>Current page:</strong> <a href="<?php echo esc_url(get_permalink($final_app_no_payment_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($final_app_no_payment_page_id)); ?></a>
-                            </p>
-                        <?php endif; ?>
+                        <p class="description">Only needed if you have a separate page for <code>[oha_vendor_final_form_no_payment]</code>. Leave as &ldquo;Same as above&rdquo; in most cases.<?php if ($final_app_no_payment_page_id): ?> <strong>Current:</strong> <a href="<?php echo esc_url(get_permalink($final_app_no_payment_page_id)); ?>" target="_blank"><?php echo esc_html(get_the_title($final_app_no_payment_page_id)); ?></a><?php endif; ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row" style="padding-top:20px;"><strong>Option 1: With Payment</strong><br><span style="font-weight:normal;color:#666;font-size:12px;">Vendor completes form + pays</span></th>
+                    <td style="padding-top:20px;">
+                        <label>Subject<br>
+                            <input type="text" name="vendor_send_with_payment_subject" class="large-text"
+                                value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_with_payment_subject', 'Complete Your Vendor Application - {convention_name}')); ?>">
+                        </label>
+                        <br><br>
+                        <label>Body<br>
+                            <textarea name="vendor_send_with_payment_body" rows="8" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_with_payment_body', "Hi {first_name},\n\nYour vendor application has been approved for {convention_name}. Please complete your final application and payment using the link below:\n\n{final_app_link}\n\nPlease complete your application and payment as soon as possible to secure your booth space.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
+                        </label>
+                        <p class="description">Placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{company_name}</code> <code>{email}</code> <code>{booths}</code> <code>{final_app_link}</code></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row" style="padding-top:20px;"><strong>Option 2: Without Payment</strong><br><span style="font-weight:normal;color:#666;font-size:12px;">Vendor completes form only (pre-paid)</span></th>
+                    <td style="padding-top:20px;">
+                        <label>Subject<br>
+                            <input type="text" name="vendor_send_no_payment_subject" class="large-text"
+                                value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_no_payment_subject', 'Complete Your Vendor Application - {convention_name} (Pre-Paid)')); ?>">
+                        </label>
+                        <br><br>
+                        <label>Body<br>
+                            <textarea name="vendor_send_no_payment_body" rows="8" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_no_payment_body', "Hi {first_name},\n\nWe have received your payment for {convention_name}. Please complete your final application using the link below:\n\n{final_app_link_no_payment}\n\nPayment Status: Already Received - Thank you!\n\nPlease complete your application to finalize your vendor registration.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
+                        </label>
+                        <p class="description">Placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{company_name}</code> <code>{email}</code> <code>{booths}</code> <code>{final_app_link_no_payment}</code></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row" style="padding-top:20px;"><strong>Option 3: Payment Only</strong><br><span style="font-weight:normal;color:#666;font-size:12px;">Vendor already completed form, just needs to pay</span></th>
+                    <td style="padding-top:20px;">
+                        <label>Subject<br>
+                            <input type="text" name="vendor_send_payment_only_subject" class="large-text"
+                                value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_payment_only_subject', 'Complete Payment for Your Vendor Booth - {convention_name}')); ?>">
+                        </label>
+                        <br><br>
+                        <label>Body<br>
+                            <textarea name="vendor_send_payment_only_body" rows="8" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_payment_only_body', "Hi {first_name},\n\nThank you for completing your vendor application for {convention_name}!\n\nTo secure your booth space, please complete payment using the link below:\n\n{payment_link}\n\nBooth Details:\n- Quantity: {booths} booth(s)\n- Total: \${total}\n\nOnce payment is received, you will receive your signed vendor agreement via email.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
+                        </label>
+                        <p class="description">Placeholders: <code>{first_name}</code> <code>{last_name}</code> <code>{company_name}</code> <code>{email}</code> <code>{booths}</code> <code>{total}</code> <code>{payment_link}</code></p>
                     </td>
                 </tr>
             </table>
 
-            <h2 class="title">Vendor Send Options - Email Templates</h2>
-            <p>Configure email templates for the "Send" dropdown in Board Hub. These are used when sending final application links to vendors.</p>
-            
-            <table class="form-table">
+            <?php /* ── 3. Fast-Track Invite ── */ ?>
+            <h3 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#3c434a;border-top:1px solid #c3c4c7;padding-top:20px;margin-top:20px;">Fast-Track Invite</h3>
+            <p class="description" style="margin-bottom:12px;">Trigger: fires when you send a Fast-Track Invite from the board hub panel. Sent to new vendors with no existing application.</p>
+
+            <table class="form-table" style="margin-top:0;">
                 <tr>
-                    <th colspan="2">
-                        <h3 style="margin:10px 0;">Option 1: With Payment (Standard)</h3>
-                        <p style="font-weight:normal;color:#666;">Vendor needs to complete form AND pay</p>
-                    </th>
-                </tr>
-                <tr>
-                    <td style="padding-left:30px;">
-                        <label><strong>Subject:</strong><br>
-                            <input type="text" name="vendor_send_with_payment_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_with_payment_subject', 'Complete Your Vendor Application - {convention_name}')); ?>">
-                        </label>
+                    <th scope="row"><label for="fasttrack_subject">Subject</label></th>
+                    <td>
+                        <?php $ft_subject_default = "You're Invited to Vend at {convention_name}"; ?>
+                        <input type="text" id="fasttrack_subject" name="fasttrack_subject" class="large-text"
+                            value="<?php echo esc_attr(get_option('oha_vhcpt_fasttrack_subject', $ft_subject_default)); ?>">
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding-left:30px;">
-                        <label><strong>Body:</strong><br>
-                            <textarea name="vendor_send_with_payment_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_with_payment_body', "Hi {first_name},\n\nYour vendor application has been approved for {convention_name}. Please complete your final application and payment using the link below:\n\n{final_app_link}\n\nPlease complete your application and payment as soon as possible to secure your booth space.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
-                        </label>
-                        <p class="description">Available placeholders: {first_name}, {last_name}, {company_name}, {email}, {booths}, {final_app_link}</p>
-                    </td>
-                </tr>
-                
-                <tr>
-                    <th colspan="2">
-                        <h3 style="margin:10px 0;">Option 2: Without Payment (Pre-Paid)</h3>
-                        <p style="font-weight:normal;color:#666;">Vendor needs to complete form ONLY (already paid)</p>
-                    </th>
-                </tr>
-                <tr>
-                    <td style="padding-left:30px;">
-                        <label><strong>Subject:</strong><br>
-                            <input type="text" name="vendor_send_no_payment_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_no_payment_subject', 'Complete Your Vendor Application - {convention_name} (Pre-Paid)')); ?>">
-                        </label>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding-left:30px;">
-                        <label><strong>Body:</strong><br>
-                            <textarea name="vendor_send_no_payment_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_no_payment_body', "Hi {first_name},\n\nWe have received your payment for {convention_name}. Please complete your final application using the link below:\n\n{final_app_link_no_payment}\n\nPayment Status: Already Received - Thank you!\n\nPlease complete your application to finalize your vendor registration.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
-                        </label>
-                        <p class="description">Available placeholders: {first_name}, {last_name}, {company_name}, {email}, {booths}, {final_app_link_no_payment}</p>
-                    </td>
-                </tr>
-                
-                <tr>
-                    <th colspan="2">
-                        <h3 style="margin:10px 0;">Option 3: Payment Only</h3>
-                        <p style="font-weight:normal;color:#666;">Vendor already completed form, just needs to pay</p>
-                    </th>
-                </tr>
-                <tr>
-                    <td style="padding-left:30px;">
-                        <label><strong>Subject:</strong><br>
-                            <input type="text" name="vendor_send_payment_only_subject" class="large-text" value="<?php echo esc_attr(get_option('oha_vhcpt_vendor_send_payment_only_subject', 'Complete Payment for Your Vendor Booth - {convention_name}')); ?>">
-                        </label>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding-left:30px;">
-                        <label><strong>Body:</strong><br>
-                            <textarea name="vendor_send_payment_only_body" rows="8" style="width:100%;"><?php echo esc_textarea(get_option('oha_vhcpt_vendor_send_payment_only_body', "Hi {first_name},\n\nThank you for completing your vendor application for {convention_name}!\n\nTo secure your booth space, please complete payment using the link below:\n\n{payment_link}\n\nBooth Details:\n- Quantity: {booths} booth(s)\n- Total: \${total}\n\nOnce payment is received, you will receive your signed vendor agreement via email.\n\nIf you have any questions, please don't hesitate to contact us.\n\nThanks,\nOhio Haunters Association")); ?></textarea>
-                        </label>
-                        <p class="description">Available placeholders: {first_name}, {last_name}, {company_name}, {email}, {booths}, {total}, {payment_link}</p>
+                    <th scope="row"><label for="fasttrack_body">Body</label></th>
+                    <td>
+                        <?php $ft_body_default = "Hello,\n\nWe are thrilled to invite you to join us as a vendor at {convention_name}!\n\nThis is a fantastic opportunity to showcase your products to hundreds of haunted attraction enthusiasts, professionals, and fans from across the region.\n\nEVENT DETAILS\nVenue:    {convention_venue}\nDates:    {convention_dates}\nLoad-In:  {convention_load_in}\n\nTo secure your booth, please complete your vendor application using the link below:\n\n{final_app_url}\n\nBooth spaces are limited and fill up quickly, so we encourage you to complete your application as soon as possible.\n\nIf you have any questions or need assistance, please don't hesitate to reply to this email. We look forward to having you with us this year!\n\nWarm regards,\nOhio Haunters Association\nhttps://ohiohaunters.com"; ?>
+                        <textarea id="fasttrack_body" name="fasttrack_body" rows="12" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_fasttrack_body', $ft_body_default)); ?></textarea>
+                        <p class="description">Placeholders: <code>{convention_name}</code> <code>{convention_venue}</code> <code>{convention_dates}</code> <code>{convention_load_in}</code> <code>{final_app_url}</code>. Event detail lines are removed automatically if the value is blank in Convention Details above.</p>
                     </td>
                 </tr>
             </table>
-            
+
+            <?php /* ── 4. Edit Link Email ── */ ?>
+            <h3 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#3c434a;border-top:1px solid #c3c4c7;padding-top:20px;margin-top:20px;">Edit Link Email</h3>
+            <p class="description" style="margin-bottom:12px;">Trigger: fires from the &ldquo;Send Edit Links&rdquo; admin page. Sends the vendor the update page URL and their Vendor ID number.</p>
+
+            <table class="form-table" style="margin-top:0;">
+                <tr>
+                    <th scope="row"><label for="edit_link_subject">Subject</label></th>
+                    <td>
+                        <input type="text" id="edit_link_subject" name="edit_link_subject" class="large-text"
+                            value="<?php echo esc_attr(get_option('oha_vhcpt_edit_link_subject', 'Update Your Vendor Information - Ohio Haunters Convention')); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="edit_link_body">Body</label></th>
+                    <td>
+                        <?php $edit_link_body_default = "Hello {first_name},\n\nHere is a link to update your vendor information for the Ohio Haunters Convention.\n\n{link}\n\nThis link is valid for 24 hours. After it expires, you can request a new one by visiting the same page and entering your email address again.\n\nIf you did not request this link, you can safely ignore this email.\n\nQuestions? Contact us at info@ohiohaunters.com\n\n-- The OHA Team"; ?>
+                        <textarea id="edit_link_body" name="edit_link_body" rows="10" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_edit_link_body', $edit_link_body_default)); ?></textarea>
+                        <p class="description">Placeholders: <code>{first_name}</code> <code>{link}</code> (vendor edit page URL) <code>{vendor_id}</code> (vendors need this to log in to the edit form)</p>
+                    </td>
+                </tr>
+            </table>
+
+            <?php /* ── 5. Returning Vendor Confirmation ── */ ?>
+            <h3 style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#3c434a;border-top:1px solid #c3c4c7;padding-top:20px;margin-top:20px;">Returning Vendor Confirmation</h3>
+            <p class="description" style="margin-bottom:12px;">Trigger: fires automatically when a returning vendor saves the edit form and their status promotes from Invited to Submitted.</p>
+
+            <table class="form-table" style="margin-top:0;">
+                <tr>
+                    <th scope="row"><label for="return_confirm_subject">Subject</label></th>
+                    <td>
+                        <?php $rc_subject_default = 'Your Vendor Information Has Been Updated - {convention_name}'; ?>
+                        <input type="text" id="return_confirm_subject" name="return_confirm_subject" class="large-text"
+                            value="<?php echo esc_attr(get_option('oha_vhcpt_return_confirm_subject', $rc_subject_default)); ?>">
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="return_confirm_body">Body</label></th>
+                    <td>
+                        <?php $rc_body_default = "Hello {first_name},\n\nThank you for updating your vendor information for {convention_name}. We have received your submission and will be in touch soon with next steps.\n\nIf you need to make any changes, you can return to the vendor update page at any time and log in with your email address and Vendor ID.\n\n-- The OHA Team"; ?>
+                        <textarea id="return_confirm_body" name="return_confirm_body" rows="8" class="large-text"><?php echo esc_textarea(get_option('oha_vhcpt_return_confirm_body', $rc_body_default)); ?></textarea>
+                        <p class="description">Placeholders: <code>{first_name}</code> <code>{company_name}</code> <code>{convention_name}</code></p>
+                    </td>
+                </tr>
+            </table>
+
             <h2 class="title">Vendor Status Table</h2>
             <p>
                 Use the shortcode <code>[oha_vendor_status_table]</code> to display a read-only, searchable vendor status table on any page.<br>

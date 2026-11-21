@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.18.0",
+    "version":  "3.19.0",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -652,6 +652,41 @@
                         "type":  "change",
                         "summary":  "Stripe setup instructions updated to remove hardcoded 2026 year and price references",
                         "notes":  "Booth price display now from oha_vhcpt_convention_booth_price option. Actual Stripe price still controlled by payment link in Stripe Dashboard."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.19.0",
+                        "type":  "feature",
+                        "summary":  "Unified all email templates into one grouped section in settings with consistent formatting and trigger descriptions",
+                        "notes":  "Five sub-sections: Status-Change Automations, Send Options, Fast-Track Invite, Edit Link Email, Returning Vendor Confirmation. Each has a Trigger: description line."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.19.0",
+                        "type":  "feature",
+                        "summary":  "Fast-track invite email subject and body are now editable via WP options in settings page",
+                        "notes":  "Options: oha_vhcpt_fasttrack_subject, oha_vhcpt_fasttrack_body. AJAX handler in actions.php reads from options with hardcoded defaults as fallback."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.19.0",
+                        "type":  "fix",
+                        "summary":  "All email body fields now use wp_kses_post(wp_unslash()) to prevent apostrophe mangling on save",
+                        "notes":  "Previously three Send Options body fields lacked wp_unslash (stored backslashes); three others used sanitize_textarea_field (stripped HTML). All six now use wp_kses_post(wp_unslash())."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.19.0",
+                        "type":  "fix",
+                        "summary":  "Removed dead Legacy Manual Email Template section from settings UI",
+                        "notes":  "The admin_post_oha_vhcpt_send_email action it powered is not wired to any current UI button. Section was confusing board admins."
+                    },
+                    {
+                        "date":  "2026-11-20",
+                        "version":  "3.19.0",
+                        "type":  "fix",
+                        "summary":  "Removed duplicate partial Stripe save block from settings-page.php",
+                        "notes":  "First copy was missing 2-booth links; second copy was complete. Kept only the complete version."
                     }
                 ]
 }
