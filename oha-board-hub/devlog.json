@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.19.0",
+    "version":  "2.19.1",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -925,6 +925,13 @@
                         "type":  "feature",
                         "summary":  "Discord integration: webhook notifications to #announcement on post publish and #job-board on new job publish",
                         "notes":  "Settings stored in oha_bh_suite_settings discord.announcement_webhook and discord.jobs_webhook. Configured in Board Hub admin \u003e Webhooks tab. Post must be in Announcements category (slug: announcements) to trigger. oha_job posts trigger jobs webhook. Only fires on new publish, not edits."
+                    },
+                    {
+                        "date":  "2026-11-21",
+                        "version":  "2.19.1",
+                        "type":  "feature",
+                        "summary":  "Add Reactivation Fee and Late-Year Signup Cutoff fields to Stripe Settings admin form",
+                        "notes":  "price_reactivate_10 and trial_end_late_cutoff were already functional in code but had no admin form fields to enter their values. Fields added to Stripe Settings tab in class-oha-admin-page.php."
                     }
                 ]
 }

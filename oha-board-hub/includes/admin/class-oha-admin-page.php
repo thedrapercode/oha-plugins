@@ -1175,13 +1175,41 @@ public function __construct() {
                     
                     <tr>
                         <th scope="row">
+                            <label for="price_reactivate_10"><?php esc_html_e('Reactivation Fee ($10 one-time)', 'oha-board-hub'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text"
+                                   id="price_reactivate_10"
+                                   name="oha_sm_settings[price_reactivate_10]"
+                                   value="<?php echo esc_attr($settings['price_reactivate_10'] ?? ''); ?>"
+                                   class="regular-text" />
+                            <p class="description"><?php esc_html_e('Stripe Price ID for $10 one-time fee for returning members reactivating a lapsed membership (no card fee). Example: price_xxxxxxxxxxxxx', 'oha-board-hub'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="trial_end_late_cutoff"><?php esc_html_e('Late-Year Signup Cutoff', 'oha-board-hub'); ?></label>
+                        </th>
+                        <td>
+                            <input type="text"
+                                   id="trial_end_late_cutoff"
+                                   name="oha_sm_settings[trial_end_late_cutoff]"
+                                   value="<?php echo esc_attr($settings['trial_end_late_cutoff'] ?? '11-01'); ?>"
+                                   class="small-text" />
+                            <p class="description"><?php esc_html_e('Month-day cutoff for late-year signups (MM-DD, e.g. 11-01 for November 1). Members signing up on or after this date get their $10/year trial extended by one extra year.', 'oha-board-hub'); ?></p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
                             <label for="membership_product_ids"><?php esc_html_e('Membership Product IDs', 'oha-board-hub'); ?></label>
                         </th>
                         <td>
-                            <input type="text" 
-                                   id="membership_product_ids" 
-                                   name="oha_sm_settings[membership_product_ids]" 
-                                   value="<?php echo esc_attr($settings['membership_product_ids'] ?? ''); ?>" 
+                            <input type="text"
+                                   id="membership_product_ids"
+                                   name="oha_sm_settings[membership_product_ids]"
+                                   value="<?php echo esc_attr($settings['membership_product_ids'] ?? ''); ?>"
                                    class="regular-text" />
                             <p class="description"><?php esc_html_e('Comma-separated Stripe Product IDs for invoice payments (prod_xxxxx, prod_yyyyy)', 'oha-board-hub'); ?></p>
                         </td>
