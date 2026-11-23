@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Board Hub Suite",
-    "version":  "2.19.1",
+    "version":  "2.19.2",
     "entries":  [
                     {
                         "date":  "2026-03-30",
@@ -939,6 +939,20 @@
                         "type":  "fix",
                         "summary":  "Added missing Reactivation Fee and Late-Year Signup Cutoff fields to Board Hub Stripe Settings tab",
                         "notes":  "price_reactivate_10 and trial_end_late_cutoff were in oha-stripe-minimal.lib.php form but missing from class-oha-admin-page.php render_stripe_tab(). Added after price_yearly_10 row."
+                    },
+                    {
+                        "date":  "2026-11-22",
+                        "version":  "2.19.2",
+                        "type":  "fix",
+                        "summary":  "Mobile/PWA: replace inline grid style on Stripe members section with responsive CSS class",
+                        "notes":  "oha-stripe-grid class added; collapses to 1 column at 900px breakpoint"
+                    },
+                    {
+                        "date":  "2026-11-22",
+                        "version":  "2.19.2",
+                        "type":  "fix",
+                        "summary":  "Mobile/PWA: set min-height 44px on tab buttons and member filter buttons for touch targets",
+                        "notes":  "oha-tab and oha-members-filter-btn now use inline-flex with min-height 44px"
                     }
                 ]
 }

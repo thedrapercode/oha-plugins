@@ -1577,7 +1577,7 @@ private function render_overview_tab($range = '30d') {
         
         ?>
         
-        <div class="oha-grid" style="grid-template-columns: 2fr 1fr; gap: 20px;">
+        <div class="oha-grid oha-stripe-grid">
             <!-- Stripe Members Table -->
             <div class="oha-card">
                 <h4>Active Stripe Invoice Members (<?php echo count($stripe_members); ?>)</h4>
@@ -2277,10 +2277,11 @@ add_action('wp_head', function(){
     .oha-board{color:#eee}
     .oha-overview-title{margin:0 0 10px;color:#fff;font-size:20px}
     .oha-tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
-    .oha-tab{white-space:nowrap;padding:8px 12px;border-radius:10px;background:#1b1b1b;border:1px solid #333;color:#ddd;text-decoration:none;flex:0 0 auto}
+    .oha-tab{white-space:nowrap;padding:8px 12px;min-height:44px;display:inline-flex;align-items:center;border-radius:10px;background:#1b1b1b;border:1px solid #333;color:#ddd;text-decoration:none;flex:0 0 auto}
     .oha-tab.is-active{background:#2a2a2a;border-color:#555}
     .oha-grid{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(280px,1fr))}
-    @media (max-width: 900px){ .oha-grid{grid-template-columns:1fr} }
+    .oha-stripe-grid{grid-template-columns:2fr 1fr;gap:20px}
+    @media (max-width: 900px){ .oha-grid{grid-template-columns:1fr} .oha-stripe-grid{grid-template-columns:1fr} }
     .oha-card{background:#111;color:#eee;padding:16px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.25)}
     .oha-card h3{margin-top:0}
     .oha-card .button{display:inline-block;margin:4px 6px 0 0}
@@ -2330,7 +2331,7 @@ add_action('wp_head', function(){
     .oha-members-filter-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
     .oha-members-filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .oha-members-filter-label{color:var(--global-palette6,#cbd2d9);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;min-width:44px}
-    .oha-members-filter-btn{display:inline-block;padding:5px 12px;background:transparent;border:1px solid rgba(173,49,25,.4);border-radius:4px;color:var(--global-palette4,#f7fafc);font-size:13px;text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+    .oha-members-filter-btn{display:inline-flex;align-items:center;min-height:44px;padding:5px 12px;background:transparent;border:1px solid rgba(173,49,25,.4);border-radius:4px;color:var(--global-palette4,#f7fafc);font-size:13px;text-decoration:none;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
     .oha-members-filter-btn:hover{border-color:var(--global-palette1,#ad3119);color:var(--global-palette3,#fff);text-decoration:none}
     .oha-members-filter-btn.is-active{background:var(--global-palette1,#ad3119);border-color:var(--global-palette1,#ad3119);color:#fff;font-weight:600}
     .oha-members-filter-btn.is-active:hover{background:var(--global-palette2,#ff0000);border-color:var(--global-palette2,#ff0000)}
