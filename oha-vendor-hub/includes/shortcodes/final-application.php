@@ -979,23 +979,6 @@ add_shortcode('oha_vendor_final_form', function($atts){
 
 
 /**
- * Return the correct Stripe Payment Link URL for the given booth count and mode.
- * 1-booth → single-booth link. 2-booth → 2-booth link (falls back to 1-booth if not configured).
- * 3+ booths are handled manually by the board and should be blocked before reaching this function.
- */
-function oha_vh_get_stripe_payment_link($booth_count, $mode = 'test') {
-    if (intval($booth_count) === 2) {
-        $link = $mode === 'live'
-            ? get_option('oha_vhcpt_stripe_link_live_2booth', '')
-            : get_option('oha_vhcpt_stripe_link_test_2booth', '');
-        if (!empty($link)) return $link;
-    }
-    return $mode === 'live'
-        ? get_option('oha_vhcpt_stripe_link_live', '')
-        : get_option('oha_vhcpt_stripe_link_test', '');
-}
-
-/**
  * Build Stripe payment URL
  */
 function oha_vhcpt_build_stripe_url($args) {

@@ -1,6 +1,6 @@
 {
     "plugin":  "OHA Vendor Hub",
-    "version":  "3.19.0",
+    "version":  "3.19.1",
     "entries":  [
                     {
                         "date":  "2026-03-04",
@@ -694,6 +694,13 @@
                         "type":  "fix",
                         "summary":  "OHA_VHCPT_VER constant corrected to 3.19.0 (was left at 3.18.0, causing WP update loop)",
                         "notes":  "PHP header Version: was updated but the define() on line 85 was missed. Always update both."
+                    },
+                    {
+                        "date":  "2026-11-22",
+                        "version":  "3.19.1",
+                        "type":  "fix",
+                        "summary":  "Remove duplicate oha_vh_get_stripe_payment_link() definition from final-application.php",
+                        "notes":  "Function was defined in final-application.php before v3.18.0 added it to actions.php. Duplicate caused E_COMPILE_ERROR on activation. Removed definition from final-application.php; actions.php is loaded first and is now the sole definition."
                     }
                 ]
 }
